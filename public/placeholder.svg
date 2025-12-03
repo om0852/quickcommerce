@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="400" fill="url(#grad)"/>
+  
+  <!-- Package/Box Icon -->
+  <g transform="translate(200, 200)">
+    <!-- Box outline -->
+    <rect x="-60" y="-50" width="120" height="100" fill="none" stroke="#a78bfa" stroke-width="3" rx="5"/>
+    
+    <!-- Box top -->
+    <path d="M -60 -50 L -40 -70 L 40 -70 L 60 -50" fill="none" stroke="#a78bfa" stroke-width="3"/>
+    
+    <!-- Box side -->
+    <path d="M 60 -50 L 80 -30 L 80 70 L 60 50" fill="none" stroke="#a78bfa" stroke-width="3" opacity="0.7"/>
+    
+    <!-- Tape -->
+    <rect x="-50" y="-35" width="100" height="8" fill="#c084fc" opacity="0.6" rx="2"/>
+    
+    <!-- Package label -->
+    <circle cx="0" cy="5" r="25" fill="none" stroke="#e879f9" stroke-width="2" opacity="0.8"/>
+    <text x="0" y="12" font-size="20" font-weight="bold" text-anchor="middle" fill="#e879f9" font-family="Arial, sans-serif">📦</text>
+  </g>
+  
+  <!-- Text -->
+  <text x="200" y="330" font-size="18" font-weight="bold" text-anchor="middle" fill="#a78bfa" font-family="Arial, sans-serif">Product Image</text>
+  <text x="200" y="360" font-size="14" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif">Loading...</text>
+</svg>
