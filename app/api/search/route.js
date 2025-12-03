@@ -96,11 +96,20 @@ function groupProductsThree(zeptoProducts = [], blinkitProducts = [], jiomartPro
     if (item.productUrl) return item.productUrl;
     if (item.url) return item.url;
     
-    // Only construct URL if we have productId (fallback - should rarely be needed)
+    // Construct URL if we have productId
     if (item.productId) {
-      if (platform === 'jiomart') return `https://www.jiomart.com/p/${item.productId}`;
-      // For Blinkit, the productUrl should be in the response - don't try to construct it
-      // as the format is complex (product-name/prid/productId)
+      if (platform === 'jiomart') {
+        return `https://www.jiomart.com/p/${item.productId}`;
+      }
+      if (platform === 'blinkit') {
+        // Convert product name to URL slug: lowercase, replace spaces/special chars with hyphens
+        const productName = item.productName || item.name || 'product';
+        const slug = productName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, ''); // remove leading/trailing hyphens
+        return `https://blinkit.com/prn/${slug}/prid/${item.productId}`;
+      }
     }
     return null;
   };
@@ -188,7 +197,7 @@ function groupProducts(a, b) {
   return groupProductsThree(a, b, []);
 }
 
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next.server';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
