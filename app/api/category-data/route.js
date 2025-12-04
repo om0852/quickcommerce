@@ -39,6 +39,7 @@ console.log(latestSnapshot)
     const snapshots = await ProductSnapshot.find({
       category,
       pincode,
+      scrapedAt: latestScrapedAt // CRITICAL: Only get products from the latest scraping session
     }).sort({ platform: 1, ranking: 1 });
 
     // Group products by platform
