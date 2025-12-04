@@ -6,6 +6,7 @@ export default function CategoriesPage() {
   const [category, setCategory] = useState('milk');
   const [pincode, setPincode] = useState('122018');
   const [platformFilter, setPlatformFilter] = useState('all');
+  const [showMissing, setShowMissing] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -110,9 +111,19 @@ export default function CategoriesPage() {
       return products;
     }
     
+    if (showMissing) {
+      return products.filter(product => {
+        const missingInSelected = !product[platformFilter];
+        const presentInOthers = ['zepto', 'blinkit', 'jiomart']
+          .filter(p => p !== platformFilter)
+          .some(p => product[p]);
+        return missingInSelected && presentInOthers;
+      });
+    }
+    
     // Only show products that have data for the selected platform
     return products.filter(product => product[platformFilter]);
-  }, [products, platformFilter]);
+  }, [products, platformFilter, showMissing]);
 
   // Calculate platform statistics
   const platformStats = useMemo(() => {
@@ -237,7 +248,7 @@ export default function CategoriesPage() {
               Filter by Platform
             </label>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
             {PLATFORM_OPTIONS.map(opt => (
               <button
                 key={opt.value}
@@ -252,6 +263,19 @@ export default function CategoriesPage() {
                 {opt.label}
               </button>
             ))}
+            
+            <div style={{ marginLeft: 'auto', paddingLeft: '1rem', borderLeft: '1px solid #e5e5e5' }}>
+              <label style={{ fontSize: '0.875rem', color: '#171717', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: platformFilter === 'all' ? 'not-allowed' : 'pointer', opacity: platformFilter === 'all' ? 0.5 : 1 }}>
+                <input 
+                  type="checkbox" 
+                  checked={showMissing} 
+                  onChange={(e) => setShowMissing(e.target.checked)}
+                  disabled={platformFilter === 'all'}
+                  style={{ cursor: 'inherit' }}
+                />
+                Show Missing
+              </label>
+            </div>
           </div>
         </div>
 
@@ -292,9 +316,9 @@ export default function CategoriesPage() {
               <thead>
                 <tr>
                   <th>Product</th>
-                  {(platformFilter === 'all' || platformFilter === 'zepto') && <th style={{ textAlign: 'center' }}>Zepto</th>}
-                  {(platformFilter === 'all' || platformFilter === 'blinkit') && <th style={{ textAlign: 'center' }}>Blinkit</th>}
-                  {(platformFilter === 'all' || platformFilter === 'jiomart') && <th style={{ textAlign: 'center' }}>JioMart</th>}
+                  {(platformFilter === 'all' || platformFilter === 'zepto' || showMissing) && <th style={{ textAlign: 'center' }}>Zepto</th>}
+                  {(platformFilter === 'all' || platformFilter === 'blinkit' || showMissing) && <th style={{ textAlign: 'center' }}>Blinkit</th>}
+                  {(platformFilter === 'all' || platformFilter === 'jiomart' || showMissing) && <th style={{ textAlign: 'center' }}>JioMart</th>}
                 </tr>
               </thead>
               <tbody>
@@ -320,7 +344,7 @@ export default function CategoriesPage() {
                     </td>
 
                     {/* Zepto */}
-                    {(platformFilter === 'all' || platformFilter === 'zepto') && (
+                    {(platformFilter === 'all' || platformFilter === 'zepto' || showMissing) && (
                       <td style={{ textAlign: 'center' }}>
                         {product.zepto ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
@@ -353,7 +377,7 @@ export default function CategoriesPage() {
                     )}
 
                     {/* Blinkit */}
-                    {(platformFilter === 'all' || platformFilter === 'blinkit') && (
+                    {(platformFilter === 'all' || platformFilter === 'blinkit' || showMissing) && (
                       <td style={{ textAlign: 'center' }}>
                         {product.blinkit ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
@@ -386,7 +410,7 @@ export default function CategoriesPage() {
                     )}
 
                     {/* JioMart */}
-                    {(platformFilter === 'all' || platformFilter === 'jiomart') && (
+                    {(platformFilter === 'all' || platformFilter === 'jiomart' || showMissing) && (
                       <td style={{ textAlign: 'center' }}>
                         {product.jiomart ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>

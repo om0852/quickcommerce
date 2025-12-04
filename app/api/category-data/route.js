@@ -289,5 +289,12 @@ function mergeProductsAcrossPlatforms(zeptoProducts, blinkitProducts, jiomartPro
     });
   });
 
+  // Sort by number of platforms (3 -> 2 -> 1)
+  merged.sort((a, b) => {
+    const countA = (a.zepto ? 1 : 0) + (a.blinkit ? 1 : 0) + (a.jiomart ? 1 : 0);
+    const countB = (b.zepto ? 1 : 0) + (b.blinkit ? 1 : 0) + (b.jiomart ? 1 : 0);
+    return countB - countA;
+  });
+
   return merged;
 }
