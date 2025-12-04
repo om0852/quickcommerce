@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server';
+
 // -- Matching & dedupe helpers --
 function normalizeProductName(name = '') {
   return String(name)
@@ -197,8 +199,6 @@ function groupProducts(a, b) {
   return groupProductsThree(a, b, []);
 }
 
-import { NextResponse } from 'next/server';
-
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('query');
@@ -211,17 +211,16 @@ export async function GET(request) {
   try {
     // Apify run-sync endpoints (provided by the user)
     // Read sensitive values from environment variables
-    const APIFY_TOKEN = process.env.APIFY_TOKEN;
+    const APIFY_TOKEN_1 = process.env.APIFY_TOKEN_4;
+    console.log(APIFY_TOKEN_1)
+    const APIFY_TOKEN_2 = process.env.APIFY_TOKEN_2;
+    const APIFY_TOKEN_3 = process.env.APIFY_TOKEN_3;
     const APIFY_PROXY_URL = process.env.APIFY_PROXY_URL || '';
     const DEFAULT_PINCODE = process.env.DEFAULT_PINCODE || '411001';
 
-    // const ZEPTO_API_URL = `https://api.apify.com/v2/acts/creatosaurus~zepto-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
-    // const BLINKIT_API_URL = `https://api.apify.com/v2/acts/creatosaurus~blinkit-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
-    // const JIOMART_API_URL = `https://api.apify.com/v2/acts/creatosaurus~jiomart-scrapper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
-
-  const ZEPTO_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~zepto-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
-  const BLINKIT_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~blinkit-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
-  const JIOMART_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~jiomart-scrapper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
+    const ZEPTO_API_URL = `https://api.apify.com/v2/acts/fateful_spinner~zepto-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN_1}`;
+    const BLINKIT_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~blinkit-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN_2}`;
+    const JIOMART_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~jiomart-scrapper/run-sync-get-dataset-items?token=${APIFY_TOKEN_3}`;
 
     // Build request bodies using the provided formats. Frontend passes a single query string;
     // the actors expect `searchQueries` as an array.
@@ -280,44 +279,56 @@ export async function GET(request) {
       scrollCount: 5
     };
 
-        // Call Apify endpoints SEQUENTIALLY (one by one) to avoid rate limiting
+    // Call Apify endpoints IN PARALLEL
     console.log(`\n🔍 Starting search for: "${query}" at pincode ${pincodeToUse}`);
     
-    // Call Zepto first
-    console.log('\n⏳ Calling Zepto API...');
-    const zeptoResponse = await fetch(ZEPTO_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(zeptoBody)
-    });
-    const zeptoData = await zeptoResponse.json();
-    console.log(`✅ Zepto API completed - Status: ${zeptoResponse.status}`);
-    
-    // Wait 3 seconds before next call
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Call Blinkit second
-    console.log('\n⏳ Calling Blinkit API...');
-    const blinkitResponse = await fetch(BLINKIT_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(blinkitBody)
-    });
-    const blinkitData = await blinkitResponse.json();
-    console.log(`✅ Blinkit API completed - Status: ${blinkitResponse.status}`);
-    
-    // Wait 3 seconds before next call
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Call JioMart third
-    console.log('\n⏳ Calling JioMart API...');
-    const jiomartResponse = await fetch(JIOMART_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(jiomartBody)
-    });
-    const jiomartDataRaw = await jiomartResponse.json();
-    console.log(`✅ JioMart API completed - Status: ${jiomartResponse.status}`);
+    const [zeptoResult, blinkitResult, jiomartResult] = await Promise.allSettled([
+      // Zepto
+      fetch(ZEPTO_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(zeptoBody)
+      }).then(async res => {
+        const data = await res.json();
+        console.log(data)
+        console.log(`✅ Zepto API completed - Status: ${res.status}`);
+        return data;
+      }),
+
+      // Blinkit
+      fetch(BLINKIT_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blinkitBody)
+      }).then(async res => {
+        const data = await res.json();
+        console.log(`✅ Blinkit API completed - Status: ${res.status}`);
+        return data;
+      }),
+
+      // JioMart
+      fetch(JIOMART_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jiomartBody)
+      }).then(async res => {
+        const data = await res.json();
+        console.log(`✅ JioMart API completed - Status: ${res.status}`);
+        return data;
+      })
+    ]);
+
+    // Helper to extract data from settled promise
+    const getData = (result) => {
+      if (result.status === 'fulfilled') return result.value;
+      console.error('API call failed:', result.reason);
+      return [];
+    };
+
+    const zeptoData = getData(zeptoResult);
+    const blinkitData = getData(blinkitResult);
+    const jiomartDataRaw = getData(jiomartResult);
+
     // Apify responses may wrap items in different keys; coerce to arrays
     const zeptoItems = Array.isArray(zeptoData)
       ? zeptoData

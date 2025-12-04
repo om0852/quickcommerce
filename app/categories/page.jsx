@@ -67,40 +67,24 @@ export default function CategoriesPage() {
     
     setHistoryLoading(true);
     try {
-      const productNames = {
-        zepto: selectedProduct.zepto?.name || (selectedProduct.zepto ? selectedProduct.name : null),
-        blinkit: selectedProduct.blinkit?.name || (selectedProduct.blinkit ? selectedProduct.name : null),
-        jiomart: selectedProduct.jiomart?.name || (selectedProduct.jiomart ? selectedProduct.name : null)
-      };
+      const productIds = {};
+      if (selectedProduct.zepto?.productId) productIds.zepto = selectedProduct.zepto.productId;
+      if (selectedProduct.blinkit?.productId) productIds.blinkit = selectedProduct.blinkit.productId;
+      if (selectedProduct.jiomart?.productId) productIds.jiomart = selectedProduct.jiomart.productId;
 
-      // Fallback: if specific platform name isn't stored in the merged object structure (it might not be), use the common name
-      // The merged object structure from API is: 
-      // { name: "Common Name", zepto: { ... }, blinkit: { ... } }
-      // The individual platform objects don't carry the name unless we added it.
-      // Looking at route.js, 'name' is at top level.
-      // So we use the top level name for all, assuming the scraper matched them correctly.
-      // Wait, the API route uses `productName` from snapshot to query.
-      // The merged object has `name` which is from one of the platforms.
-      // Ideally we should pass the exact name used in each platform if they differ, but our merge logic normalizes.
-      // Let's use the common name for now, or if we can, the specific names if available.
-      // The current merge logic in route.js DOES NOT preserve individual platform names in the merged object, only the common one.
-      // This might be a limitation. For now, we'll use the common `name` for all.
-      // ACTUALLY: The `product-history` API expects `productNames` object.
-      // If we only have one common name, we might miss history if the name on platform is slightly different.
-      // BUT, since we found them by matching, they should be close.
-      // Let's try sending the common name for all platforms where the product exists.
-      
-      const names = {};
-      if (selectedProduct.zepto) names.zepto = selectedProduct.name;
-      if (selectedProduct.blinkit) names.blinkit = selectedProduct.name;
-      if (selectedProduct.jiomart) names.jiomart = selectedProduct.name;
+      // Also send names as fallback or for reference
+      const productNames = {};
+      if (selectedProduct.zepto?.name) productNames.zepto = selectedProduct.zepto.name;
+      if (selectedProduct.blinkit?.name) productNames.blinkit = selectedProduct.blinkit.name;
+      if (selectedProduct.jiomart?.name) productNames.jiomart = selectedProduct.jiomart.name;
 
       const response = await fetch('/api/product-history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pincode,
-          productNames: names
+          productIds,
+          productNames
         })
       });
       

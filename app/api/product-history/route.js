@@ -4,9 +4,9 @@ import ProductSnapshot from '@/models/ProductSnapshot';
 
 export async function POST(request) {
   try {
-    const { pincode, productNames } = await request.json();
+    const { pincode, productNames, productIds } = await request.json();
 
-    if (!pincode || !productNames) {
+    if (!pincode || (!productNames && !productIds)) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -14,26 +14,15 @@ export async function POST(request) {
 
     // Build query to find snapshots for the specified products
     const criteria = [];
-    if (productNames.zepto) {
-      criteria.push({ 
-        platform: 'zepto', 
-        productName: productNames.zepto, 
-        pincode 
-      });
-    }
-    if (productNames.blinkit) {
-      criteria.push({ 
-        platform: 'blinkit', 
-        productName: productNames.blinkit, 
-        pincode 
-      });
-    }
-    if (productNames.jiomart) {
-      criteria.push({ 
-        platform: 'jiomart', 
-        productName: productNames.jiomart, 
-        pincode 
-      });
+    
+    if (productIds) {
+      if (productIds.zepto) criteria.push({ platform: 'zepto', productId: productIds.zepto, pincode });
+      if (productIds.blinkit) criteria.push({ platform: 'blinkit', productId: productIds.blinkit, pincode });
+      if (productIds.jiomart) criteria.push({ platform: 'jiomart', productId: productIds.jiomart, pincode });
+    } else if (productNames) {
+      if (productNames.zepto) criteria.push({ platform: 'zepto', productName: productNames.zepto, pincode });
+      if (productNames.blinkit) criteria.push({ platform: 'blinkit', productName: productNames.blinkit, pincode });
+      if (productNames.jiomart) criteria.push({ platform: 'jiomart', productName: productNames.jiomart, pincode });
     }
 
     if (criteria.length === 0) {

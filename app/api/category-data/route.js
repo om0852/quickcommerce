@@ -109,6 +109,12 @@ function normalizeProductName(name = '') {
     .trim();
 }
 
+function getBrand(name = '') {
+  if (!name) return '';
+  // Simple heuristic: first word is often the brand
+  return name.trim().split(' ')[0].toLowerCase();
+}
+
 function tokenize(name) {
   return normalizeProductName(name).split(' ').filter(Boolean).filter(t => t.length > 1);
 }
@@ -174,23 +180,47 @@ function mergeProductsAcrossPlatforms(zeptoProducts, blinkitProducts, jiomartPro
     return String(weight).toLowerCase()
       .replace(/\s+/g, '')
       .replace(/pack/g, '')
-      .replace(/\(|\)/g, '');
+      .replace(/\(|\)/g, '')
+      // Standardize units
+      .replace('ltr', 'l')
+      .replace('litre', 'l')
+      .replace('litres', 'l')
+      .replace('gms', 'g')
+      .replace('gm', 'g')
+      .replace('kgs', 'kg'); 
   };
 
   // Helper function to check if weights are compatible
   const weightsMatch = (weight1, weight2) => {
-    if (!weight1 || !weight2) return true; // If either is missing, don't use weight as filter
+    if (!weight1 || !weight2) return false; // STRICT: If weight is missing, assume no match to be safe
     const w1 = normalizeWeight(weight1);
     const w2 = normalizeWeight(weight2);
     
-    // Extract numbers from weights
-    const num1 = w1.match(/\d+/g);
-    const num2 = w2.match(/\d+/g);
-    
-    if (!num1 || !num2) return true;
-    
-    // Check if they have the same primary number (e.g., both 1L or both 500ml)
-    return num1[0] === num2[0];
+    // Exact match on normalized string
+    if (w1 === w2) return true;
+
+    // Extract numbers and units
+    const parseWeight = (w) => {
+      const match = w.match(/(\d+(?:\.\d+)?)([a-z]+)/);
+      if (match) return { val: parseFloat(match[1]), unit: match[2] };
+      return null;
+    };
+
+    const p1 = parseWeight(w1);
+    const p2 = parseWeight(w2);
+
+    if (p1 && p2) {
+      // Check unit compatibility
+      if (p1.unit === p2.unit) return p1.val === p2.val;
+      // Convert kg to g
+      if (p1.unit === 'kg' && p2.unit === 'g') return p1.val * 1000 === p2.val;
+      if (p1.unit === 'g' && p2.unit === 'kg') return p1.val === p2.val * 1000;
+      // Convert l to ml
+      if (p1.unit === 'l' && p2.unit === 'ml') return p1.val * 1000 === p2.val;
+      if (p1.unit === 'ml' && p2.unit === 'l') return p1.val === p2.val * 1000;
+    }
+
+    return false;
   };
 
   // Process each source platform
@@ -207,6 +237,7 @@ function mergeProductsAcrossPlatforms(zeptoProducts, blinkitProducts, jiomartPro
       };
 
       group[src.key] = {
+        productId: item.productId, // Include ID
         currentPrice: item.currentPrice,
         originalPrice: item.originalPrice,
         discountPercentage: item.discountPercentage,
@@ -214,10 +245,13 @@ function mergeProductsAcrossPlatforms(zeptoProducts, blinkitProducts, jiomartPro
         priceChange: item.priceChange,
         discountChange: item.discountChange,
         rankingChange: item.rankingChange,
-        url: item.productUrl
+        url: item.productUrl,
+        name: item.productName
       };
 
       used[s].add(idx);
+
+      const itemBrand = getBrand(item.productName);
 
       // Find matches in other platforms
       for (let t = 0; t < sources.length; t++) {
@@ -229,11 +263,21 @@ function mergeProductsAcrossPlatforms(zeptoProducts, blinkitProducts, jiomartPro
         other.items.forEach((oItem, oIdx) => {
           if (used[t].has(oIdx)) return;
           
-          // Check if weights are compatible first
+          // 1. Check Brand
+          const otherBrand = getBrand(oItem.productName);
+          if (itemBrand && otherBrand && itemBrand !== otherBrand) {
+            // Allow if one brand starts with the other (e.g. "Amul" vs "Amul Gold")
+            if (!itemBrand.startsWith(otherBrand) && !otherBrand.startsWith(itemBrand)) {
+              return; 
+            }
+          }
+
+          // 2. Check Weight (Strict)
           if (!weightsMatch(item.productWeight, oItem.productWeight)) {
             return;
           }
           
+          // 3. Check Name Similarity
           const score = combinedSimilarity(item.productName, oItem.productName);
           if (score > bestScore) {
             bestScore = score;
@@ -241,11 +285,12 @@ function mergeProductsAcrossPlatforms(zeptoProducts, blinkitProducts, jiomartPro
           }
         });
 
-        // Increased threshold to 0.6 for more accurate matching
-        if (bestIdx >= 0 && bestScore >= 0.6) {
+        // Increased threshold to 0.8 for stricter matching
+        if (bestIdx >= 0 && bestScore >= 0.8) {
           const matched = other.items[bestIdx];
           used[t].add(bestIdx);
           group[other.key] = {
+            productId: matched.productId, // Include ID
             currentPrice: matched.currentPrice,
             originalPrice: matched.originalPrice,
             discountPercentage: matched.discountPercentage,
@@ -253,11 +298,10 @@ function mergeProductsAcrossPlatforms(zeptoProducts, blinkitProducts, jiomartPro
             priceChange: matched.priceChange,
             discountChange: matched.discountChange,
             rankingChange: matched.rankingChange,
-            url: matched.productUrl
+            url: matched.productUrl,
+            name: matched.productName
           };
-          group.image = group.image || matched.productImage;
-          group.weight = group.weight || matched.productWeight;
-          group.rating = group.rating || matched.rating;
+          // Prefer image/weight from platform with more info if needed, but keeping first found is fine
         }
       }
 
@@ -276,6 +320,7 @@ function mergeProductsAcrossPlatforms(zeptoProducts, blinkitProducts, jiomartPro
         rating: itm.rating
       };
       g[src.key] = {
+        productId: itm.productId, // Include ID
         currentPrice: itm.currentPrice,
         originalPrice: itm.originalPrice,
         discountPercentage: itm.discountPercentage,
@@ -283,7 +328,8 @@ function mergeProductsAcrossPlatforms(zeptoProducts, blinkitProducts, jiomartPro
         priceChange: itm.priceChange,
         discountChange: itm.discountChange,
         rankingChange: itm.rankingChange,
-        url: itm.productUrl
+        url: itm.productUrl,
+        name: itm.productName
       };
       merged.push(g);
     });

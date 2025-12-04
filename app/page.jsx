@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, TrendingDown } from 'lucide-react';
 
 export default function Home() {
@@ -8,6 +8,8 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [platformFilter, setPlatformFilter] = useState('all');
+  const [showMissing, setShowMissing] = useState(false);
 
   const PINCODE_OPTIONS = [
     { label: 'Gurgaon — 122018', value: '122018' },
@@ -16,6 +18,25 @@ export default function Home() {
     { label: 'Gurgaon — 122015', value: '122015' },
     { label: 'Gurgaon — 122011', value: '122011' }
   ];
+
+  const filteredProducts = useMemo(() => {
+    if (platformFilter === 'all') {
+      return products;
+    }
+    
+    if (showMissing) {
+      return products.filter(product => {
+        const missingInSelected = !product[platformFilter];
+        const presentInOthers = ['zepto', 'blinkit', 'jiomart']
+          .filter(p => p !== platformFilter)
+          .some(p => product[p]);
+        return missingInSelected && presentInOthers;
+      });
+    }
+    
+    // Only show products that have data for the selected platform
+    return products.filter(product => product[platformFilter]);
+  }, [products, platformFilter, showMissing]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -134,14 +155,48 @@ export default function Home() {
       {/* Results */}
       {!loading && products.length > 0 && (
         <div>
-          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-              Found {products.length} products
-            </h2>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {['all', 'zepto', 'blinkit', 'jiomart'].map(platform => (
+                  <button
+                    key={platform}
+                    onClick={() => setPlatformFilter(platform)}
+                    className="btn"
+                    style={{ 
+                      background: platformFilter === platform ? '#0a0a0a' : '#ffffff',
+                      color: platformFilter === platform ? '#ffffff' : '#0a0a0a',
+                      border: '1px solid #e5e5e5',
+                      textTransform: 'capitalize',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    {platform}
+                  </button>
+                ))}
+              </div>
+
+              {platformFilter !== 'all' && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={showMissing}
+                    onChange={(e) => setShowMissing(e.target.checked)}
+                    style={{ width: '1rem', height: '1rem', accentColor: '#0a0a0a' }}
+                  />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Show Missing in {platformFilter}</span>
+                </label>
+              )}
+            </div>
+
+            <div style={{ fontSize: '0.9rem', color: '#737373' }}>
+              Showing {filteredProducts.length} results
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            {products.map((product, index) => {
+            {filteredProducts.map((product, index) => {
               const bestPrice = getBestPrice(product);
               const savings = calculateSavings(product);
 
