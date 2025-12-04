@@ -1,13 +1,18 @@
 "use client"
 import React, { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Filter, Package } from 'lucide-react';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function CategoriesPage() {
   const [category, setCategory] = useState('milk');
   const [pincode, setPincode] = useState('122018');
   const [platformFilter, setPlatformFilter] = useState('all');
   const [showMissing, setShowMissing] = useState(false);
+  const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [historyData, setHistoryData] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
@@ -56,6 +61,76 @@ export default function CategoriesPage() {
       setLoading(false);
     }
   };
+
+  const fetchHistoryData = async () => {
+    if (!selectedProduct) return;
+    
+    setHistoryLoading(true);
+    try {
+      const productNames = {
+        zepto: selectedProduct.zepto?.name || (selectedProduct.zepto ? selectedProduct.name : null),
+        blinkit: selectedProduct.blinkit?.name || (selectedProduct.blinkit ? selectedProduct.name : null),
+        jiomart: selectedProduct.jiomart?.name || (selectedProduct.jiomart ? selectedProduct.name : null)
+      };
+
+      // Fallback: if specific platform name isn't stored in the merged object structure (it might not be), use the common name
+      // The merged object structure from API is: 
+      // { name: "Common Name", zepto: { ... }, blinkit: { ... } }
+      // The individual platform objects don't carry the name unless we added it.
+      // Looking at route.js, 'name' is at top level.
+      // So we use the top level name for all, assuming the scraper matched them correctly.
+      // Wait, the API route uses `productName` from snapshot to query.
+      // The merged object has `name` which is from one of the platforms.
+      // Ideally we should pass the exact name used in each platform if they differ, but our merge logic normalizes.
+      // Let's use the common name for now, or if we can, the specific names if available.
+      // The current merge logic in route.js DOES NOT preserve individual platform names in the merged object, only the common one.
+      // This might be a limitation. For now, we'll use the common `name` for all.
+      // ACTUALLY: The `product-history` API expects `productNames` object.
+      // If we only have one common name, we might miss history if the name on platform is slightly different.
+      // BUT, since we found them by matching, they should be close.
+      // Let's try sending the common name for all platforms where the product exists.
+      
+      const names = {};
+      if (selectedProduct.zepto) names.zepto = selectedProduct.name;
+      if (selectedProduct.blinkit) names.blinkit = selectedProduct.name;
+      if (selectedProduct.jiomart) names.jiomart = selectedProduct.name;
+
+      const response = await fetch('/api/product-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pincode,
+          productNames: names
+        })
+      });
+      
+      const data = await response.json();
+      if (data.history) {
+        setHistoryData(data.history.map(h => ({
+          date: new Date(h.date).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date(h.date).getTime(),
+          Zepto: h.zepto?.price,
+          Blinkit: h.blinkit?.price,
+          JioMart: h.jiomart?.price,
+          'Zepto Rank': h.zepto?.ranking,
+          'Blinkit Rank': h.blinkit?.ranking,
+          'JioMart Rank': h.jiomart?.ranking,
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to fetch history", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if ((activeTab === 'price' || activeTab === 'ranking') && selectedProduct) {
+      fetchHistoryData();
+    }
+  }, [activeTab, selectedProduct]);
+
+
 
   useEffect(() => {
     fetchCategoryData();
@@ -125,6 +200,18 @@ export default function CategoriesPage() {
     return products.filter(product => product[platformFilter]);
   }, [products, platformFilter, showMissing]);
 
+  // Update selected product when filtered list changes
+  useEffect(() => {
+    if (filteredProducts.length > 0) {
+      // If no product selected, or selected product not in current filtered list
+      if (!selectedProduct || !filteredProducts.find(p => p.name === selectedProduct.name)) {
+        setSelectedProduct(filteredProducts[0]);
+      }
+    } else {
+      setSelectedProduct(null);
+    }
+  }, [filteredProducts, selectedProduct]);
+
   // Calculate platform statistics
   const platformStats = useMemo(() => {
     const stats = {
@@ -151,6 +238,19 @@ export default function CategoriesPage() {
 
     return stats;
   }, [products]);
+
+  const chartData = useMemo(() => {
+    return filteredProducts.map(p => ({
+      name: p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name,
+      full_name: p.name,
+      Zepto: p.zepto?.currentPrice,
+      Blinkit: p.blinkit?.currentPrice,
+      JioMart: p.jiomart?.currentPrice,
+      'Zepto Rank': p.zepto?.ranking,
+      'Blinkit Rank': p.blinkit?.ranking,
+      'JioMart Rank': p.jiomart?.ranking,
+    }));
+  }, [filteredProducts]);
 
   return (
     <div className="page-container">
@@ -304,6 +404,27 @@ export default function CategoriesPage() {
       {/* Products Table */}
       {!loading && !error && filteredProducts.length > 0 && (
         <>
+          <div className="tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid #e5e5e5' }}>
+            {['products', 'price', 'ranking'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: '0.75rem 0',
+                  borderBottom: activeTab === tab ? '2px solid #000' : '2px solid transparent',
+                  fontWeight: activeTab === tab ? 600 : 400,
+                  color: activeTab === tab ? '#000' : '#737373',
+                  textTransform: 'capitalize',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
           <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ fontSize: '0.875rem', color: '#737373' }}>
               Showing <strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? 'product' : 'products'}
@@ -311,7 +432,8 @@ export default function CategoriesPage() {
             </div>
           </div>
           
-          <div className="table-container">
+          {activeTab === 'products' && (
+            <div className="table-container">
             <table className="table">
               <thead>
                 <tr>
@@ -446,6 +568,109 @@ export default function CategoriesPage() {
               </tbody>
             </table>
           </div>
+          )}
+
+          {activeTab === 'price' && (
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e5e5e5' }}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Select Product for History</label>
+                <select 
+                  className="select" 
+                  style={{ 
+                    width: '100%', 
+                    maxWidth: '400px',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #e5e5e5',
+                    backgroundColor: '#fff',
+                    fontSize: '0.875rem',
+                    color: '#171717',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                  }}
+                  value={selectedProduct ? filteredProducts.findIndex(p => p.name === selectedProduct.name) : ''}
+                  onChange={(e) => setSelectedProduct(filteredProducts[e.target.value])}
+                >
+                  {filteredProducts.map((p, i) => (
+                    <option key={i} value={i}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={{ width: '100%', height: 500 }}>
+                {historyLoading ? (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading history...</div>
+                ) : historyData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={historyData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="date" angle={-45} textAnchor="end" interval={0} height={100} tick={{fontSize: 12}} />
+                      <YAxis label={{ value: 'Price (₹)', angle: -90, position: 'insideLeft' }} domain={['auto', 'auto']} />
+                      <Tooltip />
+                      <Legend verticalAlign="top" height={36}/>
+                      {(platformFilter === 'all' || platformFilter === 'zepto') && <Line type="monotone" dataKey="Zepto" stroke="#667eea" strokeWidth={2} connectNulls />}
+                      {(platformFilter === 'all' || platformFilter === 'blinkit') && <Line type="monotone" dataKey="Blinkit" stroke="#f093fb" strokeWidth={2} connectNulls />}
+                      {(platformFilter === 'all' || platformFilter === 'jiomart') && <Line type="monotone" dataKey="JioMart" stroke="#4facfe" strokeWidth={2} connectNulls />}
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#737373' }}>No history data available</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'ranking' && (
+            <div style={{ background: 'white', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e5e5e5' }}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Select Product for History</label>
+                <select 
+                  className="select" 
+                  style={{ 
+                    width: '100%', 
+                    maxWidth: '400px',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #e5e5e5',
+                    backgroundColor: '#fff',
+                    fontSize: '0.875rem',
+                    color: '#171717',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                  }}
+                  value={selectedProduct ? filteredProducts.findIndex(p => p.name === selectedProduct.name) : ''}
+                  onChange={(e) => setSelectedProduct(filteredProducts[e.target.value])}
+                >
+                  {filteredProducts.map((p, i) => (
+                    <option key={i} value={i}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ width: '100%', height: 500 }}>
+                {historyLoading ? (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading history...</div>
+                ) : historyData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={historyData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="date" angle={-45} textAnchor="end" interval={0} height={100} tick={{fontSize: 12}} />
+                      <YAxis label={{ value: 'Rank', angle: -90, position: 'insideLeft' }} reversed domain={['auto', 'auto']} />
+                      <Tooltip />
+                      <Legend verticalAlign="top" height={36}/>
+                      {(platformFilter === 'all' || platformFilter === 'zepto') && <Line type="monotone" dataKey="Zepto Rank" name="Zepto" stroke="#667eea" strokeWidth={2} connectNulls />}
+                      {(platformFilter === 'all' || platformFilter === 'blinkit') && <Line type="monotone" dataKey="Blinkit Rank" name="Blinkit" stroke="#f093fb" strokeWidth={2} connectNulls />}
+                      {(platformFilter === 'all' || platformFilter === 'jiomart') && <Line type="monotone" dataKey="JioMart Rank" name="JioMart" stroke="#4facfe" strokeWidth={2} connectNulls />}
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#737373' }}>No history data available</div>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
 

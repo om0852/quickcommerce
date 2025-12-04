@@ -2,14 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, BarChart3 } from 'lucide-react';
+import { Search, BarChart3, Bell } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   const navItems = [
     { href: '/', label: 'Search', icon: Search },
-    { href: '/categories', label: 'Categories', icon: BarChart3 }
+    { href: '/categories', label: 'Categories', icon: BarChart3 },
+    { href: '/alerts', label: 'Alerts', icon: Bell }
   ];
 
   return (
