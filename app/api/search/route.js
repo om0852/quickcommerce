@@ -215,9 +215,13 @@ export async function GET(request) {
     const APIFY_PROXY_URL = process.env.APIFY_PROXY_URL || '';
     const DEFAULT_PINCODE = process.env.DEFAULT_PINCODE || '411001';
 
-    const ZEPTO_API_URL = `https://api.apify.com/v2/acts/creatosaurus~zepto-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
-    const BLINKIT_API_URL = `https://api.apify.com/v2/acts/creatosaurus~blinkit-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
-    const JIOMART_API_URL = `https://api.apify.com/v2/acts/creatosaurus~jiomart-scrapper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
+    // const ZEPTO_API_URL = `https://api.apify.com/v2/acts/creatosaurus~zepto-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
+    // const BLINKIT_API_URL = `https://api.apify.com/v2/acts/creatosaurus~blinkit-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
+    // const JIOMART_API_URL = `https://api.apify.com/v2/acts/creatosaurus~jiomart-scrapper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
+
+  const ZEPTO_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~zepto-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
+  const BLINKIT_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~blinkit-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
+  const JIOMART_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~jiomart-scrapper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
 
     // Build request bodies using the provided formats. Frontend passes a single query string;
     // the actors expect `searchQueries` as an array.
@@ -276,29 +280,44 @@ export async function GET(request) {
       scrollCount: 5
     };
 
-    // POST to Apify run-sync endpoints in parallel (Zepto, Blinkit, JioMart)
-    const [zeptoResponse, blinkitResponse, jiomartResponse] = await Promise.all([
-      fetch(ZEPTO_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(zeptoBody)
-      }),
-      fetch(BLINKIT_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(blinkitBody)
-      }),
-      fetch(JIOMART_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(jiomartBody)
-      })
-    ]);
-
+        // Call Apify endpoints SEQUENTIALLY (one by one) to avoid rate limiting
+    console.log(`\n🔍 Starting search for: "${query}" at pincode ${pincodeToUse}`);
+    
+    // Call Zepto first
+    console.log('\n⏳ Calling Zepto API...');
+    const zeptoResponse = await fetch(ZEPTO_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(zeptoBody)
+    });
     const zeptoData = await zeptoResponse.json();
+    console.log(`✅ Zepto API completed - Status: ${zeptoResponse.status}`);
+    
+    // Wait 3 seconds before next call
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Call Blinkit second
+    console.log('\n⏳ Calling Blinkit API...');
+    const blinkitResponse = await fetch(BLINKIT_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(blinkitBody)
+    });
     const blinkitData = await blinkitResponse.json();
+    console.log(`✅ Blinkit API completed - Status: ${blinkitResponse.status}`);
+    
+    // Wait 3 seconds before next call
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Call JioMart third
+    console.log('\n⏳ Calling JioMart API...');
+    const jiomartResponse = await fetch(JIOMART_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(jiomartBody)
+    });
     const jiomartDataRaw = await jiomartResponse.json();
-
+    console.log(`✅ JioMart API completed - Status: ${jiomartResponse.status}`);
     // Apify responses may wrap items in different keys; coerce to arrays
     const zeptoItems = Array.isArray(zeptoData)
       ? zeptoData
@@ -312,6 +331,8 @@ export async function GET(request) {
     const jiomartData = Array.isArray(jiomartDataRaw)
       ? jiomartDataRaw
       : (jiomartDataRaw.items || jiomartDataRaw.data || jiomartDataRaw.output || []);
+
+    console.log(`\n📊 Results: Zepto=${zeptoItems.length}, Blinkit=${blinkitItems.length}, JioMart=${jiomartData.length}`);
 
     // Group and merge products across three sources
     const groupedProducts = groupProductsThree(zeptoItems, blinkitItems, jiomartData);

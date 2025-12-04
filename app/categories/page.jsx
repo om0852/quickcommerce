@@ -61,13 +61,9 @@ export default function CategoriesPage() {
   }, [category, pincode]);
 
   const renderChangeIndicator = (change, type = 'price') => {
+    // Don't show anything for no change - cleaner UI
     if (!change || change === 0) {
-      return (
-        <span className="badge badge-neutral">
-          <Minus size={12} />
-          No change
-        </span>
-      );
+      return null;
     }
 
     const isPositive = change > 0;
@@ -328,7 +324,24 @@ export default function CategoriesPage() {
                       <td style={{ textAlign: 'center' }}>
                         {product.zepto ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                            <div style={{ fontWeight: 700, fontSize: '1.125rem' }}>₹{product.zepto.currentPrice}</div>
+                            {product.zepto.url ? (
+                              <a 
+                                href={product.zepto.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ 
+                                  fontWeight: 700, 
+                                  fontSize: '1.125rem', 
+                                  color: '#171717',
+                                  textDecoration: 'none',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                ₹{product.zepto.currentPrice}
+                              </a>
+                            ) : (
+                              <div style={{ fontWeight: 700, fontSize: '1.125rem' }}>₹{product.zepto.currentPrice}</div>
+                            )}
                             <div style={{ fontSize: '0.75rem', color: '#737373' }}>Rank: #{product.zepto.ranking}</div>
                             {renderChangeIndicator(product.zepto.priceChange, 'price')}
                             {renderChangeIndicator(product.zepto.rankingChange, 'ranking')}
@@ -344,7 +357,24 @@ export default function CategoriesPage() {
                       <td style={{ textAlign: 'center' }}>
                         {product.blinkit ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                            <div style={{ fontWeight: 700, fontSize: '1.125rem' }}>₹{product.blinkit.currentPrice}</div>
+                            {product.blinkit.url ? (
+                              <a 
+                                href={product.blinkit.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ 
+                                  fontWeight: 700, 
+                                  fontSize: '1.125rem', 
+                                  color: '#171717',
+                                  textDecoration: 'none',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                ₹{product.blinkit.currentPrice}
+                              </a>
+                            ) : (
+                              <div style={{ fontWeight: 700, fontSize: '1.125rem' }}>₹{product.blinkit.currentPrice}</div>
+                            )}
                             <div style={{ fontSize: '0.75rem', color: '#737373' }}>Rank: #{product.blinkit.ranking}</div>
                             {renderChangeIndicator(product.blinkit.priceChange, 'price')}
                             {renderChangeIndicator(product.blinkit.rankingChange, 'ranking')}
@@ -360,7 +390,24 @@ export default function CategoriesPage() {
                       <td style={{ textAlign: 'center' }}>
                         {product.jiomart ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                            <div style={{ fontWeight: 700, fontSize: '1.125rem' }}>₹{product.jiomart.currentPrice}</div>
+                            {product.jiomart.url ? (
+                              <a 
+                                href={product.jiomart.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ 
+                                  fontWeight: 700, 
+                                  fontSize: '1.125rem', 
+                                  color: '#171717',
+                                  textDecoration: 'none',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                ₹{product.jiomart.currentPrice}
+                              </a>
+                            ) : (
+                              <div style={{ fontWeight: 700, fontSize: '1.125rem' }}>₹{product.jiomart.currentPrice}</div>
+                            )}
                             <div style={{ fontSize: '0.75rem', color: '#737373' }}>Rank: #{product.jiomart.ranking}</div>
                             {renderChangeIndicator(product.jiomart.priceChange, 'price')}
                             {renderChangeIndicator(product.jiomart.rankingChange, 'ranking')}

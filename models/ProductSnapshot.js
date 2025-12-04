@@ -81,4 +81,11 @@ ProductSnapshotSchema.index({ category: 1, pincode: 1, platform: 1, scrapedAt: -
 ProductSnapshotSchema.index({ category: 1, pincode: 1, scrapedAt: -1 });
 ProductSnapshotSchema.index({ productId: 1, platform: 1, scrapedAt: -1 });
 
+// UNIQUE compound index to prevent duplicates
+// Same product cannot exist twice for the same scraping session
+ProductSnapshotSchema.index(
+  { scrapedAt: 1, category: 1, platform: 1, pincode: 1, productId: 1 }, 
+  { unique: true }
+);
+
 export default mongoose.models.ProductSnapshot || mongoose.model('ProductSnapshot', ProductSnapshotSchema);
