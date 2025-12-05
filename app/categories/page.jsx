@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Filter, Package } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import AnalyticsTab from './AnalyticsTab';
 
 export default function CategoriesPage() {
   const [category, setCategory] = useState('milk');
@@ -389,7 +390,7 @@ export default function CategoriesPage() {
       {!loading && !error && filteredProducts.length > 0 && (
         <>
           <div className="tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid #e5e5e5' }}>
-            {['products', 'price', 'ranking'].map(tab => (
+            {['products', 'price', 'ranking', 'analytics'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -655,8 +656,13 @@ export default function CategoriesPage() {
               </div>
             </div>
           )}
+
+          {activeTab === 'analytics' && (
+            <AnalyticsTab category={category} pincode={pincode} platform={platformFilter} />
+          )}
         </>
       )}
+
 
       {/* Empty State */}
       {!loading && !error && products.length === 0 && (

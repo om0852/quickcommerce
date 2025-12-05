@@ -219,7 +219,7 @@ export async function GET(request) {
     const DEFAULT_PINCODE = process.env.DEFAULT_PINCODE || '411001';
 
     const ZEPTO_API_URL = `https://api.apify.com/v2/acts/fateful_spinner~zepto-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN_1}`;
-    const BLINKIT_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~blinkit-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN_2}`;
+    const BLINKIT_API_URL = `https://api.apify.com/v2/acts/blinkit-scrapper~blinkit-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN_2}`;
     const JIOMART_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~jiomart-scrapper/run-sync-get-dataset-items?token=${APIFY_TOKEN_3}`;
 
     // Build request bodies using the provided formats. Frontend passes a single query string;
