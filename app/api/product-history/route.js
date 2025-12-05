@@ -32,7 +32,7 @@ export async function POST(request) {
     // Fetch snapshots sorted by time
     const snapshots = await ProductSnapshot.find({ $or: criteria })
       .sort({ scrapedAt: 1 })
-      .select('platform productName currentPrice ranking scrapedAt');
+      .select('platform productName currentPrice ranking scrapedAt isOutOfStock');
 
     // Group snapshots by timestamp (bucketed to nearest minute to align platforms)
     // This helps in creating a unified timeline
@@ -49,10 +49,13 @@ export async function POST(request) {
       }
 
       const entry = historyMap.get(key);
-      entry[snap.platform] = {
-        price: snap.currentPrice,
-        ranking: snap.ranking
-      };
+      
+      // Store price and ranking data
+      entry[snap.platform.charAt(0).toUpperCase() + snap.platform.slice(1)] = snap.currentPrice;
+      entry[`${snap.platform.charAt(0).toUpperCase() + snap.platform.slice(1)} Rank`] = snap.ranking;
+      
+      // Store stock availability
+      entry[`${snap.platform}Stock`] = snap.isOutOfStock;
     });
 
     const history = Array.from(historyMap.values()).sort((a, b) => 

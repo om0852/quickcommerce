@@ -66,6 +66,12 @@ const ProductSnapshotSchema = new mongoose.Schema({
     default: 0
   },
   
+  // Stock availability
+  isOutOfStock: {
+    type: Boolean,
+    default: false
+  },
+  
   // Metadata
   productUrl: String,
   lastComparedWith: {

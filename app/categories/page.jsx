@@ -14,6 +14,8 @@ export default function CategoriesPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [historyData, setHistoryData] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [stockData, setStockData] = useState(null);
+  const [stockLoading, setStockLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
@@ -120,6 +122,58 @@ export default function CategoriesPage() {
   useEffect(() => {
     fetchCategoryData();
   }, [category, pincode]);
+
+  useEffect(() => {
+    if (activeTab === 'stock' && selectedProduct) {
+      setStockLoading(true);
+      
+      // Get product IDs for the selected product
+      const productIds = {};
+      if (selectedProduct.zepto?.productId) productIds.zepto = selectedProduct.zepto.productId;
+      if (selectedProduct.blinkit?.productId) productIds.blinkit = selectedProduct.blinkit.productId;
+      if (selectedProduct.jiomart?.productId) productIds.jiomart = selectedProduct.jiomart.productId;
+
+      fetch('/api/product-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category,
+          pincode,
+          productIds,
+          productNames: {
+            zepto: selectedProduct.zepto?.name,
+            blinkit: selectedProduct.blinkit?.name,
+            jiomart: selectedProduct.jiomart?.name
+          }
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          // Transform data for stock availability (1 = in stock, 0 = out of stock)
+          const stockHistory = data.history?.map(item => {
+            const date = new Date(item.date);
+            const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            
+            return {
+              date: formattedDate,
+              Zepto: item.Zepto !== null ? (item.zeptoStock === false ? 0 : 1) : null,
+              Blinkit: item.Blinkit !== null ? (item.blinkitStock === false ? 0 : 1) : null,
+              JioMart: item.JioMart !== null ? (item.jiomartStock === false ? 0 : 1) : null
+            };
+          }) || [];
+          
+          setStockData(stockHistory);
+          setStockLoading(false);
+        })
+        .catch(err => {
+          console.error('Failed to fetch stock history:', err);
+          setStockData([]);
+          setStockLoading(false);
+        });
+    } else if (activeTab === 'stock' && !selectedProduct) {
+      setStockData([]);
+    }
+  }, [activeTab, selectedProduct, category, pincode]);
 
   const renderChangeIndicator = (change, type = 'price') => {
     // Don't show anything for no change - cleaner UI
@@ -390,7 +444,7 @@ export default function CategoriesPage() {
       {!loading && !error && filteredProducts.length > 0 && (
         <>
           <div className="tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid #e5e5e5' }}>
-            {['products', 'price', 'ranking', 'analytics'].map(tab => (
+            {['products', 'price', 'ranking', 'stock', 'analytics'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -712,6 +766,125 @@ export default function CategoriesPage() {
                   </ResponsiveContainer>
                 ) : (
                   <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#737373' }}>No history data available</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'stock' && (
+            <div style={{ background: 'white', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #e5e5e5' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', marginBottom: '0.5rem' }}>Stock Availability History</h2>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Track product availability over time across platforms</p>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Select Product</label>
+                <select 
+                  className="select" 
+                  style={{ 
+                    width: '100%', 
+                    maxWidth: '500px',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #e5e5e5',
+                    backgroundColor: '#fff',
+                    fontSize: '0.875rem',
+                    color: '#171717',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                  }}
+                  value={selectedProduct ? filteredProducts.findIndex(p => p.name === selectedProduct.name) : ''}
+                  onChange={(e) => {
+                    setSelectedProduct(filteredProducts[e.target.value]);
+                    setActiveTab('stock'); // Keep on stock tab to trigger data fetch
+                  }}
+                >
+                  <option value="">Choose a product...</option>
+                  {filteredProducts.map((p, i) => (
+                    <option key={i} value={i}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={{ width: '100%', height: 400 }}>
+                {stockLoading ? (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading stock history...</div>
+                ) : stockData && stockData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={stockData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <XAxis 
+                        dataKey="date" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        axisLine={{ stroke: '#e5e7eb' }}
+                      />
+                      <YAxis 
+                        domain={[0, 1]}
+                        ticks={[0, 1]}
+                        tickFormatter={(value) => value === 1 ? 'In Stock' : 'Out of Stock'}
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        axisLine={{ stroke: '#e5e7eb' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          background: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)',
+                          border: 'none',
+                          borderRadius: '0.5rem',
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                          padding: '0.75rem 1rem'
+                        }}
+                        labelStyle={{ color: 'white', fontWeight: 600, marginBottom: '0.5rem' }}
+                        formatter={(value, name) => {
+                          const status = value === 1 ? 'In Stock' : 'Out of Stock';
+                          const color = value === 1 ? '#10b981' : '#ef4444';
+                          return [<span style={{ color }}>{status}</span>, name];
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ fontSize: '0.875rem', paddingTop: '1rem' }}
+                        iconType="circle"
+                      />
+                      {(platformFilter === 'all' || platformFilter === 'zepto') && (
+                        <Line 
+                          type="stepAfter" 
+                          dataKey="Zepto" 
+                          stroke="#8b5cf6" 
+                          strokeWidth={2} 
+                          dot={{ r: 4 }}
+                          connectNulls
+                        />
+                      )}
+                      {(platformFilter === 'all' || platformFilter === 'blinkit') && (
+                        <Line 
+                          type="stepAfter" 
+                          dataKey="Blinkit" 
+                          stroke="#eab308" 
+                          strokeWidth={2} 
+                          dot={{ r: 4 }}
+                          connectNulls
+                        />
+                      )}
+                      {(platformFilter === 'all' || platformFilter === 'jiomart') && (
+                        <Line 
+                          type="stepAfter" 
+                          dataKey="JioMart" 
+                          stroke="#3b82f6" 
+                          strokeWidth={2} 
+                          dot={{ r: 4 }}
+                          connectNulls
+                        />
+                      )}
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : selectedProduct ? (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#737373' }}>No stock history available for this product</div>
+                ) : (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#737373' }}>Please select a product to view stock history</div>
                 )}
               </div>
             </div>
