@@ -43,7 +43,7 @@ export async function GET(request) {
     }
 
     const products = await ProductSnapshot.find(query)
-      .select('productName platform currentPrice priceChange ranking rankingChange discountPercentage');
+      .select('productName platform currentPrice priceChange ranking rankingChange discountPercentage isOutOfStock');
 
     // 3. Price Point Analysis
     const priceRanges = [
@@ -96,10 +96,29 @@ export async function GET(request) {
       }
     });
 
+    // 5. Stock Availability by Platform
+    const stockByPlatform = [
+      { name: 'Zepto', inStock: 0, outOfStock: 0 },
+      { name: 'Blinkit', inStock: 0, outOfStock: 0 },
+      { name: 'JioMart', inStock: 0, outOfStock: 0 }
+    ];
+
+    products.forEach(product => {
+      const platformIndex = stockByPlatform.findIndex(p => p.name.toLowerCase() === product.platform);
+      if (platformIndex !== -1) {
+        if (product.isOutOfStock) {
+          stockByPlatform[platformIndex].outOfStock++;
+        } else {
+          stockByPlatform[platformIndex].inStock++;
+        }
+      }
+    });
+
     return NextResponse.json({
       priceDistribution: priceRanges,
       stockOverview,
-      rankingData: valueBuckets.map(({ name, rankImproved }) => ({ name, rankImproved }))
+      rankingData: valueBuckets.map(({ name, rankImproved }) => ({ name, rankImproved })),
+      stockAvailability: stockByPlatform
     });
 
   } catch (error) {
