@@ -227,8 +227,7 @@ export async function GET(request) {
     const pincodeToUse = pincodeFromRequest || DEFAULT_PINCODE;
 
     const zeptoBody = {
-      searchQueries: [String(query)],
-      searchUrls: [],
+      searchUrls: [`https://www.zepto.com/search?query=${encodeURIComponent(query)}`],
       pincode: pincodeToUse,
       maxProductsPerSearch: 50,
       proxyConfiguration: {
