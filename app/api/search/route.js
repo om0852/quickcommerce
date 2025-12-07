@@ -239,7 +239,7 @@ export async function GET(request) {
       headless: true,
       screenshotOnError: true,
       debugMode: true,
-      scrollCount: 40
+      scrollCount: 20
     };
 
     const blinkitBody = {
@@ -258,7 +258,7 @@ export async function GET(request) {
       headless: true,
       screenshotOnError: true,
       debugMode: true,
-      scrollCount: 40
+      scrollCount: 20
     };
 
     const jiomartBody = {
@@ -275,7 +275,7 @@ export async function GET(request) {
       headless: true,
       screenshotOnError: true,
       debugMode: true,
-      scrollCount: 40
+      scrollCount: 20
     };
 
     // Call Apify endpoints IN PARALLEL
