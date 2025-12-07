@@ -66,6 +66,7 @@ export default function CategoriesPage() {
   };
 
   const fetchHistoryData = async () => {
+    console.log('🔍 fetchHistoryData called, selectedProduct:', selectedProduct);
     if (!selectedProduct) return;
     
     setHistoryLoading(true);
@@ -91,9 +92,11 @@ export default function CategoriesPage() {
         })
       });
       
+      
       const data = await response.json();
+      console.log('📈 Received history data:', data);
       if (data.history) {
-        setHistoryData(data.history.map(h => ({
+        const transformedData = data.history.map(h => ({
           date: new Date(h.date).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
           timestamp: new Date(h.date).getTime(),
           Zepto: h.Zepto,
@@ -102,7 +105,10 @@ export default function CategoriesPage() {
           'Zepto Rank': h['Zepto Rank'],
           'Blinkit Rank': h['Blinkit Rank'],
           'JioMart Rank': h['JioMart Rank'],
-        })));
+        }));
+        console.log('📊 Transformed data for graph:', transformedData);
+        console.log('📊 Sample data point:', transformedData[0]);
+        setHistoryData(transformedData);
       }
     } catch (err) {
       console.error("Failed to fetch history", err);
