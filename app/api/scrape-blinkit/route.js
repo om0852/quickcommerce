@@ -103,7 +103,7 @@ async function scrapeBlinkit(apiUrl, searchUrls, pincode, category, proxyUrl, sc
     headless: true,
     screenshotOnError: true,
     debugMode: false,
-    scrollCount: 8
+    scrollCount: 40
   };
 
   console.log(`\n🔵 Calling Apify for Blinkit - ${category} - ${pincode} (Attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);

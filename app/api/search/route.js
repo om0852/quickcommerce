@@ -229,7 +229,7 @@ export async function GET(request) {
     const zeptoBody = {
       searchUrls: [`https://www.zepto.com/search?query=${encodeURIComponent(query)}`],
       pincode: pincodeToUse,
-      maxProductsPerSearch: 50,
+      maxProductsPerSearch: 500,
       proxyConfiguration: {
         useApifyProxy: false,
         customProxyUrl: APIFY_PROXY_URL
@@ -239,7 +239,7 @@ export async function GET(request) {
       headless: true,
       screenshotOnError: true,
       debugMode: true,
-      scrollCount: 5
+      scrollCount: 40
     };
 
     const blinkitBody = {
@@ -247,7 +247,7 @@ export async function GET(request) {
       searchUrls: [],
       pincode: pincodeToUse,
       deliveryLocation: null,
-      maxProductsPerSearch: 50,
+      maxProductsPerSearch: 500,
       proxyConfiguration: {
         useApifyProxy: false,
         customProxyUrl: APIFY_PROXY_URL
@@ -258,14 +258,14 @@ export async function GET(request) {
       headless: true,
       screenshotOnError: true,
       debugMode: true,
-      scrollCount: 8
+      scrollCount: 40
     };
 
     const jiomartBody = {
       searchQueries: [String(query)],
       searchUrls: [],
       pincode: pincodeToUse,
-      maxProductsPerSearch: 50,
+      maxProductsPerSearch: 500,
       proxyConfiguration: {
         useApifyProxy: false,
         customProxyUrl: APIFY_PROXY_URL
@@ -275,7 +275,7 @@ export async function GET(request) {
       headless: true,
       screenshotOnError: true,
       debugMode: true,
-      scrollCount: 5
+      scrollCount: 40
     };
 
     // Call Apify endpoints IN PARALLEL
