@@ -96,12 +96,12 @@ export default function CategoriesPage() {
         setHistoryData(data.history.map(h => ({
           date: new Date(h.date).toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
           timestamp: new Date(h.date).getTime(),
-          Zepto: h.zepto?.price,
-          Blinkit: h.blinkit?.price,
-          JioMart: h.jiomart?.price,
-          'Zepto Rank': h.zepto?.ranking,
-          'Blinkit Rank': h.blinkit?.ranking,
-          'JioMart Rank': h.jiomart?.ranking,
+          Zepto: h.Zepto,
+          Blinkit: h.Blinkit,
+          JioMart: h.JioMart,
+          'Zepto Rank': h['Zepto Rank'],
+          'Blinkit Rank': h['Blinkit Rank'],
+          'JioMart Rank': h['JioMart Rank'],
         })));
       }
     } catch (err) {

@@ -10,6 +10,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    console.log('📊 Product History Request:', { pincode, productIds, productNames });
+
     await dbConnect();
 
     // Build query to find snapshots for the specified products
@@ -25,7 +27,10 @@ export async function POST(request) {
       if (productNames.jiomart) criteria.push({ platform: 'jiomart', productName: productNames.jiomart, pincode });
     }
 
+    console.log('🔍 Query criteria:', JSON.stringify(criteria, null, 2));
+
     if (criteria.length === 0) {
+      console.log('⚠️ No criteria built, returning empty history');
       return NextResponse.json({ history: [] });
     }
 
@@ -33,6 +38,8 @@ export async function POST(request) {
     const snapshots = await ProductSnapshot.find({ $or: criteria })
       .sort({ scrapedAt: 1 })
       .select('platform productName currentPrice ranking scrapedAt isOutOfStock');
+
+    console.log(`✅ Found ${snapshots.length} snapshots`);
 
     // Group snapshots by timestamp (bucketed to nearest minute to align platforms)
     // This helps in creating a unified timeline
