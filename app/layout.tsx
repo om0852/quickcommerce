@@ -18,13 +18,6 @@ export const metadata: Metadata = {
   description: "Compare prices across Zepto, Blinkit, and JioMart",
 };
 
-// Initialize scheduler on server startup
-if (typeof window === 'undefined') {
-  import('../lib/scheduler').then(({ startCronScheduler }) => {
-    startCronScheduler();
-  });
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
