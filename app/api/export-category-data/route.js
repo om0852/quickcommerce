@@ -51,103 +51,143 @@ export async function POST(req) {
         for (const cat of targetCategories) {
             for (const pin of targetPincodes) {
 
-                // 1. Find latest scrapedAt for this specific category + pincode
-                const latestSnapshot = await ProductSnapshot.findOne({
-                    category: cat,
-                    pincode: pin,
-                    ...(platforms.length > 0 && !platforms.includes('all') ? { platform: { $in: platforms } } : {})
-                }).sort({ scrapedAt: -1 }).select('scrapedAt').lean();
+                let targettimestamps = [];
 
-                if (!latestSnapshot) continue;
+                if (body.exportType === 'unique') {
+                    // 14 days lookback
+                    const lookbackDate = new Date();
+                    lookbackDate.setDate(lookbackDate.getDate() - 14);
 
-                // 2. Fetch all products for this specific session
-                const query = {
-                    category: cat,
-                    pincode: pin,
-                    scrapedAt: latestSnapshot.scrapedAt
-                };
-                if (platforms.length > 0 && !platforms.includes('all')) {
-                    query.platform = { $in: platforms };
+                    // Find all distinct timestamps in the last 14 days
+                    const snapshots = await ProductSnapshot.find({
+                        category: cat,
+                        pincode: pin,
+                        scrapedAt: { $gte: lookbackDate },
+                        ...(platforms.length > 0 && !platforms.includes('all') ? { platform: { $in: platforms } } : {})
+                    }).distinct('scrapedAt');
+
+                    // Sort descending (latest first)
+                    targettimestamps = snapshots.sort((a, b) => b - a);
+                } else {
+                    // Default 'latest': just the single newest one
+                    const latestSnapshot = await ProductSnapshot.findOne({
+                        category: cat,
+                        pincode: pin,
+                        ...(platforms.length > 0 && !platforms.includes('all') ? { platform: { $in: platforms } } : {})
+                    }).sort({ scrapedAt: -1 }).select('scrapedAt').lean();
+
+                    if (latestSnapshot) {
+                        targettimestamps = [latestSnapshot.scrapedAt];
+                    }
                 }
 
-                // Sorting helps the platform grouping if we were doing it manually, but for splitting arrays it's fine
-                const snapshots = await ProductSnapshot.find(query).sort({ platform: 1, ranking: 1 }).lean();
+                if (!targettimestamps.length) continue;
 
-                if (!snapshots.length) continue;
+                const seenProductsInThisCategoryPincode = new Set();
 
-                // 3. Partition by platform
-                // Group products by platform
-                const productsByPlatform = {
-                    zepto: [],
-                    blinkit: [],
-                    jiomart: []
-                };
+                // Iterate through timestamps (newest to oldest)
+                for (const scrapedAt of targettimestamps) {
 
-                snapshots.forEach(snap => {
-                    uniquePlatforms.add(snap.platform);
-                    if (productsByPlatform[snap.platform]) {
-                        productsByPlatform[snap.platform].push({
-                            productId: snap.productId,
-                            productName: snap.productName,
-                            productImage: snap.productImage,
-                            productWeight: snap.productWeight,
-                            rating: snap.rating,
-                            currentPrice: snap.currentPrice,
-                            originalPrice: snap.originalPrice,
-                            discountPercentage: snap.discountPercentage,
-                            ranking: snap.ranking,
-                            priceChange: snap.priceChange,
-                            discountChange: snap.discountChange,
-                            rankingChange: snap.rankingChange,
-                            productUrl: snap.productUrl,
-                            isOutOfStock: snap.isOutOfStock,
-                            scrapedAt: snap.scrapedAt
-                        });
-                    }
-                });
-
-                // 4. Merge using shared logic to ensure consistent order/matching
-                const mergedProducts = mergeProductsAcrossPlatforms(
-                    productsByPlatform.zepto,
-                    productsByPlatform.blinkit,
-                    productsByPlatform.jiomart
-                );
-
-                // 5. Convert merged items to Excel rows
-                mergedProducts.forEach(product => {
-                    // Check product name filter if exists
-                    if (products.length > 0 && !products.includes('all') && !products.includes(product.name)) {
-                        return;
-                    }
-
-                    const dateObj = new Date(latestSnapshot.scrapedAt);
-
-                    const rowData = {
-                        date: dateObj.toLocaleDateString(),
-                        time: dateObj.toLocaleTimeString(),
-                        pincode: pin,
+                    // 2. Fetch all products for this specific session
+                    const query = {
                         category: cat,
-                        productName: product.name,
-                        productWeight: product.weight || 'N/A'
+                        pincode: pin,
+                        scrapedAt: scrapedAt
+                    };
+                    if (platforms.length > 0 && !platforms.includes('all')) {
+                        query.platform = { $in: platforms };
+                    }
+
+                    // Sorting helps the platform grouping if we were doing it manually, but for splitting arrays it's fine
+                    const snapshots = await ProductSnapshot.find(query).sort({ platform: 1, ranking: 1 }).lean();
+
+                    if (!snapshots.length) continue;
+
+                    // 3. Partition by platform
+                    const productsByPlatform = {
+                        zepto: [],
+                        blinkit: [],
+                        jiomart: []
                     };
 
-                    // Platforms
-                    ['zepto', 'blinkit', 'jiomart'].forEach(p => {
-                        if (product[p]) {
-                            rowData[`${p}_available`] = 'Yes';
-                            rowData[`${p}_price`] = product[p].currentPrice;
-                            rowData[`${p}_rank`] = product[p].ranking;
-                            rowData[`${p}_stock`] = product[p].isOutOfStock ? 'Out of Stock' : 'In Stock';
-                        } else {
-                            rowData[`${p}_available`] = 'No';
-                            rowData[`${p}_price`] = null;
-                            rowData[`${p}_rank`] = null;
-                            rowData[`${p}_stock`] = '-';
+                    snapshots.forEach(snap => {
+                        uniquePlatforms.add(snap.platform);
+                        if (productsByPlatform[snap.platform]) {
+                            productsByPlatform[snap.platform].push({
+                                productId: snap.productId,
+                                productName: snap.productName,
+                                productImage: snap.productImage,
+                                productWeight: snap.productWeight,
+                                rating: snap.rating,
+                                currentPrice: snap.currentPrice,
+                                originalPrice: snap.originalPrice,
+                                discountPercentage: snap.discountPercentage,
+                                ranking: snap.ranking,
+                                priceChange: snap.priceChange,
+                                discountChange: snap.discountChange,
+                                rankingChange: snap.rankingChange,
+                                productUrl: snap.productUrl,
+                                isOutOfStock: snap.isOutOfStock,
+                                scrapedAt: snap.scrapedAt
+                            });
                         }
                     });
 
-                    allProcessedRows.push(rowData);
-                });
+                    // 4. Merge using shared logic to ensure consistent order/matching
+                    // CRITICAL: We only merge products from the SAME timestamp.
+                    const mergedProducts = mergeProductsAcrossPlatforms(
+                        productsByPlatform.zepto,
+                        productsByPlatform.blinkit,
+                        productsByPlatform.jiomart
+                    );
+
+                    // 5. Add to processed rows IF not already seen (for unique mode)
+                    // For 'latest' mode, seenProducts won't matter as there's only one iteration.
+                    mergedProducts.forEach(product => {
+                        // Check product name filter if exists
+                        if (products.length > 0 && !products.includes('all') && !products.includes(product.name)) {
+                            return;
+                        }
+
+                        // Create a unique key for deduplication
+                        const uniqueKey = product.name.toLowerCase().trim();
+
+                        if (body.exportType === 'unique') {
+                            if (seenProductsInThisCategoryPincode.has(uniqueKey)) {
+                                return; // Skip if we already have a newer version of this product
+                            }
+                            seenProductsInThisCategoryPincode.add(uniqueKey);
+                        }
+
+                        const dateObj = new Date(scrapedAt);
+
+                        const rowData = {
+                            date: dateObj.toLocaleDateString(),
+                            time: dateObj.toLocaleTimeString(),
+                            pincode: pin,
+                            category: cat,
+                            productName: product.name,
+                            productWeight: product.weight || 'N/A'
+                        };
+
+                        // Platforms
+                        ['zepto', 'blinkit', 'jiomart'].forEach(p => {
+                            if (product[p]) {
+                                rowData[`${p}_available`] = 'Yes';
+                                rowData[`${p}_price`] = product[p].currentPrice;
+                                rowData[`${p}_rank`] = product[p].ranking;
+                                rowData[`${p}_stock`] = product[p].isOutOfStock ? 'Out of Stock' : 'In Stock';
+                            } else {
+                                rowData[`${p}_available`] = 'No';
+                                rowData[`${p}_price`] = null;
+                                rowData[`${p}_rank`] = null;
+                                rowData[`${p}_stock`] = '-';
+                            }
+                        });
+
+                        allProcessedRows.push(rowData);
+                    });
+                }
             }
         }
 

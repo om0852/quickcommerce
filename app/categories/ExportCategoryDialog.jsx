@@ -23,6 +23,7 @@ export default function ExportCategoryDialog({
     const [selectedPlatform, setSelectedPlatform] = useState('all');
     const [selectedCategory, setSelectedCategory] = useState(currentCategory || 'all');
     const [selectedPincode, setSelectedPincode] = useState(currentPincode || (pincodeOptions[0]?.value) || '');
+    const [exportType, setExportType] = useState('latest');
 
     if (!isOpen) return null;
 
@@ -38,6 +39,7 @@ export default function ExportCategoryDialog({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email,
+                    exportType,
                     // Sending arrays to match expected backend format even though UI is single select
                     platforms: selectedPlatform === 'all' ? ['all'] : [selectedPlatform],
                     categories: selectedCategory === 'all' ? ['all'] : [selectedCategory],
@@ -178,6 +180,29 @@ export default function ExportCategoryDialog({
 
                         {/* Grid for Dropdowns */}
                         <div style={{ display: 'grid', gap: '1rem' }}>
+                            {/* Export Type */}
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#404040' }}>Export Type</label>
+                                <select
+                                    value={exportType}
+                                    onChange={(e) => setExportType(e.target.value)}
+                                    className="input-focus"
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.625rem',
+                                        borderRadius: '0.375rem',
+                                        border: '1px solid #e5e5e5',
+                                        fontSize: '0.875rem',
+                                        backgroundColor: 'white',
+                                        color: '#171717',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    <option value="latest">Latest Snapshot Only</option>
+                                    <option value="unique">Unique Products (Last 7 Days)</option>
+                                </select>
+                            </div>
+
                             {/* Platform */}
                             <div>
                                 <label style={{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#404040' }}>Platform</label>

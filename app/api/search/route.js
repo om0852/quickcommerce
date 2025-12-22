@@ -2,12 +2,26 @@ import { NextResponse } from 'next/server';
 
 // -- Matching & dedupe helpers --
 function normalizeProductName(name = '') {
-  return String(name)
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ') // remove punctuation but keep spaces
-    .replace(/\b(of|and|with|pack|pcs|pieces|kg|g|ml|ltr|litre|litres)\b/g, ' ') // remove common stopwords/units
-    .replace(/\s+/g, ' ')
-    .trim();
+  let normalized = String(name).toLowerCase();
+
+  // Remove content in parentheses (packaging details like "Tetra Pack", "Pouch", "Tub")
+  normalized = normalized.replace(/\([^)]*\)/g, ' ');
+
+  // Remove content in square brackets
+  normalized = normalized.replace(/\[[^\]]*\]/g, ' ');
+
+  // Remove special characters but keep spaces
+  normalized = normalized.replace(/[^a-z0-9\s]/g, ' ');
+
+  // Remove common packaging and filler words
+  normalized = normalized.replace(/\b(tetra\s*pack|tetra|pouch|tub|bottle|carton|box|tin|can|jar|packet|sachet)\b/g, ' ');
+  normalized = normalized.replace(/\b(of|and|with|pack|pcs|pc|pieces|piece)\b/g, ' ');
+
+  // Remove units (but keep numbers)
+  normalized = normalized.replace(/\b(kg|kgs|g|gm|gms|gram|grams|ml|ltr|litre|litres|liter|liters|l)\b/g, ' ');
+
+  // Remove extra whitespace
+  return normalized.replace(/\s+/g, ' ').trim();
 }
 
 function tokenize(name) {
@@ -97,7 +111,7 @@ function groupProductsThree(zeptoProducts = [], blinkitProducts = [], jiomartPro
     // Always prefer the actual productUrl from the scraper if available
     if (item.productUrl) return item.productUrl;
     if (item.url) return item.url;
-    
+
     // Construct URL if we have productId
     if (item.productId) {
       if (platform === 'jiomart') {
@@ -218,9 +232,9 @@ export async function GET(request) {
     const APIFY_PROXY_URL = process.env.APIFY_PROXY_URL || '';
     const DEFAULT_PINCODE = process.env.DEFAULT_PINCODE || '411001';
 
-    const ZEPTO_API_URL = `https://api.apify.com/v2/acts/fateful_spinner~zepto-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN_1}`;
-    const BLINKIT_API_URL = `https://api.apify.com/v2/acts/blinkit-scrapper~blinkit-scrapper-om/run-sync-get-dataset-items?token=${APIFY_TOKEN_2}`;
-    const JIOMART_API_URL = `https://api.apify.com/v2/acts/jiomart-scrapper~jiomart-scrapper/run-sync-get-dataset-items?token=${APIFY_TOKEN_3}`;
+    const ZEPTO_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~zepto-scrapper-om/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
+    const BLINKIT_API_URL = `https://api.apify.com/v2/acts/creatosaurus~blinkit-scrapper/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
+    const JIOMART_API_URL = `https://api.apify.com/v2/acts/creatosaurus~jiomart-scrapper/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
 
     // Build request bodies using the provided formats. Frontend passes a single query string;
     // the actors expect `searchQueries` as an array.
@@ -229,10 +243,9 @@ export async function GET(request) {
     const zeptoBody = {
       searchUrls: [`https://www.zepto.com/search?query=${encodeURIComponent(query)}`],
       pincode: pincodeToUse,
-      maxProductsPerSearch: 500,
+      maxProductsPerSearch: 200,
       proxyConfiguration: {
-        useApifyProxy: false,
-        customProxyUrl: APIFY_PROXY_URL
+        useApifyProxy: true
       },
       maxRequestRetries: 3,
       navigationTimeout: 90000,
@@ -247,10 +260,9 @@ export async function GET(request) {
       searchUrls: [],
       pincode: pincodeToUse,
       deliveryLocation: null,
-      maxProductsPerSearch: 500,
+      maxProductsPerSearch: 200,
       proxyConfiguration: {
-        useApifyProxy: false,
-        customProxyUrl: APIFY_PROXY_URL
+        useApifyProxy: true
       },
       maxRequestRetries: 3,
       maxConcurrency: 2,
@@ -280,7 +292,7 @@ export async function GET(request) {
 
     // Call Apify endpoints IN PARALLEL
     console.log(`\n🔍 Starting search for: "${query}" at pincode ${pincodeToUse}`);
-    
+
     const [zeptoResult, blinkitResult, jiomartResult] = await Promise.allSettled([
       // Zepto
       fetch(ZEPTO_API_URL, {

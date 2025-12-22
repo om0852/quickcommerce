@@ -164,6 +164,7 @@ export default function CategoriesPage() {
 
             return {
               date: formattedDate,
+              timestamp: date.getTime(),
               Zepto: item.Zepto !== null ? (item.zeptoStock === false ? 0 : 1) : null,
               Blinkit: item.Blinkit !== null ? (item.blinkitStock === false ? 0 : 1) : null,
               JioMart: item.JioMart !== null ? (item.jiomartStock === false ? 0 : 1) : null
@@ -298,6 +299,44 @@ export default function CategoriesPage() {
       'JioMart Rank': p.jiomart?.ranking,
     }));
   }, [filteredProducts]);
+
+  const calculateTicks = (data) => {
+    if (!data || data.length === 0) return [];
+
+    // Ensure we have timestamps
+    if (!data[0].timestamp) return data.map(d => d.date);
+
+    const firstTimestamp = data[0].timestamp;
+    const lastTimestamp = data[data.length - 1].timestamp;
+    const durationDays = (lastTimestamp - firstTimestamp) / (1000 * 60 * 60 * 24);
+
+    let tickGapDays = 0;
+    if (durationDays > 60) tickGapDays = 7; // > 2 months -> 7 day gap
+    else if (durationDays > 14) tickGapDays = 2; // > 2 weeks -> 2 day gap
+    else return data.map(d => d.date); // Short duration -> show all (or rely on Recharts default interval if needed, but returning all allows Recharts to skip if 'interval="preserveStartEnd"' isn't strict, but explicit ticks are better)
+    // Actually, returning specific ticks forces Recharts to show ONLY those.
+
+    const ticks = [];
+    let currentTarget = firstTimestamp;
+
+    // Find the closest data point for each target time
+    // We iterate through data and pick the first one that passes the target
+
+    let lastAddedDate = null;
+
+    data.forEach(item => {
+      if (item.timestamp >= currentTarget) {
+        // Avoid duplicate dates if multiple data points fall on same day display (though timestamp check handles spacing)
+        if (item.date !== lastAddedDate) {
+          ticks.push(item.date);
+          lastAddedDate = item.date;
+          currentTarget += (tickGapDays * 24 * 60 * 60 * 1000);
+        }
+      }
+    });
+
+    return ticks;
+  };
 
   return (
     <div className="page-container">
@@ -756,7 +795,15 @@ export default function CategoriesPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={historyData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="date" angle={-45} textAnchor="end" interval={0} height={100} tick={{ fontSize: 12 }} />
+                      <XAxis
+                        dataKey="date"
+                        angle={-45}
+                        textAnchor="end"
+                        interval={0}
+                        height={100}
+                        tick={{ fontSize: 12 }}
+                        ticks={calculateTicks(historyData)}
+                      />
                       <YAxis label={{ value: 'Price (₹)', angle: -90, position: 'insideLeft' }} domain={['auto', 'auto']} />
                       <Tooltip />
                       <Legend verticalAlign="top" height={36} />
@@ -807,7 +854,15 @@ export default function CategoriesPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={historyData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="date" angle={-45} textAnchor="end" interval={0} height={100} tick={{ fontSize: 12 }} />
+                      <XAxis
+                        dataKey="date"
+                        angle={-45}
+                        textAnchor="end"
+                        interval={0}
+                        height={100}
+                        tick={{ fontSize: 12 }}
+                        ticks={calculateTicks(historyData)}
+                      />
                       <YAxis label={{ value: 'Rank', angle: -90, position: 'insideLeft' }} reversed domain={['auto', 'auto']} />
                       <Tooltip />
                       <Legend verticalAlign="top" height={36} />
@@ -874,6 +929,7 @@ export default function CategoriesPage() {
                         height={80}
                         tick={{ fontSize: 11, fill: '#6b7280' }}
                         axisLine={{ stroke: '#e5e7eb' }}
+                        ticks={calculateTicks(stockData)}
                       />
                       <YAxis
                         domain={[0, 1]}
