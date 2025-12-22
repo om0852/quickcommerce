@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react';
-import { Download, X, Calendar, Mail, Filter, CheckSquare, Square } from 'lucide-react';
+import { Download, X, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function ExportCategoryDialog({
     isOpen,
@@ -17,22 +17,12 @@ export default function ExportCategoryDialog({
     const [error, setError] = useState(null);
 
     // Form State
-    // Form State
     const [email, setEmail] = useState('');
-    const [startDate, setStartDate] = useState(() => {
-        const d = new Date();
-        d.setDate(d.getDate() - 7);
-        return d.toISOString().split('T')[0];
-    });
-    const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
 
-    const maxDate = new Date().toISOString().split('T')[0];
-
-    const [selectedPlatforms, setSelectedPlatforms] = useState(['all']);
-    const [selectedCategories, setSelectedCategories] = useState([currentCategory]);
-    const [selectedPincodes, setSelectedPincodes] = useState([currentPincode]);
-    const [selectedProducts, setSelectedProducts] = useState(['all']);
-    const [showAllProducts, setShowAllProducts] = useState(false);
+    // Dropdown States - defaulting to first option or specific values if needed
+    const [selectedPlatform, setSelectedPlatform] = useState('all');
+    const [selectedCategory, setSelectedCategory] = useState(currentCategory || 'all');
+    const [selectedPincode, setSelectedPincode] = useState(currentPincode || (pincodeOptions[0]?.value) || '');
 
     if (!isOpen) return null;
 
@@ -42,30 +32,17 @@ export default function ExportCategoryDialog({
         setError(null);
         setSuccess(false);
 
-        if (startDate === endDate) {
-            setError("Start Date and End Date cannot be the same.");
-            setLoading(false);
-            return;
-        }
-
-        if (startDate > endDate) {
-            setError("Start Date cannot be after End Date.");
-            setLoading(false);
-            return;
-        }
-
         try {
             const response = await fetch('/api/export-category-data', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email,
-                    startDate,
-                    endDate,
-                    platforms: selectedPlatforms.includes('all') ? ['all'] : selectedPlatforms,
-                    categories: selectedCategories.includes('all') ? ['all'] : selectedCategories,
-                    pincodes: selectedPincodes,
-                    products: selectedProducts.includes('all') ? ['all'] : selectedProducts
+                    // Sending arrays to match expected backend format even though UI is single select
+                    platforms: selectedPlatform === 'all' ? ['all'] : [selectedPlatform],
+                    categories: selectedCategory === 'all' ? ['all'] : [selectedCategory],
+                    pincodes: [selectedPincode],
+                    products: ['all'] // Removed from UI, default to all
                 })
             });
 
@@ -79,36 +56,12 @@ export default function ExportCategoryDialog({
             setTimeout(() => {
                 onClose();
                 setSuccess(false);
-            }, 3000); // Increased timeout to read message
+            }, 3000);
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
-    };
-
-    const toggleSelection = (item, currentList, setList, allValue = 'all') => {
-        if (item === allValue) {
-            setList([allValue]);
-            return;
-        }
-
-        let newList = [...currentList];
-        if (newList.includes(allValue)) {
-            newList = [];
-        }
-
-        if (newList.includes(item)) {
-            newList = newList.filter(i => i !== item);
-        } else {
-            newList.push(item);
-        }
-
-        if (newList.length === 0) {
-            newList = [allValue];
-        }
-
-        setList(newList);
     };
 
     return (
@@ -118,290 +71,214 @@ export default function ExportCategoryDialog({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'rgba(0,0,0,0.4)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 1000,
-            backdropFilter: 'blur(4px)'
+            backdropFilter: 'blur(4px)',
+            transition: 'opacity 0.2s ease'
         }}>
             <div style={{
                 backgroundColor: 'white',
-                borderRadius: '1rem',
+                borderRadius: '0.75rem',
                 width: '90%',
-                maxWidth: '600px',
+                maxWidth: '480px',
                 maxHeight: '90vh',
                 overflowY: 'auto',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                border: '1px solid #e5e5e5',
+                animation: 'scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
             }}>
-                {/* Header */}
+                <style jsx>{`
+                    @keyframes scaleUp {
+                        from { transform: scale(0.98); opacity: 0; }
+                        to { transform: scale(1); opacity: 1; }
+                    }
+                    .input-focus:focus {
+                        outline: none;
+                        border-color: #171717;
+                        ring: 1px solid #171717;
+                    }
+                `}</style>
+
+                {/* Header - Clean B&W */}
                 <div style={{
                     padding: '1.5rem',
-                    borderBottom: '1px solid #e5e5e5',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    position: 'sticky',
-                    top: 0,
                     background: 'white',
-                    zIndex: 10
+                    borderBottom: '1px solid #f3f4f6',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between'
                 }}>
                     <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827' }}>Export Data</h2>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Generate Excel report and send via email</p>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: '#171717' }}>Export Data</h2>
+                        <p style={{ margin: 0, fontSize: '0.875rem', color: '#737373' }}>
+                            Generate an Excel report
+                        </p>
                     </div>
                     <button
                         onClick={onClose}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: '0.375rem', color: '#6b7280' }}
+                        style={{
+                            background: 'white',
+                            border: '1px solid #e5e5e5',
+                            cursor: 'pointer',
+                            padding: '0.375rem',
+                            borderRadius: '0.375rem',
+                            color: '#737373',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#171717';
+                            e.currentTarget.style.borderColor = '#171717';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = '#737373';
+                            e.currentTarget.style.borderColor = '#e5e5e5';
+                        }}
                     >
-                        <X size={20} />
+                        <X size={18} />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} style={{ padding: '1.5rem' }}>
 
-                    {/* Date Range */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
-                                Start Date
-                            </label>
-                            <input
-                                type="date"
-                                required
-                                value={startDate}
-                                max={maxDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: '0.5rem',
-                                    border: '1px solid #e5e5e5',
-                                    fontSize: '0.875rem'
-                                }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
-                                End Date
-                            </label>
-                            <input
-                                type="date"
-                                required
-                                value={endDate}
-                                max={maxDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: '0.5rem',
-                                    border: '1px solid #e5e5e5',
-                                    fontSize: '0.875rem'
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Email */}
+                    {/* Email Input */}
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
-                            Send to Email (Required)
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#171717' }}>
+                            Email Address <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         <div style={{ position: 'relative' }}>
-                            <Mail size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+                            <Mail size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#737373' }} />
                             <input
                                 type="email"
                                 required
-                                placeholder="enter@email.com"
+                                placeholder="name@company.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                className="input-focus"
                                 style={{
                                     width: '100%',
-                                    padding: '0.75rem 1rem 0.75rem 3rem',
-                                    borderRadius: '0.5rem',
+                                    padding: '0.625rem 1rem 0.625rem 2.5rem',
+                                    borderRadius: '0.375rem',
                                     border: '1px solid #e5e5e5',
-                                    fontSize: '0.875rem'
+                                    fontSize: '0.875rem',
+                                    backgroundColor: 'white',
+                                    color: '#171717',
+                                    transition: 'border-color 0.2s'
                                 }}
                             />
                         </div>
                     </div>
 
-                    {/* Filters Section */}
-                    <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
-                        <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#374151', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Filter size={16} /> Filters
-                        </h3>
+                    {/* Filters Container */}
+                    <div style={{
+                        marginBottom: '2rem',
+                    }}>
 
-                        {/* Platforms */}
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Platforms</label>
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                {availablePlatforms.map(p => (
-                                    <button
-                                        key={p.value}
-                                        type="button"
-                                        onClick={() => toggleSelection(p.value, selectedPlatforms, setSelectedPlatforms)}
-                                        style={{
-                                            padding: '0.25rem 0.75rem',
-                                            borderRadius: '9999px',
-                                            border: '1px solid',
-                                            borderColor: selectedPlatforms.includes(p.value) ? '#4f46e5' : '#e5e5e5',
-                                            background: selectedPlatforms.includes(p.value) ? '#eef2ff' : 'white',
-                                            color: selectedPlatforms.includes(p.value) ? '#4f46e5' : '#374151',
-                                            fontSize: '0.75rem',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {p.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Categories */}
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Categories</label>
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => toggleSelection('all', selectedCategories, setSelectedCategories)}
+                        {/* Grid for Dropdowns */}
+                        <div style={{ display: 'grid', gap: '1rem' }}>
+                            {/* Platform */}
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#404040' }}>Platform</label>
+                                <select
+                                    value={selectedPlatform}
+                                    onChange={(e) => setSelectedPlatform(e.target.value)}
+                                    className="input-focus"
                                     style={{
-                                        padding: '0.25rem 0.75rem',
-                                        borderRadius: '9999px',
-                                        border: '1px solid',
-                                        borderColor: selectedCategories.includes('all') ? '#4f46e5' : '#e5e5e5',
-                                        background: selectedCategories.includes('all') ? '#eef2ff' : 'white',
-                                        color: selectedCategories.includes('all') ? '#4f46e5' : '#374151',
-                                        fontSize: '0.75rem',
-                                        cursor: 'pointer'
+                                        width: '100%',
+                                        padding: '0.625rem',
+                                        borderRadius: '0.375rem',
+                                        border: '1px solid #e5e5e5',
+                                        fontSize: '0.875rem',
+                                        backgroundColor: 'white',
+                                        color: '#171717',
+                                        cursor: 'pointer',
                                     }}
                                 >
-                                    All
-                                </button>
-                                {categoryOptions.map(c => (
-                                    <button
-                                        key={c.value}
-                                        type="button"
-                                        onClick={() => toggleSelection(c.value, selectedCategories, setSelectedCategories)}
-                                        style={{
-                                            padding: '0.25rem 0.75rem',
-                                            borderRadius: '9999px',
-                                            border: '1px solid',
-                                            borderColor: selectedCategories.includes(c.value) ? '#4f46e5' : '#e5e5e5',
-                                            background: selectedCategories.includes(c.value) ? '#eef2ff' : 'white',
-                                            color: selectedCategories.includes(c.value) ? '#4f46e5' : '#374151',
-                                            fontSize: '0.75rem',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {c.label}
-                                    </button>
-                                ))}
+                                    <option value="all">All Platforms</option>
+                                    {availablePlatforms.map(p => (
+                                        <option key={p.value} value={p.value}>{p.label}</option>
+                                    ))}
+                                </select>
                             </div>
-                        </div>
 
-                        {/* Pincodes */}
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Pincodes</label>
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                {pincodeOptions.map(p => (
-                                    <button
-                                        key={p.value}
-                                        type="button"
-                                        onClick={() => toggleSelection(p.value, selectedPincodes, setSelectedPincodes, null)} // null because we usually want specific pincodes, but UI can support multi
+                            {/* Category & Pincode Row */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#404040' }}>Category</label>
+                                    <select
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="input-focus"
                                         style={{
-                                            padding: '0.25rem 0.75rem',
-                                            borderRadius: '9999px',
-                                            border: '1px solid',
-                                            borderColor: selectedPincodes.includes(p.value) ? '#4f46e5' : '#e5e5e5',
-                                            background: selectedPincodes.includes(p.value) ? '#eef2ff' : 'white',
-                                            color: selectedPincodes.includes(p.value) ? '#4f46e5' : '#374151',
-                                            fontSize: '0.75rem',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {p.value}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Products (Optional: simplified as "All" or Specific logic if needed, keeping simple for now) */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Products</label>
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedProducts(['all'])}
-                                    style={{
-                                        padding: '0.25rem 0.75rem',
-                                        borderRadius: '9999px',
-                                        border: '1px solid',
-                                        borderColor: selectedProducts.includes('all') ? '#4f46e5' : '#e5e5e5',
-                                        background: selectedProducts.includes('all') ? '#eef2ff' : 'white',
-                                        color: selectedProducts.includes('all') ? '#4f46e5' : '#374151',
-                                        fontSize: '0.75rem',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    All Products
-                                </button>
-                                {(showAllProducts ? availableProducts : availableProducts.slice(0, 5)).map(product => (
-                                    <button
-                                        key={product.name}
-                                        type="button"
-                                        onClick={() => toggleSelection(product.name, selectedProducts, setSelectedProducts)}
-                                        style={{
-                                            padding: '0.25rem 0.75rem',
-                                            borderRadius: '9999px',
-                                            border: '1px solid',
-                                            borderColor: selectedProducts.includes(product.name) ? '#4f46e5' : '#e5e5e5',
-                                            background: selectedProducts.includes(product.name) ? '#eef2ff' : 'white',
-                                            color: selectedProducts.includes(product.name) ? '#4f46e5' : '#374151',
-                                            fontSize: '0.75rem',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {product.name.length > 15 ? product.name.substring(0, 15) + '...' : product.name}
-                                    </button>
-                                ))}
-                                {availableProducts.length > 5 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAllProducts(!showAllProducts)}
-                                        style={{
-                                            padding: '0.25rem 0.75rem',
-                                            border: 'none',
-                                            background: 'none',
-                                            fontSize: '0.75rem',
-                                            color: '#4f46e5',
-                                            alignSelf: 'center',
+                                            width: '100%',
+                                            padding: '0.625rem',
+                                            borderRadius: '0.375rem',
+                                            border: '1px solid #e5e5e5',
+                                            fontSize: '0.875rem',
+                                            backgroundColor: 'white',
+                                            color: '#171717',
                                             cursor: 'pointer',
-                                            textDecoration: 'underline'
                                         }}
                                     >
-                                        {showAllProducts ? 'Show less' : `+${availableProducts.length - 5} more`}
-                                    </button>
-                                )}
+                                        <option value="all">All</option>
+                                        {categoryOptions.map(c => (
+                                            <option key={c.value} value={c.value}>{c.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#404040' }}>Pincode</label>
+                                    <select
+                                        value={selectedPincode}
+                                        onChange={(e) => setSelectedPincode(e.target.value)}
+                                        className="input-focus"
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.625rem',
+                                            borderRadius: '0.375rem',
+                                            border: '1px solid #e5e5e5',
+                                            fontSize: '0.875rem',
+                                            backgroundColor: 'white',
+                                            color: '#171717',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        {pincodeOptions.map(p => (
+                                            <option key={p.value} value={p.value}>{p.value}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
-
                     </div>
 
                     {/* Footer actions */}
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1.5rem', borderTop: '1px solid #f3f4f6' }}>
                         <button
                             type="button"
                             onClick={onClose}
                             style={{
                                 flex: 1,
-                                padding: '0.75rem',
-                                borderRadius: '0.5rem',
+                                padding: '0.625rem',
+                                borderRadius: '0.375rem',
                                 border: '1px solid #e5e5e5',
                                 background: 'white',
-                                color: '#374151',
-                                fontWeight: 600,
-                                cursor: 'pointer'
+                                color: '#404040',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                fontSize: '0.875rem'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f9fafb';
+                                e.currentTarget.style.color = '#171717';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'white';
+                                e.currentTarget.style.color = '#404040';
                             }}
                         >
                             Cancel
@@ -411,33 +288,40 @@ export default function ExportCategoryDialog({
                             disabled={loading}
                             style={{
                                 flex: 1,
-                                padding: '0.75rem',
-                                borderRadius: '0.5rem',
-                                border: 'none',
-                                background: loading ? '#9ca3af' : '#4f46e5',
+                                padding: '0.625rem',
+                                borderRadius: '0.375rem',
+                                border: '1px solid #171717',
+                                background: loading ? '#a3a3a3' : '#171717',
                                 color: 'white',
-                                fontWeight: 600,
+                                fontWeight: 500,
                                 cursor: loading ? 'not-allowed' : 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: '0.5rem'
+                                gap: '0.5rem',
+                                fontSize: '0.875rem',
+                                transition: 'all 0.2s',
                             }}
+                            onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#000000')}
+                            onMouseLeave={(e) => !loading && (e.currentTarget.style.background = '#171717')}
                         >
                             {loading ? (
                                 'Processing...'
                             ) : success ? (
-                                'Sent!'
+                                <>
+                                    <CheckCircle size={16} /> Sent!
+                                </>
                             ) : (
                                 <>
-                                    <Download size={18} /> Export & Send
+                                    <Download size={16} /> Export
                                 </>
                             )}
                         </button>
                     </div>
 
                     {error && (
-                        <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#fee2e2', color: '#dc2626', borderRadius: '0.375rem', fontSize: '0.875rem' }}>
+                        <div style={{ marginTop: '1.5rem', background: '#fef2f2', color: '#b91c1c', borderRadius: '0.375rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem' }}>
+                            <AlertCircle size={16} />
                             {error}
                         </div>
                     )}

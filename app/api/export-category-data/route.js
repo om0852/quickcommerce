@@ -25,61 +25,78 @@ export async function POST(req) {
         if (!email) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
-        if (!startDate || !endDate) {
-            return NextResponse.json({ error: 'Start and End dates are required' }, { status: 400 });
-        }
 
         console.log('Export request:', { startDate, endDate, email, platforms, categories, pincodes });
 
         // Build Query
-        const query = {
-            scrapedAt: {
-                $gte: new Date(startDate),
-                $lte: new Date(endDate)
-            }
-        };
+        const query = {};
 
+        // Platform Filter
         if (platforms.length > 0 && !platforms.includes('all')) {
             query.platform = { $in: platforms };
         }
 
+        // Category Filter
         if (categories.length > 0 && !categories.includes('all')) {
             query.category = { $in: categories };
         }
 
+        // Pincode Filter
         if (pincodes.length > 0) {
             query.pincode = { $in: pincodes };
         }
 
+        // Product Filter
         if (products.length > 0 && !products.includes('all')) {
             query.productName = { $in: products };
         }
 
-        console.log('Query:', JSON.stringify(query));
+        console.log('Base Query filters:', JSON.stringify(query));
 
-        // Fetch Data
-        const snapshots = await ProductSnapshot.find(query).sort({ scrapedAt: 1 }).lean();
-        console.log(`Found ${snapshots.length} records`);
+        // Find the latest scrapedAt date
+        // sorting by scrapedAt desc to get the latest one
+        const latestSnapshot = await ProductSnapshot.findOne(query).sort({ scrapedAt: -1 }).lean();
 
-        if (snapshots.length === 0) {
+        if (!latestSnapshot) {
             return NextResponse.json({ error: 'No data found for the selected filters' }, { status: 404 });
         }
+
+        const latestDate = new Date(latestSnapshot.scrapedAt);
+        console.log('Latest Snapshot Date found:', latestDate);
+
+        // Create start and end of that specific day to capture all scrapes from that day (or exact timestamp?)
+        // The user request says "last updated scrap data". usually this means the last batch.
+        // Assuming batch timestamps are identical or very close. 
+        // Let's filter for documents with the exact same timestamp if possible, or same minute.
+        // Or if we want "last updated day", we use the whole day.
+        // Given typically multiple scrapes might happen in a day, user probably wants the specific LAST one.
+        // But matching exact ms might be risky if they vary slightly.
+        // Let's assume day granularity is safer unless "last updated" implies real-time. 
+        // Re-reading: "last updated scrap data". 
+        // Let's use the exact timestamp of the latest snapshot found, assuming a batch run has same timestamp. 
+
+        // Actually, safer to grab the latest timestamp and find all records that match that timestamp exactly (or within a minute window if inconsistent).
+        // Let's iterate: find distinct scrapedAt values, sort desc, pick first.
+
+        // Logic: Add scrapedAt filter to the query
+        query.scrapedAt = latestSnapshot.scrapedAt;
+
+        console.log('Final Query with Date:', JSON.stringify(query));
+
+        // Fetch Data matching that latest timestamp
+        const snapshots = await ProductSnapshot.find(query).lean();
+        console.log(`Found ${snapshots.length} records for latest timestamp: ${latestSnapshot.scrapedAt}`);
 
         // Process Data for Pivot/Comparison View
         // 1. Identify all unique platforms present in the data to create columns
         const allPlatforms = _.uniq(snapshots.map(s => s.platform)).sort();
 
         // 2. Group data by unique identifier: Product + Pincode + Time (approx)
-        // Note: scrapedAt might slightly vary, so we can group by Date + Hour or similar if needed.
-        // For now, let's group by Date (YYYY-MM-DD), Category, Pincode, ProductName
-        // We will assume snapshots for different platforms generally happen around the same time-block
-        // or we can just list each distinct capture time.
-        // Let's stick to strict grouping: Date + Time + Pincode + Product Name
-        // We need to format Date + Time to a string key.
+        // Group by Date + Time + Pincode + Product Name
         const groupedData = _.groupBy(snapshots, (doc) => {
             const dateObj = new Date(doc.scrapedAt);
             const dateStr = dateObj.toLocaleDateString();
-            const timeStr = dateObj.toLocaleTimeString(); // This might enable exact matching if scraped together
+            const timeStr = dateObj.toLocaleTimeString();
             return `${dateStr}|${timeStr}|${doc.pincode}|${doc.category}|${doc.productName}`;
         });
 
@@ -122,7 +139,6 @@ export async function POST(req) {
         // Populate Rows
         for (const key in groupedData) {
             const group = groupedData[key];
-            // Take the first item to get base details (Date, Pincode, etc.)
             const baseDoc = group[0];
             const dateObj = new Date(baseDoc.scrapedAt);
 
@@ -146,7 +162,7 @@ export async function POST(req) {
                     rowData[`${platform}_stock`] = platformDoc.isOutOfStock ? 'Out of Stock' : 'In Stock';
                 } else {
                     rowData[`${platform}_available`] = 'No';
-                    rowData[`${platform}_price`] = null; // Or '-'
+                    rowData[`${platform}_price`] = null;
                     rowData[`${platform}_rank`] = null;
                     rowData[`${platform}_stock`] = '-';
                 }
@@ -154,9 +170,8 @@ export async function POST(req) {
 
             const row = worksheet.addRow(rowData);
 
-            // Conditional Formatting for "Available" and "Stock" columns
+            // Conditional Formatting
             allPlatforms.forEach(platform => {
-                // Availability Color
                 const availCell = row.getCell(`${platform}_available`);
                 if (availCell.value === 'Yes') {
                     availCell.fill = {
@@ -174,7 +189,6 @@ export async function POST(req) {
                     availCell.font = { color: { argb: 'FF991B1B' } }; // Dark Red Text
                 }
 
-                // Stock Color (Optional, if "In Stock" make green)
                 const stockCell = row.getCell(`${platform}_stock`);
                 if (stockCell.value === 'In Stock') {
                     stockCell.font = { color: { argb: 'FF166534' } };
@@ -203,14 +217,19 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Server email configuration missing' }, { status: 500 });
         }
 
+        const dateRangeStr = latestDate.toLocaleString('en-IN', {
+            dateStyle: 'medium',
+            timeStyle: 'short'
+        });
+
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
-            subject: `Category Comparison Export - ${startDate} to ${endDate}`,
-            text: `Please find attached the requested category comparison report.\n\nFilters:\nDate: ${startDate} to ${endDate}\nPlatforms included: ${allPlatforms.join(', ')}\nCategories: ${categories.join(', ')}\nPincodes: ${pincodes.join(', ')}`,
+            subject: `Latest Scrape Data - ${dateRangeStr}`,
+            text: `Please find attached the requested category export.\n\nFilters:\nData Timestamp: ${dateRangeStr}\nPlatforms: ${platforms.length ? platforms.join(', ') : 'All'}\nCategories: ${categories.length ? categories.join(', ') : 'All'}\nPincodes: ${pincodes.length ? pincodes.join(', ') : 'All'}`,
             attachments: [
                 {
-                    filename: `product_comparison_${Date.now()}.xlsx`,
+                    filename: `product_status_${Date.now()}.xlsx`,
                     content: buffer
                 }
             ]
