@@ -5,6 +5,7 @@ import ProductSnapshot from '@/models/ProductSnapshot';
 import nodemailer from 'nodemailer';
 import ExcelJS from 'exceljs';
 import _ from 'lodash';
+import { mergeProductsAcrossPlatforms } from '@/lib/productMatching';
 
 export async function POST(req) {
     try {
@@ -28,77 +29,134 @@ export async function POST(req) {
 
         console.log('Export request:', { startDate, endDate, email, platforms, categories, pincodes });
 
-        // Build Query
-        const query = {};
+        // Helper to get distinct values if 'all' is selected
+        const getDistinctValues = async (field, filters = {}) => {
+            return await ProductSnapshot.distinct(field, filters);
+        };
 
-        // Platform Filter
-        if (platforms.length > 0 && !platforms.includes('all')) {
-            query.platform = { $in: platforms };
+        let targetCategories = categories;
+        if (!categories.length || categories.includes('all')) {
+            targetCategories = await getDistinctValues('category');
         }
 
-        // Category Filter
-        if (categories.length > 0 && !categories.includes('all')) {
-            query.category = { $in: categories };
+        let targetPincodes = pincodes;
+        if (!pincodes.length) { // Assuming empty means all valid pincodes need to be fetched, or handled by loop
+            targetPincodes = await getDistinctValues('pincode');
         }
 
-        // Pincode Filter
-        if (pincodes.length > 0) {
-            query.pincode = { $in: pincodes };
+        const allProcessedRows = [];
+        const uniquePlatforms = new Set();
+
+        // Loop through each combination to find the distinct latest snapshot for THAT unique combo
+        for (const cat of targetCategories) {
+            for (const pin of targetPincodes) {
+
+                // 1. Find latest scrapedAt for this specific category + pincode
+                const latestSnapshot = await ProductSnapshot.findOne({
+                    category: cat,
+                    pincode: pin,
+                    ...(platforms.length > 0 && !platforms.includes('all') ? { platform: { $in: platforms } } : {})
+                }).sort({ scrapedAt: -1 }).select('scrapedAt').lean();
+
+                if (!latestSnapshot) continue;
+
+                // 2. Fetch all products for this specific session
+                const query = {
+                    category: cat,
+                    pincode: pin,
+                    scrapedAt: latestSnapshot.scrapedAt
+                };
+                if (platforms.length > 0 && !platforms.includes('all')) {
+                    query.platform = { $in: platforms };
+                }
+
+                // Sorting helps the platform grouping if we were doing it manually, but for splitting arrays it's fine
+                const snapshots = await ProductSnapshot.find(query).sort({ platform: 1, ranking: 1 }).lean();
+
+                if (!snapshots.length) continue;
+
+                // 3. Partition by platform
+                // Group products by platform
+                const productsByPlatform = {
+                    zepto: [],
+                    blinkit: [],
+                    jiomart: []
+                };
+
+                snapshots.forEach(snap => {
+                    uniquePlatforms.add(snap.platform);
+                    if (productsByPlatform[snap.platform]) {
+                        productsByPlatform[snap.platform].push({
+                            productId: snap.productId,
+                            productName: snap.productName,
+                            productImage: snap.productImage,
+                            productWeight: snap.productWeight,
+                            rating: snap.rating,
+                            currentPrice: snap.currentPrice,
+                            originalPrice: snap.originalPrice,
+                            discountPercentage: snap.discountPercentage,
+                            ranking: snap.ranking,
+                            priceChange: snap.priceChange,
+                            discountChange: snap.discountChange,
+                            rankingChange: snap.rankingChange,
+                            productUrl: snap.productUrl,
+                            isOutOfStock: snap.isOutOfStock,
+                            scrapedAt: snap.scrapedAt
+                        });
+                    }
+                });
+
+                // 4. Merge using shared logic to ensure consistent order/matching
+                const mergedProducts = mergeProductsAcrossPlatforms(
+                    productsByPlatform.zepto,
+                    productsByPlatform.blinkit,
+                    productsByPlatform.jiomart
+                );
+
+                // 5. Convert merged items to Excel rows
+                mergedProducts.forEach(product => {
+                    // Check product name filter if exists
+                    if (products.length > 0 && !products.includes('all') && !products.includes(product.name)) {
+                        return;
+                    }
+
+                    const dateObj = new Date(latestSnapshot.scrapedAt);
+
+                    const rowData = {
+                        date: dateObj.toLocaleDateString(),
+                        time: dateObj.toLocaleTimeString(),
+                        pincode: pin,
+                        category: cat,
+                        productName: product.name,
+                        productWeight: product.weight || 'N/A'
+                    };
+
+                    // Platforms
+                    ['zepto', 'blinkit', 'jiomart'].forEach(p => {
+                        if (product[p]) {
+                            rowData[`${p}_available`] = 'Yes';
+                            rowData[`${p}_price`] = product[p].currentPrice;
+                            rowData[`${p}_rank`] = product[p].ranking;
+                            rowData[`${p}_stock`] = product[p].isOutOfStock ? 'Out of Stock' : 'In Stock';
+                        } else {
+                            rowData[`${p}_available`] = 'No';
+                            rowData[`${p}_price`] = null;
+                            rowData[`${p}_rank`] = null;
+                            rowData[`${p}_stock`] = '-';
+                        }
+                    });
+
+                    allProcessedRows.push(rowData);
+                });
+            }
         }
 
-        // Product Filter
-        if (products.length > 0 && !products.includes('all')) {
-            query.productName = { $in: products };
-        }
-
-        console.log('Base Query filters:', JSON.stringify(query));
-
-        // Find the latest scrapedAt date
-        // sorting by scrapedAt desc to get the latest one
-        const latestSnapshot = await ProductSnapshot.findOne(query).sort({ scrapedAt: -1 }).lean();
-
-        if (!latestSnapshot) {
+        if (allProcessedRows.length === 0) {
             return NextResponse.json({ error: 'No data found for the selected filters' }, { status: 404 });
         }
 
-        const latestDate = new Date(latestSnapshot.scrapedAt);
-        console.log('Latest Snapshot Date found:', latestDate);
-
-        // Create start and end of that specific day to capture all scrapes from that day (or exact timestamp?)
-        // The user request says "last updated scrap data". usually this means the last batch.
-        // Assuming batch timestamps are identical or very close. 
-        // Let's filter for documents with the exact same timestamp if possible, or same minute.
-        // Or if we want "last updated day", we use the whole day.
-        // Given typically multiple scrapes might happen in a day, user probably wants the specific LAST one.
-        // But matching exact ms might be risky if they vary slightly.
-        // Let's assume day granularity is safer unless "last updated" implies real-time. 
-        // Re-reading: "last updated scrap data". 
-        // Let's use the exact timestamp of the latest snapshot found, assuming a batch run has same timestamp. 
-
-        // Actually, safer to grab the latest timestamp and find all records that match that timestamp exactly (or within a minute window if inconsistent).
-        // Let's iterate: find distinct scrapedAt values, sort desc, pick first.
-
-        // Logic: Add scrapedAt filter to the query
-        query.scrapedAt = latestSnapshot.scrapedAt;
-
-        console.log('Final Query with Date:', JSON.stringify(query));
-
-        // Fetch Data matching that latest timestamp
-        const snapshots = await ProductSnapshot.find(query).lean();
-        console.log(`Found ${snapshots.length} records for latest timestamp: ${latestSnapshot.scrapedAt}`);
-
-        // Process Data for Pivot/Comparison View
-        // 1. Identify all unique platforms present in the data to create columns
-        const allPlatforms = _.uniq(snapshots.map(s => s.platform)).sort();
-
-        // 2. Group data by unique identifier: Product + Pincode + Time (approx)
-        // Group by Date + Time + Pincode + Product Name
-        const groupedData = _.groupBy(snapshots, (doc) => {
-            const dateObj = new Date(doc.scrapedAt);
-            const dateStr = dateObj.toLocaleDateString();
-            const timeStr = dateObj.toLocaleTimeString();
-            return `${dateStr}|${timeStr}|${doc.pincode}|${doc.category}|${doc.productName}`;
-        });
+        // Use collected unique platforms for columns or default to standard 3
+        const allPlatforms = Array.from(uniquePlatforms).sort();
 
         // Generate Excel
         const workbook = new ExcelJS.Workbook();
@@ -137,42 +195,12 @@ export async function POST(req) {
         };
 
         // Populate Rows
-        for (const key in groupedData) {
-            const group = groupedData[key];
-            const baseDoc = group[0];
-            const dateObj = new Date(baseDoc.scrapedAt);
-
-            const rowData = {
-                date: dateObj.toLocaleDateString(),
-                time: dateObj.toLocaleTimeString(),
-                pincode: baseDoc.pincode,
-                category: baseDoc.category,
-                productName: baseDoc.productName,
-                productWeight: baseDoc.productWeight || 'N/A'
-            };
-
-            // Fill in platform specific data
-            allPlatforms.forEach(platform => {
-                const platformDoc = group.find(d => d.platform === platform);
-
-                if (platformDoc) {
-                    rowData[`${platform}_available`] = 'Yes';
-                    rowData[`${platform}_price`] = platformDoc.currentPrice;
-                    rowData[`${platform}_rank`] = platformDoc.ranking;
-                    rowData[`${platform}_stock`] = platformDoc.isOutOfStock ? 'Out of Stock' : 'In Stock';
-                } else {
-                    rowData[`${platform}_available`] = 'No';
-                    rowData[`${platform}_price`] = null;
-                    rowData[`${platform}_rank`] = null;
-                    rowData[`${platform}_stock`] = '-';
-                }
-            });
-
-            const row = worksheet.addRow(rowData);
+        allProcessedRows.forEach(row => {
+            const excelRow = worksheet.addRow(row);
 
             // Conditional Formatting
             allPlatforms.forEach(platform => {
-                const availCell = row.getCell(`${platform}_available`);
+                const availCell = excelRow.getCell(`${platform}_available`);
                 if (availCell.value === 'Yes') {
                     availCell.fill = {
                         type: 'pattern',
@@ -189,14 +217,17 @@ export async function POST(req) {
                     availCell.font = { color: { argb: 'FF991B1B' } }; // Dark Red Text
                 }
 
-                const stockCell = row.getCell(`${platform}_stock`);
+                const stockCell = excelRow.getCell(`${platform}_stock`);
                 if (stockCell.value === 'In Stock') {
                     stockCell.font = { color: { argb: 'FF166534' } };
                 } else if (stockCell.value === 'Out of Stock') {
                     stockCell.font = { color: { argb: 'FFDC2626' } };
                 }
             });
-        }
+        });
+
+        // Using the latest date found across all rows for the filename/email subject might be ambiguous but we'll use "Latest"
+        const latestDate = new Date(); // Current export time
 
         // Freeze Header
         worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
