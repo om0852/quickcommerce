@@ -7,11 +7,12 @@ import ExcelJS from 'exceljs';
 import _ from 'lodash';
 import { mergeProductsAcrossPlatforms } from '@/lib/productMatching';
 
-export async function POST(req) {
+// Background processing function
+async function processExportInBackground(body) {
+    console.log('🚀 Starting background export process...');
     try {
         await dbConnect();
 
-        const body = await req.json();
         const {
             startDate,
             endDate,
@@ -22,12 +23,7 @@ export async function POST(req) {
             pincodes = []
         } = body;
 
-        // Validation
-        if (!email) {
-            return NextResponse.json({ error: 'Email is required' }, { status: 400 });
-        }
-
-        console.log('Export request:', { startDate, endDate, email, platforms, categories, pincodes });
+        console.log('Export request details:', { startDate, endDate, email, platforms, categories, pincodes });
 
         // Helper to get distinct values if 'all' is selected
         const getDistinctValues = async (field, filters = {}) => {
@@ -192,7 +188,8 @@ export async function POST(req) {
         }
 
         if (allProcessedRows.length === 0) {
-            return NextResponse.json({ error: 'No data found for the selected filters' }, { status: 404 });
+            console.warn('⚠️ Background Export: No data found for the selected filters');
+            return; // Or maybe send an email saying "no data found"?
         }
 
         // Use collected unique platforms for columns or default to standard 3
@@ -284,8 +281,8 @@ export async function POST(req) {
         });
 
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.warn('EMAIL_USER or EMAIL_PASS not set. Cannot send email.');
-            return NextResponse.json({ error: 'Server email configuration missing' }, { status: 500 });
+            console.warn('⚠️ EMAIL_USER or EMAIL_PASS not set. Cannot send email.');
+            return;
         }
 
         const dateRangeStr = latestDate.toLocaleString('en-IN', {
@@ -307,11 +304,44 @@ export async function POST(req) {
         };
 
         await transporter.sendMail(mailOptions);
-
-        return NextResponse.json({ success: true, message: 'Email sent successfully' });
+        console.log(`✅ Email sent successfully to ${email}`);
 
     } catch (error) {
-        console.error('Export error:', error);
+        console.error('❌ Background Export Status: FAILED', error);
+    }
+}
+
+export async function POST(req) {
+    try {
+        // No await dbConnect() here needed if we don't query DB in the main thread, 
+        // but we might want to check connection generally.
+        // Actually, the background process handles dbConnect.
+
+        const body = await req.json();
+        const { email } = body;
+
+        // Validation
+        if (!email) {
+            return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+        }
+
+        console.log('Received export request, processing in background...');
+
+        // Trigger background process without awaiting
+        // We catch strictly to prevent unhandled promise rejections crashing the process if frameworks complain,
+        // though usually in node logic it just logs to stderr.
+        processExportInBackground(body).catch(err => {
+            console.error('Failed to trigger background export:', err);
+        });
+
+        // Immediate response
+        return NextResponse.json({
+            success: true,
+            message: 'Your export request has been received. The Excel file will be sent to your email in 4 to 5 minutes.'
+        });
+
+    } catch (error) {
+        console.error('Export request error:', error);
         return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
     }
 }
