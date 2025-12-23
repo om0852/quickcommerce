@@ -232,7 +232,7 @@ export async function GET(request) {
     const APIFY_PROXY_URL = process.env.APIFY_PROXY_URL || '';
     const DEFAULT_PINCODE = process.env.DEFAULT_PINCODE || '411001';
 
-    const ZEPTO_API_URL = `https://api.apify.com/v2/acts/sharp_agenda~zepto-scrapper-om/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
+    const ZEPTO_API_URL = `https://api.apify.com/v2/acts/scrapper-master~zepto-scrapper-om/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
     const BLINKIT_API_URL = `https://api.apify.com/v2/acts/creatosaurus~blinkit-scrapper/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
     const JIOMART_API_URL = `https://api.apify.com/v2/acts/creatosaurus~jiomart-scrapper/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
 
