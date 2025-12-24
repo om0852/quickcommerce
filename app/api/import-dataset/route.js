@@ -33,13 +33,13 @@ export async function POST(request) {
     // Process each item
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      
+
       // Normalize fields
-      const platform = (item.platform || 'zepto').toLowerCase();
+      const platform = (item.platform || 'dmart').toLowerCase();
       const pincode = String(item.pincode || '122018');
       const productId = item.productId || item.id;
       const scrapedAt = item.scrapedAt ? new Date(item.scrapedAt) : new Date();
-      
+
       // Determine category
       let category = providedCategory;
       if (!category && item.searchQuery) {
@@ -77,7 +77,7 @@ export async function POST(request) {
       }).sort({ scrapedAt: -1 });
 
       const ranking = i + 1; // Assuming dataset is ordered by rank
-      
+
       const priceChange = previousSnapshot ? (item.currentPrice || 0) - previousSnapshot.currentPrice : 0;
       const discountChange = previousSnapshot ? (item.discountPercentage || 0) - previousSnapshot.discountPercentage : 0;
       const rankingChange = previousSnapshot ? ranking - previousSnapshot.ranking : 0;

@@ -15,7 +15,7 @@ const ProductSnapshotSchema = new mongoose.Schema({
   platform: {
     type: String,
     required: true,
-    enum: ['zepto', 'blinkit', 'jiomart'],
+    enum: ['zepto', 'blinkit', 'jiomart', 'dmart'],
     index: true
   },
   scrapedAt: {
@@ -24,12 +24,19 @@ const ProductSnapshotSchema = new mongoose.Schema({
     default: Date.now,
     index: true
   },
-  
+
   // Product details
   productId: {
     type: String,
     required: true
   },
+  // DMart-specific fields
+  skuId: String,
+  variant: String,
+  brand: String,
+  availability: String,
+  savings: Number,
+
   productName: {
     type: String,
     required: true
@@ -37,7 +44,7 @@ const ProductSnapshotSchema = new mongoose.Schema({
   productImage: String,
   productWeight: String,
   rating: Number,
-  
+
   // Pricing information
   currentPrice: {
     type: Number,
@@ -45,13 +52,13 @@ const ProductSnapshotSchema = new mongoose.Schema({
   },
   originalPrice: Number,
   discountPercentage: Number,
-  
+
   // Ranking
   ranking: {
     type: Number,
     required: true
   },
-  
+
   // Comparison with previous snapshot
   priceChange: {
     type: Number,
@@ -65,13 +72,13 @@ const ProductSnapshotSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  
+
   // Stock availability
   isOutOfStock: {
     type: Boolean,
     default: false
   },
-  
+
   // Metadata
   productUrl: String,
   lastComparedWith: {
@@ -90,7 +97,7 @@ ProductSnapshotSchema.index({ productId: 1, platform: 1, scrapedAt: -1 });
 // UNIQUE compound index to prevent duplicates
 // Same product cannot exist twice for the same scraping session
 ProductSnapshotSchema.index(
-  { scrapedAt: 1, category: 1, platform: 1, pincode: 1, productId: 1 }, 
+  { scrapedAt: 1, category: 1, platform: 1, pincode: 1, productId: 1 },
   { unique: true }
 );
 

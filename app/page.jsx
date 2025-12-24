@@ -23,17 +23,17 @@ export default function Home() {
     if (platformFilter === 'all') {
       return products;
     }
-    
+
     if (showMissing) {
       return products.filter(product => {
         const missingInSelected = !product[platformFilter];
-        const presentInOthers = ['zepto', 'blinkit', 'jiomart']
+        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart']
           .filter(p => p !== platformFilter)
           .some(p => product[p]);
         return missingInSelected && presentInOthers;
       });
     }
-    
+
     // Only show products that have data for the selected platform
     return products.filter(product => product[platformFilter]);
   }, [products, platformFilter, showMissing]);
@@ -72,6 +72,7 @@ export default function Home() {
     if (product.zepto?.currentPrice) prices.push(product.zepto.currentPrice);
     if (product.blinkit?.currentPrice) prices.push(product.blinkit.currentPrice);
     if (product.jiomart?.currentPrice) prices.push(product.jiomart.currentPrice);
+    if (product.dmart?.currentPrice) prices.push(product.dmart.currentPrice);
     return prices.length > 0 ? Math.min(...prices) : null;
   };
 
@@ -80,6 +81,7 @@ export default function Home() {
     if (product.zepto?.currentPrice) prices.push(product.zepto.currentPrice);
     if (product.blinkit?.currentPrice) prices.push(product.blinkit.currentPrice);
     if (product.jiomart?.currentPrice) prices.push(product.jiomart.currentPrice);
+    if (product.dmart?.currentPrice) prices.push(product.dmart.currentPrice);
     if (prices.length >= 2) {
       return Math.max(...prices) - Math.min(...prices);
     }
@@ -90,7 +92,7 @@ export default function Home() {
     <div className="page-container">
       <div className="page-header">
         <h1 className="page-title">Product Search</h1>
-        <p className="page-description">Compare prices across Zepto, Blinkit, and JioMart</p>
+        <p className="page-description">Compare prices across Zepto, Blinkit, JioMart, and DMart</p>
       </div>
 
       {/* Search Section */}
@@ -158,12 +160,12 @@ export default function Home() {
           <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {['all', 'zepto', 'blinkit', 'jiomart'].map(platform => (
+                {['all', 'zepto', 'blinkit', 'jiomart', 'dmart'].map(platform => (
                   <button
                     key={platform}
                     onClick={() => setPlatformFilter(platform)}
                     className="btn"
-                    style={{ 
+                    style={{
                       background: platformFilter === platform ? '#0a0a0a' : '#ffffff',
                       color: platformFilter === platform ? '#ffffff' : '#0a0a0a',
                       border: '1px solid #e5e5e5',
@@ -248,6 +250,13 @@ export default function Home() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: '#fafafa', borderRadius: '0.375rem' }}>
                         <span className="product-platform">JioMart</span>
                         <span style={{ fontWeight: 600 }}>₹{product.jiomart.currentPrice}</span>
+                      </div>
+                    )}
+
+                    {product.dmart && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: '#fafafa', borderRadius: '0.375rem' }}>
+                        <span className="product-platform">DMart</span>
+                        <span style={{ fontWeight: 600 }}>₹{product.dmart.currentPrice}</span>
                       </div>
                     )}
                   </div>

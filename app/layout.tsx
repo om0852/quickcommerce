@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "QuickCommerce Price Tracker",
-  description: "Compare prices across Zepto, Blinkit, and JioMart",
+  description: "Compare prices across Zepto, Blinkit, JioMart, and DMart",
 };
 
 export default function RootLayout({

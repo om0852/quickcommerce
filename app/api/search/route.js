@@ -101,16 +101,18 @@ function dedupeProducts(items, keyName = 'productName') {
   return Array.from(map.values()).map(v => v.item);
 }
 
-// Group products across three platforms (Zepto, Blinkit, JioMart)
-function groupProductsThree(zeptoProducts = [], blinkitProducts = [], jiomartProducts = []) {
+// Group products across four platforms (Zepto, Blinkit, JioMart, DMart)
+function groupProductsFour(zeptoProducts = [], blinkitProducts = [], jiomartProducts = [], dmartProducts = []) {
   const A = dedupeProducts(zeptoProducts, 'productName');
   const B = dedupeProducts(blinkitProducts, 'productName');
   const C = dedupeProducts(jiomartProducts, 'productName');
+  const D = dedupeProducts(dmartProducts, 'productName');
 
   const getProductUrl = (platform, item) => {
     // Always prefer the actual productUrl from the scraper if available
     if (item.productUrl) return item.productUrl;
     if (item.url) return item.url;
+    if (item.productLink) return item.productLink; // DMart uses productLink
 
     // Construct URL if we have productId
     if (item.productId) {
@@ -133,7 +135,8 @@ function groupProductsThree(zeptoProducts = [], blinkitProducts = [], jiomartPro
   const sources = [
     { key: 'zepto', items: A },
     { key: 'jiomart', items: C },
-    { key: 'blinkit', items: B }
+    { key: 'blinkit', items: B },
+    { key: 'dmart', items: D }
   ];
 
   // used sets per source
@@ -208,9 +211,13 @@ function groupProductsThree(zeptoProducts = [], blinkitProducts = [], jiomartPro
   return grouped;
 }
 
-// Backwards-compatible wrapper for two-source calls
+// Backwards-compatible wrappers
+function groupProductsThree(a, b, c) {
+  return groupProductsFour(a, b, c, []);
+}
+
 function groupProducts(a, b) {
-  return groupProductsThree(a, b, []);
+  return groupProductsFour(a, b, [], []);
 }
 
 export async function GET(request) {
@@ -235,6 +242,7 @@ export async function GET(request) {
     const ZEPTO_API_URL = `https://api.apify.com/v2/acts/scrapper-master~zepto-scrapper-om/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
     const BLINKIT_API_URL = `https://api.apify.com/v2/acts/creatosaurus~blinkit-scrapper/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
     const JIOMART_API_URL = `https://api.apify.com/v2/acts/creatosaurus~jiomart-scrapper/run-sync-get-dataset-items?token=${process.env.APIFY_TOKEN}`;
+    const DMART_API_URL = 'https://dmart-search-scrapper-1.onrender.com/api/search';
 
     // Build request bodies using the provided formats. Frontend passes a single query string;
     // the actors expect `searchQueries` as an array.
@@ -260,7 +268,7 @@ export async function GET(request) {
       searchUrls: [],
       pincode: pincodeToUse,
       deliveryLocation: null,
-      maxProductsPerSearch: 200,
+      maxProductsPerSearch: 70,
       proxyConfiguration: {
         useApifyProxy: true
       },
@@ -270,7 +278,7 @@ export async function GET(request) {
       headless: true,
       screenshotOnError: true,
       debugMode: true,
-      scrollCount: 20
+      scrollCount: 10
     };
 
     const jiomartBody = {
@@ -290,10 +298,17 @@ export async function GET(request) {
       scrollCount: 20
     };
 
+    // DMart uses a simple schema for search
+    const dmartBody = {
+      searchQuery: String(query),
+      pincode: pincodeToUse
+    };
+
+
     // Call Apify endpoints IN PARALLEL
     console.log(`\n🔍 Starting search for: "${query}" at pincode ${pincodeToUse}`);
 
-    const [zeptoResult, blinkitResult, jiomartResult] = await Promise.allSettled([
+    const [zeptoResult, blinkitResult, jiomartResult, dmartResult] = await Promise.allSettled([
       // Zepto
       fetch(ZEPTO_API_URL, {
         method: 'POST',
@@ -326,6 +341,17 @@ export async function GET(request) {
         const data = await res.json();
         console.log(`✅ JioMart API completed - Status: ${res.status}`);
         return data;
+      }),
+
+      // DMart
+      fetch(DMART_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dmartBody)
+      }).then(async res => {
+        const data = await res.json();
+        console.log(`✅ DMart API completed - Status: ${res.status}`);
+        return data;
       })
     ]);
 
@@ -339,6 +365,7 @@ export async function GET(request) {
     const zeptoData = getData(zeptoResult);
     const blinkitData = getData(blinkitResult);
     const jiomartDataRaw = getData(jiomartResult);
+    const dmartDataRaw = getData(dmartResult);
 
     // Apify responses may wrap items in different keys; coerce to arrays
     const zeptoItems = Array.isArray(zeptoData)
@@ -354,10 +381,15 @@ export async function GET(request) {
       ? jiomartDataRaw
       : (jiomartDataRaw.items || jiomartDataRaw.data || jiomartDataRaw.output || []);
 
-    console.log(`\n📊 Results: Zepto=${zeptoItems.length}, Blinkit=${blinkitItems.length}, JioMart=${jiomartData.length}`);
+    // DMart has a different response structure: { success, data: { products: [] } }
+    const dmartData = dmartDataRaw?.data?.products ||
+      (Array.isArray(dmartDataRaw) ? dmartDataRaw :
+        (dmartDataRaw.items || dmartDataRaw.data || dmartDataRaw.output || []));
 
-    // Group and merge products across three sources
-    const groupedProducts = groupProductsThree(zeptoItems, blinkitItems, jiomartData);
+    console.log(`\n📊 Results: Zepto=${zeptoItems.length}, Blinkit=${blinkitItems.length}, JioMart=${jiomartData.length}, DMart=${dmartData.length}`);
+
+    // Group and merge products across four sources
+    const groupedProducts = groupProductsFour(zeptoItems, blinkitItems, jiomartData, dmartData);
 
     return NextResponse.json({
       success: true,
