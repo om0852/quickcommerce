@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Filter, Package, Download } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, ComposedChart, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ScatterChart, Scatter, Cell, ReferenceLine } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, ComposedChart, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ScatterChart, Scatter, Cell, ReferenceLine, ReferenceArea } from 'recharts';
 import AnalyticsTab from './AnalyticsTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
 
@@ -973,89 +973,6 @@ export default function CategoriesPage() {
                       ))}
                     </div>
 
-                    {/* DYNAMIC "BEST DEAL" BANNER (Black Background) */}
-                    {(() => {
-                      let cheapestPlatform = null;
-                      let lowestPrice = Infinity;
-
-                      ['Zepto', 'Blinkit', 'JioMart'].forEach(platform => {
-                        const stats = getPriceStats(historyData, platform);
-                        if (stats && stats.current > 0 && stats.current < lowestPrice) {
-                          lowestPrice = stats.current;
-                          cheapestPlatform = platform;
-                        }
-                      });
-
-                      if (!cheapestPlatform) return null;
-
-                      const platformColor = PLATFORM_COLORS[cheapestPlatform.toLowerCase()].primary;
-
-                      return (
-                        <div style={{
-                          background: '#222222ff',
-                          padding: '1.5rem 2rem',
-                          borderRadius: '1rem',
-                          marginBottom: '1.5rem',
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                          position: 'relative',
-                          overflow: 'hidden'
-                        }}>
-                          <div style={{
-                            position: 'absolute',
-                            right: '-2rem',
-                            top: '-2rem',
-                            width: '10rem',
-                            height: '10rem',
-                            borderRadius: '50%',
-                            background: 'rgba(255,255,255,0.08)',
-                            pointerEvents: 'none'
-                          }} />
-
-                          <div style={{ zIndex: 1 }}>
-                            <div style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '0.5rem', 
-                              marginBottom: '0.5rem' 
-                            }}>
-                              <span style={{ 
-                                background: 'rgba(255,255,255,0.2)', 
-                                padding: '0.25rem 0.75rem', 
-                                borderRadius: '9999px', 
-                                fontSize: '0.75rem', 
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em'
-                              }}>
-                                Best Deal on <span style={{ color: platformColor, fontWeight: 600 }}>{cheapestPlatform}</span>
-                              </span>
-                            </div>
-                            <div style={{ fontSize: '2.25rem', fontWeight: 800, lineHeight: 1 }}>
-                              ₹{lowestPrice.toFixed(2)}
-                            </div>
-                          </div>
-
-                          <div style={{ 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            alignItems: 'flex-end',
-                            zIndex: 1
-                          }}>
-                            <div style={{ fontSize: '0.875rem', opacity: 0.7, textAlign: 'right' }}>
-                              Lowest price currently on
-                            </div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: platformColor }}>
-                              {cheapestPlatform}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-
                     {/* Chart - Switched to AreaChart for the "Rank Pattern" look */}
                     <div style={{
                       background: '#fafafa',
@@ -1340,89 +1257,6 @@ export default function CategoriesPage() {
                     ))}
                   </div>
 
-                  {/* DYNAMIC "TOP RANK" BANNER */}
-                  {(() => {
-                    let topRankPlatform = null;
-                    let bestRank = Infinity;
-                    const latestData = historyData[historyData.length - 1];
-
-                    if (latestData) {
-                      ['Zepto', 'Blinkit', 'JioMart'].forEach(platform => {
-                        const rankKey = `${platform} Rank`;
-                        const rank = latestData[rankKey];
-                        if (rank && rank > 0 && rank < bestRank) {
-                          bestRank = rank;
-                          topRankPlatform = platform;
-                        }
-                      });
-                    }
-
-                    if (!topRankPlatform) return null;
-                    const platformColor = PLATFORM_COLORS[topRankPlatform.toLowerCase()].primary;
-
-                    return (
-                      <div style={{
-                        background: '#222222ff',
-                        padding: '1.5rem 2rem',
-                        borderRadius: '1rem',
-                        marginBottom: '1.5rem',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                        position: 'relative',
-                        overflow: 'hidden'
-                      }}>
-                        <div style={{
-                          position: 'absolute',
-                          right: '-2rem',
-                          top: '-2rem',
-                          width: '10rem',
-                          height: '10rem',
-                          borderRadius: '50%',
-                          background: 'rgba(255,255,255,0.08)',
-                          pointerEvents: 'none'
-                        }} />
-
-                        <div style={{ zIndex: 1 }}>
-                          <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '0.5rem', 
-                            marginBottom: '0.5rem' 
-                          }}>
-                            <span style={{ 
-                              padding: '0.25rem 0.25rem', 
-                              fontSize: '0.75rem', 
-                              fontWeight: 700,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em'
-                            }}>
-                              Currently leading on <span style={{ color: platformColor, fontWeight: 600 }}>{topRankPlatform}</span>
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '2.25rem', fontWeight: 800, lineHeight: 1 }}>
-                            Rank #{bestRank}
-                          </div>
-                        </div>
-
-                        <div style={{ 
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          alignItems: 'flex-end',
-                          zIndex: 1
-                        }}>
-                          <div style={{ fontSize: '0.875rem', opacity: 0.7, textAlign: 'right' }}>
-                            Highest visibility on
-                          </div>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: platformColor }}>
-                            {topRankPlatform}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
 
                   {/* Chart Area */}
                   <div style={{
@@ -1699,217 +1533,156 @@ export default function CategoriesPage() {
                     ))}
                   </div>
 
-                  {/* DYNAMIC "RELIABILITY" BANNER */}
-                  {(() => {
-                    let mostReliable = null;
-                    let highestScore = -1;
-
-                    ['Zepto', 'Blinkit', 'JioMart'].forEach(platform => {
-                      const inStockDays = stockData.filter(d => d[platform] === 1).length;
-                      const totalDays = stockData.filter(d => d[platform] !== null).length;
-                      if (totalDays > 0) {
-                        const score = (inStockDays / totalDays) * 100;
-                        if (score > highestScore) {
-                          highestScore = score;
-                          mostReliable = platform;
-                        }
-                      }
-                    });
-
-                    if (!mostReliable) return null;
-                    const platformColor = PLATFORM_COLORS[mostReliable.toLowerCase()].primary;
-
-                    return (
-                      <div style={{
-                        background: '#222222ff',
-                        padding: '1.5rem 2rem',
-                        borderRadius: '1rem',
-                        marginBottom: '1.5rem',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                        position: 'relative',
-                        overflow: 'hidden'
-                      }}>
-                        <div style={{ position: 'absolute', right: '-2rem', top: '-2rem', width: '10rem', height: '10rem', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
-                        <div style={{ zIndex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                            <span style={{ padding: '0.25rem 0.25rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              Most Reliable
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '2.25rem', fontWeight: 800, lineHeight: 1 }}>
-                            {highestScore.toFixed(0)}% <span style={{fontSize: '1rem', fontWeight: 500, opacity: 0.8}}>Availability</span>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', zIndex: 1 }}>
-                          <div style={{ fontSize: '0.875rem', opacity: 0.7, textAlign: 'right' }}>Best stock consistency on</div>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: platformColor }}>{mostReliable}</div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* STATUS LANES CHART (Aggregated by Day) */}
+                  {/* --- DIGITAL WAVE CHART (POLISHED) --- */}
                   <div style={{
-                    background: '#fafafa',
+                    background: 'white',
                     borderRadius: '0.75rem',
                     padding: '1.5rem',
-                    border: '1px solid #e5e5e5'
+                    border: '1px solid #e5e5e5',
+                    position: 'relative'
                   }}>
                     {/* Legend */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1.5rem', marginBottom: '1rem', fontSize: '0.8rem', fontWeight: 600 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e', border: '2px solid white', boxShadow: '0 0 0 1px #e5e5e5' }}></div>
-                        <span style={{color: '#374151'}}>In Stock</span>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1.5rem', marginBottom: '1rem', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid #22c55e', background: 'white' }}></div>
+                        <span>Available</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444', border: '2px solid white', boxShadow: '0 0 0 1px #e5e5e5' }}></div>
-                        <span style={{color: '#374151'}}>Out of Stock</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid #ef4444', background: 'white' }}></div>
+                        <span>Out of Stock</span>
                       </div>
                     </div>
 
-                    <ResponsiveContainer width="100%" height={350}>
-                      <ComposedChart 
+                    <ResponsiveContainer width="100%" height={420}>
+                      <LineChart 
                         data={(() => {
                           if (!stockData) return [];
                           
-                          // 1. Filter raw data based on selected range
                           const now = Date.now();
                           const cutoff = dateRange === 'all' ? 0 : 
                             (dateRange === '7d' ? now - (7 * 24 * 60 * 60 * 1000) : now - (30 * 24 * 60 * 60 * 1000));
                           
                           const filteredRaw = stockData.filter(d => d.timestamp >= cutoff);
 
-                          // 2. AGGREGATE BY DAY
-                          // We create a map where the key is the date string (e.g. "Dec 6")
+                          // --- DATA AGGREGATION: GROUP BY DAY ---
                           const dailyMap = new Map();
 
                           filteredRaw.forEach(entry => {
-                            // entry.date is usually "Dec 6, 10:30 PM"
-                            // We split by comma to just get "Dec 6"
-                            const day = entry.date.split(',')[0];
+                            const day = entry.date.split(',')[0]; 
 
                             if (!dailyMap.has(day)) {
-                              // Initialize the day with the first entry found
                               dailyMap.set(day, {
                                 date: day,
-                                timestamp: entry.timestamp, // Keep one timestamp for sorting/axis
+                                timestamp: entry.timestamp,
                                 Zepto: entry.Zepto,
                                 Blinkit: entry.Blinkit,
                                 JioMart: entry.JioMart,
                               });
                             } else {
                               const currentDay = dailyMap.get(day);
-                              
-                              // Logic: If ANY entry for the day is 1 (In Stock), the day is 1.
-                              // Otherwise, preserve 0 or null.
-                              
-                              // Zepto Update
                               if (entry.Zepto === 1) currentDay.Zepto = 1;
                               else if (currentDay.Zepto === null && entry.Zepto !== null) currentDay.Zepto = entry.Zepto;
-
-                              // Blinkit Update
                               if (entry.Blinkit === 1) currentDay.Blinkit = 1;
                               else if (currentDay.Blinkit === null && entry.Blinkit !== null) currentDay.Blinkit = entry.Blinkit;
-
-                              // JioMart Update
                               if (entry.JioMart === 1) currentDay.JioMart = 1;
                               else if (currentDay.JioMart === null && entry.JioMart !== null) currentDay.JioMart = entry.JioMart;
                             }
                           });
 
-                          // Convert map back to array and add Y-coordinates for lanes
-                          return Array.from(dailyMap.values()).map(d => ({
-                            ...d,
-                            zeptoY: d.Zepto !== null ? 3 : null,
-                            blinkitY: d.Blinkit !== null ? 2 : null,
-                            jiomartY: d.JioMart !== null ? 1 : null,
-                          }));
+                          // --- POSITIONS ---
+                          // Zepto Lane:   Base=30. In=32, Out=28
+                          // Blinkit Lane: Base=20. In=22, Out=18
+                          // JioMart Lane: Base=10. In=12, Out=8
+                          
+                          return Array.from(dailyMap.values())
+                            .sort((a, b) => a.timestamp - b.timestamp)
+                            .map(d => ({
+                              ...d,
+                              zeptoVal: d.Zepto === null ? null : (d.Zepto === 1 ? 32 : 28),
+                              blinkitVal: d.Blinkit === null ? null : (d.Blinkit === 1 ? 22 : 18),
+                              jiomartVal: d.JioMart === null ? null : (d.JioMart === 1 ? 12 : 8),
+                              rawZepto: d.Zepto,
+                              rawBlinkit: d.Blinkit,
+                              rawJioMart: d.JioMart
+                            }));
                         })()}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={false} />
                         
-                        {/* Lane Guides */}
-                        <ReferenceLine y={1} stroke="#e5e5e5" strokeWidth={1} />
-                        <ReferenceLine y={2} stroke="#e5e5e5" strokeWidth={1} />
-                        <ReferenceLine y={3} stroke="#e5e5e5" strokeWidth={1} />
+                        {/* --- SUBTLE LANE BACKGROUNDS --- */}
+                        {/* Zepto Area */}
+                        <ReferenceArea y1={25} y2={35} fill={PLATFORM_COLORS.zepto.primary} fillOpacity={0.05} stroke="none" />
+                        {/* Blinkit Area */}
+                        <ReferenceArea y1={15} y2={25} fill={PLATFORM_COLORS.blinkit.primary} fillOpacity={0.05} stroke="none" />
+                        {/* JioMart Area */}
+                        <ReferenceArea y1={5} y2={15} fill={PLATFORM_COLORS.jiomart.primary} fillOpacity={0.05} stroke="none" />
+
+                        {/* Lane Labels */}
+                        <ReferenceLine y={30} label={{ value: 'Zepto', position: 'insideLeft', fill: PLATFORM_COLORS.zepto.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
+                        <ReferenceLine y={20} label={{ value: 'Blinkit', position: 'insideLeft', fill: PLATFORM_COLORS.blinkit.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
+                        <ReferenceLine y={10} label={{ value: 'JioMart', position: 'insideLeft', fill: PLATFORM_COLORS.jiomart.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
 
                         <XAxis
                           dataKey="date"
                           angle={-45}
                           textAnchor="end"
                           height={60}
-                          // Because we now have exactly 1 point per day, we can be strict about showing them all
-                          // unless it gets too crowded (minTickGap handles that)
-                          interval="preserveStartEnd" 
-                          minTickGap={10} 
-                          tick={{ fontSize: 11, fill: '#6b7280' }}
-                          axisLine={{ stroke: '#d1d5db' }}
+                          interval="preserveStartEnd"
+                          minTickGap={15}
+                          tick={{ fontSize: 10, fill: '#9ca3af' }}
+                          axisLine={{ stroke: '#e5e5e5' }}
+                          tickLine={false}
+                          padding={{ left: 20, right: 20 }}
                         />
                         
-                        <YAxis 
-                          type="number" 
-                          domain={[0, 4]} 
-                          ticks={[1, 2, 3]}
-                          tickFormatter={(value) => {
-                            if (value === 3) return 'Zepto';
-                            if (value === 2) return 'Blinkit';
-                            if (value === 1) return 'JioMart';
-                            return '';
-                          }}
-                          tick={{ fontSize: 13, fill: '#171717', fontWeight: 700 }}
-                          axisLine={false}
-                          tickLine={false}
-                          width={70}
-                        />
+                        <YAxis type="number" domain={[0, 40]} hide />
                         
                         <Tooltip
-                          cursor={{ stroke: '#d1d5db', strokeWidth: 1, strokeDasharray: '4 4' }}
+                          cursor={{ stroke: '#171717', strokeWidth: 1, strokeDasharray: '2 2' }}
                           content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                               const data = payload[0].payload;
                               return (
                                 <div style={{
-                                  background: '#222222ff',
-                                  border: 'none',
+                                  background: '#171717', // Slightly softer black
+                                  border: '1px solid rgba(255,255,255,0.1)',
                                   borderRadius: '0.75rem',
                                   padding: '1rem',
-                                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
                                   color: 'white',
-                                  minWidth: '180px',
+                                  minWidth: '170px',
                                   zIndex: 100
                                 }}>
-                                  <div style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e5e5e5', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
                                     {data.date}
                                   </div>
                                   
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                                     {['Zepto', 'Blinkit', 'JioMart'].map(platform => {
-                                      const status = data[platform];
+                                      const rawKey = `raw${platform}`;
+                                      const status = data[rawKey];
                                       let statusText = 'No Data';
-                                      let statusColor = '#9ca3af'; 
-                                      let dotColor = '#9ca3af';
+                                      let statusColor = '#6b7280';
+                                      let icon = '○';
 
                                       if (status === 1) {
-                                        statusText = 'In Stock';
-                                        statusColor = '#4ade80';
-                                        dotColor = '#4ade80';
+                                        statusText = 'Available';
+                                        statusColor = '#4ade80'; // Green
+                                        icon = '●';
                                       } else if (status === 0) {
                                         statusText = 'Out of Stock';
-                                        statusColor = '#f87171';
-                                        dotColor = '#f87171';
+                                        statusColor = '#f87171'; // Red
+                                        icon = '×';
                                       }
 
                                       return (
-                                        <div key={platform} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{platform}</span>
-                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: dotColor }}></div>
-                                            <span style={{ fontSize: '0.75rem', color: statusColor, fontWeight: 500 }}>{statusText}</span>
+                                        // FIX: Added gap and ensured icon doesn't crush text
+                                        <div key={platform} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                                          <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#fff' }}>{platform}</span>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                            <span style={{ color: statusColor, fontSize: '1rem', lineHeight: 1, display: 'flex', alignItems: 'center' }}>{icon}</span>
+                                            <span style={{ fontSize: '0.75rem', color: statusColor, fontWeight: 600, whiteSpace: 'nowrap' }}>{statusText}</span>
                                           </div>
                                         </div>
                                       );
@@ -1922,51 +1695,90 @@ export default function CategoriesPage() {
                           }}
                         />
 
-                        {/* Zepto Lane (Y=3) */}
+                        {/* --- THE DIGITAL WAVES --- 
+                            Using lighter colors.
+                            Dots are now hollow rings for a cleaner look.
+                        */}
+
+                        {/* Zepto Wave */}
                         <Line
-                          dataKey="zeptoY"
-                          stroke="none"
-                          isAnimationActive={false}
+                          dataKey="zeptoVal"
+                          // Lighter Purple
+                          stroke="#8b5cf6" 
+                          strokeWidth={3}
+                          type="step"
+                          connectNulls={true}
                           dot={(props) => {
                             const { cx, cy, payload } = props;
-                            if (payload.Zepto === null) return null;
-                            const color = payload.Zepto === 1 ? '#22c55e' : '#ef4444';
-                            return <circle cx={cx} cy={cy} r={5} fill={color} stroke="white" strokeWidth={1} />;
+                            if (payload.rawZepto === null) return null;
+                            const isStock = payload.rawZepto === 1;
+                            return (
+                              <circle 
+                                cx={cx} cy={cy} r={4} 
+                                fill="white" // Hollow center
+                                stroke={isStock ? '#22c55e' : '#ef4444'} 
+                                strokeWidth={2} 
+                              />
+                            );
                           }}
+                          activeDot={{ r: 6, fill: 'white', stroke: '#8b5cf6', strokeWidth: 3 }}
                         />
 
-                        {/* Blinkit Lane (Y=2) */}
+                        {/* Blinkit Wave */}
                         <Line
-                          dataKey="blinkitY"
-                          stroke="none"
-                          isAnimationActive={false}
+                          dataKey="blinkitVal"
+                          // Lighter Orange/Amber
+                          stroke="#f59e0b"
+                          strokeWidth={3}
+                          type="step"
+                          connectNulls={true}
                           dot={(props) => {
                             const { cx, cy, payload } = props;
-                            if (payload.Blinkit === null) return null;
-                            const color = payload.Blinkit === 1 ? '#22c55e' : '#ef4444';
-                            return <circle cx={cx} cy={cy} r={5} fill={color} stroke="white" strokeWidth={1} />;
+                            if (payload.rawBlinkit === null) return null;
+                            const isStock = payload.rawBlinkit === 1;
+                            return (
+                              <circle 
+                                cx={cx} cy={cy} r={4} 
+                                fill="white"
+                                stroke={isStock ? '#22c55e' : '#ef4444'} 
+                                strokeWidth={2} 
+                              />
+                            );
                           }}
+                          activeDot={{ r: 6, fill: 'white', stroke: '#f59e0b', strokeWidth: 3 }}
                         />
 
-                        {/* JioMart Lane (Y=1) */}
+                        {/* JioMart Wave */}
                         <Line
-                          dataKey="jiomartY"
-                          stroke="none"
-                          isAnimationActive={false}
+                          dataKey="jiomartVal"
+                          // Lighter Blue
+                          stroke="#3b82f6"
+                          strokeWidth={3}
+                          type="step"
+                          connectNulls={true}
                           dot={(props) => {
                             const { cx, cy, payload } = props;
-                            if (payload.JioMart === null) return null;
-                            const color = payload.JioMart === 1 ? '#22c55e' : '#ef4444';
-                            return <circle cx={cx} cy={cy} r={5} fill={color} stroke="white" strokeWidth={1} />;
+                            if (payload.rawJioMart === null) return null;
+                            const isStock = payload.rawJioMart === 1;
+                            return (
+                              <circle 
+                                cx={cx} cy={cy} r={4} 
+                                fill="white"
+                                stroke={isStock ? '#22c55e' : '#ef4444'} 
+                                strokeWidth={2} 
+                              />
+                            );
                           }}
+                          activeDot={{ r: 6, fill: 'white', stroke: '#3b82f6', strokeWidth: 3 }}
                         />
 
-                      </ComposedChart>
+                      </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </>
               ) : selectedProduct ? (
                 <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
+                  {/* Empty state icon... */}
                   <div style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
                     <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -1977,6 +1789,7 @@ export default function CategoriesPage() {
                 </div>
               ) : (
                 <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
+                  {/* Select product state icon... */}
                   <div style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
                     <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
@@ -1988,7 +1801,7 @@ export default function CategoriesPage() {
               )}
             </div>
           )}
-
+          
           {activeTab === 'analytics' && (
             <AnalyticsTab category={category} pincode={pincode} platform={platformFilter} />
           )}
