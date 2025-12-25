@@ -175,11 +175,13 @@ async function processExportInBackground(body) {
                                 rowData[`${p}_price`] = product[p].currentPrice;
                                 rowData[`${p}_rank`] = product[p].ranking;
                                 rowData[`${p}_stock`] = product[p].isOutOfStock ? 'Out of Stock' : 'In Stock';
+                                rowData[`${p}_link`] = product[p].url || '';
                             } else {
                                 rowData[`${p}_available`] = 'No';
                                 rowData[`${p}_price`] = null;
                                 rowData[`${p}_rank`] = null;
                                 rowData[`${p}_stock`] = '-';
+                                rowData[`${p}_link`] = '';
                             }
                         });
 
@@ -218,7 +220,8 @@ async function processExportInBackground(body) {
                 { header: `${pName} Available`, key: `${platform}_available`, width: 15 },
                 { header: `${pName} Price`, key: `${platform}_price`, width: 12, style: { numFmt: '₹#,##0.00' } },
                 { header: `${pName} Rank`, key: `${platform}_rank`, width: 10 },
-                { header: `${pName} Stock`, key: `${platform}_stock`, width: 12 }
+                { header: `${pName} Stock`, key: `${platform}_stock`, width: 12 },
+                { header: `${pName} Link`, key: `${platform}_link`, width: 20 }
             );
         });
 
@@ -261,6 +264,19 @@ async function processExportInBackground(body) {
                     stockCell.font = { color: { argb: 'FF166534' } };
                 } else if (stockCell.value === 'Out of Stock') {
                     stockCell.font = { color: { argb: 'FFDC2626' } };
+                }
+
+                // Format link cells as hyperlinks
+                const linkCell = excelRow.getCell(`${platform}_link`);
+                if (linkCell.value && linkCell.value !== '') {
+                    linkCell.value = {
+                        text: 'View',
+                        hyperlink: linkCell.value
+                    };
+                    linkCell.font = {
+                        color: { argb: 'FF0000FF' }, // Blue
+                        underline: true
+                    };
                 }
             });
         });
