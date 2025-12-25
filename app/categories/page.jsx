@@ -43,7 +43,8 @@ export default function CategoriesPage() {
     { label: 'All Platforms', value: 'all' },
     { label: 'Zepto', value: 'zepto' },
     { label: 'Blinkit', value: 'blinkit' },
-    { label: 'JioMart', value: 'jiomart' }
+    { label: 'JioMart', value: 'jiomart' },
+    { label: 'DMart', value: 'dmart' }
   ];
 
   const PLATFORM_COLORS = {
@@ -256,7 +257,7 @@ export default function CategoriesPage() {
     if (showMissing) {
       return products.filter(product => {
         const missingInSelected = !product[platformFilter];
-        const presentInOthers = ['zepto', 'blinkit', 'jiomart']
+        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart']
           .filter(p => p !== platformFilter)
           .some(p => product[p]);
         return missingInSelected && presentInOthers;
@@ -324,11 +325,12 @@ export default function CategoriesPage() {
     const stats = {
       zepto: { count: 0, avgPrice: 0, totalPrice: 0 },
       blinkit: { count: 0, avgPrice: 0, totalPrice: 0 },
-      jiomart: { count: 0, avgPrice: 0, totalPrice: 0 }
+      jiomart: { count: 0, avgPrice: 0, totalPrice: 0 },
+      dmart: { count: 0, avgPrice: 0, totalPrice: 0 }
     };
 
     products.forEach(product => {
-      ['zepto', 'blinkit', 'jiomart'].forEach(platform => {
+      ['zepto', 'blinkit', 'jiomart', 'dmart'].forEach(platform => {
         if (product[platform]) {
           stats[platform].count++;
           stats[platform].totalPrice += product[platform].currentPrice;
@@ -337,7 +339,7 @@ export default function CategoriesPage() {
     });
 
     // Calculate averages
-    ['zepto', 'blinkit', 'jiomart'].forEach(platform => {
+    ['zepto', 'blinkit', 'jiomart', 'dmart'].forEach(platform => {
       if (stats[platform].count > 0) {
         stats[platform].avgPrice = stats[platform].totalPrice / stats[platform].count;
       }
@@ -630,6 +632,7 @@ export default function CategoriesPage() {
                     {(platformFilter === 'all' || platformFilter === 'zepto' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>Zepto</th>}
                     {(platformFilter === 'all' || platformFilter === 'blinkit' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>Blinkit</th>}
                     {(platformFilter === 'all' || platformFilter === 'jiomart' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>JioMart</th>}
+                    {(platformFilter === 'all' || platformFilter === 'dmart' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>DMart</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -806,6 +809,51 @@ export default function CategoriesPage() {
                               </div>
                               {renderChangeIndicator(product.jiomart.priceChange, 'price')}
                               {renderChangeIndicator(product.jiomart.rankingChange, 'ranking')}
+                            </div>
+                          ) : (
+                            <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
+                          )}
+                        </td>
+                      )}
+
+                      {/* DMart */}
+                      {(platformFilter === 'all' || platformFilter === 'dmart' || showMissing) && (
+                        <td style={{ textAlign: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
+                          {product.dmart ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                              {product.dmart.url ? (
+                                <a
+                                  href={product.dmart.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    fontWeight: 700,
+                                    fontSize: '1.25rem',
+                                    color: '#171717',
+                                    textDecoration: 'none',
+                                    cursor: 'pointer',
+                                    transition: 'color 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.color = '#f97316'}
+                                  onMouseLeave={(e) => e.currentTarget.style.color = '#171717'}
+                                >
+                                  ₹{product.dmart.currentPrice}
+                                </a>
+                              ) : (
+                                <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#171717' }}>₹{product.dmart.currentPrice}</div>
+                              )}
+                              <div style={{
+                                fontSize: '0.75rem',
+                                color: '#737373',
+                                background: '#f5f5f5',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.25rem',
+                                fontWeight: 500
+                              }}>
+                                Rank: #{product.dmart.ranking}
+                              </div>
+                              {renderChangeIndicator(product.dmart.priceChange, 'price')}
+                              {renderChangeIndicator(product.dmart.rankingChange, 'ranking')}
                             </div>
                           ) : (
                             <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
