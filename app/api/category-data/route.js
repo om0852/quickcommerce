@@ -47,7 +47,8 @@ export async function GET(request) {
     const productsByPlatform = {
       zepto: [],
       blinkit: [],
-      jiomart: []
+      jiomart: [],
+      dmart: []
     };
 
     snapshots.forEach(snap => {
@@ -74,7 +75,8 @@ export async function GET(request) {
     const mergedProducts = mergeProductsAcrossPlatforms(
       productsByPlatform.zepto,
       productsByPlatform.blinkit,
-      productsByPlatform.jiomart
+      productsByPlatform.jiomart,
+      productsByPlatform.dmart
     );
 
     return NextResponse.json({
@@ -87,7 +89,8 @@ export async function GET(request) {
       platformCounts: {
         zepto: productsByPlatform.zepto.length,
         blinkit: productsByPlatform.blinkit.length,
-        jiomart: productsByPlatform.jiomart.length
+        jiomart: productsByPlatform.jiomart.length,
+        dmart: productsByPlatform.dmart.length
       }
     });
 
