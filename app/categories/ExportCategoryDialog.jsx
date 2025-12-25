@@ -54,7 +54,7 @@ export default function ExportCategoryDialog({
                 throw new Error(data.error || 'Export failed');
             }
 
-            setSuccess("Excel file is generating and will be sent in 4 to 5 min.");
+            setSuccess(data.message || "Excel file has been sent to your email!");
             setTimeout(() => {
                 onClose();
                 setSuccess(false);

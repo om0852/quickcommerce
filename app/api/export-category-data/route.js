@@ -50,11 +50,11 @@ async function processExportInBackground(body) {
                 let targettimestamps = [];
 
                 if (body.exportType === 'unique') {
-                    // 14 days lookback
+                    // 7 days lookback
                     const lookbackDate = new Date();
-                    lookbackDate.setDate(lookbackDate.getDate() - 14);
+                    lookbackDate.setDate(lookbackDate.getDate() - 7);
 
-                    // Find all distinct timestamps in the last 14 days
+                    // Find all distinct timestamps in the last 7 days
                     const snapshots = await ProductSnapshot.find({
                         category: cat,
                         pincode: pin,
@@ -103,7 +103,8 @@ async function processExportInBackground(body) {
                     const productsByPlatform = {
                         zepto: [],
                         blinkit: [],
-                        jiomart: []
+                        jiomart: [],
+                        dmart: []
                     };
 
                     snapshots.forEach(snap => {
@@ -134,7 +135,8 @@ async function processExportInBackground(body) {
                     const mergedProducts = mergeProductsAcrossPlatforms(
                         productsByPlatform.zepto,
                         productsByPlatform.blinkit,
-                        productsByPlatform.jiomart
+                        productsByPlatform.jiomart,
+                        productsByPlatform.dmart
                     );
 
                     // 5. Add to processed rows IF not already seen (for unique mode)
@@ -167,7 +169,7 @@ async function processExportInBackground(body) {
                         };
 
                         // Platforms
-                        ['zepto', 'blinkit', 'jiomart'].forEach(p => {
+                        ['zepto', 'blinkit', 'jiomart', 'dmart'].forEach(p => {
                             if (product[p]) {
                                 rowData[`${p}_available`] = 'Yes';
                                 rowData[`${p}_price`] = product[p].currentPrice;
@@ -313,9 +315,7 @@ async function processExportInBackground(body) {
 
 export async function POST(req) {
     try {
-        // No await dbConnect() here needed if we don't query DB in the main thread, 
-        // but we might want to check connection generally.
-        // Actually, the background process handles dbConnect.
+        await dbConnect();
 
         const body = await req.json();
         const { email } = body;
@@ -325,23 +325,21 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
 
-        console.log('Received export request, processing in background...');
+        console.log('🚀 Starting export process...');
 
-        // Trigger background process without awaiting
-        // We catch strictly to prevent unhandled promise rejections crashing the process if frameworks complain,
-        // though usually in node logic it just logs to stderr.
-        processExportInBackground(body).catch(err => {
-            console.error('Failed to trigger background export:', err);
-        });
+        // Execute the export synchronously to ensure it completes
+        await processExportInBackground(body);
 
-        // Immediate response
+        console.log('✅ Export completed and email sent');
+
+        // Response after completion
         return NextResponse.json({
             success: true,
-            message: 'Your export request has been received. The Excel file will be sent to your email in 4 to 5 minutes.'
+            message: 'Excel file has been generated and sent to your email successfully!'
         });
 
     } catch (error) {
-        console.error('Export request error:', error);
+        console.error('❌ Export request error:', error);
         return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
     }
 }
