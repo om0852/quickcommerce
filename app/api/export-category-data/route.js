@@ -125,6 +125,10 @@ async function processExportInBackground(body) {
                                 rankingChange: snap.rankingChange,
                                 productUrl: snap.productUrl,
                                 isOutOfStock: snap.isOutOfStock,
+                                isOutOfStock: snap.isOutOfStock,
+                                quantity: snap.quantity,
+                                deliveryTime: snap.deliveryTime,
+                                isAd: snap.isAd,
                                 scrapedAt: snap.scrapedAt
                             });
                         }
@@ -176,12 +180,18 @@ async function processExportInBackground(body) {
                                 rowData[`${p}_rank`] = product[p].ranking;
                                 rowData[`${p}_stock`] = product[p].isOutOfStock ? 'Out of Stock' : 'In Stock';
                                 rowData[`${p}_link`] = product[p].url || '';
+                                rowData[`${p}_isAd`] = product[p].isAd ? 'Yes' : 'No';
+                                rowData[`${p}_quantity`] = product[p].quantity || '-';
+                                rowData[`${p}_deliveryTime`] = product[p].deliveryTime || '-';
                             } else {
                                 rowData[`${p}_available`] = 'No';
                                 rowData[`${p}_price`] = null;
                                 rowData[`${p}_rank`] = null;
                                 rowData[`${p}_stock`] = '-';
                                 rowData[`${p}_link`] = '';
+                                rowData[`${p}_isAd`] = '-';
+                                rowData[`${p}_quantity`] = '-';
+                                rowData[`${p}_deliveryTime`] = '-';
                             }
                         });
 
@@ -221,7 +231,10 @@ async function processExportInBackground(body) {
                 { header: `${pName} Price`, key: `${platform}_price`, width: 12, style: { numFmt: '₹#,##0.00' } },
                 { header: `${pName} Rank`, key: `${platform}_rank`, width: 10 },
                 { header: `${pName} Stock`, key: `${platform}_stock`, width: 12 },
-                { header: `${pName} Link`, key: `${platform}_link`, width: 20 }
+                { header: `${pName} Link`, key: `${platform}_link`, width: 20 },
+                { header: `${pName} Ad`, key: `${platform}_isAd`, width: 8 },
+                { header: `${pName} Qty`, key: `${platform}_quantity`, width: 12 },
+                { header: `${pName} Del. Time`, key: `${platform}_deliveryTime`, width: 12 }
             );
         });
 

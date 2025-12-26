@@ -43,6 +43,12 @@ const ProductSnapshotSchema = new mongoose.Schema({
   },
   productImage: String,
   productWeight: String,
+  quantity: String,
+  deliveryTime: String,
+  isAd: {
+    type: Boolean,
+    default: false
+  },
   rating: Number,
 
   // Pricing information

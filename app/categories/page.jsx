@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Filter, Package, Download } from 'lucide-react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, ComposedChart, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ScatterChart, Scatter, Cell, ReferenceLine, ReferenceArea } from 'recharts';
 import AnalyticsTab from './AnalyticsTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
 
@@ -13,6 +13,7 @@ export default function CategoriesPage() {
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [dateRange, setDateRange] = useState('all');
   const [historyData, setHistoryData] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [stockData, setStockData] = useState(null);
@@ -45,6 +46,24 @@ export default function CategoriesPage() {
     { label: 'JioMart', value: 'jiomart' },
     { label: 'DMart', value: 'dmart' }
   ];
+
+  const PLATFORM_COLORS = {
+    zepto: {
+      primary: '#8b5cf6',
+      light: '#f3e8ff',
+      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)'
+    },
+    blinkit: {
+      primary: '#f59e0b',
+      light: '#fef3c7',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
+    },
+    jiomart: {
+      primary: '#3b82f6',
+      light: '#dbeafe',
+      gradient: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)'
+    }
+  };
 
   const fetchCategoryData = async () => {
     setLoading(true);
@@ -260,6 +279,46 @@ export default function CategoriesPage() {
       setSelectedProduct(null);
     }
   }, [filteredProducts, selectedProduct]);
+
+  const getPriceStats = (historyData, platform) => {
+    if (!historyData || historyData.length === 0) return null;
+    
+    const prices = historyData
+      .map(d => d[platform])
+      .filter(p => p !== null && p !== undefined);
+    
+    if (prices.length === 0) return null;
+    
+    return {
+      current: prices[prices.length - 1],
+      min: Math.min(...prices),
+      max: Math.max(...prices),
+      avg: prices.reduce((a, b) => a + b, 0) / prices.length
+    };
+  };
+
+  const getLowestPricePlatform = (historyData) => {
+    if (!historyData || historyData.length === 0) return null;
+    
+    const lastData = historyData[historyData.length - 1];
+    const prices = {
+      Zepto: lastData.Zepto,
+      Blinkit: lastData.Blinkit,
+      JioMart: lastData.JioMart
+    };
+    
+    let lowest = null;
+    let lowestPrice = Infinity;
+    
+    Object.entries(prices).forEach(([platform, price]) => {
+      if (price !== null && price !== undefined && price < lowestPrice) {
+        lowestPrice = price;
+        lowest = platform;
+      }
+    });
+    
+    return lowest;
+  };
 
   // Calculate platform statistics
   const platformStats = useMemo(() => {
@@ -809,68 +868,324 @@ export default function CategoriesPage() {
           )}
 
           {activeTab === 'price' && (
-            <div style={{ background: 'white', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e5e5e5' }}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Select Product for History</label>
-                <select
-                  className="select"
-                  style={{
-                    width: '100%',
-                    maxWidth: '400px',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #e5e5e5',
-                    backgroundColor: '#fff',
+            <div style={{
+              background: 'white',
+              borderRadius: '1rem',
+              border: '1px solid #e5e5e5',
+              overflow: 'hidden'
+            }}>
+              {/* Header Section */}
+              <div style={{
+                background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+                padding: '1.5rem',
+                borderBottom: '1px solid #e5e5e5'
+              }}>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', marginBottom: '0.25rem' }}>
+                    Price History
+                  </h2>
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                    Track price trends across platforms over time
+                  </p>
+                </div>
+
+                {/* Product Selector */}
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
                     fontSize: '0.875rem',
-                    color: '#171717',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                  }}
-                  value={selectedProduct ? filteredProducts.findIndex(p => p.name === selectedProduct.name) : ''}
-                  onChange={(e) => setSelectedProduct(filteredProducts[e.target.value])}
-                >
-                  {filteredProducts.map((p, i) => (
-                    <option key={i} value={i}>{p.name}</option>
-                  ))}
-                </select>
+                    fontWeight: 600,
+                    color: '#171717'
+                  }}>
+                    Select Product
+                  </label>
+                  <select
+                    className="select"
+                    style={{
+                      width: '100%',
+                      maxWidth: '500px',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e5e5',
+                      backgroundColor: '#fff',
+                      fontSize: '0.875rem',
+                      color: '#171717',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                    }}
+                    value={selectedProduct ? filteredProducts.findIndex(p => p.name === selectedProduct.name) : ''}
+                    onChange={(e) => setSelectedProduct(filteredProducts[e.target.value])}
+                  >
+                    {filteredProducts.map((p, i) => (
+                      <option key={i} value={i}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div style={{ width: '100%', height: 500 }}>
+              <div style={{ padding: '1.5rem' }}>
                 {historyLoading ? (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading history...</div>
+                  <div style={{
+                    height: '400px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#6b7280'
+                  }}>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                  </div>
                 ) : historyData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={historyData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        angle={-45}
-                        textAnchor="end"
-                        interval={0}
-                        height={100}
-                        tick={{ fontSize: 12 }}
-                        ticks={calculateTicks(historyData)}
-                      />
-                      <YAxis label={{ value: 'Price (₹)', angle: -90, position: 'insideLeft' }} domain={['auto', 'auto']} />
-                      <Tooltip />
-                      <Legend verticalAlign="top" height={36} />
-                      {(platformFilter === 'all' || platformFilter === 'zepto') && <Line type="monotone" dataKey="Zepto" stroke="#667eea" strokeWidth={2} connectNulls />}
-                      {(platformFilter === 'all' || platformFilter === 'blinkit') && <Line type="monotone" dataKey="Blinkit" stroke="#f093fb" strokeWidth={2} connectNulls />}
-                      {(platformFilter === 'all' || platformFilter === 'jiomart') && <Line type="monotone" dataKey="JioMart" stroke="#4facfe" strokeWidth={2} connectNulls />}
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <>
+                    {/* Date Range Filter */}
+                    <div style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      marginBottom: '1.5rem',
+                      padding: '0.5rem',
+                      background: '#f9fafb',
+                      borderRadius: '0.5rem',
+                      width: 'fit-content'
+                    }}>
+                      {[
+                        { label: '7 Days', value: '7d' },
+                        { label: '30 Days', value: '30d' },
+                        { label: 'All Time', value: 'all' }
+                      ].map(option => (
+                        <button
+                          key={option.value}
+                          onClick={() => setDateRange(option.value)}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            border: 'none',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            background: dateRange === option.value ? '#171717' : 'transparent',
+                            color: dateRange === option.value ? 'white' : '#6b7280'
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Chart - Switched to AreaChart for the "Rank Pattern" look */}
+                    <div style={{
+                      background: '#fafafa',
+                      borderRadius: '0.75rem',
+                      padding: '1.5rem',
+                      border: '1px solid #e5e5e5'
+                    }}>
+                      <ResponsiveContainer width="100%" height={450}>
+                        <AreaChart
+                          data={(() => {
+                            if (dateRange === 'all') return historyData;
+                            
+                            const now = Date.now();
+                            const cutoff = dateRange === '7d' 
+                              ? now - (7 * 24 * 60 * 60 * 1000)
+                              : now - (30 * 24 * 60 * 60 * 1000);
+                            
+                            return historyData.filter(d => d.timestamp >= cutoff);
+                          })()}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                        >
+                          <defs>
+                            <linearGradient id="colorZepto" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0.2}/>
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorBlinkit" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0.2}/>
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorJioMart" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0.2}/>
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                          
+                          <XAxis
+                            dataKey="date"
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                            interval="preserveStartEnd"
+                            minTickGap={20}
+                            tick={{ fontSize: 11, fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                          />
+                          
+                          <YAxis
+                            label={{
+                              value: 'Price (₹)',
+                              angle: -90,
+                              position: 'insideLeft',
+                              style: { fontSize: '0.875rem', fill: '#6b7280', fontWeight: 600 }
+                            }}
+                            domain={['auto', 'auto']}
+                            tick={{ fontSize: 11, fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                          />
+                          
+                          {/* --- FIXED TOOLTIP --- */}
+                          <Tooltip
+                            contentStyle={{
+                              background: '#222222ff',
+                              border: 'none',
+                              borderRadius: '0.75rem',
+                              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+                              padding: '1rem'
+                            }}
+                            labelStyle={{
+                              color: 'white',
+                              fontWeight: 700,
+                              marginBottom: '0.75rem',
+                              fontSize: '0.875rem',
+                              borderBottom: '1px solid rgba(255,255,255,0.1)',
+                              paddingBottom: '0.5rem'
+                            }}
+                            itemStyle={{
+                              fontSize: '0.875rem',
+                              padding: '0.25rem 0',
+                              fontWeight: 600
+                            }}
+                            // UPDATED FORMATTER: Now correctly uses the 'name' parameter
+                            formatter={(value, name) => {
+                              if (value === null || value === undefined) return ['N/A', name];
+                              return [`₹${value.toFixed(2)}`, name];
+                            }}
+                          />
+                          
+                          <Legend
+                            wrapperStyle={{
+                              paddingTop: '1.5rem',
+                              fontSize: '0.875rem',
+                              fontWeight: 600
+                            }}
+                            iconType="circle"
+                            iconSize={10}
+                          />
+                          
+                          {(platformFilter === 'all' || platformFilter === 'zepto') && (
+                            <Area
+                              type="monotone"
+                              dataKey="Zepto"
+                              stroke={PLATFORM_COLORS.zepto.primary}
+                              strokeWidth={3}
+                              fillOpacity={1}
+                              fill="url(#colorZepto)"
+                              dot={{
+                                r: 4,
+                                fill: PLATFORM_COLORS.zepto.primary,
+                                strokeWidth: 2,
+                                stroke: 'white'
+                              }}
+                              activeDot={{
+                                r: 6,
+                                fill: PLATFORM_COLORS.zepto.primary,
+                                strokeWidth: 3,
+                                stroke: 'white'
+                              }}
+                              connectNulls
+                            />
+                          )}
+                          
+                          {(platformFilter === 'all' || platformFilter === 'blinkit') && (
+                            <Area
+                              type="monotone"
+                              dataKey="Blinkit"
+                              stroke={PLATFORM_COLORS.blinkit.primary}
+                              strokeWidth={3}
+                              fillOpacity={1}
+                              fill="url(#colorBlinkit)"
+                              dot={{
+                                r: 4,
+                                fill: PLATFORM_COLORS.blinkit.primary,
+                                strokeWidth: 2,
+                                stroke: 'white'
+                              }}
+                              activeDot={{
+                                r: 6,
+                                fill: PLATFORM_COLORS.blinkit.primary,
+                                strokeWidth: 3,
+                                stroke: 'white'
+                              }}
+                              connectNulls
+                            />
+                          )}
+                          
+                          {(platformFilter === 'all' || platformFilter === 'jiomart') && (
+                            <Area
+                              type="monotone"
+                              dataKey="JioMart"
+                              stroke={PLATFORM_COLORS.jiomart.primary}
+                              strokeWidth={3}
+                              fillOpacity={1}
+                              fill="url(#colorJioMart)"
+                              dot={{
+                                r: 4,
+                                fill: PLATFORM_COLORS.jiomart.primary,
+                                strokeWidth: 2,
+                                stroke: 'white'
+                              }}
+                              activeDot={{
+                                r: 6,
+                                fill: PLATFORM_COLORS.jiomart.primary,
+                                strokeWidth: 3,
+                                stroke: 'white'
+                              }}
+                              connectNulls
+                            />
+                          )}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </>
                 ) : (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#737373' }}>No history data available</div>
+                  <div style={{
+                    height: '400px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#6b7280'
+                  }}>
+                    <div style={{
+                      width: '4rem',
+                      height: '4rem',
+                      background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '1rem'
+                    }}>
+                      <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                      </svg>
+                    </div>
+                    <p style={{ fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>No history data available</p>
+                    <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Price tracking will appear here once data is collected</p>
+                  </div>
                 )}
               </div>
             </div>
           )}
 
           {activeTab === 'ranking' && (
-            <div style={{ background: 'white', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e5e5e5' }}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Select Product for History</label>
+            <div style={{ padding: '1.5rem' }}>
+              {/* Product Selector */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
+                  Select Product for History
+                </label>
                 <select
                   className="select"
                   style={{
@@ -895,46 +1210,268 @@ export default function CategoriesPage() {
                 </select>
               </div>
 
-              <div style={{ width: '100%', height: 500 }}>
-                {historyLoading ? (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading history...</div>
-                ) : historyData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={historyData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        angle={-45}
-                        textAnchor="end"
-                        interval={0}
-                        height={100}
-                        tick={{ fontSize: 12 }}
-                        ticks={calculateTicks(historyData)}
-                      />
-                      <YAxis label={{ value: 'Rank', angle: -90, position: 'insideLeft' }} reversed domain={['auto', 'auto']} />
-                      <Tooltip />
-                      <Legend verticalAlign="top" height={36} />
-                      {(platformFilter === 'all' || platformFilter === 'zepto') && <Line type="monotone" dataKey="Zepto Rank" name="Zepto" stroke="#667eea" strokeWidth={2} connectNulls />}
-                      {(platformFilter === 'all' || platformFilter === 'blinkit') && <Line type="monotone" dataKey="Blinkit Rank" name="Blinkit" stroke="#f093fb" strokeWidth={2} connectNulls />}
-                      {(platformFilter === 'all' || platformFilter === 'jiomart') && <Line type="monotone" dataKey="JioMart Rank" name="JioMart" stroke="#4facfe" strokeWidth={2} connectNulls />}
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#737373' }}>No history data available</div>
-                )}
-              </div>
+              {historyLoading ? (
+                <div style={{
+                  height: '400px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#6b7280'
+                }}>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                </div>
+              ) : historyData.length > 0 ? (
+                <>
+                  {/* Date Range Filter */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '0.5rem',
+                    marginBottom: '1.5rem',
+                    padding: '0.5rem',
+                    background: '#f9fafb',
+                    borderRadius: '0.5rem',
+                    width: 'fit-content'
+                  }}>
+                    {[
+                      { label: '7 Days', value: '7d' },
+                      { label: '30 Days', value: '30d' },
+                      { label: 'All Time', value: 'all' }
+                    ].map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => setDateRange(option.value)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          border: 'none',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          background: dateRange === option.value ? '#171717' : 'transparent',
+                          color: dateRange === option.value ? 'white' : '#6b7280'
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+
+
+                  {/* Chart Area */}
+                  <div style={{
+                    background: '#fafafa',
+                    borderRadius: '0.75rem',
+                    padding: '1.5rem',
+                    border: '1px solid #e5e5e5'
+                  }}>
+                    <ResponsiveContainer width="100%" height={450}>
+                      <AreaChart
+                        data={(() => {
+                          if (dateRange === 'all') return historyData;
+                          const now = Date.now();
+                          const cutoff = dateRange === '7d' 
+                            ? now - (7 * 24 * 60 * 60 * 1000)
+                            : now - (30 * 24 * 60 * 60 * 1000);
+                          return historyData.filter(d => d.timestamp >= cutoff);
+                        })()}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                      >
+                        <defs>
+                          <linearGradient id="rankColorZepto" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0.2}/>
+                            <stop offset="95%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="rankColorBlinkit" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0.2}/>
+                            <stop offset="95%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="rankColorJioMart" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0.2}/>
+                            <stop offset="95%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                        
+                        <XAxis
+                          dataKey="date"
+                          angle={-45}
+                          textAnchor="end"
+                          height={80} 
+                          interval="preserveStartEnd" 
+                          minTickGap={20} 
+                          tick={{ fontSize: 11, fill: '#6b7280' }}
+                          axisLine={{ stroke: '#d1d5db' }}
+                        />
+                        
+                        <YAxis 
+                          label={{ 
+                            value: 'Rank Position', 
+                            angle: -90, 
+                            position: 'insideLeft',
+                            style: { fontSize: '0.875rem', fill: '#6b7280', fontWeight: 600 } 
+                          }} 
+                          reversed={true}
+                          domain={['dataMin - 1', 'dataMax + 1']}
+                          tick={{ fontSize: 11, fill: '#6b7280' }}
+                          axisLine={{ stroke: '#d1d5db' }}
+                        />
+                        
+                        {/* --- FIXED TOOLTIP --- */}
+                        <Tooltip
+                          contentStyle={{
+                            background: '#222222ff',
+                            border: 'none',
+                            borderRadius: '0.75rem',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+                            padding: '1rem'
+                          }}
+                          labelStyle={{
+                            color: 'white',
+                            fontWeight: 700,
+                            marginBottom: '0.75rem',
+                            fontSize: '0.875rem',
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            paddingBottom: '0.5rem'
+                          }}
+                          itemStyle={{
+                            fontSize: '0.875rem',
+                            padding: '0.25rem 0',
+                            fontWeight: 600
+                          }}
+                          // UPDATED FORMATTER: Now uses 'name' parameter
+                          formatter={(value, name) => {
+                            if (value === null || value === undefined) return ['N/A', name];
+                            return [`#${value}`, name];
+                          }}
+                        />
+                        
+                        <Legend 
+                          wrapperStyle={{
+                            paddingTop: '1.5rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 600
+                          }}
+                          iconType="circle"
+                          iconSize={10}
+                        />
+                        
+                        {(platformFilter === 'all' || platformFilter === 'zepto') && (
+                          <Area 
+                            type="monotone" 
+                            dataKey="Zepto Rank" 
+                            name="Zepto" 
+                            stroke={PLATFORM_COLORS.zepto.primary} 
+                            strokeWidth={3} 
+                            fillOpacity={1}
+                            fill="url(#rankColorZepto)"
+                            connectNulls 
+                            dot={{
+                              r: 4,
+                              fill: PLATFORM_COLORS.zepto.primary,
+                              strokeWidth: 2,
+                              stroke: 'white'
+                            }}
+                            activeDot={{
+                              r: 6,
+                              fill: PLATFORM_COLORS.zepto.primary,
+                              strokeWidth: 3,
+                              stroke: 'white'
+                            }}
+                          />
+                        )}
+                        
+                        {(platformFilter === 'all' || platformFilter === 'blinkit') && (
+                          <Area 
+                            type="monotone" 
+                            dataKey="Blinkit Rank" 
+                            name="Blinkit" 
+                            stroke={PLATFORM_COLORS.blinkit.primary} 
+                            strokeWidth={3} 
+                            fillOpacity={1}
+                            fill="url(#rankColorBlinkit)"
+                            connectNulls 
+                            dot={{
+                              r: 4,
+                              fill: PLATFORM_COLORS.blinkit.primary,
+                              strokeWidth: 2,
+                              stroke: 'white'
+                            }}
+                            activeDot={{
+                              r: 6,
+                              fill: PLATFORM_COLORS.blinkit.primary,
+                              strokeWidth: 3,
+                              stroke: 'white'
+                            }}
+                          />
+                        )}
+                        
+                        {(platformFilter === 'all' || platformFilter === 'jiomart') && (
+                          <Area 
+                            type="monotone" 
+                            dataKey="JioMart Rank" 
+                            name="JioMart" 
+                            stroke={PLATFORM_COLORS.jiomart.primary} 
+                            strokeWidth={3} 
+                            fillOpacity={1}
+                            fill="url(#rankColorJioMart)"
+                            connectNulls 
+                            dot={{
+                              r: 4,
+                              fill: PLATFORM_COLORS.jiomart.primary,
+                              strokeWidth: 2,
+                              stroke: 'white'
+                            }}
+                            activeDot={{
+                              r: 6,
+                              fill: PLATFORM_COLORS.jiomart.primary,
+                              strokeWidth: 3,
+                              stroke: 'white'
+                            }}
+                          />
+                        )}
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              ) : (
+                <div style={{
+                  height: '400px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#6b7280'
+                }}>
+                  <div style={{
+                    width: '4rem',
+                    height: '4rem',
+                    background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '1rem'
+                  }}>
+                    <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                  <p style={{ fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>No ranking data available</p>
+                  <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Rank history will appear here once data is collected</p>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'stock' && (
-            <div style={{ background: 'white', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #e5e5e5' }}>
+            <div style={{ padding: '1.5rem' }}>
+              {/* Product Selector */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827', marginBottom: '0.5rem' }}>Stock Availability History</h2>
-                <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Track product availability over time across platforms</p>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Select Product</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
+                  Select Product
+                </label>
                 <select
                   className="select"
                   style={{
@@ -953,7 +1490,7 @@ export default function CategoriesPage() {
                   value={selectedProduct ? filteredProducts.findIndex(p => p.name === selectedProduct.name) : ''}
                   onChange={(e) => {
                     setSelectedProduct(filteredProducts[e.target.value]);
-                    setActiveTab('stock'); // Keep on stock tab to trigger data fetch
+                    setActiveTab('stock');
                   }}
                 >
                   <option value="">Choose a product...</option>
@@ -963,89 +1500,308 @@ export default function CategoriesPage() {
                 </select>
               </div>
 
-              <div style={{ width: '100%', height: 400 }}>
-                {stockLoading ? (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading stock history...</div>
-                ) : stockData && stockData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={stockData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="date"
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        axisLine={{ stroke: '#e5e7eb' }}
-                        ticks={calculateTicks(stockData)}
-                      />
-                      <YAxis
-                        domain={[0, 1]}
-                        ticks={[0, 1]}
-                        tickFormatter={(value) => value === 1 ? 'In Stock' : 'Out of Stock'}
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        axisLine={{ stroke: '#e5e7eb' }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          background: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)',
+              {stockLoading ? (
+                <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                </div>
+              ) : stockData && stockData.length > 0 ? (
+                <>
+                  {/* Date Range Filter */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', padding: '0.5rem', background: '#f9fafb', borderRadius: '0.5rem', width: 'fit-content' }}>
+                    {[
+                      { label: '7 Days', value: '7d' },
+                      { label: '30 Days', value: '30d' },
+                      { label: 'All Time', value: 'all' }
+                    ].map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => setDateRange(option.value)}
+                        style={{
+                          padding: '0.5rem 1rem',
                           border: 'none',
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-                          padding: '0.75rem 1rem'
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          background: dateRange === option.value ? '#171717' : 'transparent',
+                          color: dateRange === option.value ? 'white' : '#6b7280'
                         }}
-                        labelStyle={{ color: 'white', fontWeight: 600, marginBottom: '0.5rem' }}
-                        formatter={(value, name) => {
-                          const status = value === 1 ? 'In Stock' : 'Out of Stock';
-                          const color = value === 1 ? '#10b981' : '#ef4444';
-                          return [<span style={{ color }}>{status}</span>, name];
-                        }}
-                      />
-                      <Legend
-                        wrapperStyle={{ fontSize: '0.875rem', paddingTop: '1rem' }}
-                        iconType="circle"
-                      />
-                      {(platformFilter === 'all' || platformFilter === 'zepto') && (
-                        <Line
-                          type="stepAfter"
-                          dataKey="Zepto"
-                          stroke="#8b5cf6"
-                          strokeWidth={2}
-                          dot={{ r: 4 }}
-                          connectNulls
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* --- DIGITAL WAVE CHART (POLISHED) --- */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '0.75rem',
+                    padding: '1.5rem',
+                    border: '1px solid #e5e5e5',
+                    position: 'relative'
+                  }}>
+                    {/* Legend */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1.5rem', marginBottom: '1rem', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid #22c55e', background: 'white' }}></div>
+                        <span>Available</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid #ef4444', background: 'white' }}></div>
+                        <span>Out of Stock</span>
+                      </div>
+                    </div>
+
+                    <ResponsiveContainer width="100%" height={420}>
+                      <LineChart 
+                        data={(() => {
+                          if (!stockData) return [];
+                          
+                          const now = Date.now();
+                          const cutoff = dateRange === 'all' ? 0 : 
+                            (dateRange === '7d' ? now - (7 * 24 * 60 * 60 * 1000) : now - (30 * 24 * 60 * 60 * 1000));
+                          
+                          const filteredRaw = stockData.filter(d => d.timestamp >= cutoff);
+
+                          // --- DATA AGGREGATION: GROUP BY DAY ---
+                          const dailyMap = new Map();
+
+                          filteredRaw.forEach(entry => {
+                            const day = entry.date.split(',')[0]; 
+
+                            if (!dailyMap.has(day)) {
+                              dailyMap.set(day, {
+                                date: day,
+                                timestamp: entry.timestamp,
+                                Zepto: entry.Zepto,
+                                Blinkit: entry.Blinkit,
+                                JioMart: entry.JioMart,
+                              });
+                            } else {
+                              const currentDay = dailyMap.get(day);
+                              if (entry.Zepto === 1) currentDay.Zepto = 1;
+                              else if (currentDay.Zepto === null && entry.Zepto !== null) currentDay.Zepto = entry.Zepto;
+                              if (entry.Blinkit === 1) currentDay.Blinkit = 1;
+                              else if (currentDay.Blinkit === null && entry.Blinkit !== null) currentDay.Blinkit = entry.Blinkit;
+                              if (entry.JioMart === 1) currentDay.JioMart = 1;
+                              else if (currentDay.JioMart === null && entry.JioMart !== null) currentDay.JioMart = entry.JioMart;
+                            }
+                          });
+
+                          // --- POSITIONS ---
+                          // Zepto Lane:   Base=30. In=32, Out=28
+                          // Blinkit Lane: Base=20. In=22, Out=18
+                          // JioMart Lane: Base=10. In=12, Out=8
+                          
+                          return Array.from(dailyMap.values())
+                            .sort((a, b) => a.timestamp - b.timestamp)
+                            .map(d => ({
+                              ...d,
+                              zeptoVal: d.Zepto === null ? null : (d.Zepto === 1 ? 32 : 28),
+                              blinkitVal: d.Blinkit === null ? null : (d.Blinkit === 1 ? 22 : 18),
+                              jiomartVal: d.JioMart === null ? null : (d.JioMart === 1 ? 12 : 8),
+                              rawZepto: d.Zepto,
+                              rawBlinkit: d.Blinkit,
+                              rawJioMart: d.JioMart
+                            }));
+                        })()}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={false} />
+                        
+                        {/* --- SUBTLE LANE BACKGROUNDS --- */}
+                        {/* Zepto Area */}
+                        <ReferenceArea y1={25} y2={35} fill={PLATFORM_COLORS.zepto.primary} fillOpacity={0.05} stroke="none" />
+                        {/* Blinkit Area */}
+                        <ReferenceArea y1={15} y2={25} fill={PLATFORM_COLORS.blinkit.primary} fillOpacity={0.05} stroke="none" />
+                        {/* JioMart Area */}
+                        <ReferenceArea y1={5} y2={15} fill={PLATFORM_COLORS.jiomart.primary} fillOpacity={0.05} stroke="none" />
+
+                        {/* Lane Labels */}
+                        <ReferenceLine y={30} label={{ value: 'Zepto', position: 'insideLeft', fill: PLATFORM_COLORS.zepto.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
+                        <ReferenceLine y={20} label={{ value: 'Blinkit', position: 'insideLeft', fill: PLATFORM_COLORS.blinkit.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
+                        <ReferenceLine y={10} label={{ value: 'JioMart', position: 'insideLeft', fill: PLATFORM_COLORS.jiomart.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
+
+                        <XAxis
+                          dataKey="date"
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                          interval="preserveStartEnd"
+                          minTickGap={15}
+                          tick={{ fontSize: 10, fill: '#9ca3af' }}
+                          axisLine={{ stroke: '#e5e5e5' }}
+                          tickLine={false}
+                          padding={{ left: 20, right: 20 }}
                         />
-                      )}
-                      {(platformFilter === 'all' || platformFilter === 'blinkit') && (
-                        <Line
-                          type="stepAfter"
-                          dataKey="Blinkit"
-                          stroke="#eab308"
-                          strokeWidth={2}
-                          dot={{ r: 4 }}
-                          connectNulls
+                        
+                        <YAxis type="number" domain={[0, 40]} hide />
+                        
+                        <Tooltip
+                          cursor={{ stroke: '#171717', strokeWidth: 1, strokeDasharray: '2 2' }}
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                                <div style={{
+                                  background: '#171717', // Slightly softer black
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  borderRadius: '0.75rem',
+                                  padding: '1rem',
+                                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+                                  color: 'white',
+                                  minWidth: '170px',
+                                  zIndex: 100
+                                }}>
+                                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e5e5e5', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                                    {data.date}
+                                  </div>
+                                  
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                                    {['Zepto', 'Blinkit', 'JioMart'].map(platform => {
+                                      const rawKey = `raw${platform}`;
+                                      const status = data[rawKey];
+                                      let statusText = 'No Data';
+                                      let statusColor = '#6b7280';
+                                      let icon = '○';
+
+                                      if (status === 1) {
+                                        statusText = 'Available';
+                                        statusColor = '#4ade80'; // Green
+                                        icon = '●';
+                                      } else if (status === 0) {
+                                        statusText = 'Out of Stock';
+                                        statusColor = '#f87171'; // Red
+                                        icon = '×';
+                                      }
+
+                                      return (
+                                        // FIX: Added gap and ensured icon doesn't crush text
+                                        <div key={platform} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                                          <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#fff' }}>{platform}</span>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                            <span style={{ color: statusColor, fontSize: '1rem', lineHeight: 1, display: 'flex', alignItems: 'center' }}>{icon}</span>
+                                            <span style={{ fontSize: '0.75rem', color: statusColor, fontWeight: 600, whiteSpace: 'nowrap' }}>{statusText}</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
                         />
-                      )}
-                      {(platformFilter === 'all' || platformFilter === 'jiomart') && (
+
+                        {/* --- THE DIGITAL WAVES --- 
+                            Using lighter colors.
+                            Dots are now hollow rings for a cleaner look.
+                        */}
+
+                        {/* Zepto Wave */}
                         <Line
-                          type="stepAfter"
-                          dataKey="JioMart"
+                          dataKey="zeptoVal"
+                          // Lighter Purple
+                          stroke="#8b5cf6" 
+                          strokeWidth={3}
+                          type="step"
+                          connectNulls={true}
+                          dot={(props) => {
+                            const { cx, cy, payload } = props;
+                            if (payload.rawZepto === null) return null;
+                            const isStock = payload.rawZepto === 1;
+                            return (
+                              <circle 
+                                cx={cx} cy={cy} r={4} 
+                                fill="white" // Hollow center
+                                stroke={isStock ? '#22c55e' : '#ef4444'} 
+                                strokeWidth={2} 
+                              />
+                            );
+                          }}
+                          activeDot={{ r: 6, fill: 'white', stroke: '#8b5cf6', strokeWidth: 3 }}
+                        />
+
+                        {/* Blinkit Wave */}
+                        <Line
+                          dataKey="blinkitVal"
+                          // Lighter Orange/Amber
+                          stroke="#f59e0b"
+                          strokeWidth={3}
+                          type="step"
+                          connectNulls={true}
+                          dot={(props) => {
+                            const { cx, cy, payload } = props;
+                            if (payload.rawBlinkit === null) return null;
+                            const isStock = payload.rawBlinkit === 1;
+                            return (
+                              <circle 
+                                cx={cx} cy={cy} r={4} 
+                                fill="white"
+                                stroke={isStock ? '#22c55e' : '#ef4444'} 
+                                strokeWidth={2} 
+                              />
+                            );
+                          }}
+                          activeDot={{ r: 6, fill: 'white', stroke: '#f59e0b', strokeWidth: 3 }}
+                        />
+
+                        {/* JioMart Wave */}
+                        <Line
+                          dataKey="jiomartVal"
+                          // Lighter Blue
                           stroke="#3b82f6"
-                          strokeWidth={2}
-                          dot={{ r: 4 }}
-                          connectNulls
+                          strokeWidth={3}
+                          type="step"
+                          connectNulls={true}
+                          dot={(props) => {
+                            const { cx, cy, payload } = props;
+                            if (payload.rawJioMart === null) return null;
+                            const isStock = payload.rawJioMart === 1;
+                            return (
+                              <circle 
+                                cx={cx} cy={cy} r={4} 
+                                fill="white"
+                                stroke={isStock ? '#22c55e' : '#ef4444'} 
+                                strokeWidth={2} 
+                              />
+                            );
+                          }}
+                          activeDot={{ r: 6, fill: 'white', stroke: '#3b82f6', strokeWidth: 3 }}
                         />
-                      )}
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : selectedProduct ? (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#737373' }}>No stock history available for this product</div>
-                ) : (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#737373' }}>Please select a product to view stock history</div>
-                )}
-              </div>
+
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              ) : selectedProduct ? (
+                <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
+                  {/* Empty state icon... */}
+                  <div style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                    <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                  <p style={{ fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>No stock history available</p>
+                  <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Try selecting a different product or platform</p>
+                </div>
+              ) : (
+                <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
+                  {/* Select product state icon... */}
+                  <div style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                    <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    </svg>
+                  </div>
+                  <p style={{ fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Select a product</p>
+                  <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Choose a product above to view its stock history</p>
+                </div>
+              )}
             </div>
           )}
-
+          
           {activeTab === 'analytics' && (
             <AnalyticsTab category={category} pincode={pincode} platform={platformFilter} />
           )}
