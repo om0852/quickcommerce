@@ -8,6 +8,9 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const pincode = searchParams.get('pincode');
+    
+    // 1. Get the requested Time Travel timestamp
+    const requestedTimestamp = searchParams.get('timestamp');
 
     if (!category || !pincode) {
       return NextResponse.json({
@@ -17,31 +20,65 @@ export async function GET(request) {
 
     await dbConnect();
 
-    // Get the latest scraping timestamp
-    const latestSnapshot = await ProductSnapshot.findOne({
-      category,
-      pincode
-    }).sort({ scrapedAt: -1 });
+    let targetScrapedAt;
 
-    if (!latestSnapshot) {
-      return NextResponse.json({
-        success: true,
+    // 2. DECIDE WHICH TIMESTAMP TO USE (SLOT SELECTION)
+    if (requestedTimestamp) {
+      // TIME TRAVEL MODE
+      // We parse the requested date. 
+      // CRITICAL: This date must match the DB 'scrapedAt' exactly (ms precision).
+      const searchDate = new Date(requestedTimestamp);
+
+      // Optional Robustness: Verify this timestamp actually exists for this category/pincode
+      // This prevents returning an empty array if the frontend sends a slightly mismatched time.
+      const exactBatch = await ProductSnapshot.findOne({
         category,
         pincode,
-        products: [],
-        lastUpdated: null,
-        message: 'No data available for this category and pincode'
-      });
-    }
-    console.log(latestSnapshot)
-    const latestScrapedAt = latestSnapshot.scrapedAt;
+        scrapedAt: searchDate 
+      }).select('scrapedAt');
 
-    // Fetch all products from the latest scraping session for all platforms
+      if (!exactBatch) {
+         return NextResponse.json({
+          success: true,
+          products: [],
+          message: 'No data found for this exact time slot.'
+        });
+      }
+
+      targetScrapedAt = exactBatch.scrapedAt;
+      console.log(`🕒 Time Travel: Locked onto slot ${targetScrapedAt.toISOString()}`);
+
+    } else {
+      // LIVE MODE: Find the absolute latest scraping timestamp
+      const latestSnapshot = await ProductSnapshot.findOne({
+        category,
+        pincode
+      }).sort({ scrapedAt: -1 });
+
+      if (!latestSnapshot) {
+        return NextResponse.json({
+          success: true,
+          category,
+          pincode,
+          products: [],
+          lastUpdated: null,
+          message: 'No data available for this category and pincode'
+        });
+      }
+      targetScrapedAt = latestSnapshot.scrapedAt;
+      console.log(`🔴 Live Mode: Fetching latest snapshot for ${targetScrapedAt.toISOString()}`);
+    }
+
+    // 3. FETCH PRODUCTS FOR THAT SPECIFIC SLOT ONLY
+    // The key here is 'scrapedAt: targetScrapedAt'. 
+    // This acts as a strict firewall, ensuring no data from previous/future batches appears.
     const snapshots = await ProductSnapshot.find({
       category,
       pincode,
-      scrapedAt: latestScrapedAt // CRITICAL: Only get products from the latest scraping session
+      scrapedAt: targetScrapedAt 
     }).sort({ platform: 1, ranking: 1 });
+
+    // --- (Rest of your processing logic remains the same) ---
 
     // Group products by platform
     const productsByPlatform = {
@@ -63,15 +100,12 @@ export async function GET(request) {
           originalPrice: snap.originalPrice,
           discountPercentage: snap.discountPercentage,
           ranking: snap.ranking,
-          priceChange: snap.priceChange,
-          discountChange: snap.discountChange,
-          rankingChange: snap.rankingChange,
+          stock: snap.inStock, // Make sure to pass stock info if available in schema
           productUrl: snap.productUrl
         });
       }
     });
 
-    // Match products across platforms using similarity
     const mergedProducts = mergeProductsAcrossPlatforms(
       productsByPlatform.zepto,
       productsByPlatform.blinkit,
@@ -83,7 +117,7 @@ export async function GET(request) {
       success: true,
       category,
       pincode,
-      lastUpdated: latestScrapedAt,
+      lastUpdated: targetScrapedAt, // Return the exact timestamp used
       products: mergedProducts,
       totalProducts: mergedProducts.length,
       platformCounts: {

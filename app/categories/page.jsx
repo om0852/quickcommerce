@@ -22,6 +22,9 @@ export default function CategoriesPage() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [snapshotDate, setSnapshotDate] = useState(''); 
+  const [snapshotTime, setSnapshotTime] = useState(''); 
+  const [availableSnapshots, setAvailableSnapshots] = useState([]);
 
   const PINCODE_OPTIONS = [
     { label: 'Gurgaon — 122018', value: '122018' },
@@ -65,20 +68,37 @@ export default function CategoriesPage() {
     }
   };
 
-  const fetchCategoryData = async () => {
+  const fetchCategoryData = async (customTimestamp = null) => {
     setLoading(true);
+    setProducts([]); // CRITICAL: Clear table immediately so no old data is visible
     setError(null);
 
     try {
-      const response = await fetch(`/api/category-data?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`);
-      const data = await response.json();
+      // Use customTimestamp if passed, otherwise fall back to state, otherwise null (Live)
+      const timeToFetch = customTimestamp || snapshotTime || null;
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch category data');
+      // Start with the base URL
+      let url = `/api/category-data?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`;
+      
+      // STRICT: If we have a time, append it. The Backend API (from previous step) 
+      // MUST use this to filter specifically: { scrapedAt: timeToFetch }
+      if (timeToFetch) {
+        url += `&timestamp=${encodeURIComponent(timeToFetch)}`;
       }
 
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Failed to fetch category data');
+
+      // This REPLACE operation ensures the table only shows what came back from this specific fetch
       setProducts(data.products || []);
-      setLastUpdated(data.lastUpdated);
+      
+      // Update the "Last Updated" text to match exactly what we fetched
+      if (data.lastUpdated) {
+        setLastUpdated(data.lastUpdated);
+      }
+      
     } catch (err) {
       setError(err.message);
       setProducts([]);
@@ -145,10 +165,24 @@ export default function CategoriesPage() {
     }
   }, [activeTab, selectedProduct]);
 
-
+  // Fetch available snapshots when the page loads
+  useEffect(() => {
+    const fetchSnapshots = async () => {
+      try {
+        const res = await fetch('/api/available-snapshots');
+        const data = await res.json();
+        if (data.snapshots) {
+          setAvailableSnapshots(data.snapshots);
+        }
+      } catch (err) {
+        console.error("Failed to load history options", err);
+      }
+    };
+    fetchSnapshots();
+  }, []);
 
   useEffect(() => {
-    fetchCategoryData();
+    fetchCategoryData(snapshotTime);
   }, [category, pincode]);
 
   useEffect(() => {
@@ -204,6 +238,18 @@ export default function CategoriesPage() {
     }
   }, [activeTab, selectedProduct, category, pincode]);
 
+  // --- SYNC SELECTED PRODUCT ---
+  // When the 'products' list updates (e.g. after time travel), 
+  // find the currently selected product in the new list and update it.
+  useEffect(() => {
+    if (selectedProduct && products.length > 0) {
+      const updatedProduct = products.find(p => p.name === selectedProduct.name);
+      if (updatedProduct) {
+        setSelectedProduct(updatedProduct);
+      }
+    }
+  }, [products]);
+
   const renderChangeIndicator = (change, type = 'price') => {
     // Don't show anything for no change - cleaner UI
     if (!change || change === 0) {
@@ -239,6 +285,33 @@ export default function CategoriesPage() {
     );
   };
 
+  // 2. Extract Unique Dates (YYYY-MM-DD) for the first dropdown
+  const uniqueDates = useMemo(() => {
+    const dates = availableSnapshots.map(ts => {
+      const d = new Date(ts);
+      // Use 'en-CA' to get consistent YYYY-MM-DD format
+      return d.toLocaleDateString('en-CA'); 
+    });
+    return [...new Set(dates)]; // Remove duplicates
+  }, [availableSnapshots]);
+  
+  // 3. Filter Times for the second dropdown based on selected Date
+  const availableTimes = useMemo(() => {
+    if (!snapshotDate) return [];
+    return availableSnapshots
+      .filter(ts => {
+        const d = new Date(ts);
+        return d.toLocaleDateString('en-CA') === snapshotDate;
+    })
+    .map(ts => {
+      const d = new Date(ts);
+      return {
+        value: ts, // We keep the Full ISO Timestamp to send to API
+        label: d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }) // e.g. "4:34 pm"
+      };
+    });
+  }, [snapshotDate, availableSnapshots]);
+  
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return 'Never';
     const date = new Date(timestamp);
@@ -279,6 +352,20 @@ export default function CategoriesPage() {
       setSelectedProduct(null);
     }
   }, [filteredProducts, selectedProduct]);
+
+  // When 'lastUpdated' is fetched, automatically set the dropdowns to match it.
+  useEffect(() => {
+    if (lastUpdated && !snapshotTime) {
+      const dateObj = new Date(lastUpdated);
+      
+      // 1. Format date to YYYY-MM-DD (must match your uniqueDates logic)
+      const dateStr = dateObj.toLocaleDateString('en-CA');
+      
+      // 2. Set the state variables
+      setSnapshotDate(dateStr);
+      setSnapshotTime(lastUpdated); 
+    }
+  }, [lastUpdated]);
 
   const getPriceStats = (historyData, platform) => {
     if (!historyData || historyData.length === 0) return null;
@@ -399,6 +486,20 @@ export default function CategoriesPage() {
     return ticks;
   };
 
+  // --- HELPER: Filter history/stock data based on selected snapshot ---
+  const getSnapshotFilteredData = (data) => {
+    if (!data || data.length === 0) return [];
+    
+    // If no snapshot is selected, return everything
+    if (!snapshotTime) return data;
+
+    // Cutoff timestamp
+    const cutoff = new Date(snapshotTime).getTime();
+
+    // Return only data points that happened ON or BEFORE the snapshot time
+    return data.filter(item => item.timestamp <= cutoff);
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -477,7 +578,7 @@ export default function CategoriesPage() {
             </label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                onClick={fetchCategoryData}
+                onClick={() => fetchCategoryData()}
                 disabled={loading}
                 className="btn btn-primary"
                 style={{ flex: 1 }}
@@ -558,13 +659,90 @@ export default function CategoriesPage() {
           </div>
         </div>
 
-        {lastUpdated && (
-          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#737373' }}>
-            <Clock size={16} />
-            <span>Last updated: {formatTimestamp(lastUpdated)}</span>
-          </div>
-        )}
+        {/* --- SNAPSHOT SELECTOR (Date -> Time) --- */}
+          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+            
+            {/* Left Side: Status Text */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#737373' }}>
+              <Clock size={16} />
+              <span>
+                {/* Compare timestamps to decide what text to show */}
+                {snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()
+                  ? <span style={{ color: '#171717', fontWeight: 600 }}>Viewing Snapshot: {new Date(snapshotTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                  : `Latest Data: ${lastUpdated ? formatTimestamp(lastUpdated) : 'Never'}`
+                }
+              </span>
+            </div>
 
+            {/* Right Side: The Dropdown Selectors */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#171717', whiteSpace: 'nowrap' }}>
+                View History:
+              </span>
+              
+              {/* 1. Date Select */}
+              <select 
+                value={snapshotDate}
+                onChange={(e) => {
+                  setSnapshotDate(e.target.value);
+                  setSnapshotTime(''); 
+                }}
+                className="select"
+                style={{ padding: '0.4rem 2rem 0.4rem 0.75rem', minWidth: '140px', fontSize: '0.875rem' }}
+              >
+                <option value="">Select Date</option>
+                {uniqueDates.map(dateStr => (
+                  <option key={dateStr} value={dateStr}>
+                    {new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </option>
+                ))}
+              </select>
+
+              {/* 2. Time Select */}
+              <select 
+                value={snapshotTime}
+                onChange={(e) => {
+                  const ts = e.target.value;
+                  setSnapshotTime(ts);
+                  if (ts) fetchCategoryData(ts); 
+                }}
+                disabled={!snapshotDate}
+                className="select"
+                style={{ 
+                  padding: '0.4rem 2rem 0.4rem 0.75rem', 
+                  minWidth: '120px', 
+                  fontSize: '0.875rem',
+                  opacity: snapshotDate ? 1 : 0.5,
+                  cursor: snapshotDate ? 'pointer' : 'not-allowed'
+                }}
+              >
+                <option value="">Select Time</option>
+                {availableTimes.map((t, i) => (
+                  <option key={i} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+
+              {/* 3. Reset Button - Only Visible when time is NOT the default */}
+              {(snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()) && (
+                <button 
+                  onClick={() => {
+                    if (lastUpdated) {
+                      const dateObj = new Date(lastUpdated);
+                      // 1. Reset Date Dropdown to Default
+                      setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
+                      // 2. Reset Time Dropdown to Default
+                      setSnapshotTime(lastUpdated);
+                      // 3. Fetch Live Data immediately
+                      fetchCategoryData(lastUpdated); 
+                    }
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', marginLeft: '0.5rem', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
       </div>
 
       <ExportCategoryDialog
@@ -607,7 +785,6 @@ export default function CategoriesPage() {
                   color: activeTab === tab ? '#000' : '#737373',
                   textTransform: 'capitalize',
                   background: 'none',
-                  border: 'none',
                   cursor: 'pointer'
                 }}
               >
@@ -938,59 +1115,29 @@ export default function CategoriesPage() {
                   </div>
                 ) : historyData.length > 0 ? (
                   <>
-                    {/* Date Range Filter */}
-                    <div style={{
-                      display: 'flex',
-                      gap: '0.5rem',
-                      marginBottom: '1.5rem',
-                      padding: '0.5rem',
-                      background: '#f9fafb',
-                      borderRadius: '0.5rem',
-                      width: 'fit-content'
-                    }}>
-                      {[
-                        { label: '7 Days', value: '7d' },
-                        { label: '30 Days', value: '30d' },
-                        { label: 'All Time', value: 'all' }
-                      ].map(option => (
-                        <button
-                          key={option.value}
-                          onClick={() => setDateRange(option.value)}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            border: 'none',
-                            borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            background: dateRange === option.value ? '#171717' : 'transparent',
-                            color: dateRange === option.value ? 'white' : '#6b7280'
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-
                     {/* Chart - Switched to AreaChart for the "Rank Pattern" look */}
                     <div style={{
-                      background: '#fafafa',
+                      background: 'white',
                       borderRadius: '0.75rem',
                       padding: '1.5rem',
-                      border: '1px solid #e5e5e5'
+                      border: '1px solid #e5e5e5',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'  
                     }}>
                       <ResponsiveContainer width="100%" height={450}>
                         <AreaChart
                           data={(() => {
-                            if (dateRange === 'all') return historyData;
+                            // First, apply the Time Travel filter
+                            const timeTravelData = getSnapshotFilteredData(historyData);
                             
-                            const now = Date.now();
+                            const now = snapshotTime ? new Date(snapshotTime).getTime() : Date.now();
                             const cutoff = dateRange === '7d' 
                               ? now - (7 * 24 * 60 * 60 * 1000)
                               : now - (30 * 24 * 60 * 60 * 1000);
                             
-                            return historyData.filter(d => d.timestamp >= cutoff);
+                            return timeTravelData.filter(d => d.timestamp >= cutoff);
                           })()}
                           margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
                         >
@@ -1037,7 +1184,7 @@ export default function CategoriesPage() {
                           {/* --- FIXED TOOLTIP --- */}
                           <Tooltip
                             contentStyle={{
-                              background: '#222222ff',
+                              background: '#171717',
                               border: 'none',
                               borderRadius: '0.75rem',
                               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
@@ -1180,625 +1327,656 @@ export default function CategoriesPage() {
           )}
 
           {activeTab === 'ranking' && (
-            <div style={{ padding: '1.5rem' }}>
-              {/* Product Selector */}
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
-                  Select Product for History
-                </label>
-                <select
-                  className="select"
-                  style={{
-                    width: '100%',
-                    maxWidth: '400px',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #e5e5e5',
-                    backgroundColor: '#fff',
-                    fontSize: '0.875rem',
-                    color: '#171717',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                  }}
-                  value={selectedProduct ? filteredProducts.findIndex(p => p.name === selectedProduct.name) : ''}
-                  onChange={(e) => setSelectedProduct(filteredProducts[e.target.value])}
-                >
-                  {filteredProducts.map((p, i) => (
-                    <option key={i} value={i}>{p.name}</option>
-                  ))}
-                </select>
+            <div
+              style={{
+                background: 'white',
+                borderRadius: '1rem',
+                border: '1px solid #e5e5e5',
+                overflow: 'hidden'
+              }}
+            >
+              {/* ================= HEADER ================= */}
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+                  padding: '1.5rem',
+                  borderBottom: '1px solid #e5e5e5'
+                }}
+              >
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h2
+                    style={{
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      color: '#111827',
+                      marginBottom: '0.25rem'
+                    }}
+                  >
+                    Ranking History
+                  </h2>
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                    Track visibility and ranking trends across platforms
+                  </p>
+                </div>
+
+                {/* Product Selector */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#171717'
+                    }}
+                  >
+                    Select Product
+                  </label>
+
+                  <select
+                    className="select"
+                    style={{
+                      width: '100%',
+                      maxWidth: '500px',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e5e5',
+                      backgroundColor: '#fff',
+                      fontSize: '0.875rem',
+                      color: '#171717',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                    }}
+                    value={
+                      selectedProduct
+                        ? filteredProducts.findIndex(
+                            p => p.name === selectedProduct.name
+                          )
+                        : ''
+                    }
+                    onChange={e =>
+                      setSelectedProduct(filteredProducts[e.target.value])
+                    }
+                  >
+                    {filteredProducts.map((p, i) => (
+                      <option key={i} value={i}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {historyLoading ? (
-                <div style={{
-                  height: '400px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#6b7280'
-                }}>
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-                </div>
-              ) : historyData.length > 0 ? (
-                <>
-                  {/* Date Range Filter */}
-                  <div style={{
-                    display: 'flex',
-                    gap: '0.5rem',
-                    marginBottom: '1.5rem',
-                    padding: '0.5rem',
-                    background: '#f9fafb',
-                    borderRadius: '0.5rem',
-                    width: 'fit-content'
-                  }}>
-                    {[
-                      { label: '7 Days', value: '7d' },
-                      { label: '30 Days', value: '30d' },
-                      { label: 'All Time', value: 'all' }
-                    ].map(option => (
-                      <button
-                        key={option.value}
-                        onClick={() => setDateRange(option.value)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          border: 'none',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          background: dateRange === option.value ? '#171717' : 'transparent',
-                          color: dateRange === option.value ? 'white' : '#6b7280'
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+              {/* ================= BODY ================= */}
+              <div style={{ padding: '1.5rem' }}>
+                {historyLoading ? (
+                  <div
+                    style={{
+                      height: '400px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#6b7280'
+                    }}
+                  >
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black" />
                   </div>
+                ) : historyData.length > 0 ? (
+                  <>
+                    {/* ================= CHART CARD ================= */}
+                    <div
+                      style={{
+                        background: '#fafafa',
+                        borderRadius: '0.75rem',
+                        padding: '1.5rem',
+                        border: '1px solid #e5e5e5',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center'  
+                      }}
+                    >
+                      <ResponsiveContainer width="100%" height={450}>
+                        <AreaChart
+                          data={(() => {
+                            // Snapshot feature 
+                            const timeTravelData = getSnapshotFilteredData(historyData); 
 
+                            // If 'All Time', return the filtered list immediately
+                            if (dateRange === 'all') return timeTravelData;
 
-                  {/* Chart Area */}
-                  <div style={{
-                    background: '#fafafa',
-                    borderRadius: '0.75rem',
-                    padding: '1.5rem',
-                    border: '1px solid #e5e5e5'
-                  }}>
-                    <ResponsiveContainer width="100%" height={450}>
-                      <AreaChart
-                        data={(() => {
-                          if (dateRange === 'all') return historyData;
-                          const now = Date.now();
-                          const cutoff = dateRange === '7d' 
-                            ? now - (7 * 24 * 60 * 60 * 1000)
-                            : now - (30 * 24 * 60 * 60 * 1000);
-                          return historyData.filter(d => d.timestamp >= cutoff);
-                        })()}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
-                      >
-                        <defs>
-                          <linearGradient id="rankColorZepto" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0.2}/>
-                            <stop offset="95%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0}/>
-                          </linearGradient>
-                          <linearGradient id="rankColorBlinkit" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0.2}/>
-                            <stop offset="95%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0}/>
-                          </linearGradient>
-                          <linearGradient id="rankColorJioMart" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0.2}/>
-                            <stop offset="95%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
+                            // Determine the "End Date" for the graph
+                            // If Time Travel is active, "Now" is the Snapshot Time. Otherwise, it is real-time.
+                            const referenceTime = snapshotTime ? new Date(snapshotTime).getTime() : Date.now();
 
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                        
-                        <XAxis
-                          dataKey="date"
-                          angle={-45}
-                          textAnchor="end"
-                          height={80} 
-                          interval="preserveStartEnd" 
-                          minTickGap={20} 
-                          tick={{ fontSize: 11, fill: '#6b7280' }}
-                          axisLine={{ stroke: '#d1d5db' }}
-                        />
-                        
-                        <YAxis 
-                          label={{ 
-                            value: 'Rank Position', 
-                            angle: -90, 
-                            position: 'insideLeft',
-                            style: { fontSize: '0.875rem', fill: '#6b7280', fontWeight: 600 } 
-                          }} 
-                          reversed={true}
-                          domain={['dataMin - 1', 'dataMax + 1']}
-                          tick={{ fontSize: 11, fill: '#6b7280' }}
-                          axisLine={{ stroke: '#d1d5db' }}
-                        />
-                        
-                        {/* --- FIXED TOOLTIP --- */}
-                        <Tooltip
-                          contentStyle={{
-                            background: '#222222ff',
-                            border: 'none',
-                            borderRadius: '0.75rem',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
-                            padding: '1rem'
-                          }}
-                          labelStyle={{
-                            color: 'white',
-                            fontWeight: 700,
-                            marginBottom: '0.75rem',
-                            fontSize: '0.875rem',
-                            borderBottom: '1px solid rgba(255,255,255,0.1)',
-                            paddingBottom: '0.5rem'
-                          }}
-                          itemStyle={{
-                            fontSize: '0.875rem',
-                            padding: '0.25rem 0',
-                            fontWeight: 600
-                          }}
-                          // UPDATED FORMATTER: Now uses 'name' parameter
-                          formatter={(value, name) => {
-                            if (value === null || value === undefined) return ['N/A', name];
-                            return [`#${value}`, name];
-                          }}
-                        />
-                        
-                        <Legend 
-                          wrapperStyle={{
-                            paddingTop: '1.5rem',
-                            fontSize: '0.875rem',
-                            fontWeight: 600
-                          }}
-                          iconType="circle"
-                          iconSize={10}
-                        />
-                        
-                        {(platformFilter === 'all' || platformFilter === 'zepto') && (
-                          <Area 
-                            type="monotone" 
-                            dataKey="Zepto Rank" 
-                            name="Zepto" 
-                            stroke={PLATFORM_COLORS.zepto.primary} 
-                            strokeWidth={3} 
-                            fillOpacity={1}
-                            fill="url(#rankColorZepto)"
-                            connectNulls 
-                            dot={{
-                              r: 4,
-                              fill: PLATFORM_COLORS.zepto.primary,
-                              strokeWidth: 2,
-                              stroke: 'white'
-                            }}
-                            activeDot={{
-                              r: 6,
-                              fill: PLATFORM_COLORS.zepto.primary,
-                              strokeWidth: 3,
-                              stroke: 'white'
+                            // Calculate the "Start Date" based on the range (7d / 30d)
+                            const cutoff = dateRange === '7d' 
+                              ? referenceTime - (7 * 24 * 60 * 60 * 1000) 
+                              : referenceTime - (30 * 24 * 60 * 60 * 1000);
+
+                            // Return data within that specific window
+                            return timeTravelData.filter(d => d.timestamp >= cutoff);
+                          })()}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                        >
+                          <defs>
+                            <linearGradient id="rankColorZepto" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0.15} />
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="rankColorBlinkit" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0.15} />
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="rankColorJioMart" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0.15} />
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+
+                          <XAxis
+                            dataKey="date"
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                            interval="preserveStartEnd"
+                            minTickGap={20}
+                            tick={{ fontSize: 11, fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                          />
+
+                          <YAxis
+                            reversed
+                            domain={['dataMin - 1', 'dataMax + 1']}
+                            tick={{ fontSize: 11, fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                            label={{
+                              value: 'Rank Position',
+                              angle: -90,
+                              position: 'insideLeft',
+                              style: { fontSize: '0.875rem', fill: '#6b7280', fontWeight: 600 }
                             }}
                           />
-                        )}
-                        
-                        {(platformFilter === 'all' || platformFilter === 'blinkit') && (
-                          <Area 
-                            type="monotone" 
-                            dataKey="Blinkit Rank" 
-                            name="Blinkit" 
-                            stroke={PLATFORM_COLORS.blinkit.primary} 
-                            strokeWidth={3} 
-                            fillOpacity={1}
-                            fill="url(#rankColorBlinkit)"
-                            connectNulls 
-                            dot={{
-                              r: 4,
-                              fill: PLATFORM_COLORS.blinkit.primary,
-                              strokeWidth: 2,
-                              stroke: 'white'
+
+                          <Tooltip
+                            contentStyle={{
+                              background: '#171717',
+                              border: 'none',
+                              borderRadius: '0.75rem',
+                              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)',
+                              padding: '1rem'
                             }}
-                            activeDot={{
-                              r: 6,
-                              fill: PLATFORM_COLORS.blinkit.primary,
-                              strokeWidth: 3,
-                              stroke: 'white'
+                            labelStyle={{
+                              color: 'white',
+                              fontWeight: 700,
+                              marginBottom: '0.5rem'
                             }}
+                            formatter={(value, name) => [`#${value}`, name]}
                           />
-                        )}
-                        
-                        {(platformFilter === 'all' || platformFilter === 'jiomart') && (
-                          <Area 
-                            type="monotone" 
-                            dataKey="JioMart Rank" 
-                            name="JioMart" 
-                            stroke={PLATFORM_COLORS.jiomart.primary} 
-                            strokeWidth={3} 
-                            fillOpacity={1}
-                            fill="url(#rankColorJioMart)"
-                            connectNulls 
-                            dot={{
-                              r: 4,
-                              fill: PLATFORM_COLORS.jiomart.primary,
-                              strokeWidth: 2,
-                              stroke: 'white'
-                            }}
-                            activeDot={{
-                              r: 6,
-                              fill: PLATFORM_COLORS.jiomart.primary,
-                              strokeWidth: 3,
-                              stroke: 'white'
-                            }}
+
+                          <Legend
+                            wrapperStyle={{ paddingTop: '1.5rem', fontSize: '0.875rem', fontWeight: 600 }}
+                            iconType="circle"
+                            iconSize={10}
                           />
-                        )}
-                      </AreaChart>
-                    </ResponsiveContainer>
+
+                          {(platformFilter === 'all' || platformFilter === 'zepto') && (
+                            <Area
+                              type="monotone"
+                              dataKey="Zepto Rank"
+                              name="Zepto"
+                              stroke={PLATFORM_COLORS.zepto.primary}
+                              strokeWidth={3}
+                              fill="url(#rankColorZepto)"
+                              connectNulls
+                              // --- Added Dot Props ---
+                              dot={{ r: 4, fill: PLATFORM_COLORS.zepto.primary, stroke: 'white', strokeWidth: 2 }}
+                              activeDot={{ r: 6, strokeWidth: 0 }}
+                            />
+                          )}
+
+                          {(platformFilter === 'all' || platformFilter === 'blinkit') && (
+                            <Area
+                              type="monotone"
+                              dataKey="Blinkit Rank"
+                              name="Blinkit"
+                              stroke={PLATFORM_COLORS.blinkit.primary}
+                              strokeWidth={3}
+                              fill="url(#rankColorBlinkit)"
+                              connectNulls
+                              // --- Added Dot Props ---
+                              dot={{ r: 4, fill: PLATFORM_COLORS.blinkit.primary, stroke: 'white', strokeWidth: 2 }}
+                              activeDot={{ r: 6, strokeWidth: 0 }}
+                            />
+                          )}
+
+                          {(platformFilter === 'all' || platformFilter === 'jiomart') && (
+                            <Area
+                              type="monotone"
+                              dataKey="JioMart Rank"
+                              name="JioMart"
+                              stroke={PLATFORM_COLORS.jiomart.primary}
+                              strokeWidth={3}
+                              fill="url(#rankColorJioMart)"
+                              connectNulls
+                              // --- Added Dot Props ---
+                              dot={{ r: 4, fill: PLATFORM_COLORS.jiomart.primary, stroke: 'white', strokeWidth: 2 }}
+                              activeDot={{ r: 6, strokeWidth: 0 }}
+                            />
+                          )}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </>
+                ) : (
+                  <div
+                    style={{
+                      height: '400px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#6b7280'
+                    }}
+                  >
+                    <p style={{ fontWeight: 600 }}>No ranking data available</p>
+                    <p style={{ fontSize: '0.875rem' }}>
+                      Rank history will appear here once data is collected
+                    </p>
                   </div>
-                </>
-              ) : (
-                <div style={{
-                  height: '400px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#6b7280'
-                }}>
-                  <div style={{
-                    width: '4rem',
-                    height: '4rem',
-                    background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '1rem'
-                  }}>
-                    <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <p style={{ fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>No ranking data available</p>
-                  <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Rank history will appear here once data is collected</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 
+
           {activeTab === 'stock' && (
-            <div style={{ padding: '1.5rem' }}>
-              {/* Product Selector */}
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>
-                  Select Product
-                </label>
-                <select
-                  className="select"
-                  style={{
-                    width: '100%',
-                    maxWidth: '500px',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #e5e5e5',
-                    backgroundColor: '#fff',
-                    fontSize: '0.875rem',
-                    color: '#171717',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                  }}
-                  value={selectedProduct ? filteredProducts.findIndex(p => p.name === selectedProduct.name) : ''}
-                  onChange={(e) => {
-                    setSelectedProduct(filteredProducts[e.target.value]);
-                    setActiveTab('stock');
-                  }}
-                >
-                  <option value="">Choose a product...</option>
-                  {filteredProducts.map((p, i) => (
-                    <option key={i} value={i}>{p.name}</option>
-                  ))}
-                </select>
+            <div
+              style={{
+                background: 'white',
+                borderRadius: '1rem',
+                border: '1px solid #e5e5e5',
+                overflow: 'hidden'
+              }}
+            >
+              {/* ================= HEADER ================= */}
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+                  padding: '1.5rem',
+                  borderBottom: '1px solid #e5e5e5'
+                }}
+              >
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h2
+                    style={{
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      color: '#111827',
+                      marginBottom: '0.25rem'
+                    }}
+                  >
+                    Stock History
+                  </h2>
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                    Track stock availability trends across platforms
+                  </p>
+                </div>
+
+                {/* Product Selector */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: '#171717'
+                    }}
+                  >
+                    Select Product
+                  </label>
+
+                  <select
+                    className="select"
+                    style={{
+                      width: '100%',
+                      maxWidth: '500px',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e5e5',
+                      backgroundColor: '#fff',
+                      fontSize: '0.875rem',
+                      color: '#171717',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                    }}
+                    value={
+                      selectedProduct
+                        ? filteredProducts.findIndex(
+                            p => p.name === selectedProduct.name
+                          )
+                        : ''
+                    }
+                    onChange={e => {
+                      setSelectedProduct(filteredProducts[e.target.value]);
+                      setActiveTab('stock');
+                    }}
+                  >
+                    <option value="">Choose a product...</option>
+                    {filteredProducts.map((p, i) => (
+                      <option key={i} value={i}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {stockLoading ? (
-                <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-                </div>
-              ) : stockData && stockData.length > 0 ? (
-                <>
-                  {/* Date Range Filter */}
-                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', padding: '0.5rem', background: '#f9fafb', borderRadius: '0.5rem', width: 'fit-content' }}>
-                    {[
-                      { label: '7 Days', value: '7d' },
-                      { label: '30 Days', value: '30d' },
-                      { label: 'All Time', value: 'all' }
-                    ].map(option => (
-                      <button
-                        key={option.value}
-                        onClick={() => setDateRange(option.value)}
+              {/* ================= BODY ================= */}
+              <div style={{ padding: '1.5rem' }}>
+                {stockLoading ? (
+                  <div
+                    style={{
+                      height: '400px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#3a3f48ff'
+                    }}
+                  >
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black" />
+                  </div>
+                ) : stockData && stockData.length > 0 ? (
+                  <>
+                    {/* ================= CHART CARD ================= */}
+                    <div
+                      style={{
+                        background: '#fafafa',
+                        borderRadius: '0.75rem',
+                        padding: '1.5rem',
+                        border: '1px solid #e5e5e5',
+                        position: 'relative'
+                      }}
+                    >
+                      {/* Custom Legend for Stock */}
+                      <div
                         style={{
-                          padding: '0.5rem 1rem',
-                          border: 'none',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                          gap: '1.5rem',
+                          marginBottom: '1rem',
+                          fontSize: '0.75rem',
                           fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          background: dateRange === option.value ? '#171717' : 'transparent',
-                          color: dateRange === option.value ? 'white' : '#6b7280'
+                          color: '#3a3f48ff'
                         }}
                       >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* --- DIGITAL WAVE CHART (POLISHED) --- */}
-                  <div style={{
-                    background: 'white',
-                    borderRadius: '0.75rem',
-                    padding: '1.5rem',
-                    border: '1px solid #e5e5e5',
-                    position: 'relative'
-                  }}>
-                    {/* Legend */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1.5rem', marginBottom: '1rem', fontSize: '0.75rem', fontWeight: 600, color: '#6b7280' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid #22c55e', background: 'white' }}></div>
-                        <span>Available</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid #22c55e', background: 'white' }}></div>
+                          <span>Available</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid #ef4444', background: 'white' }}></div>
+                          <span>Out of Stock</span>
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', border: '2px solid #ef4444', background: 'white' }}></div>
-                        <span>Out of Stock</span>
-                      </div>
-                    </div>
 
-                    <ResponsiveContainer width="100%" height={420}>
-                      <LineChart 
-                        data={(() => {
-                          if (!stockData) return [];
-                          
-                          const now = Date.now();
-                          const cutoff = dateRange === 'all' ? 0 : 
-                            (dateRange === '7d' ? now - (7 * 24 * 60 * 60 * 1000) : now - (30 * 24 * 60 * 60 * 1000));
-                          
-                          const filteredRaw = stockData.filter(d => d.timestamp >= cutoff);
+                      <ResponsiveContainer width="100%" height={420}>
+                        <LineChart
+                          data={(() => {
+                            if (!stockData) return [];
 
-                          // --- DATA AGGREGATION: GROUP BY DAY ---
-                          const dailyMap = new Map();
+                            // Filter based on Snapshot Selection
+                            const timeTravelData = getSnapshotFilteredData(stockData);
 
-                          filteredRaw.forEach(entry => {
-                            const day = entry.date.split(',')[0]; 
+                            // Calculate cutoff based on the snapshot time (not just "now")
+                            const referenceTime = snapshotTime ? new Date(snapshotTime).getTime() : Date.now();
 
-                            if (!dailyMap.has(day)) {
-                              dailyMap.set(day, {
-                                date: day,
-                                timestamp: entry.timestamp,
-                                Zepto: entry.Zepto,
-                                Blinkit: entry.Blinkit,
-                                JioMart: entry.JioMart,
-                              });
-                            } else {
-                              const currentDay = dailyMap.get(day);
-                              if (entry.Zepto === 1) currentDay.Zepto = 1;
-                              else if (currentDay.Zepto === null && entry.Zepto !== null) currentDay.Zepto = entry.Zepto;
-                              if (entry.Blinkit === 1) currentDay.Blinkit = 1;
-                              else if (currentDay.Blinkit === null && entry.Blinkit !== null) currentDay.Blinkit = entry.Blinkit;
-                              if (entry.JioMart === 1) currentDay.JioMart = 1;
-                              else if (currentDay.JioMart === null && entry.JioMart !== null) currentDay.JioMart = entry.JioMart;
-                            }
-                          });
+                            const cutoff = dateRange === 'all' ? 0 : 
+                              (dateRange === '7d' ? referenceTime - (7 * 24 * 60 * 60 * 1000) : referenceTime - (30 * 24 * 60 * 60 * 1000));
 
-                          // --- POSITIONS ---
-                          // Zepto Lane:   Base=30. In=32, Out=28
-                          // Blinkit Lane: Base=20. In=22, Out=18
-                          // JioMart Lane: Base=10. In=12, Out=8
-                          
-                          return Array.from(dailyMap.values())
-                            .sort((a, b) => a.timestamp - b.timestamp)
-                            .map(d => ({
-                              ...d,
-                              zeptoVal: d.Zepto === null ? null : (d.Zepto === 1 ? 32 : 28),
-                              blinkitVal: d.Blinkit === null ? null : (d.Blinkit === 1 ? 22 : 18),
-                              jiomartVal: d.JioMart === null ? null : (d.JioMart === 1 ? 12 : 8),
-                              rawZepto: d.Zepto,
-                              rawBlinkit: d.Blinkit,
-                              rawJioMart: d.JioMart
-                            }));
-                        })()}
-                        margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={false} />
-                        
-                        {/* --- SUBTLE LANE BACKGROUNDS --- */}
-                        {/* Zepto Area */}
-                        <ReferenceArea y1={25} y2={35} fill={PLATFORM_COLORS.zepto.primary} fillOpacity={0.05} stroke="none" />
-                        {/* Blinkit Area */}
-                        <ReferenceArea y1={15} y2={25} fill={PLATFORM_COLORS.blinkit.primary} fillOpacity={0.05} stroke="none" />
-                        {/* JioMart Area */}
-                        <ReferenceArea y1={5} y2={15} fill={PLATFORM_COLORS.jiomart.primary} fillOpacity={0.05} stroke="none" />
+                            const filteredRaw = timeTravelData.filter(d => d.timestamp >= cutoff);
 
-                        {/* Lane Labels */}
-                        <ReferenceLine y={30} label={{ value: 'Zepto', position: 'insideLeft', fill: PLATFORM_COLORS.zepto.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
-                        <ReferenceLine y={20} label={{ value: 'Blinkit', position: 'insideLeft', fill: PLATFORM_COLORS.blinkit.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
-                        <ReferenceLine y={10} label={{ value: 'JioMart', position: 'insideLeft', fill: PLATFORM_COLORS.jiomart.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
+                            // --- DATA AGGREGATION: GROUP BY DAY ---
+                            const dailyMap = new Map();
 
-                        <XAxis
-                          dataKey="date"
-                          angle={-45}
-                          textAnchor="end"
-                          height={60}
-                          interval="preserveStartEnd"
-                          minTickGap={15}
-                          tick={{ fontSize: 10, fill: '#9ca3af' }}
-                          axisLine={{ stroke: '#e5e5e5' }}
-                          tickLine={false}
-                          padding={{ left: 20, right: 20 }}
-                        />
-                        
-                        <YAxis type="number" domain={[0, 40]} hide />
-                        
-                        <Tooltip
-                          cursor={{ stroke: '#171717', strokeWidth: 1, strokeDasharray: '2 2' }}
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              const data = payload[0].payload;
-                              return (
-                                <div style={{
-                                  background: '#171717', // Slightly softer black
-                                  border: '1px solid rgba(255,255,255,0.1)',
-                                  borderRadius: '0.75rem',
-                                  padding: '1rem',
-                                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
-                                  color: 'white',
-                                  minWidth: '170px',
-                                  zIndex: 100
-                                }}>
-                                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e5e5e5', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-                                    {data.date}
-                                  </div>
-                                  
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                                    {['Zepto', 'Blinkit', 'JioMart'].map(platform => {
-                                      const rawKey = `raw${platform}`;
-                                      const status = data[rawKey];
-                                      let statusText = 'No Data';
-                                      let statusColor = '#6b7280';
-                                      let icon = '○';
+                            filteredRaw.forEach(entry => {
+                              const day = entry.date.split(',')[0]; 
 
-                                      if (status === 1) {
-                                        statusText = 'Available';
-                                        statusColor = '#4ade80'; // Green
-                                        icon = '●';
-                                      } else if (status === 0) {
-                                        statusText = 'Out of Stock';
-                                        statusColor = '#f87171'; // Red
-                                        icon = '×';
-                                      }
+                              if (!dailyMap.has(day)) {
+                                dailyMap.set(day, {
+                                  date: day,
+                                  timestamp: entry.timestamp,
+                                  Zepto: entry.Zepto,
+                                  Blinkit: entry.Blinkit,
+                                  JioMart: entry.JioMart,
+                                });
+                              } else {
+                                const currentDay = dailyMap.get(day);
+                                if (entry.Zepto === 1) currentDay.Zepto = 1;
+                                else if (currentDay.Zepto === null && entry.Zepto !== null) currentDay.Zepto = entry.Zepto;
+                                if (entry.Blinkit === 1) currentDay.Blinkit = 1;
+                                else if (currentDay.Blinkit === null && entry.Blinkit !== null) currentDay.Blinkit = entry.Blinkit;
+                                if (entry.JioMart === 1) currentDay.JioMart = 1;
+                                else if (currentDay.JioMart === null && entry.JioMart !== null) currentDay.JioMart = entry.JioMart;
+                              }
+                            });
 
-                                      return (
-                                        // FIX: Added gap and ensured icon doesn't crush text
-                                        <div key={platform} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-                                          <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#fff' }}>{platform}</span>
-                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                            <span style={{ color: statusColor, fontSize: '1rem', lineHeight: 1, display: 'flex', alignItems: 'center' }}>{icon}</span>
-                                            <span style={{ fontSize: '0.75rem', color: statusColor, fontWeight: 600, whiteSpace: 'nowrap' }}>{statusText}</span>
+                            // --- POSITIONS ---
+                            return Array.from(dailyMap.values())
+                              .sort((a, b) => a.timestamp - b.timestamp)
+                              .map(d => ({
+                                ...d,
+                                zeptoVal: d.Zepto === null ? null : (d.Zepto === 1 ? 32 : 28),
+                                blinkitVal: d.Blinkit === null ? null : (d.Blinkit === 1 ? 22 : 18),
+                                jiomartVal: d.JioMart === null ? null : (d.JioMart === 1 ? 12 : 8),
+                                rawZepto: d.Zepto,
+                                rawBlinkit: d.Blinkit,
+                                rawJioMart: d.JioMart
+                              }));
+                          })()}
+                          margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={false} />
+
+                          {/* SUBTLE LANE BACKGROUNDS */}
+                          <ReferenceArea y1={25} y2={35} fill={PLATFORM_COLORS.zepto.primary} fillOpacity={0.05} stroke="none" />
+                          <ReferenceArea y1={15} y2={25} fill={PLATFORM_COLORS.blinkit.primary} fillOpacity={0.05} stroke="none" />
+                          <ReferenceArea y1={5} y2={15} fill={PLATFORM_COLORS.jiomart.primary} fillOpacity={0.05} stroke="none" />
+
+                          {/* Lane Labels */}
+                          <ReferenceLine y={30} label={{ value: 'Zepto', position: 'insideLeft', fill: PLATFORM_COLORS.zepto.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
+                          <ReferenceLine y={20} label={{ value: 'Blinkit', position: 'insideLeft', fill: PLATFORM_COLORS.blinkit.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
+                          <ReferenceLine y={10} label={{ value: 'JioMart', position: 'insideLeft', fill: PLATFORM_COLORS.jiomart.primary, fontWeight: 800, fontSize: 13 }} stroke="none" />
+
+                          <XAxis
+                            dataKey="date"
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                            interval="preserveStartEnd"
+                            minTickGap={15}
+                            tick={{ fontSize: 10, fill: '#9ca3af' }}
+                            axisLine={{ stroke: '#e5e5e5' }}
+                            tickLine={false}
+                            padding={{ left: 20, right: 20 }}
+                          />
+
+                          <YAxis type="number" domain={[0, 40]} hide />
+
+                          <Tooltip
+                            cursor={{ stroke: '#171717', strokeWidth: 1, strokeDasharray: '2 2' }}
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                const data = payload[0].payload;
+                                return (
+                                  <div style={{
+                                    background: '#171717',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '0.75rem',
+                                    padding: '1rem',
+                                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+                                    color: 'white',
+                                    minWidth: '170px',
+                                    zIndex: 100
+                                  }}>
+                                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e5e5e5', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                                      {data.date}
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                                      {['Zepto', 'Blinkit', 'JioMart'].map(platform => {
+                                        const rawKey = `raw${platform}`;
+                                        const status = data[rawKey];
+                                        let statusText = 'No Data';
+                                        let statusColor = '#6b7280';
+                                        let icon = '○';
+
+                                        if (status === 1) {
+                                          statusText = 'Available';
+                                          statusColor = '#4ade80';
+                                          icon = '●';
+                                        } else if (status === 0) {
+                                          statusText = 'Out of Stock';
+                                          statusColor = '#f87171';
+                                          icon = '×';
+                                        }
+
+                                        return (
+                                          <div key={platform} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                                            <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#fff' }}>{platform}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                              <span style={{ color: statusColor, fontSize: '1rem', lineHeight: 1, display: 'flex', alignItems: 'center' }}>{icon}</span>
+                                              <span style={{ fontSize: '0.75rem', color: statusColor, fontWeight: 600, whiteSpace: 'nowrap' }}>{statusText}</span>
+                                            </div>
                                           </div>
-                                        </div>
-                                      );
-                                    })}
+                                        );
+                                      })}
+                                    </div>
                                   </div>
-                                </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+
+                          {/* Zepto Wave */}
+                          <Line
+                            dataKey="zeptoVal"
+                            stroke="#8b5cf6"
+                            strokeWidth={3}
+                            type="step"
+                            connectNulls={true}
+                            dot={(props) => {
+                              const { cx, cy, payload } = props;
+                              if (payload.rawZepto === null) return null;
+                              const isStock = payload.rawZepto === 1;
+                              return (
+                                <circle 
+                                  cx={cx} cy={cy} r={4} 
+                                  fill="white" 
+                                  stroke={isStock ? '#22c55e' : '#ef4444'} 
+                                  strokeWidth={2} 
+                                />
                               );
-                            }
-                            return null;
-                          }}
-                        />
+                            }}
+                            activeDot={{ r: 6, fill: 'white', stroke: '#8b5cf6', strokeWidth: 3 }}
+                          />
 
-                        {/* --- THE DIGITAL WAVES --- 
-                            Using lighter colors.
-                            Dots are now hollow rings for a cleaner look.
-                        */}
+                          {/* Blinkit Wave */}
+                          <Line
+                            dataKey="blinkitVal"
+                            stroke="#f59e0b"
+                            strokeWidth={3}
+                            type="step"
+                            connectNulls={true}
+                            dot={(props) => {
+                              const { cx, cy, payload } = props;
+                              if (payload.rawBlinkit === null) return null;
+                              const isStock = payload.rawBlinkit === 1;
+                              return (
+                                <circle 
+                                  cx={cx} cy={cy} r={4} 
+                                  fill="white" 
+                                  stroke={isStock ? '#22c55e' : '#ef4444'} 
+                                  strokeWidth={2} 
+                                />
+                              );
+                            }}
+                            activeDot={{ r: 6, fill: 'white', stroke: '#f59e0b', strokeWidth: 3 }}
+                          />
 
-                        {/* Zepto Wave */}
-                        <Line
-                          dataKey="zeptoVal"
-                          // Lighter Purple
-                          stroke="#8b5cf6" 
-                          strokeWidth={3}
-                          type="step"
-                          connectNulls={true}
-                          dot={(props) => {
-                            const { cx, cy, payload } = props;
-                            if (payload.rawZepto === null) return null;
-                            const isStock = payload.rawZepto === 1;
-                            return (
-                              <circle 
-                                cx={cx} cy={cy} r={4} 
-                                fill="white" // Hollow center
-                                stroke={isStock ? '#22c55e' : '#ef4444'} 
-                                strokeWidth={2} 
-                              />
-                            );
-                          }}
-                          activeDot={{ r: 6, fill: 'white', stroke: '#8b5cf6', strokeWidth: 3 }}
-                        />
+                          {/* JioMart Wave */}
+                          <Line
+                            dataKey="jiomartVal"
+                            stroke="#3b82f6"
+                            strokeWidth={3}
+                            type="step"
+                            connectNulls={true}
+                            dot={(props) => {
+                              const { cx, cy, payload } = props;
+                              if (payload.rawJioMart === null) return null;
+                              const isStock = payload.rawJioMart === 1;
+                              return (
+                                <circle 
+                                  cx={cx} cy={cy} r={4} 
+                                  fill="white" 
+                                  stroke={isStock ? '#22c55e' : '#ef4444'} 
+                                  strokeWidth={2} 
+                                />
+                              );
+                            }}
+                            activeDot={{ r: 6, fill: 'white', stroke: '#3b82f6', strokeWidth: 3 }}
+                          />
 
-                        {/* Blinkit Wave */}
-                        <Line
-                          dataKey="blinkitVal"
-                          // Lighter Orange/Amber
-                          stroke="#f59e0b"
-                          strokeWidth={3}
-                          type="step"
-                          connectNulls={true}
-                          dot={(props) => {
-                            const { cx, cy, payload } = props;
-                            if (payload.rawBlinkit === null) return null;
-                            const isStock = payload.rawBlinkit === 1;
-                            return (
-                              <circle 
-                                cx={cx} cy={cy} r={4} 
-                                fill="white"
-                                stroke={isStock ? '#22c55e' : '#ef4444'} 
-                                strokeWidth={2} 
-                              />
-                            );
-                          }}
-                          activeDot={{ r: 6, fill: 'white', stroke: '#f59e0b', strokeWidth: 3 }}
-                        />
-
-                        {/* JioMart Wave */}
-                        <Line
-                          dataKey="jiomartVal"
-                          // Lighter Blue
-                          stroke="#3b82f6"
-                          strokeWidth={3}
-                          type="step"
-                          connectNulls={true}
-                          dot={(props) => {
-                            const { cx, cy, payload } = props;
-                            if (payload.rawJioMart === null) return null;
-                            const isStock = payload.rawJioMart === 1;
-                            return (
-                              <circle 
-                                cx={cx} cy={cy} r={4} 
-                                fill="white"
-                                stroke={isStock ? '#22c55e' : '#ef4444'} 
-                                strokeWidth={2} 
-                              />
-                            );
-                          }}
-                          activeDot={{ r: 6, fill: 'white', stroke: '#3b82f6', strokeWidth: 3 }}
-                        />
-
-                      </LineChart>
-                    </ResponsiveContainer>
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </>
+                ) : selectedProduct ? (
+                  <div
+                    style={{
+                      height: '400px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#6b7280'
+                    }}
+                  >
+                    <div style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                      <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                    <p style={{ fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>No stock history available</p>
+                    <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Try selecting a different product or platform</p>
                   </div>
-                </>
-              ) : selectedProduct ? (
-                <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
-                  {/* Empty state icon... */}
-                  <div style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-                    <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
+                ) : (
+                  <div
+                    style={{
+                      height: '400px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#6b7280'
+                    }}
+                  >
+                    <div style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                      <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                      </svg>
+                    </div>
+                    <p style={{ fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Select a product</p>
+                    <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Choose a product above to view its stock history</p>
                   </div>
-                  <p style={{ fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>No stock history available</p>
-                  <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Try selecting a different product or platform</p>
-                </div>
-              ) : (
-                <div style={{ height: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
-                  {/* Select product state icon... */}
-                  <div style={{ width: '4rem', height: '4rem', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-                    <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                    </svg>
-                  </div>
-                  <p style={{ fontWeight: 600, color: '#374151', marginBottom: '0.25rem' }}>Select a product</p>
-                  <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>Choose a product above to view its stock history</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
           
