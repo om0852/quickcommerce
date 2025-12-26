@@ -199,6 +199,26 @@ body {
   cursor: not-allowed;
 }
 
+/* Removes the focus border from the Recharts wrapper */
+.recharts-wrapper-no-outline:focus {
+  outline: none !important;
+}
+.recharts-surface:focus {
+  outline: none !important;
+}
+
+/* 2. Removes the small black border around the dots/tooltips */
+.recharts-wrapper path:focus,
+.recharts-wrapper g:focus,
+.recharts-layer:focus {
+  outline: none !important;
+}
+
+/* 3. "Nuclear option" to ensure nothing inside the chart gets a border */
+.recharts-wrapper *:focus {
+  outline: none !important;
+}
+
 /* Table */
 .table-container {
   overflow-x: auto;
