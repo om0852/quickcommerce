@@ -181,8 +181,11 @@ async function processExportInBackground(body) {
                                 rowData[`${p}_stock`] = product[p].isOutOfStock ? 'Out of Stock' : 'In Stock';
                                 rowData[`${p}_link`] = product[p].url || '';
                                 rowData[`${p}_isAd`] = product[p].isAd ? 'Yes' : 'No';
-                                rowData[`${p}_quantity`] = product[p].quantity || '-';
+                                rowData[`${p}_combo`] = product[p].quantity || '-';
                                 rowData[`${p}_deliveryTime`] = product[p].deliveryTime || '-';
+                                rowData[`${p}_originalPrice`] = product[p].originalPrice || '-';
+                                rowData[`${p}_discount`] = product[p].discountPercentage ? `${Math.round(product[p].discountPercentage)}%` : '-';
+                                rowData[`${p}_rating`] = product[p].rating || '-';
                             } else {
                                 rowData[`${p}_available`] = 'No';
                                 rowData[`${p}_price`] = null;
@@ -190,8 +193,11 @@ async function processExportInBackground(body) {
                                 rowData[`${p}_stock`] = '-';
                                 rowData[`${p}_link`] = '';
                                 rowData[`${p}_isAd`] = '-';
-                                rowData[`${p}_quantity`] = '-';
+                                rowData[`${p}_combo`] = '-';
                                 rowData[`${p}_deliveryTime`] = '-';
+                                rowData[`${p}_originalPrice`] = '-';
+                                rowData[`${p}_discount`] = '-';
+                                rowData[`${p}_rating`] = '-';
                             }
                         });
 
@@ -224,17 +230,21 @@ async function processExportInBackground(body) {
         ];
 
         // Add Dynamic Columns for each Platform
+        // Add Dynamic Columns for each Platform
         allPlatforms.forEach(platform => {
             const pName = platform.charAt(0).toUpperCase() + platform.slice(1);
             columns.push(
                 { header: `${pName} Available`, key: `${platform}_available`, width: 15 },
-                { header: `${pName} Price`, key: `${platform}_price`, width: 12, style: { numFmt: '₹#,##0.00' } },
+                { header: `${pName} Combo`, key: `${platform}_combo`, width: 15 },
+                { header: `${pName} Org. Price`, key: `${platform}_originalPrice`, width: 12, style: { numFmt: '₹#,##0.00' } },
+                { header: `${pName} Disc. Price`, key: `${platform}_price`, width: 12, style: { numFmt: '₹#,##0.00' } },
+                { header: `${pName} Discount`, key: `${platform}_discount`, width: 10 },
+                { header: `${pName} Rating`, key: `${platform}_rating`, width: 8 },
+                { header: `${pName} Del. Time`, key: `${platform}_deliveryTime`, width: 12 },
                 { header: `${pName} Rank`, key: `${platform}_rank`, width: 10 },
                 { header: `${pName} Stock`, key: `${platform}_stock`, width: 12 },
                 { header: `${pName} Link`, key: `${platform}_link`, width: 20 },
-                { header: `${pName} Ad`, key: `${platform}_isAd`, width: 8 },
-                { header: `${pName} Qty`, key: `${platform}_quantity`, width: 12 },
-                { header: `${pName} Del. Time`, key: `${platform}_deliveryTime`, width: 12 }
+                { header: `${pName} Ad`, key: `${platform}_isAd`, width: 8 }
             );
         });
 
