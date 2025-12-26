@@ -70,18 +70,18 @@ export default function CategoriesPage() {
 
   const fetchCategoryData = async (customTimestamp = null) => {
     setLoading(true);
-    setProducts([]); // CRITICAL: Clear table immediately so no old data is visible
+    setProducts([]);
     setError(null);
 
     try {
-      // Use customTimestamp if passed, otherwise fall back to state, otherwise null (Live)
-      const timeToFetch = customTimestamp || snapshotTime || null;
+      // Determine what time to fetch:
+      // 1. customTimestamp (passed from dropdown)
+      // 2. snapshotTime (from state)
+      // 3. null (Live Mode)
+      const timeToFetch = customTimestamp !== null ? customTimestamp : (snapshotTime || null);
 
-      // Start with the base URL
       let url = `/api/category-data?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`;
       
-      // STRICT: If we have a time, append it. The Backend API (from previous step) 
-      // MUST use this to filter specifically: { scrapedAt: timeToFetch }
       if (timeToFetch) {
         url += `&timestamp=${encodeURIComponent(timeToFetch)}`;
       }
@@ -91,11 +91,12 @@ export default function CategoriesPage() {
 
       if (!response.ok) throw new Error(data.error || 'Failed to fetch category data');
 
-      // This REPLACE operation ensures the table only shows what came back from this specific fetch
       setProducts(data.products || []);
       
-      // Update the "Last Updated" text to match exactly what we fetched
-      if (data.lastUpdated) {
+      // --- THE FIX ---
+      // We ONLY update 'lastUpdated' if we fetched LIVE data (timeToFetch is null).
+      // If we fetched a specific history slot, we keep 'lastUpdated' pointing to the real "Latest" time.
+      if (!timeToFetch) {
         setLastUpdated(data.lastUpdated);
       }
       
@@ -756,10 +757,21 @@ export default function CategoriesPage() {
         categoryOptions={CATEGORY_OPTIONS}
       />
 
-      {/* Loading */}
+      {/* Loading State - Updated for visibility */}
       {loading && (
-        <div className="loading">
-          <div>Loading category data...</div>
+        <div style={{ 
+          height: '400px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          color: '#6b7280' 
+        }}>
+          <div 
+            className="animate-spin rounded-full h-10 w-10 border-b-2 border-black" 
+            style={{ marginBottom: '1rem' }}
+          ></div>
+          <p style={{ fontWeight: 500 }}>Loading data...</p>
         </div>
       )}
 
