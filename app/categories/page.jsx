@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Filter, Package, Dow
 import { AreaChart, Area, BarChart, Bar, ComposedChart, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ScatterChart, Scatter, Cell, ReferenceLine, ReferenceArea } from 'recharts';
 import AnalyticsTab from './AnalyticsTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
+import CustomDropdown from '@/components/CustomDropdown';
 
 export default function CategoriesPage() {
   const [category, setCategory] = useState('milk');
@@ -22,9 +23,10 @@ export default function CategoriesPage() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const [snapshotDate, setSnapshotDate] = useState(''); 
-  const [snapshotTime, setSnapshotTime] = useState(''); 
+  const [snapshotDate, setSnapshotDate] = useState('');
+  const [snapshotTime, setSnapshotTime] = useState('');
   const [availableSnapshots, setAvailableSnapshots] = useState([]);
+  const [isLiveMode, setIsLiveMode] = useState(true);
 
   const PINCODE_OPTIONS = [
     { label: 'Gurgaon — 122018', value: '122018' },
@@ -81,7 +83,7 @@ export default function CategoriesPage() {
       const timeToFetch = customTimestamp !== null ? customTimestamp : (snapshotTime || null);
 
       let url = `/api/category-data?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`;
-      
+
       if (timeToFetch) {
         url += `&timestamp=${encodeURIComponent(timeToFetch)}`;
       }
@@ -92,14 +94,14 @@ export default function CategoriesPage() {
       if (!response.ok) throw new Error(data.error || 'Failed to fetch category data');
 
       setProducts(data.products || []);
-      
+
       // --- THE FIX ---
       // We ONLY update 'lastUpdated' if we fetched LIVE data (timeToFetch is null).
       // If we fetched a specific history slot, we keep 'lastUpdated' pointing to the real "Latest" time.
       if (!timeToFetch) {
         setLastUpdated(data.lastUpdated);
       }
-      
+
     } catch (err) {
       setError(err.message);
       setProducts([]);
@@ -166,25 +168,38 @@ export default function CategoriesPage() {
     }
   }, [activeTab, selectedProduct]);
 
-  // Fetch available snapshots when the page loads
+  // Fetch available snapshots and handle "Smart Selection"
   useEffect(() => {
     const fetchSnapshots = async () => {
-      try {
-        const res = await fetch('/api/available-snapshots');
-        const data = await res.json();
-        if (data.snapshots) {
-          setAvailableSnapshots(data.snapshots);
+      const res = await fetch(`/api/available-snapshots?category=${category}&pincode=${pincode}`);
+      const data = await res.json();
+
+      if (data.snapshots && data.snapshots.length > 0) {
+        setAvailableSnapshots(data.snapshots);
+
+        // If user is in Live Mode, or just clicked Reset, force selection to absolute newest
+        if (isLiveMode) {
+          const latestTS = data.snapshots[0];
+          const dateObj = new Date(latestTS);
+          setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
+          setSnapshotTime(latestTS);
+          fetchCategoryData(latestTS);
+        } else {
+          // Smart persistence: Try to stay on selected date if it exists for this new category
+          const snapshotsForSameDate = data.snapshots.filter(ts =>
+            new Date(ts).toLocaleDateString('en-CA') === snapshotDate
+          );
+          if (snapshotDate && snapshotsForSameDate.length > 0) {
+            setSnapshotTime(snapshotsForSameDate[0]);
+            fetchCategoryData(snapshotsForSameDate[0]);
+          } else {
+            setIsLiveMode(true); // No data for old date, jump to live
+          }
         }
-      } catch (err) {
-        console.error("Failed to load history options", err);
       }
     };
     fetchSnapshots();
-  }, []);
-
-  useEffect(() => {
-    fetchCategoryData(snapshotTime);
-  }, [category, pincode]);
+  }, [category, pincode, isLiveMode]); // Now listens for reset clicks too
 
   useEffect(() => {
     if (activeTab === 'stock' && selectedProduct) {
@@ -251,6 +266,23 @@ export default function CategoriesPage() {
     }
   }, [products]);
 
+  const thStyle = {
+  padding: '1rem 1.5rem',
+  fontSize: '0.75rem',
+  fontWeight: 700,
+  color: '#111827',
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  borderBottom: '1px solid #e5e7eb',
+};
+
+const tdStyle = {
+  padding: '1.25rem 1.5rem',
+  borderBottom: '1px solid #f1f5f9',
+  verticalAlign: 'middle',
+};
+
+
   const renderChangeIndicator = (change, type = 'price') => {
     // Don't show anything for no change - cleaner UI
     if (!change || change === 0) {
@@ -291,11 +323,11 @@ export default function CategoriesPage() {
     const dates = availableSnapshots.map(ts => {
       const d = new Date(ts);
       // Use 'en-CA' to get consistent YYYY-MM-DD format
-      return d.toLocaleDateString('en-CA'); 
+      return d.toLocaleDateString('en-CA');
     });
     return [...new Set(dates)]; // Remove duplicates
   }, [availableSnapshots]);
-  
+
   // 3. Filter Times for the second dropdown based on selected Date
   const availableTimes = useMemo(() => {
     if (!snapshotDate) return [];
@@ -303,16 +335,16 @@ export default function CategoriesPage() {
       .filter(ts => {
         const d = new Date(ts);
         return d.toLocaleDateString('en-CA') === snapshotDate;
-    })
-    .map(ts => {
-      const d = new Date(ts);
-      return {
-        value: ts, // We keep the Full ISO Timestamp to send to API
-        label: d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }) // e.g. "4:34 pm"
-      };
-    });
+      })
+      .map(ts => {
+        const d = new Date(ts);
+        return {
+          value: ts, // We keep the Full ISO Timestamp to send to API
+          label: d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }) // e.g. "4:34 pm"
+        };
+      });
   }, [snapshotDate, availableSnapshots]);
-  
+
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return 'Never';
     const date = new Date(timestamp);
@@ -358,25 +390,25 @@ export default function CategoriesPage() {
   useEffect(() => {
     if (lastUpdated && !snapshotTime) {
       const dateObj = new Date(lastUpdated);
-      
+
       // 1. Format date to YYYY-MM-DD (must match your uniqueDates logic)
       const dateStr = dateObj.toLocaleDateString('en-CA');
-      
+
       // 2. Set the state variables
       setSnapshotDate(dateStr);
-      setSnapshotTime(lastUpdated); 
+      setSnapshotTime(lastUpdated);
     }
   }, [lastUpdated]);
 
   const getPriceStats = (historyData, platform) => {
     if (!historyData || historyData.length === 0) return null;
-    
+
     const prices = historyData
       .map(d => d[platform])
       .filter(p => p !== null && p !== undefined);
-    
+
     if (prices.length === 0) return null;
-    
+
     return {
       current: prices[prices.length - 1],
       min: Math.min(...prices),
@@ -387,24 +419,24 @@ export default function CategoriesPage() {
 
   const getLowestPricePlatform = (historyData) => {
     if (!historyData || historyData.length === 0) return null;
-    
+
     const lastData = historyData[historyData.length - 1];
     const prices = {
       Zepto: lastData.Zepto,
       Blinkit: lastData.Blinkit,
       JioMart: lastData.JioMart
     };
-    
+
     let lowest = null;
     let lowestPrice = Infinity;
-    
+
     Object.entries(prices).forEach(([platform, price]) => {
       if (price !== null && price !== undefined && price < lowestPrice) {
         lowestPrice = price;
         lowest = platform;
       }
     });
-    
+
     return lowest;
   };
 
@@ -490,7 +522,7 @@ export default function CategoriesPage() {
   // --- HELPER: Filter history/stock data based on selected snapshot ---
   const getSnapshotFilteredData = (data) => {
     if (!data || data.length === 0) return [];
-    
+
     // If no snapshot is selected, return everything
     if (!snapshotTime) return data;
 
@@ -543,36 +575,27 @@ export default function CategoriesPage() {
       {/* Filters */}
       <div className="card" style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#171717' }}>
-              Category
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="select"
-            >
-              {CATEGORY_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+            <div className="field-wrapper">
+                <label className="field-label">Category</label>
+                <CustomDropdown
+                value={category}
+                onChange={(val) => setCategory(val)}
+                options={CATEGORY_OPTIONS}
+                placeholder="Select Category"
+            />
+            </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#171717' }}>
-              Pincode
-            </label>
-            <select
+
+            <div className="field-wrapper">
+              <label className="field-label">Pincode</label>
+              <CustomDropdown
               value={pincode}
-              onChange={(e) => setPincode(e.target.value)}
-              className="select"
-            >
-              {PINCODE_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+              onChange={(val) => setPincode(val)}
+              options={PINCODE_OPTIONS}
+              placeholder="Select Pincode"
+            />
 
+            </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#171717' }}>
               &nbsp;
@@ -660,90 +683,88 @@ export default function CategoriesPage() {
           </div>
         </div>
 
-        {/* --- SNAPSHOT SELECTOR (Date -> Time) --- */}
-          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-            
-            {/* Left Side: Status Text */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#737373' }}>
-              <Clock size={16} />
-              <span>
-                {/* Compare timestamps to decide what text to show */}
-                {snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()
-                  ? <span style={{ color: '#171717', fontWeight: 600 }}>Viewing Snapshot: {new Date(snapshotTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                  : `Latest Data: ${lastUpdated ? formatTimestamp(lastUpdated) : 'Never'}`
-                }
-              </span>
-            </div>
+        {/* --- UPDATED SNAPSHOT SELECTOR & STATUS --- */}
+        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
 
-            {/* Right Side: The Dropdown Selectors */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#171717', whiteSpace: 'nowrap' }}>
-                View History:
-              </span>
-              
-              {/* 1. Date Select */}
-              <select 
-                value={snapshotDate}
-                onChange={(e) => {
-                  setSnapshotDate(e.target.value);
-                  setSnapshotTime(''); 
-                }}
-                className="select"
-                style={{ padding: '0.4rem 2rem 0.4rem 0.75rem', minWidth: '140px', fontSize: '0.875rem' }}
-              >
-                <option value="">Select Date</option>
-                {uniqueDates.map(dateStr => (
-                  <option key={dateStr} value={dateStr}>
-                    {new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </option>
-                ))}
-              </select>
-
-              {/* 2. Time Select */}
-              <select 
-                value={snapshotTime}
-                onChange={(e) => {
-                  const ts = e.target.value;
-                  setSnapshotTime(ts);
-                  if (ts) fetchCategoryData(ts); 
-                }}
-                disabled={!snapshotDate}
-                className="select"
-                style={{ 
-                  padding: '0.4rem 2rem 0.4rem 0.75rem', 
-                  minWidth: '120px', 
-                  fontSize: '0.875rem',
-                  opacity: snapshotDate ? 1 : 0.5,
-                  cursor: snapshotDate ? 'pointer' : 'not-allowed'
-                }}
-              >
-                <option value="">Select Time</option>
-                {availableTimes.map((t, i) => (
-                  <option key={i} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-
-              {/* 3. Reset Button - Only Visible when time is NOT the default */}
-              {(snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()) && (
-                <button 
-                  onClick={() => {
-                    if (lastUpdated) {
-                      const dateObj = new Date(lastUpdated);
-                      // 1. Reset Date Dropdown to Default
-                      setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
-                      // 2. Reset Time Dropdown to Default
-                      setSnapshotTime(lastUpdated);
-                      // 3. Fetch Live Data immediately
-                      fetchCategoryData(lastUpdated); 
-                    }
-                  }}
-                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', marginLeft: '0.5rem', textDecoration: 'underline', whiteSpace: 'nowrap' }}
-                >
-                  Reset
-                </button>
-              )}
-            </div>
+          {/* Left Side: Status Text with Pulsing Indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '0.875rem' }}>
+            {!isLiveMode ? (
+              <>
+                <span className="status-dot-red"></span>
+                <span style={{ color: '#737373', fontWeight: 500 }}>
+                  Viewing Data: {new Date(snapshotTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="status-dot-green"></span>
+                <span style={{ color: '#737373', fontWeight: 500 }}>
+                  Latest Data: {availableSnapshots.length > 0
+                    ? new Date(availableSnapshots[0]).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+                    : 'No data for this selection'}
+                </span>
+              </>
+            )}
           </div>
+
+          {/* Right Side: The Dropdown Selectors */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap' }}>
+            <span className="history-label" style={{ marginBottom: 0 }}>View History:</span>
+
+            {/* 1. Date Select */}
+            <CustomDropdown
+              value={snapshotDate}
+              onChange={(newDate) => {
+                setSnapshotDate(newDate);
+                setIsLiveMode(false);
+
+                const latestForDate = availableSnapshots.find(ts =>
+                  new Date(ts).toLocaleDateString('en-CA') === newDate
+                );
+
+                if (latestForDate) {
+                  setSnapshotTime(latestForDate);
+                  fetchCategoryData(latestForDate);
+                }
+              }}
+              options={uniqueDates.map(d => ({
+                value: d,
+                label: new Date(d).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })
+              }))}
+              placeholder="Select Date"
+            />
+
+
+            {/* 2. Time Select */}
+            <CustomDropdown
+              value={snapshotTime}
+              onChange={(ts) => {
+                setSnapshotTime(ts);
+                setIsLiveMode(false);
+                if (ts) fetchCategoryData(ts);
+              }}
+              options={availableTimes}
+              placeholder="Time"
+              disabled={!snapshotDate}
+            />
+
+            {/* 3. Reset Button - Now strictly tied to isLiveMode */}
+            {!isLiveMode && (
+              <button
+                onClick={() => {
+                  setIsLiveMode(true); // Triggers re-fetch of absolute latest in useEffect
+                }}
+                style={{ background: 'none', border: 'none', color: '#f06d6dff', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', marginLeft: '0.5rem', whiteSpace: 'nowrap', textDecoration: 'underline' }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <ExportCategoryDialog
@@ -759,16 +780,16 @@ export default function CategoriesPage() {
 
       {/* Loading State - Updated for visibility */}
       {loading && (
-        <div style={{ 
-          height: '400px', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          color: '#6b7280' 
+        <div style={{
+          height: '400px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#6b7280'
         }}>
-          <div 
-            className="animate-spin rounded-full h-10 w-10 border-b-2 border-black" 
+          <div
+            className="animate-spin rounded-full h-10 w-10 border-b-2 border-black"
             style={{ marginBottom: '1rem' }}
           ></div>
           <p style={{ fontWeight: 500 }}>Loading data...</p>
@@ -813,241 +834,150 @@ export default function CategoriesPage() {
           </div>
 
           {activeTab === 'products' && (
-            <div className="table-container" style={{ overflow: 'hidden', borderRadius: '0.75rem', border: '1px solid #e5e5e5' }}>
-              <table className="table" style={{ marginBottom: 0 }}>
+            <div
+              style={{
+                borderRadius: '1rem',
+                border: '1px solid #e5e5e5',
+                overflow: 'hidden',
+                background: 'linear-gradient(180deg, #ffffff 0%, #fafafa 100%)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+              }}
+            >
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'separate',
+                  borderSpacing: 0,
+                }}
+              >
+                {/* ================= HEADER ================= */}
                 <thead>
-                  <tr style={{ background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)' }}>
-                    <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e5e5e5' }}>Product</th>
-                    {(platformFilter === 'all' || platformFilter === 'zepto' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>Zepto</th>}
-                    {(platformFilter === 'all' || platformFilter === 'blinkit' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>Blinkit</th>}
-                    {(platformFilter === 'all' || platformFilter === 'jiomart' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>JioMart</th>}
-                    {(platformFilter === 'all' || platformFilter === 'dmart' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>DMart</th>}
+                  <tr
+                    style={{
+                      background: 'linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%)',
+                    }}
+                  >
+                    <th style={thStyle}>Product</th>
+                    {(platformFilter === 'all' || platformFilter === 'zepto' || showMissing) && (
+                      <th style={{ ...thStyle, textAlign: 'center' }}>Zepto</th>
+                    )}
+                    {(platformFilter === 'all' || platformFilter === 'blinkit' || showMissing) && (
+                      <th style={{ ...thStyle, textAlign: 'center' }}>Blinkit</th>
+                    )}
+                    {(platformFilter === 'all' || platformFilter === 'jiomart' || showMissing) && (
+                      <th style={{ ...thStyle, textAlign: 'center' }}>JioMart</th>
+                    )}
+                    {(platformFilter === 'all' || platformFilter === 'dmart' || showMissing) && (
+                      <th style={{ ...thStyle, textAlign: 'center' }}>DMart</th>
+                    )}
                   </tr>
                 </thead>
+
+                {/* ================= BODY ================= */}
                 <tbody>
                   {filteredProducts.map((product, index) => (
                     <tr
                       key={index}
                       style={{
-                        background: index % 2 === 0 ? 'white' : '#fafafa',
-                        transition: 'all 0.2s'
+                        background: '#fff',
+                        transition: 'background 0.2s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f3f4f6';
-                        e.currentTarget.style.transform = 'scale(1.005)';
+                        e.currentTarget.style.background = '#f9fafb';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = index % 2 === 0 ? 'white' : '#fafafa';
-                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.background = '#fff';
                       }}
                     >
-                      {/* Product Info */}
-                      <td style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          {product.image && (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              style={{
-                                width: '72px',
-                                height: '72px',
-                                objectFit: 'contain',
-                                borderRadius: '0.5rem',
-                                background: 'white',
-                                border: '1px solid #e5e5e5',
-                                padding: '0.25rem'
-                              }}
-                            />
-                          )}
-                          <div>
-                            <p style={{ fontWeight: 600, fontSize: '0.9375rem', marginBottom: '0.375rem', color: '#171717', lineHeight: 1.4 }}>{product.name}</p>
-                            {product.weight && (
-                              <p style={{ fontSize: '0.8125rem', color: '#737373', background: '#f5f5f5', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block' }}>
-                                {product.weight}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                      {/* -------- Product Cell -------- */}
+                      <td style={tdStyle}>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+  {product.image && (
+    <div className="product-image-3d">
+      <img
+        src={product.image}
+        alt={product.name}
+        className="product-img"
+      />
+    </div>
+  )}
+
+  <div>
+    <div
+      style={{
+        fontSize: '0.95rem',
+        fontWeight: 600,
+        color: '#111827',
+        lineHeight: 1.4,
+        marginBottom: '0.35rem',
+      }}
+    >
+      {product.name}
+    </div>
+
+    {product.weight && (
+      <span
+        style={{
+          fontSize: '0.75rem',
+          color: '#6b7280',
+          background: '#f3f4f6',
+          padding: '0.25rem 0.5rem',
+          borderRadius: '0.375rem',
+          fontWeight: 500,
+        }}
+      >
+        {product.weight}
+      </span>
+    )}
+  </div>
+</div>
+
                       </td>
 
-                      {/* Zepto */}
-                      {(platformFilter === 'all' || platformFilter === 'zepto' || showMissing) && (
-                        <td style={{ textAlign: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                          {product.zepto ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                              {product.zepto.url ? (
-                                <a
-                                  href={product.zepto.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                      {/* -------- PLATFORM CELLS -------- */}
+                      {['zepto', 'blinkit', 'jiomart', 'dmart'].map(
+                        (platform) =>
+                          (platformFilter === 'all' ||
+                            platformFilter === platform ||
+                            showMissing) && (
+                            <td key={platform} style={{ ...tdStyle, textAlign: 'center' }}>
+                              {product[platform] ? (
+                                <div
                                   style={{
-                                    fontWeight: 700,
-                                    fontSize: '1.25rem',
-                                    color: '#171717',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.2s'
+                                    background: '#fafafa',
+                                    borderRadius: '0.75rem',
+                                    padding: '0.75rem',
+                                    border: '1px solid #e5e5e5',
+                                    display: 'inline-flex',
+                                    flexDirection: 'column',
+                                    gap: '0.35rem',
+                                    minWidth: 90,
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.color = '#8b5cf6'}
-                                  onMouseLeave={(e) => e.currentTarget.style.color = '#171717'}
                                 >
-                                  ₹{product.zepto.currentPrice}
-                                </a>
+                                  <div
+                                    style={{
+                                      fontSize: '1.15rem',
+                                      fontWeight: 700,
+                                      color: '#111827',
+                                    }}
+                                  >
+                                    ₹{product[platform].currentPrice}
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: '0.7rem',
+                                      color: '#6b7280',
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    Rank #{product[platform].ranking}
+                                  </div>
+                                </div>
                               ) : (
-                                <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#171717' }}>₹{product.zepto.currentPrice}</div>
+                                <span style={{ color: '#9ca3af', fontWeight: 500 }}>—</span>
                               )}
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: '#737373',
-                                background: '#f5f5f5',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '0.25rem',
-                                fontWeight: 500
-                              }}>
-                                Rank: #{product.zepto.ranking}
-                              </div>
-                              {renderChangeIndicator(product.zepto.priceChange, 'price')}
-                              {renderChangeIndicator(product.zepto.rankingChange, 'ranking')}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
-                          )}
-                        </td>
-                      )}
-
-                      {/* Blinkit */}
-                      {(platformFilter === 'all' || platformFilter === 'blinkit' || showMissing) && (
-                        <td style={{ textAlign: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                          {product.blinkit ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                              {product.blinkit.url ? (
-                                <a
-                                  href={product.blinkit.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    fontWeight: 700,
-                                    fontSize: '1.25rem',
-                                    color: '#171717',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.color = '#eab308'}
-                                  onMouseLeave={(e) => e.currentTarget.style.color = '#171717'}
-                                >
-                                  ₹{product.blinkit.currentPrice}
-                                </a>
-                              ) : (
-                                <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#171717' }}>₹{product.blinkit.currentPrice}</div>
-                              )}
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: '#737373',
-                                background: '#f5f5f5',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '0.25rem',
-                                fontWeight: 500
-                              }}>
-                                Rank: #{product.blinkit.ranking}
-                              </div>
-                              {renderChangeIndicator(product.blinkit.priceChange, 'price')}
-                              {renderChangeIndicator(product.blinkit.rankingChange, 'ranking')}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
-                          )}
-                        </td>
-                      )}
-
-                      {/* JioMart */}
-                      {(platformFilter === 'all' || platformFilter === 'jiomart' || showMissing) && (
-                        <td style={{ textAlign: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                          {product.jiomart ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                              {product.jiomart.url ? (
-                                <a
-                                  href={product.jiomart.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    fontWeight: 700,
-                                    fontSize: '1.25rem',
-                                    color: '#171717',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.color = '#3b82f6'}
-                                  onMouseLeave={(e) => e.currentTarget.style.color = '#171717'}
-                                >
-                                  ₹{product.jiomart.currentPrice}
-                                </a>
-                              ) : (
-                                <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#171717' }}>₹{product.jiomart.currentPrice}</div>
-                              )}
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: '#737373',
-                                background: '#f5f5f5',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '0.25rem',
-                                fontWeight: 500
-                              }}>
-                                Rank: #{product.jiomart.ranking}
-                              </div>
-                              {renderChangeIndicator(product.jiomart.priceChange, 'price')}
-                              {renderChangeIndicator(product.jiomart.rankingChange, 'ranking')}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
-                          )}
-                        </td>
-                      )}
-
-                      {/* DMart */}
-                      {(platformFilter === 'all' || platformFilter === 'dmart' || showMissing) && (
-                        <td style={{ textAlign: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                          {product.dmart ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                              {product.dmart.url ? (
-                                <a
-                                  href={product.dmart.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    fontWeight: 700,
-                                    fontSize: '1.25rem',
-                                    color: '#171717',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.color = '#f97316'}
-                                  onMouseLeave={(e) => e.currentTarget.style.color = '#171717'}
-                                >
-                                  ₹{product.dmart.currentPrice}
-                                </a>
-                              ) : (
-                                <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#171717' }}>₹{product.dmart.currentPrice}</div>
-                              )}
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: '#737373',
-                                background: '#f5f5f5',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '0.25rem',
-                                fontWeight: 500
-                              }}>
-                                Rank: #{product.dmart.ranking}
-                              </div>
-                              {renderChangeIndicator(product.dmart.priceChange, 'price')}
-                              {renderChangeIndicator(product.dmart.rankingChange, 'ranking')}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
-                          )}
-                        </td>
+                            </td>
+                          )
                       )}
                     </tr>
                   ))}
@@ -1060,7 +990,7 @@ export default function CategoriesPage() {
             <div style={{
               background: 'white',
               borderRadius: '1rem',
-              border: '1px solid #e5e5e5',
+              border: '1px solid #e5e5e5ff',
               overflow: 'hidden'
             }}>
               {/* Header Section */}
@@ -1136,40 +1066,40 @@ export default function CategoriesPage() {
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      justifyContent: 'center'  
+                      justifyContent: 'center'
                     }}>
                       <ResponsiveContainer width="100%" height={450}>
                         <AreaChart
                           data={(() => {
                             // First, apply the Time Travel filter
                             const timeTravelData = getSnapshotFilteredData(historyData);
-                            
+
                             const now = snapshotTime ? new Date(snapshotTime).getTime() : Date.now();
-                            const cutoff = dateRange === '7d' 
+                            const cutoff = dateRange === '7d'
                               ? now - (7 * 24 * 60 * 60 * 1000)
                               : now - (30 * 24 * 60 * 60 * 1000);
-                            
+
                             return timeTravelData.filter(d => d.timestamp >= cutoff);
                           })()}
                           margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
                         >
                           <defs>
                             <linearGradient id="colorZepto" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0}/>
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0.2} />
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="colorBlinkit" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0}/>
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0.2} />
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="colorJioMart" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0}/>
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0.2} />
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0} />
                             </linearGradient>
                           </defs>
-                          
+
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                          
+
                           <XAxis
                             dataKey="date"
                             angle={-45}
@@ -1180,7 +1110,7 @@ export default function CategoriesPage() {
                             tick={{ fontSize: 11, fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
                           />
-                          
+
                           <YAxis
                             label={{
                               value: 'Price (₹)',
@@ -1192,7 +1122,7 @@ export default function CategoriesPage() {
                             tick={{ fontSize: 11, fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
                           />
-                          
+
                           {/* --- FIXED TOOLTIP --- */}
                           <Tooltip
                             contentStyle={{
@@ -1221,7 +1151,7 @@ export default function CategoriesPage() {
                               return [`₹${value.toFixed(2)}`, name];
                             }}
                           />
-                          
+
                           <Legend
                             wrapperStyle={{
                               paddingTop: '1.5rem',
@@ -1231,7 +1161,7 @@ export default function CategoriesPage() {
                             iconType="circle"
                             iconSize={10}
                           />
-                          
+
                           {(platformFilter === 'all' || platformFilter === 'zepto') && (
                             <Area
                               type="monotone"
@@ -1255,7 +1185,7 @@ export default function CategoriesPage() {
                               connectNulls
                             />
                           )}
-                          
+
                           {(platformFilter === 'all' || platformFilter === 'blinkit') && (
                             <Area
                               type="monotone"
@@ -1279,7 +1209,7 @@ export default function CategoriesPage() {
                               connectNulls
                             />
                           )}
-                          
+
                           {(platformFilter === 'all' || platformFilter === 'jiomart') && (
                             <Area
                               type="monotone"
@@ -1403,8 +1333,8 @@ export default function CategoriesPage() {
                     value={
                       selectedProduct
                         ? filteredProducts.findIndex(
-                            p => p.name === selectedProduct.name
-                          )
+                          p => p.name === selectedProduct.name
+                        )
                         : ''
                     }
                     onChange={e =>
@@ -1446,14 +1376,14 @@ export default function CategoriesPage() {
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'center'  
+                        justifyContent: 'center'
                       }}
                     >
                       <ResponsiveContainer width="100%" height={450}>
                         <AreaChart
                           data={(() => {
                             // Snapshot feature 
-                            const timeTravelData = getSnapshotFilteredData(historyData); 
+                            const timeTravelData = getSnapshotFilteredData(historyData);
 
                             // If 'All Time', return the filtered list immediately
                             if (dateRange === 'all') return timeTravelData;
@@ -1463,8 +1393,8 @@ export default function CategoriesPage() {
                             const referenceTime = snapshotTime ? new Date(snapshotTime).getTime() : Date.now();
 
                             // Calculate the "Start Date" based on the range (7d / 30d)
-                            const cutoff = dateRange === '7d' 
-                              ? referenceTime - (7 * 24 * 60 * 60 * 1000) 
+                            const cutoff = dateRange === '7d'
+                              ? referenceTime - (7 * 24 * 60 * 60 * 1000)
                               : referenceTime - (30 * 24 * 60 * 60 * 1000);
 
                             // Return data within that specific window
@@ -1670,8 +1600,8 @@ export default function CategoriesPage() {
                     value={
                       selectedProduct
                         ? filteredProducts.findIndex(
-                            p => p.name === selectedProduct.name
-                          )
+                          p => p.name === selectedProduct.name
+                        )
                         : ''
                     }
                     onChange={e => {
@@ -1748,7 +1678,7 @@ export default function CategoriesPage() {
                             // Calculate cutoff based on the snapshot time (not just "now")
                             const referenceTime = snapshotTime ? new Date(snapshotTime).getTime() : Date.now();
 
-                            const cutoff = dateRange === 'all' ? 0 : 
+                            const cutoff = dateRange === 'all' ? 0 :
                               (dateRange === '7d' ? referenceTime - (7 * 24 * 60 * 60 * 1000) : referenceTime - (30 * 24 * 60 * 60 * 1000));
 
                             const filteredRaw = timeTravelData.filter(d => d.timestamp >= cutoff);
@@ -1757,7 +1687,7 @@ export default function CategoriesPage() {
                             const dailyMap = new Map();
 
                             filteredRaw.forEach(entry => {
-                              const day = entry.date.split(',')[0]; 
+                              const day = entry.date.split(',')[0];
 
                               if (!dailyMap.has(day)) {
                                 dailyMap.set(day, {
@@ -1888,11 +1818,11 @@ export default function CategoriesPage() {
                               if (payload.rawZepto === null) return null;
                               const isStock = payload.rawZepto === 1;
                               return (
-                                <circle 
-                                  cx={cx} cy={cy} r={4} 
-                                  fill="white" 
-                                  stroke={isStock ? '#22c55e' : '#ef4444'} 
-                                  strokeWidth={2} 
+                                <circle
+                                  cx={cx} cy={cy} r={4}
+                                  fill="white"
+                                  stroke={isStock ? '#22c55e' : '#ef4444'}
+                                  strokeWidth={2}
                                 />
                               );
                             }}
@@ -1911,11 +1841,11 @@ export default function CategoriesPage() {
                               if (payload.rawBlinkit === null) return null;
                               const isStock = payload.rawBlinkit === 1;
                               return (
-                                <circle 
-                                  cx={cx} cy={cy} r={4} 
-                                  fill="white" 
-                                  stroke={isStock ? '#22c55e' : '#ef4444'} 
-                                  strokeWidth={2} 
+                                <circle
+                                  cx={cx} cy={cy} r={4}
+                                  fill="white"
+                                  stroke={isStock ? '#22c55e' : '#ef4444'}
+                                  strokeWidth={2}
                                 />
                               );
                             }}
@@ -1934,11 +1864,11 @@ export default function CategoriesPage() {
                               if (payload.rawJioMart === null) return null;
                               const isStock = payload.rawJioMart === 1;
                               return (
-                                <circle 
-                                  cx={cx} cy={cy} r={4} 
-                                  fill="white" 
-                                  stroke={isStock ? '#22c55e' : '#ef4444'} 
-                                  strokeWidth={2} 
+                                <circle
+                                  cx={cx} cy={cy} r={4}
+                                  fill="white"
+                                  stroke={isStock ? '#22c55e' : '#ef4444'}
+                                  strokeWidth={2}
                                 />
                               );
                             }}
@@ -1991,7 +1921,7 @@ export default function CategoriesPage() {
               </div>
             </div>
           )}
-          
+
           {activeTab === 'analytics' && (
             <AnalyticsTab category={category} pincode={pincode} platform={platformFilter} />
           )}
