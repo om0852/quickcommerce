@@ -2,17 +2,27 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+    const pincode = searchParams.get('pincode');
+
     await dbConnect();
 
-    // distinct('scrapedAt') gets all unique timestamps from your DB
-    const timestamps = await ProductSnapshot.distinct('scrapedAt');
+    // 1. Build a dynamic filter
+    const filter = {};
+    if (category) filter.category = category;
+    if (pincode) filter.pincode = pincode;
 
-    // Sort them: Newest first so the dropdown shows latest dates at the top
+    // 2. Fetch distinct timestamps based on BOTH category and pincode
+    const timestamps = await ProductSnapshot.distinct('scrapedAt', filter);
+
+    // 3. Sort them: Newest first
     const sortedSnapshots = timestamps.sort((a, b) => new Date(b) - new Date(a));
 
     return NextResponse.json({ 
+      success: true,
       snapshots: sortedSnapshots 
     });
 

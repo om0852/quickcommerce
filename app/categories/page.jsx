@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Filter, Package, Dow
 import { AreaChart, Area, BarChart, Bar, ComposedChart, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ScatterChart, Scatter, Cell, ReferenceLine, ReferenceArea } from 'recharts';
 import AnalyticsTab from './AnalyticsTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
+import CustomDropdown from '@/components/CustomDropdown';
 
 export default function CategoriesPage() {
   const [category, setCategory] = useState('milk');
@@ -25,6 +26,7 @@ export default function CategoriesPage() {
   const [snapshotDate, setSnapshotDate] = useState('');
   const [snapshotTime, setSnapshotTime] = useState('');
   const [availableSnapshots, setAvailableSnapshots] = useState([]);
+  const [isLiveMode, setIsLiveMode] = useState(true);
 
   const PINCODE_OPTIONS = [
     { label: 'Gurgaon — 122018', value: '122018' },
@@ -170,25 +172,38 @@ export default function CategoriesPage() {
     }
   }, [activeTab, selectedProduct]);
 
-  // Fetch available snapshots when the page loads
+  // Fetch available snapshots and handle "Smart Selection"
   useEffect(() => {
     const fetchSnapshots = async () => {
-      try {
-        const res = await fetch('/api/available-snapshots');
-        const data = await res.json();
-        if (data.snapshots) {
-          setAvailableSnapshots(data.snapshots);
+      const res = await fetch(`/api/available-snapshots?category=${category}&pincode=${pincode}`);
+      const data = await res.json();
+
+      if (data.snapshots && data.snapshots.length > 0) {
+        setAvailableSnapshots(data.snapshots);
+
+        // If user is in Live Mode, or just clicked Reset, force selection to absolute newest
+        if (isLiveMode) {
+          const latestTS = data.snapshots[0];
+          const dateObj = new Date(latestTS);
+          setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
+          setSnapshotTime(latestTS);
+          fetchCategoryData(latestTS);
+        } else {
+          // Smart persistence: Try to stay on selected date if it exists for this new category
+          const snapshotsForSameDate = data.snapshots.filter(ts =>
+            new Date(ts).toLocaleDateString('en-CA') === snapshotDate
+          );
+          if (snapshotDate && snapshotsForSameDate.length > 0) {
+            setSnapshotTime(snapshotsForSameDate[0]);
+            fetchCategoryData(snapshotsForSameDate[0]);
+          } else {
+            setIsLiveMode(true); // No data for old date, jump to live
+          }
         }
-      } catch (err) {
-        console.error("Failed to load history options", err);
       }
     };
     fetchSnapshots();
-  }, []);
-
-  useEffect(() => {
-    fetchCategoryData(snapshotTime);
-  }, [category, pincode]);
+  }, [category, pincode, isLiveMode]); // Now listens for reset clicks too
 
   useEffect(() => {
     if (activeTab === 'stock' && selectedProduct) {
@@ -254,6 +269,23 @@ export default function CategoriesPage() {
       }
     }
   }, [products]);
+
+  const thStyle = {
+    padding: '1rem 1.5rem',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    color: '#111827',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    borderBottom: '1px solid #e5e7eb',
+  };
+
+  const tdStyle = {
+    padding: '1.25rem 1.5rem',
+    borderBottom: '1px solid #f1f5f9',
+    verticalAlign: 'middle',
+  };
+
 
   const renderChangeIndicator = (change, type = 'price') => {
     // Don't show anything for no change - cleaner UI
@@ -547,36 +579,27 @@ export default function CategoriesPage() {
       {/* Filters */}
       <div className="card" style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#171717' }}>
-              Category
-            </label>
-            <select
+          <div className="field-wrapper">
+            <label className="field-label">Category</label>
+            <CustomDropdown
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="select"
-            >
-              {CATEGORY_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+              onChange={(val) => setCategory(val)}
+              options={CATEGORY_OPTIONS}
+              placeholder="Select Category"
+            />
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#171717' }}>
-              Pincode
-            </label>
-            <select
+
+          <div className="field-wrapper">
+            <label className="field-label">Pincode</label>
+            <CustomDropdown
               value={pincode}
-              onChange={(e) => setPincode(e.target.value)}
-              className="select"
-            >
-              {PINCODE_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+              onChange={(val) => setPincode(val)}
+              options={PINCODE_OPTIONS}
+              placeholder="Select Pincode"
+            />
 
+          </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#171717' }}>
               &nbsp;
@@ -817,241 +840,150 @@ export default function CategoriesPage() {
           </div>
 
           {activeTab === 'products' && (
-            <div className="table-container" style={{ overflow: 'hidden', borderRadius: '0.75rem', border: '1px solid #e5e5e5' }}>
-              <table className="table" style={{ marginBottom: 0 }}>
+            <div
+              style={{
+                borderRadius: '1rem',
+                border: '1px solid #e5e5e5',
+                overflow: 'hidden',
+                background: 'linear-gradient(180deg, #ffffff 0%, #fafafa 100%)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+              }}
+            >
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'separate',
+                  borderSpacing: 0,
+                }}
+              >
+                {/* ================= HEADER ================= */}
                 <thead>
-                  <tr style={{ background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)' }}>
-                    <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '2px solid #e5e5e5' }}>Product</th>
-                    {(platformFilter === 'all' || platformFilter === 'zepto' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>Zepto</th>}
-                    {(platformFilter === 'all' || platformFilter === 'blinkit' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>Blinkit</th>}
-                    {(platformFilter === 'all' || platformFilter === 'jiomart' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>JioMart</th>}
-                    {(platformFilter === 'all' || platformFilter === 'dmart' || showMissing) && <th style={{ padding: '1rem 1.5rem', fontSize: '0.8125rem', fontWeight: 700, color: '#171717', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', borderBottom: '2px solid #e5e5e5' }}>DMart</th>}
+                  <tr
+                    style={{
+                      background: 'linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%)',
+                    }}
+                  >
+                    <th style={thStyle}>Product</th>
+                    {(platformFilter === 'all' || platformFilter === 'zepto' || showMissing) && (
+                      <th style={{ ...thStyle, textAlign: 'center' }}>Zepto</th>
+                    )}
+                    {(platformFilter === 'all' || platformFilter === 'blinkit' || showMissing) && (
+                      <th style={{ ...thStyle, textAlign: 'center' }}>Blinkit</th>
+                    )}
+                    {(platformFilter === 'all' || platformFilter === 'jiomart' || showMissing) && (
+                      <th style={{ ...thStyle, textAlign: 'center' }}>JioMart</th>
+                    )}
+                    {(platformFilter === 'all' || platformFilter === 'dmart' || showMissing) && (
+                      <th style={{ ...thStyle, textAlign: 'center' }}>DMart</th>
+                    )}
                   </tr>
                 </thead>
+
+                {/* ================= BODY ================= */}
                 <tbody>
                   {filteredProducts.map((product, index) => (
                     <tr
                       key={index}
                       style={{
-                        background: index % 2 === 0 ? 'white' : '#fafafa',
-                        transition: 'all 0.2s'
+                        background: '#fff',
+                        transition: 'background 0.2s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f3f4f6';
-                        e.currentTarget.style.transform = 'scale(1.005)';
+                        e.currentTarget.style.background = '#f9fafb';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = index % 2 === 0 ? 'white' : '#fafafa';
-                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.background = '#fff';
                       }}
                     >
-                      {/* Product Info */}
-                      <td style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      {/* -------- Product Cell -------- */}
+                      <td style={tdStyle}>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                           {product.image && (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              style={{
-                                width: '72px',
-                                height: '72px',
-                                objectFit: 'contain',
-                                borderRadius: '0.5rem',
-                                background: 'white',
-                                border: '1px solid #e5e5e5',
-                                padding: '0.25rem'
-                              }}
-                            />
+                            <div className="product-image-3d">
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="product-img"
+                              />
+                            </div>
                           )}
+
                           <div>
-                            <p style={{ fontWeight: 600, fontSize: '0.9375rem', marginBottom: '0.375rem', color: '#171717', lineHeight: 1.4 }}>{product.name}</p>
+                            <div
+                              style={{
+                                fontSize: '0.95rem',
+                                fontWeight: 600,
+                                color: '#111827',
+                                lineHeight: 1.4,
+                                marginBottom: '0.35rem',
+                              }}
+                            >
+                              {product.name}
+                            </div>
+
                             {product.weight && (
-                              <p style={{ fontSize: '0.8125rem', color: '#737373', background: '#f5f5f5', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block' }}>
+                              <span
+                                style={{
+                                  fontSize: '0.75rem',
+                                  color: '#6b7280',
+                                  background: '#f3f4f6',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.375rem',
+                                  fontWeight: 500,
+                                }}
+                              >
                                 {product.weight}
-                              </p>
+                              </span>
                             )}
                           </div>
                         </div>
+
                       </td>
 
-                      {/* Zepto */}
-                      {(platformFilter === 'all' || platformFilter === 'zepto' || showMissing) && (
-                        <td style={{ textAlign: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                          {product.zepto ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                              {product.zepto.url ? (
-                                <a
-                                  href={product.zepto.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                      {/* -------- PLATFORM CELLS -------- */}
+                      {['zepto', 'blinkit', 'jiomart', 'dmart'].map(
+                        (platform) =>
+                          (platformFilter === 'all' ||
+                            platformFilter === platform ||
+                            showMissing) && (
+                            <td key={platform} style={{ ...tdStyle, textAlign: 'center' }}>
+                              {product[platform] ? (
+                                <div
                                   style={{
-                                    fontWeight: 700,
-                                    fontSize: '1.25rem',
-                                    color: '#171717',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.2s'
+                                    background: '#fafafa',
+                                    borderRadius: '0.75rem',
+                                    padding: '0.75rem',
+                                    border: '1px solid #e5e5e5',
+                                    display: 'inline-flex',
+                                    flexDirection: 'column',
+                                    gap: '0.35rem',
+                                    minWidth: 90,
                                   }}
-                                  onMouseEnter={(e) => e.currentTarget.style.color = '#8b5cf6'}
-                                  onMouseLeave={(e) => e.currentTarget.style.color = '#171717'}
                                 >
-                                  ₹{product.zepto.currentPrice}
-                                </a>
+                                  <div
+                                    style={{
+                                      fontSize: '1.15rem',
+                                      fontWeight: 700,
+                                      color: '#111827',
+                                    }}
+                                  >
+                                    ₹{product[platform].currentPrice}
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: '0.7rem',
+                                      color: '#6b7280',
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    Rank #{product[platform].ranking}
+                                  </div>
+                                </div>
                               ) : (
-                                <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#171717' }}>₹{product.zepto.currentPrice}</div>
+                                <span style={{ color: '#9ca3af', fontWeight: 500 }}>—</span>
                               )}
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: '#737373',
-                                background: '#f5f5f5',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '0.25rem',
-                                fontWeight: 500
-                              }}>
-                                Rank: #{product.zepto.ranking}
-                              </div>
-                              {renderChangeIndicator(product.zepto.priceChange, 'price')}
-                              {renderChangeIndicator(product.zepto.rankingChange, 'ranking')}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
-                          )}
-                        </td>
-                      )}
-
-                      {/* Blinkit */}
-                      {(platformFilter === 'all' || platformFilter === 'blinkit' || showMissing) && (
-                        <td style={{ textAlign: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                          {product.blinkit ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                              {product.blinkit.url ? (
-                                <a
-                                  href={product.blinkit.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    fontWeight: 700,
-                                    fontSize: '1.25rem',
-                                    color: '#171717',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.color = '#eab308'}
-                                  onMouseLeave={(e) => e.currentTarget.style.color = '#171717'}
-                                >
-                                  ₹{product.blinkit.currentPrice}
-                                </a>
-                              ) : (
-                                <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#171717' }}>₹{product.blinkit.currentPrice}</div>
-                              )}
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: '#737373',
-                                background: '#f5f5f5',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '0.25rem',
-                                fontWeight: 500
-                              }}>
-                                Rank: #{product.blinkit.ranking}
-                              </div>
-                              {renderChangeIndicator(product.blinkit.priceChange, 'price')}
-                              {renderChangeIndicator(product.blinkit.rankingChange, 'ranking')}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
-                          )}
-                        </td>
-                      )}
-
-                      {/* JioMart */}
-                      {(platformFilter === 'all' || platformFilter === 'jiomart' || showMissing) && (
-                        <td style={{ textAlign: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                          {product.jiomart ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                              {product.jiomart.url ? (
-                                <a
-                                  href={product.jiomart.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    fontWeight: 700,
-                                    fontSize: '1.25rem',
-                                    color: '#171717',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.color = '#3b82f6'}
-                                  onMouseLeave={(e) => e.currentTarget.style.color = '#171717'}
-                                >
-                                  ₹{product.jiomart.currentPrice}
-                                </a>
-                              ) : (
-                                <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#171717' }}>₹{product.jiomart.currentPrice}</div>
-                              )}
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: '#737373',
-                                background: '#f5f5f5',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '0.25rem',
-                                fontWeight: 500
-                              }}>
-                                Rank: #{product.jiomart.ranking}
-                              </div>
-                              {renderChangeIndicator(product.jiomart.priceChange, 'price')}
-                              {renderChangeIndicator(product.jiomart.rankingChange, 'ranking')}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
-                          )}
-                        </td>
-                      )}
-
-                      {/* DMart */}
-                      {(platformFilter === 'all' || platformFilter === 'dmart' || showMissing) && (
-                        <td style={{ textAlign: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
-                          {product.dmart ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                              {product.dmart.url ? (
-                                <a
-                                  href={product.dmart.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    fontWeight: 700,
-                                    fontSize: '1.25rem',
-                                    color: '#171717',
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'color 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.color = '#f97316'}
-                                  onMouseLeave={(e) => e.currentTarget.style.color = '#171717'}
-                                >
-                                  ₹{product.dmart.currentPrice}
-                                </a>
-                              ) : (
-                                <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#171717' }}>₹{product.dmart.currentPrice}</div>
-                              )}
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: '#737373',
-                                background: '#f5f5f5',
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '0.25rem',
-                                fontWeight: 500
-                              }}>
-                                Rank: #{product.dmart.ranking}
-                              </div>
-                              {renderChangeIndicator(product.dmart.priceChange, 'price')}
-                              {renderChangeIndicator(product.dmart.rankingChange, 'ranking')}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#a3a3a3', fontSize: '0.875rem', fontWeight: 500 }}>—</span>
-                          )}
-                        </td>
+                            </td>
+                          )
                       )}
                     </tr>
                   ))}
@@ -1064,7 +996,7 @@ export default function CategoriesPage() {
             <div style={{
               background: 'white',
               borderRadius: '1rem',
-              border: '1px solid #e5e5e5',
+              border: '1px solid #e5e5e5ff',
               overflow: 'hidden'
             }}>
               {/* Header Section */}
