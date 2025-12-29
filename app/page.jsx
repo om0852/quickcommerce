@@ -16,7 +16,11 @@ export default function Home() {
     { label: 'Gurgaon — 122017', value: '122017' },
     { label: 'Gurgaon — 122016', value: '122016' },
     { label: 'Gurgaon — 122015', value: '122015' },
-    { label: 'Gurgaon — 122011', value: '122011' }
+    { label: 'Gurgaon — 122011', value: '122011' },
+    { label: 'Delhi NCR — 201303', value: '201303' },
+    { label: 'Delhi NCR — 201014', value: '201014' },
+    { label: 'Delhi NCR — 122008', value: '122008' },
+    { label: 'Delhi NCR — 122010', value: '122010' }
   ];
 
   const filteredProducts = useMemo(() => {

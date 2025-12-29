@@ -22,8 +22,8 @@ export default function CategoriesPage() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const [snapshotDate, setSnapshotDate] = useState(''); 
-  const [snapshotTime, setSnapshotTime] = useState(''); 
+  const [snapshotDate, setSnapshotDate] = useState('');
+  const [snapshotTime, setSnapshotTime] = useState('');
   const [availableSnapshots, setAvailableSnapshots] = useState([]);
 
   const PINCODE_OPTIONS = [
@@ -31,7 +31,11 @@ export default function CategoriesPage() {
     { label: 'Gurgaon — 122017', value: '122017' },
     { label: 'Gurgaon — 122016', value: '122016' },
     { label: 'Gurgaon — 122015', value: '122015' },
-    { label: 'Gurgaon — 122011', value: '122011' }
+    { label: 'Gurgaon — 122011', value: '122011' },
+    { label: 'Delhi NCR — 201303', value: '201303' },
+    { label: 'Delhi NCR — 201014', value: '201014' },
+    { label: 'Delhi NCR — 122008', value: '122008' },
+    { label: 'Delhi NCR — 122010', value: '122010' }
   ];
 
   const CATEGORY_OPTIONS = [
@@ -81,7 +85,7 @@ export default function CategoriesPage() {
       const timeToFetch = customTimestamp !== null ? customTimestamp : (snapshotTime || null);
 
       let url = `/api/category-data?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`;
-      
+
       if (timeToFetch) {
         url += `&timestamp=${encodeURIComponent(timeToFetch)}`;
       }
@@ -92,14 +96,14 @@ export default function CategoriesPage() {
       if (!response.ok) throw new Error(data.error || 'Failed to fetch category data');
 
       setProducts(data.products || []);
-      
+
       // --- THE FIX ---
       // We ONLY update 'lastUpdated' if we fetched LIVE data (timeToFetch is null).
       // If we fetched a specific history slot, we keep 'lastUpdated' pointing to the real "Latest" time.
       if (!timeToFetch) {
         setLastUpdated(data.lastUpdated);
       }
-      
+
     } catch (err) {
       setError(err.message);
       setProducts([]);
@@ -291,11 +295,11 @@ export default function CategoriesPage() {
     const dates = availableSnapshots.map(ts => {
       const d = new Date(ts);
       // Use 'en-CA' to get consistent YYYY-MM-DD format
-      return d.toLocaleDateString('en-CA'); 
+      return d.toLocaleDateString('en-CA');
     });
     return [...new Set(dates)]; // Remove duplicates
   }, [availableSnapshots]);
-  
+
   // 3. Filter Times for the second dropdown based on selected Date
   const availableTimes = useMemo(() => {
     if (!snapshotDate) return [];
@@ -303,16 +307,16 @@ export default function CategoriesPage() {
       .filter(ts => {
         const d = new Date(ts);
         return d.toLocaleDateString('en-CA') === snapshotDate;
-    })
-    .map(ts => {
-      const d = new Date(ts);
-      return {
-        value: ts, // We keep the Full ISO Timestamp to send to API
-        label: d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }) // e.g. "4:34 pm"
-      };
-    });
+      })
+      .map(ts => {
+        const d = new Date(ts);
+        return {
+          value: ts, // We keep the Full ISO Timestamp to send to API
+          label: d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }) // e.g. "4:34 pm"
+        };
+      });
   }, [snapshotDate, availableSnapshots]);
-  
+
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return 'Never';
     const date = new Date(timestamp);
@@ -358,25 +362,25 @@ export default function CategoriesPage() {
   useEffect(() => {
     if (lastUpdated && !snapshotTime) {
       const dateObj = new Date(lastUpdated);
-      
+
       // 1. Format date to YYYY-MM-DD (must match your uniqueDates logic)
       const dateStr = dateObj.toLocaleDateString('en-CA');
-      
+
       // 2. Set the state variables
       setSnapshotDate(dateStr);
-      setSnapshotTime(lastUpdated); 
+      setSnapshotTime(lastUpdated);
     }
   }, [lastUpdated]);
 
   const getPriceStats = (historyData, platform) => {
     if (!historyData || historyData.length === 0) return null;
-    
+
     const prices = historyData
       .map(d => d[platform])
       .filter(p => p !== null && p !== undefined);
-    
+
     if (prices.length === 0) return null;
-    
+
     return {
       current: prices[prices.length - 1],
       min: Math.min(...prices),
@@ -387,24 +391,24 @@ export default function CategoriesPage() {
 
   const getLowestPricePlatform = (historyData) => {
     if (!historyData || historyData.length === 0) return null;
-    
+
     const lastData = historyData[historyData.length - 1];
     const prices = {
       Zepto: lastData.Zepto,
       Blinkit: lastData.Blinkit,
       JioMart: lastData.JioMart
     };
-    
+
     let lowest = null;
     let lowestPrice = Infinity;
-    
+
     Object.entries(prices).forEach(([platform, price]) => {
       if (price !== null && price !== undefined && price < lowestPrice) {
         lowestPrice = price;
         lowest = platform;
       }
     });
-    
+
     return lowest;
   };
 
@@ -490,7 +494,7 @@ export default function CategoriesPage() {
   // --- HELPER: Filter history/stock data based on selected snapshot ---
   const getSnapshotFilteredData = (data) => {
     if (!data || data.length === 0) return [];
-    
+
     // If no snapshot is selected, return everything
     if (!snapshotTime) return data;
 
@@ -661,89 +665,89 @@ export default function CategoriesPage() {
         </div>
 
         {/* --- SNAPSHOT SELECTOR (Date -> Time) --- */}
-          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-            
-            {/* Left Side: Status Text */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#737373' }}>
-              <Clock size={16} />
-              <span>
-                {/* Compare timestamps to decide what text to show */}
-                {snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()
-                  ? <span style={{ color: '#171717', fontWeight: 600 }}>Viewing Snapshot: {new Date(snapshotTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                  : `Latest Data: ${lastUpdated ? formatTimestamp(lastUpdated) : 'Never'}`
-                }
-              </span>
-            </div>
+        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
 
-            {/* Right Side: The Dropdown Selectors */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#171717', whiteSpace: 'nowrap' }}>
-                View History:
-              </span>
-              
-              {/* 1. Date Select */}
-              <select 
-                value={snapshotDate}
-                onChange={(e) => {
-                  setSnapshotDate(e.target.value);
-                  setSnapshotTime(''); 
-                }}
-                className="select"
-                style={{ padding: '0.4rem 2rem 0.4rem 0.75rem', minWidth: '140px', fontSize: '0.875rem' }}
-              >
-                <option value="">Select Date</option>
-                {uniqueDates.map(dateStr => (
-                  <option key={dateStr} value={dateStr}>
-                    {new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </option>
-                ))}
-              </select>
-
-              {/* 2. Time Select */}
-              <select 
-                value={snapshotTime}
-                onChange={(e) => {
-                  const ts = e.target.value;
-                  setSnapshotTime(ts);
-                  if (ts) fetchCategoryData(ts); 
-                }}
-                disabled={!snapshotDate}
-                className="select"
-                style={{ 
-                  padding: '0.4rem 2rem 0.4rem 0.75rem', 
-                  minWidth: '120px', 
-                  fontSize: '0.875rem',
-                  opacity: snapshotDate ? 1 : 0.5,
-                  cursor: snapshotDate ? 'pointer' : 'not-allowed'
-                }}
-              >
-                <option value="">Select Time</option>
-                {availableTimes.map((t, i) => (
-                  <option key={i} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-
-              {/* 3. Reset Button - Only Visible when time is NOT the default */}
-              {(snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()) && (
-                <button 
-                  onClick={() => {
-                    if (lastUpdated) {
-                      const dateObj = new Date(lastUpdated);
-                      // 1. Reset Date Dropdown to Default
-                      setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
-                      // 2. Reset Time Dropdown to Default
-                      setSnapshotTime(lastUpdated);
-                      // 3. Fetch Live Data immediately
-                      fetchCategoryData(lastUpdated); 
-                    }
-                  }}
-                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', marginLeft: '0.5rem', textDecoration: 'underline', whiteSpace: 'nowrap' }}
-                >
-                  Reset
-                </button>
-              )}
-            </div>
+          {/* Left Side: Status Text */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#737373' }}>
+            <Clock size={16} />
+            <span>
+              {/* Compare timestamps to decide what text to show */}
+              {snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()
+                ? <span style={{ color: '#171717', fontWeight: 600 }}>Viewing Snapshot: {new Date(snapshotTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                : `Latest Data: ${lastUpdated ? formatTimestamp(lastUpdated) : 'Never'}`
+              }
+            </span>
           </div>
+
+          {/* Right Side: The Dropdown Selectors */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap' }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#171717', whiteSpace: 'nowrap' }}>
+              View History:
+            </span>
+
+            {/* 1. Date Select */}
+            <select
+              value={snapshotDate}
+              onChange={(e) => {
+                setSnapshotDate(e.target.value);
+                setSnapshotTime('');
+              }}
+              className="select"
+              style={{ padding: '0.4rem 2rem 0.4rem 0.75rem', minWidth: '140px', fontSize: '0.875rem' }}
+            >
+              <option value="">Select Date</option>
+              {uniqueDates.map(dateStr => (
+                <option key={dateStr} value={dateStr}>
+                  {new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </option>
+              ))}
+            </select>
+
+            {/* 2. Time Select */}
+            <select
+              value={snapshotTime}
+              onChange={(e) => {
+                const ts = e.target.value;
+                setSnapshotTime(ts);
+                if (ts) fetchCategoryData(ts);
+              }}
+              disabled={!snapshotDate}
+              className="select"
+              style={{
+                padding: '0.4rem 2rem 0.4rem 0.75rem',
+                minWidth: '120px',
+                fontSize: '0.875rem',
+                opacity: snapshotDate ? 1 : 0.5,
+                cursor: snapshotDate ? 'pointer' : 'not-allowed'
+              }}
+            >
+              <option value="">Select Time</option>
+              {availableTimes.map((t, i) => (
+                <option key={i} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+
+            {/* 3. Reset Button - Only Visible when time is NOT the default */}
+            {(snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()) && (
+              <button
+                onClick={() => {
+                  if (lastUpdated) {
+                    const dateObj = new Date(lastUpdated);
+                    // 1. Reset Date Dropdown to Default
+                    setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
+                    // 2. Reset Time Dropdown to Default
+                    setSnapshotTime(lastUpdated);
+                    // 3. Fetch Live Data immediately
+                    fetchCategoryData(lastUpdated);
+                  }
+                }}
+                style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', marginLeft: '0.5rem', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <ExportCategoryDialog
@@ -759,16 +763,16 @@ export default function CategoriesPage() {
 
       {/* Loading State - Updated for visibility */}
       {loading && (
-        <div style={{ 
-          height: '400px', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          color: '#6b7280' 
+        <div style={{
+          height: '400px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#6b7280'
         }}>
-          <div 
-            className="animate-spin rounded-full h-10 w-10 border-b-2 border-black" 
+          <div
+            className="animate-spin rounded-full h-10 w-10 border-b-2 border-black"
             style={{ marginBottom: '1rem' }}
           ></div>
           <p style={{ fontWeight: 500 }}>Loading data...</p>
@@ -1136,40 +1140,40 @@ export default function CategoriesPage() {
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      justifyContent: 'center'  
+                      justifyContent: 'center'
                     }}>
                       <ResponsiveContainer width="100%" height={450}>
                         <AreaChart
                           data={(() => {
                             // First, apply the Time Travel filter
                             const timeTravelData = getSnapshotFilteredData(historyData);
-                            
+
                             const now = snapshotTime ? new Date(snapshotTime).getTime() : Date.now();
-                            const cutoff = dateRange === '7d' 
+                            const cutoff = dateRange === '7d'
                               ? now - (7 * 24 * 60 * 60 * 1000)
                               : now - (30 * 24 * 60 * 60 * 1000);
-                            
+
                             return timeTravelData.filter(d => d.timestamp >= cutoff);
                           })()}
                           margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
                         >
                           <defs>
                             <linearGradient id="colorZepto" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0}/>
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0.2} />
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.zepto.primary} stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="colorBlinkit" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0}/>
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0.2} />
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.blinkit.primary} stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="colorJioMart" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0}/>
+                              <stop offset="5%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0.2} />
+                              <stop offset="95%" stopColor={PLATFORM_COLORS.jiomart.primary} stopOpacity={0} />
                             </linearGradient>
                           </defs>
-                          
+
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                          
+
                           <XAxis
                             dataKey="date"
                             angle={-45}
@@ -1180,7 +1184,7 @@ export default function CategoriesPage() {
                             tick={{ fontSize: 11, fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
                           />
-                          
+
                           <YAxis
                             label={{
                               value: 'Price (₹)',
@@ -1192,7 +1196,7 @@ export default function CategoriesPage() {
                             tick={{ fontSize: 11, fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
                           />
-                          
+
                           {/* --- FIXED TOOLTIP --- */}
                           <Tooltip
                             contentStyle={{
@@ -1221,7 +1225,7 @@ export default function CategoriesPage() {
                               return [`₹${value.toFixed(2)}`, name];
                             }}
                           />
-                          
+
                           <Legend
                             wrapperStyle={{
                               paddingTop: '1.5rem',
@@ -1231,7 +1235,7 @@ export default function CategoriesPage() {
                             iconType="circle"
                             iconSize={10}
                           />
-                          
+
                           {(platformFilter === 'all' || platformFilter === 'zepto') && (
                             <Area
                               type="monotone"
@@ -1255,7 +1259,7 @@ export default function CategoriesPage() {
                               connectNulls
                             />
                           )}
-                          
+
                           {(platformFilter === 'all' || platformFilter === 'blinkit') && (
                             <Area
                               type="monotone"
@@ -1279,7 +1283,7 @@ export default function CategoriesPage() {
                               connectNulls
                             />
                           )}
-                          
+
                           {(platformFilter === 'all' || platformFilter === 'jiomart') && (
                             <Area
                               type="monotone"
@@ -1403,8 +1407,8 @@ export default function CategoriesPage() {
                     value={
                       selectedProduct
                         ? filteredProducts.findIndex(
-                            p => p.name === selectedProduct.name
-                          )
+                          p => p.name === selectedProduct.name
+                        )
                         : ''
                     }
                     onChange={e =>
@@ -1446,14 +1450,14 @@ export default function CategoriesPage() {
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'center'  
+                        justifyContent: 'center'
                       }}
                     >
                       <ResponsiveContainer width="100%" height={450}>
                         <AreaChart
                           data={(() => {
                             // Snapshot feature 
-                            const timeTravelData = getSnapshotFilteredData(historyData); 
+                            const timeTravelData = getSnapshotFilteredData(historyData);
 
                             // If 'All Time', return the filtered list immediately
                             if (dateRange === 'all') return timeTravelData;
@@ -1463,8 +1467,8 @@ export default function CategoriesPage() {
                             const referenceTime = snapshotTime ? new Date(snapshotTime).getTime() : Date.now();
 
                             // Calculate the "Start Date" based on the range (7d / 30d)
-                            const cutoff = dateRange === '7d' 
-                              ? referenceTime - (7 * 24 * 60 * 60 * 1000) 
+                            const cutoff = dateRange === '7d'
+                              ? referenceTime - (7 * 24 * 60 * 60 * 1000)
                               : referenceTime - (30 * 24 * 60 * 60 * 1000);
 
                             // Return data within that specific window
@@ -1670,8 +1674,8 @@ export default function CategoriesPage() {
                     value={
                       selectedProduct
                         ? filteredProducts.findIndex(
-                            p => p.name === selectedProduct.name
-                          )
+                          p => p.name === selectedProduct.name
+                        )
                         : ''
                     }
                     onChange={e => {
@@ -1748,7 +1752,7 @@ export default function CategoriesPage() {
                             // Calculate cutoff based on the snapshot time (not just "now")
                             const referenceTime = snapshotTime ? new Date(snapshotTime).getTime() : Date.now();
 
-                            const cutoff = dateRange === 'all' ? 0 : 
+                            const cutoff = dateRange === 'all' ? 0 :
                               (dateRange === '7d' ? referenceTime - (7 * 24 * 60 * 60 * 1000) : referenceTime - (30 * 24 * 60 * 60 * 1000));
 
                             const filteredRaw = timeTravelData.filter(d => d.timestamp >= cutoff);
@@ -1757,7 +1761,7 @@ export default function CategoriesPage() {
                             const dailyMap = new Map();
 
                             filteredRaw.forEach(entry => {
-                              const day = entry.date.split(',')[0]; 
+                              const day = entry.date.split(',')[0];
 
                               if (!dailyMap.has(day)) {
                                 dailyMap.set(day, {
@@ -1888,11 +1892,11 @@ export default function CategoriesPage() {
                               if (payload.rawZepto === null) return null;
                               const isStock = payload.rawZepto === 1;
                               return (
-                                <circle 
-                                  cx={cx} cy={cy} r={4} 
-                                  fill="white" 
-                                  stroke={isStock ? '#22c55e' : '#ef4444'} 
-                                  strokeWidth={2} 
+                                <circle
+                                  cx={cx} cy={cy} r={4}
+                                  fill="white"
+                                  stroke={isStock ? '#22c55e' : '#ef4444'}
+                                  strokeWidth={2}
                                 />
                               );
                             }}
@@ -1911,11 +1915,11 @@ export default function CategoriesPage() {
                               if (payload.rawBlinkit === null) return null;
                               const isStock = payload.rawBlinkit === 1;
                               return (
-                                <circle 
-                                  cx={cx} cy={cy} r={4} 
-                                  fill="white" 
-                                  stroke={isStock ? '#22c55e' : '#ef4444'} 
-                                  strokeWidth={2} 
+                                <circle
+                                  cx={cx} cy={cy} r={4}
+                                  fill="white"
+                                  stroke={isStock ? '#22c55e' : '#ef4444'}
+                                  strokeWidth={2}
                                 />
                               );
                             }}
@@ -1934,11 +1938,11 @@ export default function CategoriesPage() {
                               if (payload.rawJioMart === null) return null;
                               const isStock = payload.rawJioMart === 1;
                               return (
-                                <circle 
-                                  cx={cx} cy={cy} r={4} 
-                                  fill="white" 
-                                  stroke={isStock ? '#22c55e' : '#ef4444'} 
-                                  strokeWidth={2} 
+                                <circle
+                                  cx={cx} cy={cy} r={4}
+                                  fill="white"
+                                  stroke={isStock ? '#22c55e' : '#ef4444'}
+                                  strokeWidth={2}
                                 />
                               );
                             }}
@@ -1991,7 +1995,7 @@ export default function CategoriesPage() {
               </div>
             </div>
           )}
-          
+
           {activeTab === 'analytics' && (
             <AnalyticsTab category={category} pincode={pincode} platform={platformFilter} />
           )}
