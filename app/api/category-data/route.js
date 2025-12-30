@@ -8,7 +8,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const pincode = searchParams.get('pincode');
-    
+
     // 1. Get the requested Time Travel timestamp
     const requestedTimestamp = searchParams.get('timestamp');
 
@@ -34,11 +34,11 @@ export async function GET(request) {
       const exactBatch = await ProductSnapshot.findOne({
         category,
         pincode,
-        scrapedAt: searchDate 
+        scrapedAt: searchDate
       }).select('scrapedAt');
 
       if (!exactBatch) {
-         return NextResponse.json({
+        return NextResponse.json({
           success: true,
           products: [],
           message: 'No data found for this exact time slot.'
@@ -75,7 +75,7 @@ export async function GET(request) {
     const snapshots = await ProductSnapshot.find({
       category,
       pincode,
-      scrapedAt: targetScrapedAt 
+      scrapedAt: targetScrapedAt
     }).sort({ platform: 1, ranking: 1 });
 
     // --- (Rest of your processing logic remains the same) ---
@@ -100,8 +100,11 @@ export async function GET(request) {
           originalPrice: snap.originalPrice,
           discountPercentage: snap.discountPercentage,
           ranking: snap.ranking,
-          stock: snap.inStock, // Make sure to pass stock info if available in schema
-          productUrl: snap.productUrl
+          isOutOfStock: snap.isOutOfStock,
+          productUrl: snap.productUrl,
+          quantity: snap.quantity,
+          deliveryTime: snap.deliveryTime,
+          isAd: snap.isAd
         });
       }
     });

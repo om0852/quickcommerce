@@ -182,7 +182,7 @@ async function processExportInBackground(body) {
                                 rowData[`${p}_link`] = product[p].url || '';
                                 rowData[`${p}_isAd`] = product[p].isAd ? 'Yes' : 'No';
                                 rowData[`${p}_combo`] = product[p].quantity || '-';
-                                rowData[`${p}_deliveryTime`] = product[p].deliveryTime || '-';
+                                rowData[`${p}_deliveryTime`] = p === 'jiomart' ? '10 to 30 min' : (product[p].deliveryTime || '-');
                                 rowData[`${p}_originalPrice`] = product[p].originalPrice || '-';
                                 rowData[`${p}_discount`] = product[p].discountPercentage ? `${Math.round(product[p].discountPercentage)}%` : '-';
                                 rowData[`${p}_rating`] = product[p].rating || '-';
