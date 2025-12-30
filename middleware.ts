@@ -1,19 +1,32 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Public paths
     const isPublicPath = pathname === '/login' || pathname.startsWith('/api/auth');
 
-    const authSession = request.cookies.get('auth_session');
+    const authSession = request.cookies.get('auth_session')?.value;
 
-    if (!isPublicPath && !authSession) {
+    let isValid = false;
+    if (authSession) {
+        try {
+            const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback_secret_keep_it_safe');
+            await jwtVerify(authSession, secret);
+            isValid = true;
+        } catch (error) {
+            console.error('JWT verification failed:', error);
+            isValid = false;
+        }
+    }
+
+    if (!isPublicPath && !isValid) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    if (pathname === '/login' && authSession) {
+    if (pathname === '/login' && isValid) {
         return NextResponse.redirect(new URL('/', request.url));
     }
 

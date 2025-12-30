@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { SignJWT } from 'jose';
 
 export async function POST(request) {
     try {
@@ -9,13 +10,21 @@ export async function POST(request) {
         const adminPassword = process.env.ADMIN_PASSWORD;
 
         if (username === adminUsername && password === adminPassword) {
+            // Sign JWT
+            const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback_secret_keep_it_safe');
+            const token = await new SignJWT({ username })
+                .setProtectedHeader({ alg: 'HS256' })
+                .setIssuedAt()
+                .setExpirationTime('24h')
+                .sign(secret);
+
             const response = NextResponse.json(
                 { message: 'Login successful' },
                 { status: 200 }
             );
 
             // Set cookie for 24 hours
-            (await cookies()).set('auth_session', 'true', {
+            (await cookies()).set('auth_session', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
