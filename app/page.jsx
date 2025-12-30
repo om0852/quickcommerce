@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useMemo } from 'react';
-import { Search, TrendingDown } from 'lucide-react';
+import { Search, TrendingDown, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,35 +94,38 @@ export default function Home() {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1 className="page-title">Product Search</h1>
-        <p className="page-description">Compare prices across Zepto, Blinkit, JioMart, and DMart</p>
+    <div className="min-h-screen bg-[#fafafa] p-4 md:p-8 font-sans text-neutral-900">
+      <div className="mb-8 max-w-[1400px] mx-auto text-center md:text-left">
+        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 mb-2">Product Search</h1>
+        <p className="text-neutral-500">Compare prices across Zepto, Blinkit, JioMart, and DMart</p>
       </div>
 
       {/* Search Section */}
-      <div className="card" style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '1rem', alignItems: 'end' }}>
+      <div className="max-w-[1400px] mx-auto bg-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_200px_auto] gap-4 items-end">
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+            <label className="block text-sm font-semibold text-neutral-900 mb-2">
               Search Product
             </label>
-            <input
-              type="text"
-              className="input"
-              placeholder="e.g., milk, bread, eggs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+              <input
+                type="text"
+                className="w-full h-[42px] pl-10 pr-4 rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors"
+                placeholder="e.g., milk, bread, eggs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+            </div>
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+            <label className="block text-sm font-semibold text-neutral-900 mb-2">
               Pincode
             </label>
             <select
-              className="select"
+              className="w-full h-[42px] px-3 rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 cursor-pointer"
               value={pincode}
               onChange={(e) => setPincode(e.target.value)}
             >
@@ -134,11 +138,11 @@ export default function Home() {
           </div>
 
           <button
-            className="btn btn-primary"
+            className="h-[42px] px-6 bg-neutral-900 text-white rounded-md font-medium text-sm flex items-center gap-2 hover:bg-black transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             onClick={handleSearch}
             disabled={loading || !searchQuery.trim()}
           >
-            <Search size={18} />
+            {loading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <Search size={18} />}
             {loading ? 'Searching...' : 'Search'}
           </button>
         </div>
@@ -146,37 +150,35 @@ export default function Home() {
 
       {/* Error */}
       {error && (
-        <div className="error" style={{ marginBottom: '2rem' }}>
+        <div className="max-w-[1400px] mx-auto mb-8 p-4 bg-red-50 text-red-600 rounded-lg border border-red-100 text-sm">
           {error}
         </div>
       )}
 
-      {/* Loading */}
+      {/* Loading Skeleton */}
       {loading && (
-        <div className="loading">
-          <div>Searching products...</div>
+        <div className="max-w-[1400px] mx-auto py-12 flex flex-col items-center justify-center text-neutral-400">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-900 mb-4"></div>
+          <p className="text-sm font-medium">Searching products...</p>
         </div>
       )}
 
       {/* Results */}
       {!loading && products.length > 0 && (
-        <div>
-          <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="max-w-[1400px] mx-auto">
+          <div className="mb-6 flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap gap-2">
                 {['all', 'zepto', 'blinkit', 'jiomart', 'dmart'].map(platform => (
                   <button
                     key={platform}
                     onClick={() => setPlatformFilter(platform)}
-                    className="btn"
-                    style={{
-                      background: platformFilter === platform ? '#0a0a0a' : '#ffffff',
-                      color: platformFilter === platform ? '#ffffff' : '#0a0a0a',
-                      border: '1px solid #e5e5e5',
-                      textTransform: 'capitalize',
-                      padding: '0.5rem 1rem',
-                      fontSize: '0.875rem'
-                    }}
+                    className={cn(
+                      "px-4 py-1.5 rounded-full text-sm font-medium transition-colors border capitalize",
+                      platformFilter === platform
+                        ? "bg-neutral-900 text-white border-neutral-900"
+                        : "bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900"
+                    )}
                   >
                     {platform}
                   </button>
@@ -184,85 +186,80 @@ export default function Home() {
               </div>
 
               {platformFilter !== 'all' && (
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={showMissing}
                     onChange={(e) => setShowMissing(e.target.checked)}
-                    style={{ width: '1rem', height: '1rem', accentColor: '#0a0a0a' }}
+                    className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
                   />
-                  <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Show Missing in {platformFilter}</span>
+                  <span className="text-sm font-medium text-neutral-700">Show Missing in {platformFilter}</span>
                 </label>
               )}
             </div>
 
-            <div style={{ fontSize: '0.9rem', color: '#737373' }}>
+            <div className="text-sm text-neutral-500">
               Showing {filteredProducts.length} results
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product, index) => {
               const bestPrice = getBestPrice(product);
               const savings = calculateSavings(product);
 
+              // Find first available image
+              const productImage = product.image || product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage;
+
+
               return (
-                <div key={index} className="product-card">
-                  {product.image && (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="product-image"
-                    />
-                  )}
+                <div key={index} className="bg-white rounded-xl border border-neutral-200 overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                  <div className="aspect-[4/3] p-4 bg-white flex items-center justify-center border-b border-neutral-100 relative">
+                    {productImage ? (
+                      <img
+                        src={productImage}
+                        alt={product.name}
+                        className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="text-neutral-300 text-xs">No Image</div>
+                    )}
 
-                  <div className="product-name">{product.name}</div>
+                    {savings > 0 && (
+                      <div className="absolute top-3 right-3 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-100 flex items-center gap-1 shadow-sm">
+                        <TrendingDown size={12} />
+                        Save ₹{savings}
+                      </div>
+                    )}
+                  </div>
 
-                  {product.weight && (
-                    <div style={{ fontSize: '0.875rem', color: '#737373', marginBottom: '0.75rem' }}>
-                      {product.weight}
+                  <div className="p-5">
+                    <h3 className="font-semibold text-neutral-900 mb-1 line-clamp-2 h-10 text-sm leading-relaxed" title={product.name}>
+                      {product.name}
+                    </h3>
+
+                    {product.weight && (
+                      <p className="text-xs text-neutral-500 mb-3">{product.weight}</p>
+                    )}
+
+                    {bestPrice && (
+                      <div className="text-lg font-bold text-neutral-900 mb-4">
+                        ₹{bestPrice}
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      {['zepto', 'blinkit', 'jiomart', 'dmart'].map(p => {
+                        const pData = product[p];
+                        if (!pData) return null;
+                        return (
+                          <div key={p} className="flex justify-between items-center p-2 rounded bg-neutral-50 border border-neutral-100 text-xs">
+                            <span className="capitalize font-medium text-neutral-600">{p}</span>
+                            <span className="font-bold text-neutral-900">₹{pData.currentPrice}</span>
+                          </div>
+                        )
+                      })}
                     </div>
-                  )}
-
-                  {bestPrice && (
-                    <div className="product-price">₹{bestPrice}</div>
-                  )}
-
-                  {savings > 0 && (
-                    <div className="badge badge-success" style={{ marginBottom: '1rem' }}>
-                      <TrendingDown size={14} />
-                      Save ₹{savings}
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {product.zepto && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: '#fafafa', borderRadius: '0.375rem' }}>
-                        <span className="product-platform">Zepto</span>
-                        <span style={{ fontWeight: 600 }}>₹{product.zepto.currentPrice}</span>
-                      </div>
-                    )}
-
-                    {product.blinkit && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: '#fafafa', borderRadius: '0.375rem' }}>
-                        <span className="product-platform">Blinkit</span>
-                        <span style={{ fontWeight: 600 }}>₹{product.blinkit.currentPrice}</span>
-                      </div>
-                    )}
-
-                    {product.jiomart && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: '#fafafa', borderRadius: '0.375rem' }}>
-                        <span className="product-platform">JioMart</span>
-                        <span style={{ fontWeight: 600 }}>₹{product.jiomart.currentPrice}</span>
-                      </div>
-                    )}
-
-                    {product.dmart && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: '#fafafa', borderRadius: '0.375rem' }}>
-                        <span className="product-platform">DMart</span>
-                        <span style={{ fontWeight: 600 }}>₹{product.dmart.currentPrice}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               );
@@ -273,10 +270,10 @@ export default function Home() {
 
       {/* No Results */}
       {!loading && products.length === 0 && searchQuery && (
-        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>No products found</h3>
-          <p style={{ color: '#737373' }}>Try searching for something else</p>
+        <div className="max-w-[1400px] mx-auto text-center py-16 bg-white rounded-xl border border-neutral-200">
+          <div className="text-4xl mb-4">🔍</div>
+          <h3 className="text-lg font-semibold text-neutral-900 mb-1">No products found</h3>
+          <p className="text-neutral-500 text-sm">Try searching for something else</p>
         </div>
       )}
     </div>

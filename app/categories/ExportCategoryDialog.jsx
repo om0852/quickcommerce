@@ -1,6 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { Download, X, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function ExportCategoryDialog({
     isOpen,
@@ -67,136 +68,57 @@ export default function ExportCategoryDialog({
     };
 
     return (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            backdropFilter: 'blur(4px)',
-            transition: 'opacity 0.2s ease'
-        }}>
-            <div style={{
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                width: '90%',
-                maxWidth: '480px',
-                maxHeight: '90vh',
-                overflowY: 'auto',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                border: '1px solid #e5e5e5',
-                animation: 'scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
-            }}>
-                <style jsx>{`
-                    @keyframes scaleUp {
-                        from { transform: scale(0.98); opacity: 0; }
-                        to { transform: scale(1); opacity: 1; }
-                    }
-                    .input-focus:focus {
-                        outline: none;
-                        border-color: #171717;
-                        ring: 1px solid #171717;
-                    }
-                `}</style>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-[4px] transition-opacity duration-200">
+            <div className="bg-white rounded-xl w-[90%] max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200">
 
-                {/* Header - Clean B&W */}
-                <div style={{
-                    padding: '1.5rem',
-                    background: 'white',
-                    borderBottom: '1px solid #f3f4f6',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between'
-                }}>
+                {/* Header */}
+                <div className="p-6 bg-white border-b border-neutral-100 flex items-start justify-between">
                     <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: '#171717' }}>Export Data</h2>
-                        <p style={{ margin: 0, fontSize: '0.875rem', color: '#737373' }}>
+                        <h2 className="text-xl font-bold text-neutral-900 mb-1">Export Data</h2>
+                        <p className="text-sm text-neutral-500">
                             Generate an Excel report
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        style={{
-                            background: 'white',
-                            border: '1px solid #e5e5e5',
-                            cursor: 'pointer',
-                            padding: '0.375rem',
-                            borderRadius: '0.375rem',
-                            color: '#737373',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.color = '#171717';
-                            e.currentTarget.style.borderColor = '#171717';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '#737373';
-                            e.currentTarget.style.borderColor = '#e5e5e5';
-                        }}
+                        className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors border border-transparent hover:border-neutral-200"
                     >
                         <X size={18} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} style={{ padding: '1.5rem' }}>
+                <form onSubmit={handleSubmit} className="p-6">
 
                     {/* Email Input */}
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#171717' }}>
-                            Email Address <span style={{ color: '#ef4444' }}>*</span>
+                    <div className="mb-6">
+                        <label className="block mb-2 text-sm font-semibold text-neutral-900">
+                            Email Address <span className="text-red-500">*</span>
                         </label>
-                        <div style={{ position: 'relative' }}>
-                            <Mail size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#737373' }} />
+                        <div className="relative">
+                            <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
                             <input
                                 type="email"
                                 required
                                 placeholder="name@company.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="input-focus"
-                                style={{
-                                    width: '100%',
-                                    padding: '0.625rem 1rem 0.625rem 2.5rem',
-                                    borderRadius: '0.375rem',
-                                    border: '1px solid #e5e5e5',
-                                    fontSize: '0.875rem',
-                                    backgroundColor: 'white',
-                                    color: '#171717',
-                                    transition: 'border-color 0.2s'
-                                }}
+                                className="w-full pl-10 pr-4 py-2.5 rounded-md border border-neutral-200 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors placeholder:text-neutral-400"
                             />
                         </div>
                     </div>
 
                     {/* Filters Container */}
-                    <div style={{
-                        marginBottom: '2rem',
-                    }}>
+                    <div className="mb-8">
 
                         {/* Grid for Dropdowns */}
-                        <div style={{ display: 'grid', gap: '1rem' }}>
+                        <div className="grid gap-4">
                             {/* Export Type */}
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#404040' }}>Export Type</label>
+                                <label className="block mb-1.5 text-sm font-medium text-neutral-600">Export Type</label>
                                 <select
                                     value={exportType}
                                     onChange={(e) => setExportType(e.target.value)}
-                                    className="input-focus"
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.625rem',
-                                        borderRadius: '0.375rem',
-                                        border: '1px solid #e5e5e5',
-                                        fontSize: '0.875rem',
-                                        backgroundColor: 'white',
-                                        color: '#171717',
-                                        cursor: 'pointer',
-                                    }}
+                                    className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
                                 >
                                     <option value="latest">Latest Snapshot Only</option>
                                     <option value="unique">Unique Products (Last 7 Days)</option>
@@ -205,21 +127,11 @@ export default function ExportCategoryDialog({
 
                             {/* Platform */}
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#404040' }}>Platform</label>
+                                <label className="block mb-1.5 text-sm font-medium text-neutral-600">Platform</label>
                                 <select
                                     value={selectedPlatform}
                                     onChange={(e) => setSelectedPlatform(e.target.value)}
-                                    className="input-focus"
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.625rem',
-                                        borderRadius: '0.375rem',
-                                        border: '1px solid #e5e5e5',
-                                        fontSize: '0.875rem',
-                                        backgroundColor: 'white',
-                                        color: '#171717',
-                                        cursor: 'pointer',
-                                    }}
+                                    className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
                                 >
                                     <option value="all">All Platforms</option>
                                     {availablePlatforms.map(p => (
@@ -229,23 +141,13 @@ export default function ExportCategoryDialog({
                             </div>
 
                             {/* Category & Pincode Row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#404040' }}>Category</label>
+                                    <label className="block mb-1.5 text-sm font-medium text-neutral-600">Category</label>
                                     <select
                                         value={selectedCategory}
                                         onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="input-focus"
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.625rem',
-                                            borderRadius: '0.375rem',
-                                            border: '1px solid #e5e5e5',
-                                            fontSize: '0.875rem',
-                                            backgroundColor: 'white',
-                                            color: '#171717',
-                                            cursor: 'pointer',
-                                        }}
+                                        className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
                                     >
                                         <option value="all">All</option>
                                         {categoryOptions.map(c => (
@@ -255,21 +157,11 @@ export default function ExportCategoryDialog({
                                 </div>
 
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: 500, color: '#404040' }}>Pincode</label>
+                                    <label className="block mb-1.5 text-sm font-medium text-neutral-600">Pincode</label>
                                     <select
                                         value={selectedPincode}
                                         onChange={(e) => setSelectedPincode(e.target.value)}
-                                        className="input-focus"
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.625rem',
-                                            borderRadius: '0.375rem',
-                                            border: '1px solid #e5e5e5',
-                                            fontSize: '0.875rem',
-                                            backgroundColor: 'white',
-                                            color: '#171717',
-                                            cursor: 'pointer',
-                                        }}
+                                        className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
                                     >
                                         {pincodeOptions.map(p => (
                                             <option key={p.value} value={p.value}>{p.value}</option>
@@ -281,54 +173,21 @@ export default function ExportCategoryDialog({
                     </div>
 
                     {/* Footer actions */}
-                    <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1.5rem', borderTop: '1px solid #f3f4f6' }}>
+                    <div className="flex gap-3 pt-6 border-t border-neutral-100">
                         <button
                             type="button"
                             onClick={onClose}
-                            style={{
-                                flex: 1,
-                                padding: '0.625rem',
-                                borderRadius: '0.375rem',
-                                border: '1px solid #e5e5e5',
-                                background: 'white',
-                                color: '#404040',
-                                fontWeight: 500,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                fontSize: '0.875rem'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.background = '#f9fafb';
-                                e.currentTarget.style.color = '#171717';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'white';
-                                e.currentTarget.style.color = '#404040';
-                            }}
+                            className="flex-1 px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-600 text-sm font-medium hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            style={{
-                                flex: 1,
-                                padding: '0.625rem',
-                                borderRadius: '0.375rem',
-                                border: '1px solid #171717',
-                                background: loading ? '#a3a3a3' : '#171717',
-                                color: 'white',
-                                fontWeight: 500,
-                                cursor: loading ? 'not-allowed' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '0.5rem',
-                                fontSize: '0.875rem',
-                                transition: 'all 0.2s',
-                            }}
-                            onMouseEnter={(e) => !loading && (e.currentTarget.style.background = '#000000')}
-                            onMouseLeave={(e) => !loading && (e.currentTarget.style.background = '#171717')}
+                            className={cn(
+                                "flex-1 px-4 py-2.5 rounded-md border border-neutral-900 bg-neutral-900 text-white text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-black hover:shadow-md",
+                                loading && "opacity-70 cursor-not-allowed hover:bg-neutral-900 hover:shadow-none"
+                            )}
                         >
                             {loading ? (
                                 'Processing...'
@@ -345,7 +204,7 @@ export default function ExportCategoryDialog({
                     </div>
 
                     {error && (
-                        <div style={{ marginTop: '1.5rem', background: '#fef2f2', color: '#b91c1c', borderRadius: '0.375rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem' }}>
+                        <div className="mt-6 p-3 bg-red-50 text-red-700 rounded-md text-sm flex items-center gap-2 border border-red-100">
                             <AlertCircle size={16} />
                             {error}
                         </div>
