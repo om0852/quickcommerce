@@ -687,84 +687,82 @@ export default function CategoriesPage() {
           </div>
         </div>
 
-        {/* --- SNAPSHOT SELECTOR (Date -> Time) --- */}
+        {/* --- UPDATED SNAPSHOT SELECTOR & STATUS --- */}
         <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
 
-          {/* Left Side: Status Text */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#737373' }}>
-            <Clock size={16} />
-            <span>
-              {/* Compare timestamps to decide what text to show */}
-              {snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()
-                ? <span style={{ color: '#171717', fontWeight: 600 }}>Viewing Snapshot: {new Date(snapshotTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                : `Latest Data: ${lastUpdated ? formatTimestamp(lastUpdated) : 'Never'}`
-              }
-            </span>
+          {/* Left Side: Status Text with Pulsing Indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '0.875rem' }}>
+            {!isLiveMode ? (
+              <>
+                <span className="status-dot-red"></span>
+                <span style={{ color: '#737373', fontWeight: 500 }}>
+                  Viewing Data: {new Date(snapshotTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="status-dot-green"></span>
+                <span style={{ color: '#737373', fontWeight: 500 }}>
+                  Latest Data: {availableSnapshots.length > 0
+                    ? new Date(availableSnapshots[0]).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+                    : 'No data for this selection'}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Right Side: The Dropdown Selectors */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#171717', whiteSpace: 'nowrap' }}>
-              View History:
-            </span>
+            <span className="history-label" style={{ marginBottom: 0 }}>View History:</span>
 
             {/* 1. Date Select */}
-            <select
+            <CustomDropdown
               value={snapshotDate}
-              onChange={(e) => {
-                setSnapshotDate(e.target.value);
-                setSnapshotTime('');
+              onChange={(newDate) => {
+                setSnapshotDate(newDate);
+                setIsLiveMode(false);
+
+                const latestForDate = availableSnapshots.find(ts =>
+                  new Date(ts).toLocaleDateString('en-CA') === newDate
+                );
+
+                if (latestForDate) {
+                  setSnapshotTime(latestForDate);
+                  fetchCategoryData(latestForDate);
+                }
               }}
-              className="select"
-              style={{ padding: '0.4rem 2rem 0.4rem 0.75rem', minWidth: '140px', fontSize: '0.875rem' }}
-            >
-              <option value="">Select Date</option>
-              {uniqueDates.map(dateStr => (
-                <option key={dateStr} value={dateStr}>
-                  {new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </option>
-              ))}
-            </select>
+              options={uniqueDates.map(d => ({
+                value: d,
+                label: new Date(d).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })
+              }))}
+              placeholder="Select Date"
+            />
+
 
             {/* 2. Time Select */}
-            <select
+            <CustomDropdown
               value={snapshotTime}
-              onChange={(e) => {
-                const ts = e.target.value;
+              onChange={(ts) => {
                 setSnapshotTime(ts);
+                setIsLiveMode(false);
                 if (ts) fetchCategoryData(ts);
               }}
+              options={availableTimes}
+              placeholder="Time"
               disabled={!snapshotDate}
-              className="select"
-              style={{
-                padding: '0.4rem 2rem 0.4rem 0.75rem',
-                minWidth: '120px',
-                fontSize: '0.875rem',
-                opacity: snapshotDate ? 1 : 0.5,
-                cursor: snapshotDate ? 'pointer' : 'not-allowed'
-              }}
-            >
-              <option value="">Select Time</option>
-              {availableTimes.map((t, i) => (
-                <option key={i} value={t.value}>{t.label}</option>
-              ))}
-            </select>
+            />
 
-            {/* 3. Reset Button - Only Visible when time is NOT the default */}
-            {(snapshotTime && lastUpdated && new Date(snapshotTime).getTime() !== new Date(lastUpdated).getTime()) && (
+            {/* 3. Reset Button - Now strictly tied to isLiveMode */}
+            {!isLiveMode && (
               <button
                 onClick={() => {
-                  if (lastUpdated) {
-                    const dateObj = new Date(lastUpdated);
-                    // 1. Reset Date Dropdown to Default
-                    setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
-                    // 2. Reset Time Dropdown to Default
-                    setSnapshotTime(lastUpdated);
-                    // 3. Fetch Live Data immediately
-                    fetchCategoryData(lastUpdated);
-                  }
+                  setIsLiveMode(true); // Triggers re-fetch of absolute latest in useEffect
                 }}
-                style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', marginLeft: '0.5rem', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+                style={{ background: 'none', border: 'none', color: '#f06d6dff', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', marginLeft: '0.5rem', whiteSpace: 'nowrap', textDecoration: 'underline' }}
               >
                 Reset
               </button>
