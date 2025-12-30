@@ -435,6 +435,7 @@ export default function CategoriesPage() {
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* Snapshot Selector */}
       <div className="mt-6 pt-4 border-t border-neutral-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-sm text-neutral-500 bg-neutral-50 px-3 py-1.5 rounded-md border border-neutral-100">
@@ -493,6 +494,89 @@ export default function CategoriesPage() {
               Reset
             </button>
           )}
+=======
+        {/* --- UPDATED SNAPSHOT SELECTOR & STATUS --- */}
+        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+
+          {/* Left Side: Status Text with Pulsing Indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '0.875rem' }}>
+            {!isLiveMode ? (
+              <>
+                <span className="status-dot-red"></span>
+                <span style={{ color: '#737373', fontWeight: 500 }}>
+                  Viewing Data: {new Date(snapshotTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="status-dot-green"></span>
+                <span style={{ color: '#737373', fontWeight: 500 }}>
+                  Latest Data: {availableSnapshots.length > 0
+                    ? new Date(availableSnapshots[0]).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+                    : 'No data for this selection'}
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Right Side: The Dropdown Selectors */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'nowrap' }}>
+            <span className="history-label" style={{ marginBottom: 0 }}>View History:</span>
+
+            {/* 1. Date Select */}
+            <CustomDropdown
+              value={snapshotDate}
+              onChange={(newDate) => {
+                setSnapshotDate(newDate);
+                setIsLiveMode(false);
+
+                const latestForDate = availableSnapshots.find(ts =>
+                  new Date(ts).toLocaleDateString('en-CA') === newDate
+                );
+
+                if (latestForDate) {
+                  setSnapshotTime(latestForDate);
+                  fetchCategoryData(latestForDate);
+                }
+              }}
+              options={uniqueDates.map(d => ({
+                value: d,
+                label: new Date(d).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })
+              }))}
+              placeholder="Select Date"
+            />
+
+
+            {/* 2. Time Select */}
+            <CustomDropdown
+              value={snapshotTime}
+              onChange={(ts) => {
+                setSnapshotTime(ts);
+                setIsLiveMode(false);
+                if (ts) fetchCategoryData(ts);
+              }}
+              options={availableTimes}
+              placeholder="Time"
+              disabled={!snapshotDate}
+            />
+
+            {/* 3. Reset Button - Now strictly tied to isLiveMode */}
+            {!isLiveMode && (
+              <button
+                onClick={() => {
+                  setIsLiveMode(true); // Triggers re-fetch of absolute latest in useEffect
+                }}
+                style={{ background: 'none', border: 'none', color: '#f06d6dff', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', marginLeft: '0.5rem', whiteSpace: 'nowrap', textDecoration: 'underline' }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
+>>>>>>> c55c2b1969eb888aafb9e77680a4c07b3bf7a071
         </div>
       </div>
       {/* Content Tabs */}
