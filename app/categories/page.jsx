@@ -19,7 +19,7 @@ export default function CategoriesPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [stockData, setStockData] = useState(null);
   const [stockLoading, setStockLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Default to true for initial load
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -166,6 +166,9 @@ export default function CategoriesPage() {
             setIsLiveMode(true);
           }
         }
+      } else {
+        // If no snapshots found, turn off loading directly (as fetchCategoryData won't be called)
+        setLoading(false);
       }
     };
     fetchSnapshots();
@@ -681,7 +684,7 @@ export default function CategoriesPage() {
         {/* Loading Overlay */}
         {
           loading && (
-            <div className="fixed inset-0 bg-white/50 backdrop-blur-[2px] z-50 flex items-center justify-center">
+            <div className="fixed inset-0 bg-neutral-50 z-[100] flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">
                 <div className="animate-spin text-neutral-900">
                   <RefreshCw size={32} />
