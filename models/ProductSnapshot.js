@@ -7,6 +7,16 @@ const ProductSnapshotSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  subCategory: {
+    type: String,
+    required: false  // Some platforms may not have subcategories
+  },
+  categoryUrl: {
+    type: String,
+    required: true
+  },
+  officialCategory: String,
+  officialSubCategory: String,
   pincode: {
     type: String,
     required: true,
@@ -15,7 +25,7 @@ const ProductSnapshotSchema = new mongoose.Schema({
   platform: {
     type: String,
     required: true,
-    enum: ['zepto', 'blinkit', 'jiomart', 'dmart'],
+    enum: ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'],
     index: true
   },
   scrapedAt: {
@@ -44,6 +54,7 @@ const ProductSnapshotSchema = new mongoose.Schema({
   productImage: String,
   productWeight: String,
   quantity: String,
+  combo: String,
   deliveryTime: String,
   isAd: {
     type: Boolean,

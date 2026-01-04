@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:keys": "node scripts/test-key-rotation.js",
+    "test:queue": "node scripts/test-queue-manager.js"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

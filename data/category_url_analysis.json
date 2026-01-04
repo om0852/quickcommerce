@@ -1,0 +1,208 @@
+{
+  "totalCategories": 20,
+  "totalUrls": 589,
+  "platformCounts": {
+    "zepto": 168,
+    "blinkit": 215,
+    "jiomart": 75,
+    "dmart": 86,
+    "instamart": 45
+  },
+  "categoryBreakdown": {
+    "Fruits & Vegetables": {
+      "total": 43,
+      "platforms": {
+        "zepto": 11,
+        "blinkit": 18,
+        "jiomart": 4,
+        "dmart": 8,
+        "instamart": 2
+      }
+    },
+    "Dairy, Bread & Eggs": {
+      "total": 42,
+      "platforms": {
+        "zepto": 15,
+        "blinkit": 13,
+        "jiomart": 7,
+        "dmart": 1,
+        "instamart": 6
+      }
+    },
+    "Atta, Rice, Oil & Dals": {
+      "total": 55,
+      "platforms": {
+        "zepto": 9,
+        "blinkit": 27,
+        "jiomart": 9,
+        "dmart": 6,
+        "instamart": 4
+      }
+    },
+    "Masala, Dry Fruits & More": {
+      "total": 39,
+      "platforms": {
+        "zepto": 6,
+        "blinkit": 10,
+        "jiomart": 3,
+        "dmart": 3,
+        "instamart": 17
+      }
+    },
+    "Breakfast & Sauces": {
+      "total": 27,
+      "platforms": {
+        "zepto": 8,
+        "blinkit": 11,
+        "jiomart": 3,
+        "dmart": 4,
+        "instamart": 1
+      }
+    },
+    "Packaged Food": {
+      "total": 22,
+      "platforms": {
+        "zepto": 9,
+        "blinkit": 3,
+        "jiomart": 2,
+        "dmart": 7,
+        "instamart": 1
+      }
+    },
+    "Tea, Coffee & More": {
+      "total": 34,
+      "platforms": {
+        "zepto": 10,
+        "blinkit": 20,
+        "jiomart": 1,
+        "dmart": 1,
+        "instamart": 2
+      }
+    },
+    "Ice Creams & More": {
+      "total": 18,
+      "platforms": {
+        "zepto": 9,
+        "blinkit": 6,
+        "jiomart": 2,
+        "dmart": 0,
+        "instamart": 1
+      }
+    },
+    "Health & Wellness": {
+      "total": 6,
+      "platforms": {
+        "zepto": 0,
+        "blinkit": 3,
+        "jiomart": 2,
+        "dmart": 1
+      }
+    },
+    "Sweet Cravings": {
+      "total": 13,
+      "platforms": {
+        "zepto": 6,
+        "blinkit": 1,
+        "jiomart": 2,
+        "dmart": 3,
+        "instamart": 1
+      }
+    },
+    "Cold Drinks & Juices": {
+      "total": 37,
+      "platforms": {
+        "zepto": 10,
+        "blinkit": 24,
+        "jiomart": 1,
+        "dmart": 1,
+        "instamart": 1
+      }
+    },
+    "Snacks & Munchies": {
+      "total": 19,
+      "platforms": {
+        "zepto": 7,
+        "blinkit": 8,
+        "jiomart": 1,
+        "dmart": 1,
+        "instamart": 2
+      }
+    },
+    "Bakery & Biscuits": {
+      "total": 27,
+      "platforms": {
+        "zepto": 7,
+        "blinkit": 15,
+        "jiomart": 1,
+        "dmart": 2,
+        "instamart": 2
+      }
+    },
+    "Home Needs": {
+      "total": 66,
+      "platforms": {
+        "zepto": 3,
+        "blinkit": 22,
+        "jiomart": 13,
+        "dmart": 27,
+        "instamart": 1
+      }
+    },
+    "School, Office & Stationery": {
+      "total": 21,
+      "platforms": {
+        "zepto": 1,
+        "blinkit": 4,
+        "jiomart": 9,
+        "dmart": 7
+      }
+    },
+    "Baby Care": {
+      "total": 38,
+      "platforms": {
+        "zepto": 14,
+        "blinkit": 14,
+        "jiomart": 4,
+        "dmart": 5,
+        "instamart": 1
+      }
+    },
+    "Beauty": {
+      "total": 10,
+      "platforms": {
+        "zepto": 1,
+        "blinkit": 1,
+        "jiomart": 4,
+        "dmart": 1,
+        "instamart": 3
+      }
+    },
+    "Skincare": {
+      "total": 16,
+      "platforms": {
+        "zepto": 11,
+        "blinkit": 3,
+        "jiomart": 1,
+        "dmart": 1
+      }
+    },
+    "Bath & Body": {
+      "total": 22,
+      "platforms": {
+        "zepto": 13,
+        "blinkit": 5,
+        "jiomart": 2,
+        "dmart": 2
+      }
+    },
+    "Personal Care": {
+      "total": 34,
+      "platforms": {
+        "zepto": 18,
+        "blinkit": 7,
+        "jiomart": 4,
+        "dmart": 5
+      }
+    }
+  }
+}

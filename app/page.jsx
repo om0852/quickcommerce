@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [pincode, setPincode] = useState('122018');
+  const [pincode, setPincode] = useState('201303');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,15 +13,11 @@ export default function Home() {
   const [showMissing, setShowMissing] = useState(false);
 
   const PINCODE_OPTIONS = [
-    { label: 'Gurgaon — 122018', value: '122018' },
-    { label: 'Gurgaon — 122017', value: '122017' },
-    { label: 'Gurgaon — 122016', value: '122016' },
-    { label: 'Gurgaon — 122015', value: '122015' },
-    { label: 'Gurgaon — 122011', value: '122011' },
     { label: 'Delhi NCR — 201303', value: '201303' },
     { label: 'Delhi NCR — 201014', value: '201014' },
     { label: 'Delhi NCR — 122008', value: '122008' },
-    { label: 'Delhi NCR — 122010', value: '122010' }
+    { label: 'Delhi NCR — 122010', value: '122010' },
+    { label: 'Delhi NCR — 122016', value: '122016' }
   ];
 
   const filteredProducts = useMemo(() => {
@@ -32,7 +28,7 @@ export default function Home() {
     if (showMissing) {
       return products.filter(product => {
         const missingInSelected = !product[platformFilter];
-        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart']
+        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart']
           .filter(p => p !== platformFilter)
           .some(p => product[p]);
         return missingInSelected && presentInOthers;
@@ -78,6 +74,7 @@ export default function Home() {
     if (product.blinkit?.currentPrice) prices.push(product.blinkit.currentPrice);
     if (product.jiomart?.currentPrice) prices.push(product.jiomart.currentPrice);
     if (product.dmart?.currentPrice) prices.push(product.dmart.currentPrice);
+    if (product.instamart?.currentPrice) prices.push(product.instamart.currentPrice);
     return prices.length > 0 ? Math.min(...prices) : null;
   };
 
@@ -87,6 +84,7 @@ export default function Home() {
     if (product.blinkit?.currentPrice) prices.push(product.blinkit.currentPrice);
     if (product.jiomart?.currentPrice) prices.push(product.jiomart.currentPrice);
     if (product.dmart?.currentPrice) prices.push(product.dmart.currentPrice);
+    if (product.instamart?.currentPrice) prices.push(product.instamart.currentPrice);
     if (prices.length >= 2) {
       return Math.max(...prices) - Math.min(...prices);
     }
@@ -97,7 +95,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#fafafa] p-4 md:p-8 font-sans text-neutral-900">
       <div className="mb-8 max-w-[1400px] mx-auto text-center md:text-left">
         <h1 className="text-3xl font-bold tracking-tight text-neutral-900 mb-2">Product Search</h1>
-        <p className="text-neutral-500">Compare prices across Zepto, Blinkit, JioMart, and DMart</p>
+        <p className="text-neutral-500">Compare prices across Zepto, Blinkit, JioMart, DMart, and Instamart</p>
       </div>
 
       {/* Search Section */}
@@ -169,7 +167,7 @@ export default function Home() {
           <div className="mb-6 flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap gap-2">
-                {['all', 'zepto', 'blinkit', 'jiomart', 'dmart'].map(platform => (
+                {['all', 'zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'].map(platform => (
                   <button
                     key={platform}
                     onClick={() => setPlatformFilter(platform)}
@@ -209,7 +207,7 @@ export default function Home() {
               const savings = calculateSavings(product);
 
               // Find first available image
-              const productImage = product.image || product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage;
+              const productImage = product.image || product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage || product.instamart?.productImage;
 
 
               return (
@@ -249,7 +247,7 @@ export default function Home() {
                     )}
 
                     <div className="space-y-2">
-                      {['zepto', 'blinkit', 'jiomart', 'dmart'].map(p => {
+                      {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'].map(p => {
                         const pData = product[p];
                         if (!pData) return null;
                         return (

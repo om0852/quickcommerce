@@ -1,15 +1,23 @@
 "use client"
 import React, { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink } from 'lucide-react';
+import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 import AnalyticsTab from './AnalyticsTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
 import CustomDropdown from '@/components/CustomDropdown';
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
+import categoriesData from '@/data/categories_with_urls.json';
+
 export default function CategoriesPage() {
-  const [category, setCategory] = useState('milk');
-  const [pincode, setPincode] = useState('122018');
+  // Generate options from the JSON keys (Master Categories)
+  const CATEGORY_OPTIONS = Object.keys(categoriesData).map(cat => ({
+    label: cat,
+    value: cat
+  }));
+
+  const [category, setCategory] = useState(CATEGORY_OPTIONS[0]?.value || 'Fruits & Vegetables');
+  const [pincode, setPincode] = useState('201303');
   const [platformFilter, setPlatformFilter] = useState('all');
   const [showMissing, setShowMissing] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
@@ -27,25 +35,14 @@ export default function CategoriesPage() {
   const [snapshotTime, setSnapshotTime] = useState('');
   const [availableSnapshots, setAvailableSnapshots] = useState([]);
   const [isLiveMode, setIsLiveMode] = useState(true);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   const PINCODE_OPTIONS = [
-    { label: 'Gurgaon — 122018', value: '122018' },
-    { label: 'Gurgaon — 122017', value: '122017' },
-    { label: 'Gurgaon — 122016', value: '122016' },
-    { label: 'Gurgaon — 122015', value: '122015' },
-    { label: 'Gurgaon — 122011', value: '122011' },
     { label: 'Delhi NCR — 201303', value: '201303' },
     { label: 'Delhi NCR — 201014', value: '201014' },
     { label: 'Delhi NCR — 122008', value: '122008' },
-    { label: 'Delhi NCR — 122010', value: '122010' }
-  ];
-
-  const CATEGORY_OPTIONS = [
-    { label: 'Milk', value: 'milk' },
-    { label: 'Biscuits', value: 'biscuits' },
-    { label: 'Tea', value: 'tea' },
-    { label: 'Chips', value: 'chips' },
-    { label: 'Hair Care', value: 'hair-care' }
+    { label: 'Delhi NCR — 122010', value: '122010' },
+    { label: 'Delhi NCR — 122016', value: '122016' }
   ];
 
   const PLATFORM_OPTIONS = [
@@ -53,7 +50,8 @@ export default function CategoriesPage() {
     { label: 'Zepto', value: 'zepto' },
     { label: 'Blinkit', value: 'blinkit' },
     { label: 'JioMart', value: 'jiomart' },
-    { label: 'DMart', value: 'dmart' }
+    { label: 'DMart', value: 'dmart' },
+    { label: 'Instamart', value: 'instamart' }
   ];
 
   const fetchCategoryData = async (customTimestamp = null) => {
@@ -143,7 +141,7 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     const fetchSnapshots = async () => {
-      const res = await fetch(`/api/available-snapshots?category=${category}&pincode=${pincode}`);
+      const res = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`);
       const data = await res.json();
 
       if (data.snapshots && data.snapshots.length > 0) {
@@ -275,7 +273,7 @@ export default function CategoriesPage() {
     if (showMissing) {
       return products.filter(product => {
         const missingInSelected = !product[platformFilter];
-        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart']
+        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart']
           .filter(p => p !== platformFilter)
           .some(p => product[p]);
         return missingInSelected && presentInOthers;
@@ -284,6 +282,39 @@ export default function CategoriesPage() {
 
     return products.filter(product => product[platformFilter]);
   }, [products, platformFilter, showMissing]);
+
+  const sortedProducts = useMemo(() => {
+    let sortableProducts = [...filteredProducts];
+    if (sortConfig.key !== null) {
+      sortableProducts.sort((a, b) => {
+        const platformKey = sortConfig.key;
+        // Access nested object property safely
+        const itemA = a[platformKey];
+        const itemB = b[platformKey];
+
+        // Get ranking, treating missing or non-numeric rankings as Infinity (always push to bottom)
+        const rankA = itemA && itemA.ranking && !isNaN(itemA.ranking) ? itemA.ranking : Infinity;
+        const rankB = itemB && itemB.ranking && !isNaN(itemB.ranking) ? itemB.ranking : Infinity;
+
+        if (rankA < rankB) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (rankA > rankB) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableProducts;
+  }, [filteredProducts, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   useEffect(() => {
     if (filteredProducts.length > 0) {
@@ -399,6 +430,9 @@ export default function CategoriesPage() {
           <div className="flex items-center gap-2 mb-3 text-neutral-900 font-semibold text-sm">
             <Filter size={16} className="text-neutral-500" />
             Filter by Platform
+            <span className="ml-2 text-xs font-medium px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded-full border border-neutral-200">
+              {filteredProducts.length} Products
+            </span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {PLATFORM_OPTIONS.map(opt => (
@@ -583,22 +617,40 @@ export default function CategoriesPage() {
                     <thead className="bg-neutral-50">
                       <tr>
                         <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider sticky left-0 bg-neutral-50 z-10 w-[350px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">Product</th>
-                        <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider min-w-[140px]">Zepto</th>
-                        <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider min-w-[140px]">Blinkit</th>
-                        <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider min-w-[140px]">JioMart</th>
-                        <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider min-w-[140px]">DMart</th>
+                        {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'].map((platform) => (
+                          <th
+                            key={platform}
+                            scope="col"
+                            className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider min-w-[140px] cursor-pointer hover:bg-neutral-100 transition-colors select-none"
+                            onClick={() => requestSort(platform)}
+                          >
+                            <div className="flex items-center gap-1">
+                              {platform}
+                              {sortConfig.key === platform ? (
+                                sortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                              ) : (
+                                <ChevronsUpDown size={14} className="text-neutral-300" />
+                              )}
+                            </div>
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-neutral-200">
-                      {filteredProducts.map((product, idx) => {
-                        const productImage = product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage;
+                      {sortedProducts.map((product, idx) => {
+                        const productImage = product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage || product.instamart?.productImage;
                         return (
                           <tr key={idx} className="hover:bg-neutral-50 transition-colors">
                             <td className="px-8 py-4 whitespace-nowrap sticky left-0 bg-white z-10 group-hover:bg-neutral-50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
                               <div className="flex items-center gap-4">
                                 <div className="h-12 w-12 flex-shrink-0 rounded-lg border border-neutral-200 p-1 bg-white">
                                   {productImage ? (
-                                    <img className="h-full w-full object-contain mix-blend-multiply" src={productImage} alt={product.name} />
+                                    <img
+                                      className="h-full w-full object-contain mix-blend-multiply"
+                                      src={productImage}
+                                      alt={product.name}
+                                      onError={(e) => e.target.style.display = 'none'}
+                                    />
                                   ) : (
                                     <div className="h-full w-full flex items-center justify-center bg-neutral-100 text-[10px] text-neutral-400">No Img</div>
                                   )}
@@ -608,7 +660,7 @@ export default function CategoriesPage() {
                                 </div>
                               </div>
                             </td>
-                            {['zepto', 'blinkit', 'jiomart', 'dmart'].map(p => {
+                            {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'].map(p => {
                               const data = product[p];
                               return (
                                 <td key={p} className="px-8 py-4 whitespace-nowrap">
@@ -655,7 +707,7 @@ export default function CategoriesPage() {
                       })}
                       {filteredProducts.length === 0 && !loading && (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-sm text-neutral-500">
+                          <td colSpan={6} className="px-6 py-12 text-center text-sm text-neutral-500">
                             No products found matching your filters.
                           </td>
                         </tr>

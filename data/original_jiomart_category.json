@@ -1,0 +1,452 @@
+[
+  {
+    "sr_no": 1,
+    "category": "Fruits & Vegetables",
+    "subcategory": "Fresh Fruits",
+    "url": "https://www.jiomart.com/c/groceries/fruits-vegetables/fresh-fruits/220"
+  },
+  {
+    "sr_no": 2,
+    "category": "Fruits & Vegetables",
+    "subcategory": "Basic Vegetables",
+    "url": "https://www.jiomart.com/c/groceries/fruits-vegetables/basic-vegetables/28981"
+  },
+  {
+    "sr_no": 3,
+    "category": "Fruits & Vegetables",
+    "subcategory": "Roots, Herbs & Others",
+    "url": "https://www.jiomart.com/c/groceries/fruits-vegetables/roots-herbs-others/28982"
+  },
+  {
+    "sr_no": 4,
+    "category": "Fruits & Vegetables",
+    "subcategory": "Premium Fruits & Vegetables",
+    "url": "https://www.jiomart.com/c/groceries/fruits-vegetables/premium-fruits-vegetables/28983"
+  },
+  {
+    "sr_no": 5,
+    "category": "Cooking Essentials",
+    "subcategory": "Atta, Flours & Sooji",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/atta-flours-sooji/28985"
+  },
+  {
+    "sr_no": 6,
+    "category": "Cooking Essentials",
+    "subcategory": "Dals & Pulses",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/dals-pulses/28986"
+  },
+  {
+    "sr_no": 7,
+    "category": "Cooking Essentials",
+    "subcategory": "Rice",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/rice/28987"
+  },
+  {
+    "sr_no": 8,
+    "category": "Cooking Essentials",
+    "subcategory": "Sabudana, Poha & Murmura",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/sabudana-poha-murmura/28988"
+  },
+  {
+    "sr_no": 9,
+    "category": "Cooking Essentials",
+    "subcategory": "Edible Oils",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/edible-oils/28989"
+  },
+  {
+    "sr_no": 10,
+    "category": "Cooking Essentials",
+    "subcategory": "Masala, Spices & Mukhwas",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/masala-spices-mukhwas/28990"
+  },
+  {
+    "sr_no": 11,
+    "category": "Cooking Essentials",
+    "subcategory": "Salt, Sugar & Jaggery",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/salt-sugar-jaggery/28991"
+  },
+  {
+    "sr_no": 12,
+    "category": "Cooking Essentials",
+    "subcategory": "Wheat & Soya",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/wheat-soya/28992"
+  },
+  {
+    "sr_no": 13,
+    "category": "Cooking Essentials",
+    "subcategory": "Ghee",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/ghee/28993"
+  },
+  {
+    "sr_no": 14,
+    "category": "Cooking Essentials",
+    "subcategory": "Dry Fruits & Nuts",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/dry-fruits-nuts/28994"
+  },
+  {
+    "sr_no": 15,
+    "category": "Cooking Essentials",
+    "subcategory": "Millets & Organic",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/millets-organic/28995"
+  },
+  {
+    "sr_no": 16,
+    "category": "Cooking Essentials",
+    "subcategory": "Combo Offers (Cooking Essentials)",
+    "url": "https://www.jiomart.com/c/groceries/cooking-essentials/combo-offers/28996"
+  },
+  {
+    "sr_no": 17,
+    "category": "Dairy & Bakery",
+    "subcategory": "Milk & Milk Products",
+    "url": "https://www.jiomart.com/c/groceries/dairy-bakery/milk-milk-products/29011"
+  },
+  {
+    "sr_no": 18,
+    "category": "Dairy & Bakery",
+    "subcategory": "Cheese, Paneer & Tofu",
+    "url": "https://www.jiomart.com/c/groceries/dairy-bakery/cheese-paneer-tofu/29010"
+  },
+  {
+    "sr_no": 19,
+    "category": "Dairy & Bakery",
+    "subcategory": "Batter & Chutney",
+    "url": "https://www.jiomart.com/c/groceries/dairy-bakery/batter-chutney/407"
+  },
+  {
+    "sr_no": 20,
+    "category": "Dairy & Bakery",
+    "subcategory": "Toast & Khari",
+    "url": "https://www.jiomart.com/c/groceries/dairy-bakery/toast-khari/102"
+  },
+  {
+    "sr_no": 21,
+    "category": "Dairy & Bakery",
+    "subcategory": "Cakes & Muffins",
+    "url": "https://www.jiomart.com/c/groceries/dairy-bakery/cakes-muffins/125"
+  },
+  {
+    "sr_no": 22,
+    "category": "Dairy & Bakery",
+    "subcategory": "Breads & Chapatis",
+    "url": "https://www.jiomart.com/c/groceries/dairy-bakery/breads-and-chapatis/267"
+  },
+  {
+    "sr_no": 23,
+    "category": "Dairy & Bakery",
+    "subcategory": "Bakery & Snacks (Biscuits & Cookies)",
+    "url": "https://www.jiomart.com/c/groceries/dairy-bakery/baked-cookies/273"
+  },
+  {
+    "sr_no": 24,
+    "category": "Dairy & Bakery",
+    "subcategory": "Ice Cream",
+    "url": "https://www.jiomart.com/c/groceries/dairy-bakery/ice-cream/36761"
+  },
+  {
+    "sr_no": 25,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Chips & Namkeens",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/chips-namkeens/29000"
+  },
+  {
+    "sr_no": 26,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Ice Cream & Frozen",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/ice-cream-frozen/36175"
+  },
+  {
+    "sr_no": 27,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Biscuits & Cookies",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/biscuits-cookies/28998"
+  },
+  {
+    "sr_no": 28,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Chocolates & Candies",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/chocolates-candies/29001"
+  },
+  {
+    "sr_no": 29,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Indian Sweets",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/indian-sweets/29004"
+  },
+  {
+    "sr_no": 30,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Drinks & Juices",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/drinks-juices/29003"
+  },
+  {
+    "sr_no": 31,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Breakfast Cereals",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/breakfast-cereals/28999"
+  },
+  {
+    "sr_no": 32,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Noodles, Pasta & Vermicelli",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/noodles-pasta-vermicelli/29005"
+  },
+  {
+    "sr_no": 33,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Ready To Cook & Eat",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/ready-to-cook-eat/29007"
+  },
+  {
+    "sr_no": 34,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Spread, Sauces & Ketchup",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/spread-sauces-ketchup/29008"
+  },
+  {
+    "sr_no": 35,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Pickles, Chutney & Flavouring",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/pickles-chutney-flavouring/29006"
+  },
+  {
+    "sr_no": 36,
+    "category": "Biscuits, Drinks & Packaged Foods",
+    "subcategory": "Tea & Coffee",
+    "url": "https://www.jiomart.com/c/groceries/biscuits-drinks-packaged-foods/tea-coffee/29009"
+  },
+  {
+    "sr_no": 37,
+    "category": "Mom & Baby Care",
+    "subcategory": "Diapers & Wipes",
+    "url": "https://www.jiomart.com/c/groceries/mom-baby-care/diapers-wipes/2564"
+  },
+  {
+    "sr_no": 38,
+    "category": "Mom & Baby Care",
+    "subcategory": "Bath, Hygiene & Grooming",
+    "url": "https://www.jiomart.com/c/groceries/mom-baby-care/baby-bath-hygiene/2562"
+  },
+  {
+    "sr_no": 39,
+    "category": "Mom & Baby Care",
+    "subcategory": "Food & Feeding",
+    "url": "https://www.jiomart.com/c/groceries/mom-baby-care/food-feeding/30013"
+  },
+  {
+    "sr_no": 40,
+    "category": "Mom & Baby Care",
+    "subcategory": "Bedding, Toys & Accessories",
+    "url": "https://www.jiomart.com/c/groceries/mom-baby-care/bedding-toys-accessories/30012"
+  },
+  {
+    "sr_no": 41,
+    "category": "Mom & Baby Care",
+    "subcategory": "Health & Wellness",
+    "url": "https://www.jiomart.com/c/groceries/mom-baby-care/health-wellness/2571"
+  },
+  {
+    "sr_no": 42,
+    "category": "Home",
+    "subcategory": "Dishwash",
+    "url": "https://www.jiomart.com/c/groceries/home-care/dishwash/148"
+  },
+  {
+    "sr_no": 43,
+    "category": "Home",
+    "subcategory": "Detergents & Cleaners",
+    "url": "https://www.jiomart.com/c/groceries/home-care/detergents-cleaners/29119"
+  },
+  {
+    "sr_no": 44,
+    "category": "Home",
+    "subcategory": "Fresheners & Repellents",
+    "url": "https://www.jiomart.com/c/groceries/home-care/fresheners-repellents/65"
+  },
+  {
+    "sr_no": 45,
+    "category": "Home",
+    "subcategory": "Home & Cleaning Tools",
+    "url": "https://www.jiomart.com/c/groceries/home-care/home_cleaning_tools/207"
+  },
+  {
+    "sr_no": 46,
+    "category": "Home",
+    "subcategory": "Pooja Needs",
+    "url": "https://www.jiomart.com/c/groceries/home-care/pooja-needs/156"
+  },
+  {
+    "sr_no": 47,
+    "category": "Home",
+    "subcategory": "Basic Electricals",
+    "url": "https://www.jiomart.com/c/groceries/home-care/basic-electricals/30164"
+  },
+  {
+    "sr_no": 48,
+    "category": "Home",
+    "subcategory": "Games, Toys & Activities",
+    "url": "https://www.jiomart.com/c/groceries/home-care/games-toys-activities/36218"
+  },
+  {
+    "sr_no": 49,
+    "category": "Home",
+    "subcategory": "Home Needs",
+    "url": "https://www.jiomart.com/c/groceries/home-care/home-needs/39273"
+  },
+  {
+    "sr_no": 50,
+    "category": "Home",
+    "subcategory": "Shoe Care",
+    "url": "https://www.jiomart.com/c/groceries/home-care/shoe-care/139"
+  },
+  {
+    "sr_no": 51,
+    "category": "School, Office & Stationery",
+    "subcategory": "Notebooks & Paper Products",
+    "url": "https://www.jiomart.com/c/groceries/school-office-stationery/notebooks-paper-products/29999"
+  },
+  {
+    "sr_no": 52,
+    "category": "School, Office & Stationery",
+    "subcategory": "Writing Instruments & Accessories",
+    "url": "https://www.jiomart.com/c/groceries/school-office-stationery/writing-instruments-accessories/29986"
+  },
+  {
+    "sr_no": 53,
+    "category": "School, Office & Stationery",
+    "subcategory": "School Supplies",
+    "url": "https://www.jiomart.com/c/groceries/school-office-stationery/school-supplies/29992"
+  },
+  {
+    "sr_no": 54,
+    "category": "School, Office & Stationery",
+    "subcategory": "Office Supplies",
+    "url": "https://www.jiomart.com/c/groceries/school-office-stationery/office-supplies/29993"
+  },
+  {
+    "sr_no": 55,
+    "category": "School, Office & Stationery",
+    "subcategory": "Party Accessories",
+    "url": "https://www.jiomart.com/c/homeandkitchen/school-office-stationery/party-accessories/37934"
+  },
+  {
+    "sr_no": 56,
+    "category": "School, Office & Stationery",
+    "subcategory": "Art, Craft & Hobby",
+    "url": "https://www.jiomart.com/c/groceries/school-office-stationery/art-craft-hobby/30400"
+  },
+  {
+    "sr_no": 57,
+    "category": "School, Office & Stationery",
+    "subcategory": "Children's Books",
+    "url": "https://www.jiomart.com/c/groceries/school-office-stationery/children-s-books/30009"
+  },
+  {
+    "sr_no": 58,
+    "category": "School, Office & Stationery",
+    "subcategory": "School Textbooks",
+    "url": "https://www.jiomart.com/c/groceries/school-office-stationery/school-textbooks/30014"
+  },
+  {
+    "sr_no": 59,
+    "category": "School, Office & Stationery",
+    "subcategory": "School Art & Supplies",
+    "url": "https://www.jiomart.com/c/groceries/school-office-stationery/school-art-supplies/44927"
+  },
+  {
+    "sr_no": 60,
+    "category": "Disposables",
+    "subcategory": "Food Wrapping Essentials",
+    "url": "https://www.jiomart.com/c/groceries/disposables/food-wrapping-essentials/32899"
+  },
+  {
+    "sr_no": 61,
+    "category": "Disposables",
+    "subcategory": "Home Hygiene",
+    "url": "https://www.jiomart.com/c/groceries/disposables/home-hygiene/32900"
+  },
+  {
+    "sr_no": 62,
+    "category": "Disposables",
+    "subcategory": "Plates & Cutlery",
+    "url": "https://www.jiomart.com/c/groceries/disposables/plates-cutlery/32901"
+  },
+  {
+    "sr_no": 63,
+    "category": "Disposables",
+    "subcategory": "Tissues & Napkins",
+    "url": "https://www.jiomart.com/c/groceries/disposables/tissues-napkins/32902"
+  },
+  {
+    "sr_no": 64,
+    "category": "Personal Care",
+    "subcategory": "Hair Care",
+    "url": "https://www.jiomart.com/c/groceries/personal-care/hair-care/92"
+  },
+  {
+    "sr_no": 65,
+    "category": "Personal Care",
+    "subcategory": "Bath & Hand Wash",
+    "url": "https://www.jiomart.com/c/groceries/personal-care/bath-hand-wash/119"
+  },
+  {
+    "sr_no": 66,
+    "category": "Personal Care",
+    "subcategory": "Oral Care",
+    "url": "https://www.jiomart.com/c/groceries/personal-care/oral-care/132"
+  },
+  {
+    "sr_no": 67,
+    "category": "Personal Care",
+    "subcategory": "Skin Care",
+    "url": "https://www.jiomart.com/c/groceries/personal-care/skin-care/122"
+  },
+  {
+    "sr_no": 68,
+    "category": "Personal Care",
+    "subcategory": "Feminine Hygiene",
+    "url": "https://www.jiomart.com/c/groceries/personal-care/feminine-hygiene/134"
+  },
+  {
+    "sr_no": 69,
+    "category": "Personal Care",
+    "subcategory": "Men's Grooming",
+    "url": "https://www.jiomart.com/c/groceries/personal-care/men-s-grooming/163"
+  },
+  {
+    "sr_no": 70,
+    "category": "Personal Care",
+    "subcategory": "Deo & Fragrances",
+    "url": "https://www.jiomart.com/c/groceries/personal-care/deo-fragrances/172"
+  },
+  {
+    "sr_no": 71,
+    "category": "Personal Care",
+    "subcategory": "Health & Wellness",
+    "url": "https://www.jiomart.com/c/groceries/personal-care/health-wellness/165"
+  },
+  {
+    "sr_no": 72,
+    "category": "Beauty",
+    "subcategory": "Face",
+    "url": "https://www.jiomart.com/c/groceries/beauty/face/29989"
+  },
+  {
+    "sr_no": 73,
+    "category": "Beauty",
+    "subcategory": "Nails & Lips",
+    "url": "https://www.jiomart.com/c/groceries/beauty/nails-lips/29991"
+  },
+  {
+    "sr_no": 74,
+    "category": "Beauty",
+    "subcategory": "Eyes",
+    "url": "https://www.jiomart.com/c/groceries/beauty/eyes/30045"
+  },
+  {
+    "sr_no": 75,
+    "category": "Beauty",
+    "subcategory": "Beauty Accessories",
+    "url": "https://www.jiomart.com/c/groceries/beauty/beauty-accessories/30011"
+  }
+]

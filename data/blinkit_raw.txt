@@ -1,0 +1,218 @@
+| Category                    | Sub-Category                       | Link                                                                   |
+| --------------------------- | ---------------------------------- | ---------------------------------------------------------------------- |
+| Bakery & Biscuits           | Cookies                            | <https://blinkit.com/cn/cookies/cid/888/28>                            |
+| Bakery & Biscuits           | Cream Biscuits                     | <https://blinkit.com/cn/cream-biscuits/cid/888/105>                    |
+| Bakery & Biscuits           | Rusks & Wafers                     | <https://blinkit.com/cn/rusks-wafers/cid/888/107>                      |
+| Bakery & Biscuits           | Sweet & Salty                      | <https://blinkit.com/cn/sweet-salty/cid/888/144>                       |
+| Bakery & Biscuits           | Glucose & Marie                    | <https://blinkit.com/cn/glucose-marie/cid/888/209>                     |
+| Bakery & Biscuits           | Healthy & Digestive                | <https://blinkit.com/cn/healthy-digestive/cid/888/938>                 |
+| Bakery & Biscuits           | Baking Ingredients & Mixes         | <https://blinkit.com/cn/baking-ingredients-mixes/cid/888/971>          |
+| Bakery & Biscuits           | Gourmet Bakery                     | <https://blinkit.com/cn/gourmet-bakery/cid/888/1663>                   |
+| Bakery & Biscuits           | Specialty Breads                   | <https://blinkit.com/cn/specialty-breads/cid/888/1097>                 |
+| Bakery & Biscuits           | Milk & White Breads                | <https://blinkit.com/cn/milk-white-breads/cid/888/31>                  |
+| Bakery & Biscuits           | Fresh Muffins & Cake               | <https://blinkit.com/cn/fresh-muffins-cake/cid/888/176>                |
+| Bakery & Biscuits           | Fresh Bakery                       | <https://blinkit.com/cn/fresh-bakery/cid/888/477>                      |
+| Bakery & Biscuits           | Buns, Pavs & Pizza Base            | <https://blinkit.com/cn/buns-pavs-pizza-base/cid/888/1956>             |
+| Bakery & Biscuits           | Brown & Multigrain Breads          | <https://blinkit.com/cn/brown-multigrain-breads/cid/888/198>           |
+| Munchies                    | Namkeen Snacks                     | <https://blinkit.com/cn/namkeen-snacks/cid/1237/29>                    |
+| Munchies                    | Papad & Fryums                     | <https://blinkit.com/cn/papad-fryums/cid/1237/80>                      |
+| Munchies                    | Popcorn                            | <https://blinkit.com/cn/popcorn/cid/1237/156>                          |
+| Munchies                    | Nachos                             | <https://blinkit.com/cn/nachos/cid/1237/316>                           |
+| Munchies                    | Healthy Snacks                     | <https://blinkit.com/cn/healthy-snacks/cid/1237/816>                   |
+| Munchies                    | Chips & Crisps                     | <https://blinkit.com/cn/chips-crisps/cid/1237/940>                     |
+| Munchies                    | Bhujia & Mixtures                  | <https://blinkit.com/cn/bhujia-mixtures/cid/1237/1178>                 |
+| Cold Drinks & Juices        | Energy Drinks                      | <https://blinkit.com/cn/energy-drinks/cid/332/19>                      |
+| Cold Drinks & Juices        | Coldpress                          | <https://blinkit.com/cn/coldpress/cid/332/91>                          |
+| Cold Drinks & Juices        | Coconut Water                      | <https://blinkit.com/cn/coconut-water/cid/332/1594>                    |
+| Cold Drinks & Juices        | Concentrates & Syrups              | <https://blinkit.com/cn/concentrates-syrups/cid/332/109>               |
+| Cold Drinks & Juices        | Sharbat                            | <https://blinkit.com/cn/sharbat/cid/332/24>                            |
+| Cold Drinks & Juices        | Mango Drink                        | <https://blinkit.com/cn/mango-drink/cid/332/1108>                      |
+| Cold Drinks & Juices        | Flavored Milk                      | <https://blinkit.com/cn/flavored-milk/cid/332/36>                      |
+| Cold Drinks & Juices        | Lassi                              | <https://blinkit.com/cn/lassi/cid/332/1093>                            |
+| Cold Drinks & Juices        | Specialty Milk                     | <https://blinkit.com/cn/specialty-milk/cid/332/1091>                   |
+| Cold Drinks & Juices        | Soda                               | <https://blinkit.com/cn/soda/cid/332/1600>                             |
+| Cold Drinks & Juices        | Cold Drink in Bottles              | <https://blinkit.com/cn/cold-drink-in-bottles/cid/332/23>              |
+| Cold Drinks & Juices        | Cocktail Mixers/Tonic Waters       | <https://blinkit.com/cn/cocktail-mixerstonic-waters/cid/332/1103>      |
+| Cold Drinks & Juices        | Cold Drink in a Can                | <https://blinkit.com/cn/cold-drink-in-a-can/cid/332/1107>              |
+| Cold Drinks & Juices        | Ice Cubes                          | <https://blinkit.com/cn/ice-cubes/cid/332/219>                         |
+| Cold Drinks & Juices        | Mineral Water                      | <https://blinkit.com/cn/mineral-water/cid/332/22>                      |
+| Cold Drinks & Juices        | Non-Alcoholic Drinks               | <https://blinkit.com/cn/non-alcoholic-drinks/cid/332/1486>             |
+| Cold Drinks & Juices        | Glucose Energy Drink               | <https://blinkit.com/cn/glucose-energy-drink/cid/332/640>              |
+| Cold Drinks & Juices        | Water & Ice Cubes                  | <https://blinkit.com/cn/water-ice-cubes/cid/332/270>                   |
+| Cold Drinks & Juices        | Fruit Juices                       | <https://blinkit.com/cn/fruit-juices/cid/332/955>                      |
+| Cold Drinks & Juices        | Cold Coffee                        | <https://blinkit.com/cn/cold-coffee/cid/332/412>                       |
+| Cold Drinks & Juices        | Iced Tea                           | <https://blinkit.com/cn/iced-tea/cid/332/93>                           |
+| Cold Drinks & Juices        | 100% Juice                         | <https://blinkit.com/cn/100-juice/cid/332/1318>                        |
+| Cold Drinks & Juices        | Soft Drinks                        | <https://blinkit.com/cn/soft-drinks/cid/332/1102>                      |
+| Cold Drinks & Juices        | Soda & Mixers                      | <https://blinkit.com/cn/soda-mixers/cid/332/1599>                      |
+| Tea, Coffee & Health Drinks | Vegan Drinks                       | <https://blinkit.com/cn/vegan-drinks/cid/12/87>                        |
+| Tea, Coffee & Health Drinks | Tea                                | <https://blinkit.com/cn/tea/cid/12/957>                                |
+| Tea, Coffee & Health Drinks | Health Drinks                      | <https://blinkit.com/cn/health-drinks/cid/12/960>                      |
+| Tea, Coffee & Health Drinks | Herbal Drinks                      | <https://blinkit.com/cn/herbal-drinks/cid/12/1109>                     |
+| Tea, Coffee & Health Drinks | Milk Drinks                        | <https://blinkit.com/cn/milk-drinks/cid/12/1184>                       |
+| Tea, Coffee & Health Drinks | Coffee                             | <https://blinkit.com/cn/coffee/cid/12/1322>                            |
+| Tea, Coffee & Health Drinks | Leaf & Dust Tea                    | <https://blinkit.com/cn/leaf-dust-tea/cid/12/25>                       |
+| Tea, Coffee & Health Drinks | Black Tea                          | <https://blinkit.com/cn/black-tea/cid/12/1561>                         |
+| Tea, Coffee & Health Drinks | Vegan Milk                         | <https://blinkit.com/cn/vegan-milk/cid/12/948>                         |
+| Tea, Coffee & Health Drinks | Hot Chocolate Drink                | <https://blinkit.com/cn/hot-chocolate-drink/cid/12/90>                 |
+| Tea, Coffee & Health Drinks | Health Drinks & Supplements        | <https://blinkit.com/cn/health-drinks-supplements/cid/12/21>           |
+| Tea, Coffee & Health Drinks | Chocolate Health Drinks            | <https://blinkit.com/cn/chocolate-health-drinks/cid/12/1106>           |
+| Tea, Coffee & Health Drinks | Exotic & Flavoured Tea             | <https://blinkit.com/cn/exotic-flavoured-tea/cid/12/1562>              |
+| Tea, Coffee & Health Drinks | Green Tea                          | <https://blinkit.com/cn/green-tea/cid/12/1104>                         |
+| Tea, Coffee & Health Drinks | Roasted & Ground Coffee            | <https://blinkit.com/cn/roasted-ground-coffee/cid/12/720>              |
+| Tea, Coffee & Health Drinks | Instant Coffee                     | <https://blinkit.com/cn/instant-coffee/cid/12/958>                     |
+| Tea, Coffee & Health Drinks | Filter Coffee                      | <https://blinkit.com/cn/filter-coffee/cid/12/1589>                     |
+| Tea, Coffee & Health Drinks | Coffee Bags                        | <https://blinkit.com/cn/coffee-bags/cid/12/1105>                       |
+| Vegetables & Fruits         | Exotics & Premium                  | <https://blinkit.com/cn/exotics-premium/cid/1487/278>                  |
+| Vegetables & Fruits         | Freshly Cut & Sprouts              | <https://blinkit.com/cn/freshly-cut-sprouts/cid/1487/395>              |
+| Vegetables & Fruits         | Gourmet Mushroom                   | <https://blinkit.com/cn/gourmet-mushroom/cid/1487/482>                 |
+| Vegetables & Fruits         | Organic & Hydroponic               | <https://blinkit.com/cn/organic-hydroponic/cid/1487/742>               |
+| Vegetables & Fruits         | Combo Offer                        | <https://blinkit.com/cn/combo-offer/cid/1487/928>                      |
+| Vegetables & Fruits         | Fruits                             | <https://blinkit.com/cn/fruits/cid/1487/1503>                          |
+| Vegetables & Fruits         | Flowers & Leaves                   | <https://blinkit.com/cn/flowers-leaves/cid/1487/1452>                  |
+| Vegetables & Fruits         | Fresh Juice & Dips                 | <https://blinkit.com/cn/fresh-juice-dips/cid/1487/1941>                |
+| Vegetables & Fruits         | Frozen Indian Breads               | <https://blinkit.com/cn/frozen-indian-breads/cid/1487/116>             |
+| Vegetables & Fruits         | Frozen Veg                         | <https://blinkit.com/cn/frozen-veg/cid/1487/157>                       |
+| Vegetables & Fruits         | Fresh Vegetables                   | <https://blinkit.com/cn/fresh-vegetables/cid/1487/1489>                |
+| Vegetables & Fruits         | Frozen Peas & Corn                 | <https://blinkit.com/cn/frozen-peas-corn/cid/1487/172>                 |
+| Vegetables & Fruits         | Frozen Potato Snacks               | <https://blinkit.com/cn/frozen-potato-snacks/cid/1487/122>             |
+| Vegetables & Fruits         | Other Frozen Vegetables            | <https://blinkit.com/cn/other-frozen-vegetables/cid/1487/222>          |
+| Vegetables & Fruits         | Hydroponics                        | <https://blinkit.com/cn/hydroponics/cid/1487/39>                       |
+| Vegetables & Fruits         | Leafies & Herbs                    | <https://blinkit.com/cn/leafies-herbs/cid/1487/1871>                   |
+| Vegetables & Fruits         | Other Frozen Snacks                | <https://blinkit.com/cn/other-frozen-snacks/cid/1487/125>              |
+| Atta, Rice & Dal            | Moong & Masoor                     | <https://blinkit.com/cn/moong-masoor/cid/16/505>                       |
+| Atta, Rice & Dal            | Rice                               | <https://blinkit.com/cn/rice/cid/16/1161>                              |
+| Atta, Rice & Dal            | Besan, Sooji & Maida               | <https://blinkit.com/cn/besan-sooji-maida/cid/16/1166>                 |
+| Atta, Rice & Dal            | Poha, Daliya & Other Grains        | <https://blinkit.com/cn/poha-daliya-other-grains/cid/16/1295>          |
+| Atta, Rice & Dal            | Rajma, Chhole & Others             | <https://blinkit.com/cn/rajma-chhole-others/cid/16/1573>               |
+| Atta, Rice & Dal            | Urad                               | <https://blinkit.com/cn/urad/cid/16/1197>                              |
+| Atta, Rice & Dal            | Pesticide-Free Pulses              | <https://blinkit.com/cn/pesticide-free-pulses/cid/16/11>               |
+| Atta, Rice & Dal            | Chana                              | <https://blinkit.com/cn/chana/cid/16/1702>                             |
+| Atta, Rice & Dal            | Toor                               | <https://blinkit.com/cn/toor/cid/16/1010>                              |
+| Atta, Rice & Dal            | Arhar                              | <https://blinkit.com/cn/arhar/cid/16/1195>                             |
+| Atta, Rice & Dal            | Sonamasuri & Kolam Rice            | <https://blinkit.com/cn/sonamasuri-kolam-rice/cid/16/1192>             |
+| Atta, Rice & Dal            | Ponni Rice                         | <https://blinkit.com/cn/ponni-rice/cid/16/1482>                        |
+| Atta, Rice & Dal            | Basmati Rice                       | <https://blinkit.com/cn/basmati-rice/cid/16/1164>                      |
+| Atta, Rice & Dal            | Soya                               | <https://blinkit.com/cn/soya/cid/16/1297>                              |
+| Atta, Rice & Dal            | Rajma                              | <https://blinkit.com/cn/rajma/cid/16/1198>                             |
+| Atta, Rice & Dal            | Flours                             | <https://blinkit.com/cn/flours/cid/16/48>                              |
+| Atta, Rice & Dal            | Moong                              | <https://blinkit.com/cn/moong/cid/16/1196>                             |
+| Atta, Rice & Dal            | Sooji                              | <https://blinkit.com/cn/sooji/cid/16/1194>                             |
+| Atta, Rice & Dal            | Maida                              | <https://blinkit.com/cn/maida/cid/16/1483>                             |
+| Atta, Rice & Dal            | Besan                              | <https://blinkit.com/cn/besan/cid/16/1193>                             |
+| Atta, Rice & Dal            | Atta                               | <https://blinkit.com/cn/atta/cid/16/1165>                              |
+| Atta, Rice & Dal            | Kabuli Chana                       | <https://blinkit.com/cn/kabuli-chana/cid/16/8>                         |
+| Atta, Rice & Dal            | Dried Peas                         | <https://blinkit.com/cn/dried-peas/cid/16/1009>                        |
+| Organic & Gourmet           | Baby Food                          | <https://blinkit.com/cn/baby-food/cid/175/47>                          |
+| Organic & Gourmet           | Snacks & Munchies                  | <https://blinkit.com/cn/snacks-munchies/cid/175/82>                    |
+| Organic & Gourmet           | Breakfast & More                   | <https://blinkit.com/cn/breakfast-more/cid/175/96>                     |
+| Organic & Gourmet           | Healthy Proteins                   | <https://blinkit.com/cn/healthy-proteins/cid/175/97>                   |
+| Organic & Gourmet           | Beverages                          | <https://blinkit.com/cn/beverages/cid/175/655>                         |
+| Organic & Gourmet           | Oil & Ghee                         | <https://blinkit.com/cn/oil-ghee/cid/175/799>                          |
+| Organic & Gourmet           | Pulses & Millets                   | <https://blinkit.com/cn/pulses-millets/cid/175/800>                    |
+| Organic & Gourmet           | Flour                              | <https://blinkit.com/cn/flour/cid/175/801>                             |
+| Organic & Gourmet           | Spices & Vinegar                   | <https://blinkit.com/cn/spices-vinegar/cid/175/803>                    |
+| Organic & Gourmet           | Dairy Products                     | <https://blinkit.com/cn/dairy-products/cid/175/882>                    |
+| Organic & Gourmet           | Veggies and Fruits                 | <https://blinkit.com/cn/veggies-and-fruits/cid/175/919>                |
+| Organic & Gourmet           | Cookies & Wafers                   | <https://blinkit.com/cn/cookies-wafers/cid/175/939>                    |
+| Organic & Gourmet           | Cooking Essentials                 | <https://blinkit.com/cn/cooking-essentials/cid/175/946>                |
+| Organic & Gourmet           | Chocolates & Candies               | <https://blinkit.com/cn/chocolates-candies/cid/175/1044>               |
+| Organic & Gourmet           | Sauces & Spreads                   | <https://blinkit.com/cn/sauces-spreads/cid/175/1128>                   |
+| Organic & Gourmet           | Noodles & Pasta                    | <https://blinkit.com/cn/noodles-pasta/cid/175/1313>                    |
+| Organic & Gourmet           | Tea & Coffee                       | <https://blinkit.com/cn/tea-coffee/cid/175/1563>                       |
+| Organic & Gourmet           | Rice & Rice Products               | <https://blinkit.com/cn/rice-rice-products/cid/175/1935>               |
+| Organic & Gourmet           | Organic Salt                       | <https://blinkit.com/cn/organic-salt/cid/175/1936>                     |
+| Organic & Gourmet           | Dry Fruits, Nuts & Seeds           | <https://blinkit.com/cn/dry-fruits-nuts-seeds/cid/175/1937>            |
+| Masala, Oil & More          | Powdered Masala                    | <https://blinkit.com/cn/powdered-masala/cid/1557/50>                   |
+| Masala, Oil & More          | Dates & Seeds                      | <https://blinkit.com/cn/dates-seeds/cid/1557/815>                      |
+| Masala, Oil & More          | Oil                                | <https://blinkit.com/cn/oil/cid/1557/917>                              |
+| Masala, Oil & More          | Whole Spices                       | <https://blinkit.com/cn/whole-spices/cid/1557/930>                     |
+| Masala, Oil & More          | Salt, Sugar & Jaggery              | <https://blinkit.com/cn/salt-sugar-jaggery/cid/1557/933>               |
+| Masala, Oil & More          | Ghee & Vanaspati                   | <https://blinkit.com/cn/ghee-vanaspati/cid/1557/1158>                  |
+| Masala, Oil & More          | Dry Fruits                         | <https://blinkit.com/cn/dry-fruits/cid/1557/1160>                      |
+| Dairy and Breads            | Cheese                             | <https://blinkit.com/cn/cheese/cid/14/33>                              |
+| Dairy and Breads            | Curd & Yogurt                      | <https://blinkit.com/cn/curd-yogurt/cid/14/123>                        |
+| Dairy and Breads            | Condensed Milk                     | <https://blinkit.com/cn/condensed-milk/cid/14/130>                     |
+| Dairy and Breads            | Gourmet Cheese                     | <https://blinkit.com/cn/gourmet-cheese/cid/14/185>                     |
+| Dairy and Breads            | Buns & Pav                         | <https://blinkit.com/cn/buns-pav/cid/14/279>                           |
+| Dairy and Breads            | Milk                               | <https://blinkit.com/cn/milk/cid/14/922>                               |
+| Dairy and Breads            | Paneer & Tofu                      | <https://blinkit.com/cn/paneer-tofu/cid/14/923>                        |
+| Dairy and Breads            | Butter & More                      | <https://blinkit.com/cn/butter-more/cid/14/952>                        |
+| Dairy and Breads            | Bread                              | <https://blinkit.com/cn/bread/cid/14/953>                              |
+| Dairy and Breads            | Cream & Whitener                   | <https://blinkit.com/cn/cream-whitener/cid/14/1092>                    |
+| Dairy and Breads            | Oats                               | <https://blinkit.com/cn/oats/cid/14/584>                               |
+| Dairy and Breads            | Granola                            | <https://blinkit.com/cn/granola/cid/14/613>                            |
+| Dairy and Breads            | Muesli                             | <https://blinkit.com/cn/muesli/cid/14/1307>                            |
+| Dairy and Breads            | Kids Cereals                       | <https://blinkit.com/cn/kids-cereals/cid/14/1739>                      |
+| Dairy and Breads            | Flakes                             | <https://blinkit.com/cn/flakes/cid/14/1098>                            |
+| Dairy and Breads            | Curd                               | <https://blinkit.com/cn/curd/cid/14/949>                               |
+| Dairy and Breads            | Yogurt                             | <https://blinkit.com/cn/yogurt/cid/14/1094>                            |
+| Dairy and Breads            | Peanut Butter                      | <https://blinkit.com/cn/peanut-butter/cid/14/644>                      |
+| Dairy and Breads            | Poha                               | <https://blinkit.com/cn/poha/cid/14/1288>                              |
+| Dairy and Breads            | Chocolate Spreads                  | <https://blinkit.com/cn/chocolate-spreads/cid/14/504>                  |
+| Dairy and Breads            | Honey                              | <https://blinkit.com/cn/honey/cid/14/610>                              |
+| Personal Care               | Shampoo & Conditioner              | <https://blinkit.com/cn/shampoo-conditioner/cid/163/166>               |
+| Personal Care               | Body Moisturizers & More           | <https://blinkit.com/cn/body-moisturizers-more/cid/163/690>            |
+| Personal Care               | Hair Colour & More                 | <https://blinkit.com/cn/hair-colour-more/cid/163/691>                  |
+| Personal Care               | Men's Grooming                     | <https://blinkit.com/cn/mens-grooming/cid/163/692>                     |
+| Personal Care               | Cosmetics                          | <https://blinkit.com/cn/cosmetics/cid/163/693>                         |
+| Personal Care               | Soaps                              | <https://blinkit.com/cn/soaps/cid/163/696>                             |
+| Personal Care               | Hand & Foot Care                   | <https://blinkit.com/cn/hand-foot-care/cid/163/698>                    |
+| Personal Care               | Handwash                           | <https://blinkit.com/cn/handwash/cid/163/699>                          |
+| Personal Care               | Hair Oil & Serum                   | <https://blinkit.com/cn/hair-oil-serum/cid/163/702>                    |
+| Personal Care               | Bath & Body Kits                   | <https://blinkit.com/cn/bath-body-kits/cid/163/710>                    |
+| Personal Care               | Oral Care                          | <https://blinkit.com/cn/oral-care/cid/163/722>                         |
+| Personal Care               | Feminine Care                      | <https://blinkit.com/cn/feminine-care/cid/163/723>                     |
+| Personal Care               | Shower Gels & Scrubs               | <https://blinkit.com/cn/shower-gels-scrubs/cid/163/981>                |
+| Personal Care               | Deodorants & Powders               | <https://blinkit.com/cn/deodorants-powders/cid/163/1115>               |
+| Personal Care               | Facial Care                        | <https://blinkit.com/cn/facial-care/cid/163/1117>                      |
+| Personal Care               | Women's Grooming                   | <https://blinkit.com/cn/womens-grooming/cid/163/1893>                  |
+| Baby Care                   | Baby Diapers                       | <https://blinkit.com/cn/baby-diapers/cid/7/84>                         |
+| Baby Care                   | Baby Feeding Needs                 | <https://blinkit.com/cn/baby-feeding-needs/cid/7/169>                  |
+| Baby Care                   | Baby Wipes                         | <https://blinkit.com/cn/baby-wipes/cid/7/996>                          |
+| Baby Care                   | Hygiene                            | <https://blinkit.com/cn/hygiene/cid/7/85>                              |
+| Baby Care                   | Baby's Health & Safety Tools       | <https://blinkit.com/cn/babys-health-safety-tools/cid/7/997>           |
+| Baby Care                   | Oral & Nasal Care                  | <https://blinkit.com/cn/oral-nasal-care/cid/7/998>                     |
+| Baby Care                   | Baby Gift Hampers                  | <https://blinkit.com/cn/baby-gift-hampers/cid/7/999>                   |
+| Baby Care                   | Diapers & Wipes                    | <https://blinkit.com/cn/diapers-wipes/cid/7/1000>                      |
+| Baby Care                   | Baby Bathing Needs                 | <https://blinkit.com/cn/baby-bathing-needs/cid/7/1001>                 |
+| Baby Care                   | Baby Skin & Hair Care              | <https://blinkit.com/cn/baby-skin-hair-care/cid/7/1002>                |
+| Baby Care                   | Baby Food                          | <https://blinkit.com/cn/baby-food/cid/7/1590>                          |
+| Baby Care                   | Mom Care                           | <https://blinkit.com/cn/mom-care/cid/7/1967>                           |
+| Baby Care                   | Other Diapering Needs              | <https://blinkit.com/cn/other-diapering-needs/cid/7/1966>              |
+| Baby Care                   | Nursing                            | <https://blinkit.com/cn/nursing/cid/7/597>                             |
+| Home & Office               | Soft Toys & Greeting Cards         | <https://blinkit.com/cn/soft-toys-greeting-cards/cid/1379/394>         |
+| Home & Office               | Games                              | <https://blinkit.com/cn/games/cid/1379/1868>                           |
+| Home & Office               | Collectible Toy Guns & Accessories | <https://blinkit.com/cn/collectible-toy-guns-accessories/cid/1379/596> |
+| Home & Office               | DIY and Learning                   | <https://blinkit.com/cn/diy-and-learning/cid/1379/591>                 |
+| Home & Office               | Bags                               | <https://blinkit.com/cn/bags/cid/1379/120>                             |
+| Home & Office               | Party Essentials                   | <https://blinkit.com/cn/party-essentials/cid/1379/126>                 |
+| Home & Office               | Kids Toys & More                   | <https://blinkit.com/cn/kids-toys-more/cid/1379/305>                   |
+| Home & Office               | Repellents                         | <https://blinkit.com/cn/repellents/cid/1379/926>                       |
+| Home & Office               | Bathroom Essentials                | <https://blinkit.com/cn/bathroom-essentials/cid/1379/1014>             |
+| Home & Office               | Pooja Needs                        | <https://blinkit.com/cn/pooja-needs/cid/1379/1048>                     |
+| Home & Office               | Stationery Needs                   | <https://blinkit.com/cn/stationery-needs/cid/1379/1049>                |
+| Home & Office               | Kitchen & Dining Needs             | <https://blinkit.com/cn/kitchen-dining-needs/cid/1379/1052>            |
+| Home & Office               | Tissues & Disposables              | <https://blinkit.com/cn/tissues-disposables/cid/1379/1075>             |
+| Home & Office               | Fresheners                         | <https://blinkit.com/cn/fresheners/cid/1379/1085>                      |
+| Home & Office               | Electrical Accessories             | <https://blinkit.com/cn/electrical-accessories/cid/1379/1187>          |
+| Home & Office               | Electronic Accessories             | <https://blinkit.com/cn/electronic-accessories/cid/1379/1387>          |
+| Home & Office               | Home Decor & Storage               | <https://blinkit.com/cn/home-decor-storage/cid/1379/1433>              |
+| Home & Office               | Festive & Occasion Needs           | <https://blinkit.com/cn/festive-occasion-needs/cid/1379/1674>          |
+| Home & Office               | Clothing, Footwear & Accessories   | <https://blinkit.com/cn/clothing-footwear-accessories/cid/1379/1715>   |
+| Home & Office               | Home & Kitchen Appliances          | <https://blinkit.com/cn/home-kitchen-appliances/cid/1379/1886>         |
+| Home & Office               | Books                              | <https://blinkit.com/cn/books/cid/1379/1970>                           |
+| Home & Office               | Sports, Fitness & Outdoors         | <https://blinkit.com/cn/sports-fitness-outdoors/cid/1379/1992>         |
+| Home & Office               | Trimmers                           | <https://blinkit.com/cn/trimmers/cid/1379/2108>                        |
+| Home & Office               | Hair Dryer                         | <https://blinkit.com/cn/hair-dryer/cid/1379/2109>                      |
+| Home & Office               | Weighing Machines & Massagers      | <https://blinkit.com/cn/weighing-machines-massagers/cid/1379/2110>     |
+| Home & Office               | Mixer Grinders                     | <https://blinkit.com/cn/mixer-grinders/cid/1379/1882>                  |
+| Home & Office               | Fans                               | <https://blinkit.com/cn/fans/cid/1379/2106>                            |
+| Home & Office               | Electric Kettles                   | <https://blinkit.com/cn/electric-kettles/cid/1379/2111>                |
+| Home & Office               | Choppers                           | <https://blinkit.com/cn/choppers/cid/1379/1068>                        |
+| Home & Office               | Iron                               | <https://blinkit.com/cn/iron/cid/1379/1890>                            |
+| Home & Office               | Toasters                           | <https://blinkit.com/cn/toasters/cid/1379/1883>                        |
+| Home & Office               | Clocks & Calculators               | <https://blinkit.com/cn/clocks-calculators/cid/1379/2107>              |
+| Books                       | Children's Books                   | <https://blinkit.com/cn/childrens-books/cid/1559/273>                  |
+| Books                       | Children's Activity Books          | <https://blinkit.com/cn/childrens-activity-books/cid/1559/512>         |
+| E-Cards                     | E-Gift Cards                       | <https://blinkit.com/cn/e-cards/cid/416/4301>                          |
