@@ -408,7 +408,7 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col font-sans text-neutral-900 overflow-hidden">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
 
       {/* Header */}
       <div className="flex-none bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-20">
@@ -441,7 +441,7 @@ export default function CategoriesPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-6 gap-4 min-h-0">
+      <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-6 gap-4">
 
         {/* Controls */}
         <div className="flex-none flex flex-col gap-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -552,7 +552,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Product Table */}
-        <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden min-h-0">
+        <div className="h-[180vh] bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
           <ProductTable
             products={paginatedProducts}
             sortConfig={sortConfig}
