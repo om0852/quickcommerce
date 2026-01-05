@@ -11,7 +11,89 @@ import { TableVirtuoso } from 'react-virtuoso';
 
 import categoriesData from '@/data/categories_with_urls.json';
 
+// Defined outside component to prevent re-creation
+const VirtuosoTableComponents = {
+  Table: (props) => <table {...props} className="min-w-full divide-y divide-neutral-200 border-collapse" style={{ ...props.style, width: '100%' }} />,
+  TableRow: (props) => <tr {...props} className="hover:bg-neutral-50 transition-colors" />,
+};
+
+function ItemContent(_index, product) {
+  const productImage = product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage || product.instamart?.productImage || product.flipkartMinutes?.productImage;
+  return (
+    <>
+      <td className="px-8 py-4 whitespace-nowrap sticky left-0 bg-white z-10 group-hover:bg-neutral-50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 flex-shrink-0 rounded-lg border border-neutral-200 p-1 bg-white">
+            {productImage ? (
+              <img
+                className="h-full w-full object-contain mix-blend-multiply"
+                src={productImage}
+                alt={product.name}
+                onError={(e) => e.target.style.display = 'none'}
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center bg-neutral-100 text-[10px] text-neutral-400">No Img</div>
+            )}
+          </div>
+          <div className="max-w-[250px]">
+            <div className="text-sm font-medium text-neutral-900 truncate" title={product.name}>{product.name}</div>
+          </div>
+        </div>
+      </td>
+      {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'].map(p => {
+        const data = product[p];
+        return (
+          <td key={p} className="px-8 py-4 whitespace-nowrap">
+            {data ? (
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="text-sm font-semibold text-neutral-900">
+                    ₹{Number(data.currentPrice).toFixed(0)}
+                  </div>
+                  {/* Ranking Badge */}
+                  {data.ranking && !isNaN(data.ranking) && (
+                    <span className={cn(
+                      "text-[10px] font-bold px-1.5 py-0.5 rounded border",
+                      data.ranking === 1 ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-neutral-50 text-neutral-500 border-neutral-200"
+                    )}>
+                      #{data.ranking}
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-xs text-neutral-500 mt-1 flex flex-col gap-0.5">
+                  {data.priceChange && !isNaN(data.priceChange) && data.priceChange !== 0 ? (
+                    <span className={cn(
+                      "inline-flex items-center gap-0.5",
+                      data.priceChange < 0 ? "text-emerald-600" : "text-rose-600"
+                    )}>
+                      {data.priceChange < 0 ? <TrendingDown size={10} /> : <TrendingUp size={10} />}
+                      {Math.abs(data.priceChange)}
+                    </span>
+                  ) : null}
+                  {((data.deliveryTime && data.deliveryTime.length < 20) || p === 'jiomart') && (
+                    <span className="opacity-75">{p === 'jiomart' ? '10-30 min' : data.deliveryTime}</span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <span className="text-sm text-neutral-400 italic">--</span>
+            )}
+          </td>
+        )
+      })}
+    </>
+  );
+}
+
 export default function CategoriesPage() {
+  // ... (keep existing state)
+
+  // Memoize fixed header content
+
+
+  // ... (rest of component)
+
   // Generate options from the JSON keys (Master Categories)
   const CATEGORY_OPTIONS = Object.keys(categoriesData).map(cat => ({
     label: cat,
@@ -335,6 +417,30 @@ export default function CategoriesPage() {
     setSortConfig({ key, direction });
   };
 
+  // Memoize fixed header content
+  const fixedHeaderContent = React.useCallback(() => (
+    <tr className="bg-neutral-50">
+      <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider sticky left-0 bg-neutral-50 z-20 w-[350px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">Product</th>
+      {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'].map((platform) => (
+        <th
+          key={platform}
+          scope="col"
+          className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider min-w-[140px] cursor-pointer hover:bg-neutral-100 transition-colors select-none bg-neutral-50"
+          onClick={() => requestSort(platform)}
+        >
+          <div className="flex items-center gap-1">
+            {platform}
+            {sortConfig.key === platform ? (
+              sortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+            ) : (
+              <ChevronsUpDown size={14} className="text-neutral-300" />
+            )}
+          </div>
+        </th>
+      ))}
+    </tr>
+  ), [sortConfig, requestSort]);
+
   useEffect(() => {
     if (filteredProducts.length > 0) {
       if (!selectedProduct || !filteredProducts.find(p => p.name === selectedProduct.name)) {
@@ -630,105 +736,12 @@ export default function CategoriesPage() {
             ) : (
               /* Products List (Table) - Virtualized */
               <div className="flex flex-col gap-4">
-                <div className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden h-[calc(100vh-380px)]">
+                <div className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden h-[80vh]">
                   <TableVirtuoso
                     data={paginatedProducts}
-                    components={{
-                      Table: (props) => (
-                        <table {...props} className="min-w-full divide-y divide-neutral-200 border-collapse" style={{ ...props.style, width: '100%' }} />
-                      ),
-                      TableRow: (props) => <tr {...props} className="hover:bg-neutral-50 transition-colors" />,
-                    }}
-                    fixedHeaderContent={() => (
-                      <tr className="bg-neutral-50">
-                        <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider sticky left-0 bg-neutral-50 z-20 w-[350px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">Product</th>
-                        {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'].map((platform) => (
-                          <th
-                            key={platform}
-                            scope="col"
-                            className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider min-w-[140px] cursor-pointer hover:bg-neutral-100 transition-colors select-none bg-neutral-50"
-                            onClick={() => requestSort(platform)}
-                          >
-                            <div className="flex items-center gap-1">
-                              {platform}
-                              {sortConfig.key === platform ? (
-                                sortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                              ) : (
-                                <ChevronsUpDown size={14} className="text-neutral-300" />
-                              )}
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
-                    )}
-                    itemContent={(index, product) => {
-                      const productImage = product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage || product.instamart?.productImage || product.flipkartMinutes?.productImage;
-                      return (
-                        <>
-                          <td className="px-8 py-4 whitespace-nowrap sticky left-0 bg-white z-10 group-hover:bg-neutral-50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
-                            <div className="flex items-center gap-4">
-                              <div className="h-12 w-12 flex-shrink-0 rounded-lg border border-neutral-200 p-1 bg-white">
-                                {productImage ? (
-                                  <img
-                                    className="h-full w-full object-contain mix-blend-multiply"
-                                    src={productImage}
-                                    alt={product.name}
-                                    onError={(e) => e.target.style.display = 'none'}
-                                  />
-                                ) : (
-                                  <div className="h-full w-full flex items-center justify-center bg-neutral-100 text-[10px] text-neutral-400">No Img</div>
-                                )}
-                              </div>
-                              <div className="max-w-[250px]">
-                                <div className="text-sm font-medium text-neutral-900 truncate" title={product.name}>{product.name}</div>
-                              </div>
-                            </div>
-                          </td>
-                          {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'].map(p => {
-                            const data = product[p];
-                            return (
-                              <td key={p} className="px-8 py-4 whitespace-nowrap">
-                                {data ? (
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <div className="text-sm font-semibold text-neutral-900">
-                                        ₹{Number(data.currentPrice).toFixed(0)}
-                                      </div>
-                                      {/* Ranking Badge */}
-                                      {data.ranking && !isNaN(data.ranking) && (
-                                        <span className={cn(
-                                          "text-[10px] font-bold px-1.5 py-0.5 rounded border",
-                                          data.ranking === 1 ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-neutral-50 text-neutral-500 border-neutral-200"
-                                        )}>
-                                          #{data.ranking}
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    <div className="text-xs text-neutral-500 mt-1 flex flex-col gap-0.5">
-                                      {data.priceChange && !isNaN(data.priceChange) && data.priceChange !== 0 ? (
-                                        <span className={cn(
-                                          "inline-flex items-center gap-0.5",
-                                          data.priceChange < 0 ? "text-emerald-600" : "text-rose-600"
-                                        )}>
-                                          {data.priceChange < 0 ? <TrendingDown size={10} /> : <TrendingUp size={10} />}
-                                          {Math.abs(data.priceChange)}
-                                        </span>
-                                      ) : null}
-                                      {((data.deliveryTime && data.deliveryTime.length < 20) || p === 'jiomart') && (
-                                        <span className="opacity-75">{p === 'jiomart' ? '10-30 min' : data.deliveryTime}</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <span className="text-sm text-neutral-400 italic">--</span>
-                                )}
-                              </td>
-                            )
-                          })}
-                        </>
-                      );
-                    }}
+                    components={VirtuosoTableComponents}
+                    fixedHeaderContent={fixedHeaderContent}
+                    itemContent={ItemContent}
                   />
                   {filteredProducts.length === 0 && !loading && (
                     <div className="px-6 py-12 text-center text-sm text-neutral-500">
