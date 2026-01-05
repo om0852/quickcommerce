@@ -85,11 +85,9 @@ export async function GET(request) {
       zepto: [],
       blinkit: [],
       jiomart: [],
-      zepto: [],
-      blinkit: [],
-      jiomart: [],
       dmart: [],
-      flipkartMinutes: []
+      flipkartMinutes: [],
+      instamart: []
     };
 
     snapshots.forEach(snap => {
@@ -108,7 +106,10 @@ export async function GET(request) {
           productUrl: snap.productUrl,
           quantity: snap.quantity,
           deliveryTime: snap.deliveryTime,
-          isAd: snap.isAd
+          isAd: snap.isAd,
+          officialCategory: snap.officialCategory,
+          officialSubCategory: snap.officialSubCategory,
+          scrapedAt: snap.scrapedAt
         });
       }
     });
@@ -117,11 +118,9 @@ export async function GET(request) {
       productsByPlatform.zepto,
       productsByPlatform.blinkit,
       productsByPlatform.jiomart,
-      productsByPlatform.zepto,
-      productsByPlatform.blinkit,
-      productsByPlatform.jiomart,
       productsByPlatform.dmart,
-      productsByPlatform.flipkartMinutes
+      productsByPlatform.flipkartMinutes,
+      productsByPlatform.instamart
     );
 
     return NextResponse.json({
@@ -136,7 +135,8 @@ export async function GET(request) {
         blinkit: productsByPlatform.blinkit.length,
         jiomart: productsByPlatform.jiomart.length,
         dmart: productsByPlatform.dmart.length,
-        flipkartMinutes: productsByPlatform.flipkartMinutes.length
+        flipkartMinutes: productsByPlatform.flipkartMinutes.length,
+        instamart: productsByPlatform.instamart.length
       }
     });
 

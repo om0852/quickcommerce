@@ -1,29 +1,18 @@
 "use client"
 import React, { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight } from 'lucide-react';
-import AnalyticsTab from './AnalyticsTab';
-import ExportCategoryDialog from './ExportCategoryDialog';
+import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, ArrowRight, LayoutGrid, List } from 'lucide-react';
+// Import components from the parent categories directory
+import AnalyticsTab from '../categories/AnalyticsTab';
+import ExportCategoryDialog from '../categories/ExportCategoryDialog';
 import CustomDropdown from '@/components/CustomDropdown';
-import ProductDetailsDialog from './ProductDetailsDialog';
-import ProductTable from './ProductTable';
+import ProductDetailsDialog from '../categories/ProductDetailsDialog';
+import ProductTable from '../categories/ProductTable';
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
-
-
 import categoriesData from '@/data/categories_with_urls.json';
 
-// Defined outside component to prevent re-creation
-
-
-export default function CategoriesPage() {
-  // ... (keep existing state)
-
-  // Memoize fixed header content
-
-
-  // ... (rest of component)
-
+export default function TestingPage() {
   // Generate options from the JSON keys (Master Categories)
   const CATEGORY_OPTIONS = Object.keys(categoriesData).map(cat => ({
     label: cat,
@@ -249,24 +238,6 @@ export default function CategoriesPage() {
     }
   }, [selectedProduct, category, pincode]);
 
-  useEffect(() => {
-    if (selectedProduct && products.length > 0) {
-      const updatedProduct = products.find(p => p.name === selectedProduct.name);
-      if (updatedProduct) {
-        setSelectedProduct(updatedProduct);
-      }
-    }
-  }, [products]);
-
-  useEffect(() => {
-    if (lastUpdated && !snapshotTime) {
-      const dateObj = new Date(lastUpdated);
-      const dateStr = dateObj.toLocaleDateString('en-CA');
-      setSnapshotDate(dateStr);
-      setSnapshotTime(lastUpdated);
-    }
-  }, [lastUpdated]);
-
   const uniqueDates = useMemo(() => {
     const dates = availableSnapshots.map(ts => {
       const d = new Date(ts);
@@ -339,7 +310,6 @@ export default function CategoriesPage() {
     return sortedProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [sortedProducts, currentPage]);
 
-
   const requestSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -348,252 +318,141 @@ export default function CategoriesPage() {
     setSortConfig({ key, direction });
   };
 
-
-
-  useEffect(() => {
-    if (filteredProducts.length > 0) {
-      if (!selectedProduct || !filteredProducts.find(p => p.name === selectedProduct.name)) {
-        // Removed auto selection
-        // setSelectedProduct(filteredProducts[0]);
-        if (selectedProduct) setSelectedProduct(null);
-      }
-    } else {
-      setSelectedProduct(null);
-    }
-  }, [filteredProducts]);
-
-
-  const renderChangeIndicator = (change, type = 'price') => {
-    if (!change || change === 0) {
-      return null;
-    }
-
-    const isPositive = change > 0;
-
-    if (type === 'ranking') {
-      // Lower rank is better (e.g. 5 -> 1)
-      // Change = old - new (e.g. 5-1 = 4 rank improvement)
-      // Actually user logic was: change < 0 -> GREEN ?
-      // Let's stick to user logic:
-      // if change < 0 (rank number decreased, e.g. 5 to 1) -> Good
-      if (change < 0) {
-        return (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-            <TrendingUp size={12} />
-            <span>↑ {Math.abs(change)}</span>
-          </span>
-        );
-      } else {
-        return (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
-            <TrendingDown size={12} />
-            <span>↓ {change}</span>
-          </span>
-        );
-      }
-    }
-
-    // For Price:
-    // change < 0 (price dropped) -> Good (Green)
-    const isGood = change < 0;
-    return (
-      <span className={cn(
-        "inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border",
-        isGood ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-rose-600 bg-rose-50 border-rose-100"
-      )}>
-        {isGood ? <TrendingDown size={12} /> : <TrendingUp size={12} />}
-        {isPositive ? '+' : ''}₹{change.toFixed(2)}
-      </span>
-    );
-  };
-
   return (
-    <div className="h-screen bg-gray-50 flex flex-col font-sans text-neutral-900 overflow-hidden">
+    <div className="h-screen bg-neutral-50 flex flex-col font-sans text-neutral-900 overflow-hidden">
 
-      {/* Header */}
-      <div className="flex-none bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-20">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Price Tracker</h1>
-
-          <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
-            <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
-            <span className="font-medium text-neutral-600">
-              {isLiveMode ? 'Live Mode' : 'Historical Snapshot'}
-            </span>
+      {/* Premium Navbar */}
+      <div className="flex-none bg-white border-b border-neutral-200 px-6 py-3 flex items-center justify-between shadow-sm z-20">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-neutral-900 rounded-lg flex items-center justify-center">
+            <TrendingUp size={18} className="text-emerald-400" />
+          </div>
+          <div>
+            <h1 className="text-sm font-bold tracking-tight text-neutral-900">QC Tracker</h1>
+            <div className="flex items-center gap-1">
+              <div className={`w-1.5 h-1.5 rounded-full ${isLiveMode ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+              <span className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider">
+                {isLiveMode ? 'Live Mode' : 'Historical'}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* Center: Search / Global Actions (Placeholder) */}
+        <div className="hidden md:flex items-center bg-neutral-100 rounded-full px-4 py-1.5 border border-neutral-200 w-64">
+          <Search size={14} className="text-neutral-400 mr-2" />
+          <input type="text" placeholder="Search products..." className="bg-transparent text-sm outline-none w-full placeholder:text-neutral-500" />
+        </div>
 
-
-          <div className="flex items-center gap-4">
-            {!isLiveMode && (
-              <div className="flex items-center gap-2 text-sm bg-rose-50 text-rose-700 px-3 py-1.5 rounded-lg border border-rose-100 animate-in fade-in">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                </span>
-                <span className="font-medium">Viewing Past Data</span>
-              </div>
-            )}
+        {/* Right: History & Date Controls */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-white border border-neutral-200 rounded-lg p-1 pr-3 shadow-sm hover:shadow-md transition-shadow">
+            <div className="px-2 py-1 bg-neutral-100 rounded text-[10px] font-bold text-neutral-500 uppercase">Snapshot</div>
+            <div className="w-32">
+              <CustomDropdown
+                value={snapshotDate}
+                onChange={(newDate) => { setSnapshotDate(newDate); setIsLiveMode(false); }}
+                options={uniqueDates.map(d => ({ value: d, label: d }))}
+                placeholder="Date"
+                minimal
+              />
+            </div>
+            <div className="w-24 border-l border-neutral-200 pl-2">
+              <CustomDropdown
+                value={snapshotTime}
+                onChange={(ts) => { setSnapshotTime(ts); setIsLiveMode(false); if (ts) fetchCategoryData(ts); }}
+                options={availableTimes}
+                placeholder="Time"
+                minimal
+              />
+            </div>
           </div>
+          {!isLiveMode && (
+            <button onClick={() => setIsLiveMode(true)} className="p-2 bg-neutral-900 text-white rounded-lg hover:bg-black transition-colors" title="Reset to Live">
+              <RefreshCw size={16} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-6 gap-4 min-h-0">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col w-full max-w-[1600px] mx-auto p-4 gap-4 min-h-0">
 
-        {/* Controls */}
-        <div className="flex-none flex flex-col gap-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-
-          {/* Top Row: Selectors and Actions */}
-          <div className="flex items-center justify-between gap-4">
-            {/* Left: Selectors */}
-            <div className="flex items-center gap-4">
-              <div className="w-64 relative z-50">
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Category</label>
-                <CustomDropdown value={category} onChange={setCategory} options={CATEGORY_OPTIONS} />
-              </div>
-              <div className="w-48 relative z-40">
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Region</label>
-                <CustomDropdown value={pincode} onChange={setPincode} options={PINCODE_OPTIONS} />
-              </div>
-
-              {/* Snapshot Selectors */}
-              <div className="w-40 relative z-30 mr-4">
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Date</label>
-                <CustomDropdown
-                  value={snapshotDate}
-                  onChange={(newDate) => { setSnapshotDate(newDate); setIsLiveMode(false); }}
-                  options={uniqueDates.map(d => ({ value: d, label: d }))}
-                  placeholder="Date"
-                  minimal
-                />
-              </div>
-              <div className="w-32 relative z-20">
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Time</label>
-                <CustomDropdown
-                  value={snapshotTime}
-                  onChange={(ts) => { setSnapshotTime(ts); setIsLiveMode(false); if (ts) fetchCategoryData(ts); }}
-                  options={availableTimes}
-                  placeholder="Time"
-                  minimal
-                />
-              </div>
-
-              {!isLiveMode && (
-                <button
-                  onClick={() => setIsLiveMode(true)}
-                  className="mt-6 p-2 text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
-                  title="Return to Live Mode"
-                >
-                  <RefreshCw size={18} />
-                </button>
-              )}
+        {/* Controls Bar - Single Line */}
+        <div className="flex-none flex flex-col md:flex-row items-center gap-4 bg-white p-3 rounded-xl border border-neutral-200 shadow-sm">
+          <div className="flex items-center gap-3 w-full md:w-auto flex-1">
+            <div className="w-64 min-w-[200px]">
+              <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1 block pl-1">Category</label>
+              <CustomDropdown value={category} onChange={setCategory} options={CATEGORY_OPTIONS} />
             </div>
-
-            {/* Right: Actions */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => fetchCategoryData()}
-                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all"
-                title="Refresh Data"
-              >
-                <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-              </button>
-              <button
-                onClick={() => setIsExportOpen(true)}
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
-              >
-                <Download size={16} />
-                Export
-              </button>
+            <div className="w-48 min-w-[160px]">
+              <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1 block pl-1">Region</label>
+              <CustomDropdown value={pincode} onChange={setPincode} options={PINCODE_OPTIONS} />
             </div>
           </div>
 
-          {/* Bottom Row: Platform Filter */}
-          <div className="w-full border-t border-gray-100 pt-3 flex items-end justify-between gap-4">
-            <div className="flex-1 overflow-hidden">
-              <label className="text-xs font-semibold text-gray-500 mb-2 block">Platform Filter</label>
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                {PLATFORM_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setPlatformFilter(opt.value)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
-                      platformFilter === opt.value
-                        ? "bg-neutral-900 text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="h-8 w-px bg-neutral-200 hidden md:block"></div>
 
-            {platformFilter !== 'all' && (
+          {/* Platform Filters as Tabs */}
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full">
+            {PLATFORM_OPTIONS.map(opt => (
               <button
-                onClick={() => setShowMissing(!showMissing)}
+                key={opt.value}
+                onClick={() => setPlatformFilter(opt.value)}
                 className={cn(
-                  "flex-none flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap mb-0.5",
-                  showMissing
-                    ? "bg-amber-100 text-amber-800 border border-amber-200"
-                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                  "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border",
+                  platformFilter === opt.value
+                    ? "bg-neutral-900 text-white border-neutral-900 shadow-md transform scale-105"
+                    : "bg-white text-neutral-600 border-transparent hover:bg-neutral-50 hover:border-neutral-200"
                 )}
-                title="Show products missing on this platform"
               >
-                <Filter size={14} className={showMissing ? "fill-current" : ""} />
-                {showMissing ? 'Showing Missing' : 'Show Missing'}
+                {opt.label}
               </button>
-            )}
+            ))}
+          </div>
+
+          <div className="h-8 w-px bg-neutral-200 hidden md:block"></div>
+
+          <div className="flex items-center gap-2">
+            <button onClick={() => fetchCategoryData()} className="p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors">
+              <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            </button>
+            <button onClick={() => setIsExportOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-emerald-200">
+              <Download size={14} />
+              EXPORT
+            </button>
           </div>
         </div>
 
-        {/* Product Table */}
-        <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden min-h-0">
+        {/* Table Area - Maximized */}
+        <div className="flex-1 flex flex-col bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden min-h-0">
           <ProductTable
             products={paginatedProducts}
             sortConfig={sortConfig}
             onSort={requestSort}
-            loading={loading}
-            onProductClick={(product) => {
-              setSelectedProduct(product);
-              setIsDetailsOpen(true);
-            }}
+            onProductClick={(product) => { setSelectedProduct(product); setIsDetailsOpen(true); }}
           />
         </div>
 
-        {/* Footer/Pagination */}
+        {/* Pagination Footer */}
         {sortedProducts.length > ITEMS_PER_PAGE && (
-          <div className="flex-none flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm">
-            <span className="text-sm text-gray-600 font-medium">
-              Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, sortedProducts.length)} - {Math.min(currentPage * ITEMS_PER_PAGE, sortedProducts.length)} of {sortedProducts.length} products
+          <div className="flex-none bg-white border border-neutral-200 p-2 rounded-lg flex items-center justify-between shadow-sm">
+            <span className="text-xs text-neutral-500 font-medium px-2">
+              Line items: <span className="text-neutral-900 font-bold">{sortedProducts.length}</span>
             </span>
             <div className="flex items-center gap-2">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(c => c - 1)}
-                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
-              >
-                <ArrowRight size={18} className="rotate-180" />
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(c => c - 1)} className="p-1.5 rounded hover:bg-neutral-100 disabled:opacity-50">
+                <ArrowRight size={16} className="rotate-180" />
               </button>
-              <span className="text-sm font-semibold">Page {currentPage} / {Math.ceil(sortedProducts.length / ITEMS_PER_PAGE)}</span>
-              <button
-                disabled={currentPage >= Math.ceil(sortedProducts.length / ITEMS_PER_PAGE)}
-                onClick={() => setCurrentPage(c => c + 1)}
-                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
-              >
-                <ArrowRight size={18} />
+              <span className="text-xs font-bold text-neutral-900">Page {currentPage}</span>
+              <button disabled={currentPage >= Math.ceil(sortedProducts.length / ITEMS_PER_PAGE)} onClick={() => setCurrentPage(c => c + 1)} className="p-1.5 rounded hover:bg-neutral-100 disabled:opacity-50">
+                <ArrowRight size={16} />
               </button>
             </div>
           </div>
         )}
 
       </div>
-
-
 
       <ProductDetailsDialog
         isOpen={isDetailsOpen}
@@ -607,8 +466,6 @@ export default function CategoriesPage() {
         selectedProduct={selectedProduct}
       />
 
-
-
       <ExportCategoryDialog
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
@@ -620,7 +477,14 @@ export default function CategoriesPage() {
         categoryOptions={CATEGORY_OPTIONS}
       />
 
-
-    </div >
+      {loading && (
+        <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-2xl shadow-xl border border-neutral-100 flex flex-col items-center">
+            <RefreshCw size={32} className="text-neutral-900 animate-spin mb-2" />
+            <span className="text-sm font-bold text-neutral-900">Syncing Data...</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
