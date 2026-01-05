@@ -109,6 +109,7 @@ export async function GET(request) {
           isAd: snap.isAd,
           officialCategory: snap.officialCategory,
           officialSubCategory: snap.officialSubCategory,
+          combo: snap.combo,
           scrapedAt: snap.scrapedAt
         });
       }

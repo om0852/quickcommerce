@@ -1,34 +1,22 @@
+const mongoose = require('mongoose');
 
+// --- INLINED LOGIC START ---
 // Product matching helpers
 
 function normalizeProductName(name = '') {
     let normalized = String(name).toLowerCase();
-
-    // Remove content in parentheses (packaging details like "Tetra Pack", "Pouch", "Tub")
     normalized = normalized.replace(/\([^)]*\)/g, ' ');
-
-    // Remove content in square brackets
     normalized = normalized.replace(/\[[^\]]*\]/g, ' ');
-
-    // Remove special characters but keep spaces
     normalized = normalized.replace(/[^a-z0-9\s]/g, ' ');
-
-    // Remove common packaging and filler words
     normalized = normalized.replace(/\b(tetra\s*pack|tetra|pouch|tub|bottle|carton|box|tin|can|jar|packet|sachet)\b/g, ' ');
     normalized = normalized.replace(/\b(of|and|with|pack|pcs|pc|pieces|piece)\b/g, ' ');
-
-    // Remove units (but keep numbers)
     normalized = normalized.replace(/\b(kg|kgs|g|gm|gms|gram|grams|ml|ltr|litre|litres|liter|liters|l)\b/g, ' ');
-
-    // Remove extra whitespace
     normalized = normalized.replace(/\s+/g, ' ').trim();
-
     return normalized;
 }
 
 function getBrand(name = '') {
     if (!name) return '';
-    // Simple heuristic: first word is often the brand
     return name.trim().split(' ')[0].toLowerCase();
 }
 
@@ -81,14 +69,12 @@ function combinedSimilarity(nameA, nameB) {
     return 0.65 * j + 0.35 * lev;
 }
 
-// Helper function to normalize weight for comparison
 const normalizeWeight = (weight) => {
     if (!weight) return '';
     return String(weight).toLowerCase()
         .replace(/\s+/g, '')
         .replace(/pack/g, '')
         .replace(/\(|\)/g, '')
-        // Standardize units
         .replace('ltr', 'l')
         .replace('litre', 'l')
         .replace('litres', 'l')
@@ -97,26 +83,18 @@ const normalizeWeight = (weight) => {
         .replace('kgs', 'kg');
 };
 
-// Helper function to check if weights are compatible
 const weightsMatch = (weight1, weight2) => {
-    // RELAXED: If weight is missing in either, assume compatibility to rely on name matching
     if (!weight1 || !weight2) return true;
-
-    // If both exist, we check strictness
     const w1 = normalizeWeight(weight1);
     const w2 = normalizeWeight(weight2);
-
     if (w1 === w2) return true;
-
     const parseWeight = (w) => {
         const match = w.match(/(\d+(?:\.\d+)?)([a-z]+)/);
         if (match) return { val: parseFloat(match[1]), unit: match[2] };
         return null;
     };
-
     const p1 = parseWeight(w1);
     const p2 = parseWeight(w2);
-
     if (p1 && p2) {
         if (p1.unit === p2.unit) return p1.val === p2.val;
         if (p1.unit === 'kg' && p2.unit === 'g') return p1.val * 1000 === p2.val;
@@ -124,11 +102,11 @@ const weightsMatch = (weight1, weight2) => {
         if (p1.unit === 'l' && p2.unit === 'ml') return p1.val * 1000 === p2.val;
         if (p1.unit === 'ml' && p2.unit === 'l') return p1.val === p2.val * 1000;
     }
-
     return false;
 };
 
-export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts = [], jiomartProducts = [], dmartProducts = [], flipkartMinutesProducts = [], instamartProducts = []) {
+// THIS IS THE FIXED FUNCTION
+function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts = [], jiomartProducts = [], dmartProducts = [], flipkartMinutesProducts = [], instamartProducts = []) {
     const sources = [
         { key: 'zepto', items: zeptoProducts },
         { key: 'blinkit', items: blinkitProducts },
@@ -162,8 +140,7 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
                 priceChange: item.priceChange,
                 discountChange: item.discountChange,
                 rankingChange: item.rankingChange,
-                rankingChange: item.rankingChange,
-                productUrl: item.productUrl,
+                productUrl: item.productUrl, // FIXED HERE
                 name: item.productName,
                 isOutOfStock: item.isOutOfStock,
                 scrapedAt: item.scrapedAt,
@@ -189,34 +166,23 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
 
                 other.items.forEach((oItem, oIdx) => {
                     if (used[t].has(oIdx)) return;
-
-                    // 1. Check Brand
                     const otherBrand = getBrand(oItem.productName);
                     if (itemBrand && otherBrand && itemBrand !== otherBrand) {
                         if (!itemBrand.startsWith(otherBrand) && !otherBrand.startsWith(itemBrand)) {
                             return;
                         }
                     }
-
-                    // 2. Calculate Similarity Score FIRST
                     const score = combinedSimilarity(item.productName, oItem.productName);
-
-                    // 3. Check Weight
                     const wMatch = weightsMatch(item.productWeight, oItem.productWeight);
-
-                    // Logic: If weights mismatch, ONLY allow if score is very high (strong name match implies same product or acceptable variant)
-                    // Threshold 0.8 allows slight differences (like "69 g" vs "230 g" in long names)
                     if (!wMatch && score < 0.8) {
                         return;
                     }
-
                     if (score > bestScore) {
                         bestScore = score;
                         bestIdx = oIdx;
                     }
                 });
 
-                // Lower threshold slightly to 0.75 to capture more variations
                 if (bestIdx >= 0 && bestScore >= 0.75) {
                     const matched = other.items[bestIdx];
                     used[t].add(bestIdx);
@@ -229,15 +195,13 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
                         priceChange: matched.priceChange,
                         discountChange: matched.discountChange,
                         rankingChange: matched.rankingChange,
-                        rankingChange: matched.rankingChange,
-                        productUrl: matched.productUrl,
+                        productUrl: matched.productUrl, // FIXED HERE
                         name: matched.productName,
                         isOutOfStock: matched.isOutOfStock,
                         scrapedAt: matched.scrapedAt,
                         quantity: matched.quantity,
                         deliveryTime: matched.deliveryTime,
                         isAd: matched.isAd,
-                        rating: matched.rating,
                         rating: matched.rating,
                         productImage: matched.productImage,
                         officialCategory: matched.officialCategory,
@@ -250,7 +214,9 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
             merged.push(group);
         });
     }
-    // ... items sort ...
+
+    // Remaining... (simplified for this script as main logic is above)
+    // Actually need to include remaining to capture all cases
     sources.forEach((src, sIdx) => {
         src.items.forEach((itm, idx) => {
             if (used[sIdx].has(idx)) return;
@@ -261,6 +227,8 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
                 rating: itm.rating
             };
             g[src.key] = {
+                // ... same fields ...
+                productUrl: itm.productUrl, // FIXED HERE
                 productId: itm.productId,
                 currentPrice: itm.currentPrice,
                 originalPrice: itm.originalPrice,
@@ -269,15 +237,12 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
                 priceChange: itm.priceChange,
                 discountChange: itm.discountChange,
                 rankingChange: itm.rankingChange,
-                rankingChange: itm.rankingChange,
-                productUrl: itm.productUrl,
                 name: itm.productName,
                 isOutOfStock: itm.isOutOfStock,
                 scrapedAt: itm.scrapedAt,
                 quantity: itm.quantity,
                 deliveryTime: itm.deliveryTime,
                 isAd: itm.isAd,
-                rating: itm.rating,
                 rating: itm.rating,
                 productImage: itm.productImage,
                 officialCategory: itm.officialCategory,
@@ -289,11 +254,94 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
         });
     });
 
-    merged.sort((a, b) => {
-        const countA = (a.zepto ? 1 : 0) + (a.blinkit ? 1 : 0) + (a.jiomart ? 1 : 0) + (a.dmart ? 1 : 0) + (a.flipkartMinutes ? 1 : 0) + (a.instamart ? 1 : 0);
-        const countB = (b.zepto ? 1 : 0) + (b.blinkit ? 1 : 0) + (b.jiomart ? 1 : 0) + (b.dmart ? 1 : 0) + (b.flipkartMinutes ? 1 : 0) + (b.instamart ? 1 : 0);
-        return countB - countA;
-    });
-
     return merged;
 }
+
+// --- LOGIC END ---
+
+// Load env vars
+require('dotenv').config({ path: '.env.local' });
+if (!process.env.MONGODB_URI) {
+    require('dotenv').config({ path: '.env' });
+}
+
+async function run() {
+    try {
+        console.log('Connecting to DB...');
+        if (!process.env.MONGODB_URI) {
+            console.error('MONGODB_URI not found');
+            process.exit(1);
+        }
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log('Connected.');
+
+        const ProductSnapshotSchema = new mongoose.Schema({}, { strict: false });
+        const ProductSnapshot = mongoose.model('ProductSnapshot', ProductSnapshotSchema, 'productsnapshots');
+
+        console.log('Searching for productId: 95422');
+        const snapshots = await ProductSnapshot.find({ productId: "95422" }).sort({ scrapedAt: -1 }).limit(1);
+
+        if (snapshots.length === 0) {
+            console.log('No snapshots found. Try looking for 7UP...');
+            const p = await ProductSnapshot.findOne({ productName: /7UP/ }).sort({ scrapedAt: -1 });
+            if (p) snapshots.push(p);
+        }
+
+        if (snapshots.length === 0) {
+            console.log('Product not found in DB.');
+            process.exit(0);
+        }
+
+        const snap = snapshots[0];
+        console.log(`Found Product: ${snap.productName}`);
+        console.log(`DB productUrl: ${snap.productUrl}`);
+        console.log(`DB isAd: ${snap.isAd}`);
+        console.log(`DB isOutOfStock: ${snap.isOutOfStock}`);
+
+        // Prepare item for merger
+        const item = snap.toObject(); // Use raw object
+        // NOTE: route.js explicitly extracts fields, but let's assume it passes mostly everything or at least what we care about.
+        // Actually route.js DOES explicit extraction. Let's replicate that EXACTLY to be sure.
+
+        const exactItem = {
+            productId: snap.productId,
+            productName: snap.productName,
+            productImage: snap.productImage,
+            productWeight: snap.productWeight,
+            rating: snap.rating,
+            currentPrice: snap.currentPrice,
+            originalPrice: snap.originalPrice,
+            discountPercentage: snap.discountPercentage,
+            ranking: snap.ranking,
+            isOutOfStock: snap.isOutOfStock,
+            productUrl: snap.productUrl, // KEY FIELD
+            quantity: snap.quantity,
+            deliveryTime: snap.deliveryTime,
+            isAd: snap.isAd,
+            officialCategory: snap.officialCategory,
+            officialSubCategory: snap.officialSubCategory,
+            combo: snap.combo,
+            scrapedAt: snap.scrapedAt
+        };
+
+        console.log('Running merger...');
+        const merged = mergeProductsAcrossPlatforms([], [exactItem], [], [], [], []);
+        const final = merged[0];
+
+        console.log('Merged output for Blinkit:', final.blinkit);
+
+        if (final.blinkit.productUrl) {
+            console.log('✅ TEST PASSED: productUrl is present');
+        } else {
+            console.log('❌ TEST FAILED: productUrl is missing');
+        }
+
+    } catch (e) {
+        console.error(e);
+    } finally {
+        await mongoose.disconnect();
+        process.exit();
+    }
+}
+
+run();

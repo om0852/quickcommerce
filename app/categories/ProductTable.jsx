@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw } from 'lucide-react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -9,7 +9,53 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { cn } from '@/lib/utils'; // Keep cn for tailwind utility usage if needed
 
-export default function ProductTable({
+const ProductImage = ({ product }) => {
+    const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
+
+    // Collect all available images from all platforms
+    const images = useMemo(() => {
+        return platforms
+            .map(p => product[p]?.productImage)
+            .filter(url => url && url.length > 5); // Basic filter for valid URL strings
+    }, [product]);
+
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [failed, setFailed] = useState(false);
+
+    // Reset state when product changes
+    React.useEffect(() => {
+        setCurrentImageIndex(0);
+        setFailed(false);
+    }, [product]);
+
+    const handleError = () => {
+        if (currentImageIndex < images.length - 1) {
+            setCurrentImageIndex(prev => prev + 1);
+        } else {
+            setFailed(true);
+        }
+    };
+
+    if (images.length === 0 || failed) {
+        return (
+            <div className="h-full w-full flex items-center justify-center bg-neutral-100 text-[10px] text-neutral-400">
+                No Img
+            </div>
+        );
+    }
+
+    return (
+        <img
+            className="h-full w-full object-contain mix-blend-multiply"
+            src={images[currentImageIndex]}
+            alt={product.name}
+            onError={handleError}
+            loading="lazy"
+        />
+    );
+};
+
+const ProductTable = React.memo(function ProductTable({
     products,
     sortConfig,
     onSort,
@@ -90,8 +136,6 @@ export default function ProductTable({
                     </TableHead>
                     <TableBody>
                         {products.map((product, index) => {
-                            const productImage = product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage || product.instamart?.productImage || product.flipkartMinutes?.productImage;
-
                             return (
                                 <TableRow
                                     hover
@@ -120,16 +164,7 @@ export default function ProductTable({
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className="h-12 w-12 flex-shrink-0 rounded-lg border border-neutral-200 p-1 bg-white">
-                                                {productImage ? (
-                                                    <img
-                                                        className="h-full w-full object-contain mix-blend-multiply"
-                                                        src={productImage}
-                                                        alt={product.name}
-                                                        onError={(e) => e.target.style.display = 'none'}
-                                                    />
-                                                ) : (
-                                                    <div className="h-full w-full flex items-center justify-center bg-neutral-100 text-[10px] text-neutral-400">No Img</div>
-                                                )}
+                                                <ProductImage product={product} />
                                             </div>
                                             <div className="w-full">
                                                 <div className="text-sm font-medium text-neutral-900" title={product.name}>{product.name}</div>
@@ -214,4 +249,6 @@ export default function ProductTable({
             }
         </Paper >
     );
-}
+});
+
+export default ProductTable;

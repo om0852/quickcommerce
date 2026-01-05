@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect, useMemo } from 'react';
+import { Switch } from '@/components/ui/switch';
 import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight } from 'lucide-react';
 import AnalyticsTab from './AnalyticsTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
@@ -340,13 +341,15 @@ export default function CategoriesPage() {
   }, [sortedProducts, currentPage]);
 
 
-  const requestSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
+  const requestSort = React.useCallback((key) => {
+    setSortConfig(currentConfig => {
+      let direction = 'asc';
+      if (currentConfig.key === key && currentConfig.direction === 'asc') {
+        direction = 'desc';
+      }
+      return { key, direction };
+    });
+  }, []);
 
 
 
@@ -413,7 +416,7 @@ export default function CategoriesPage() {
       {/* Header */}
       <div className="flex-none bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-20">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Price Tracker</h1>
+          <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
             <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'}`}></span>
@@ -521,7 +524,7 @@ export default function CategoriesPage() {
                     key={opt.value}
                     onClick={() => setPlatformFilter(opt.value)}
                     className={cn(
-                      "px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
+                      "px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap",
                       platformFilter === opt.value
                         ? "bg-neutral-900 text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -533,21 +536,17 @@ export default function CategoriesPage() {
               </div>
             </div>
 
-            {platformFilter !== 'all' && (
-              <button
-                onClick={() => setShowMissing(!showMissing)}
-                className={cn(
-                  "flex-none flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap mb-0.5",
-                  showMissing
-                    ? "bg-neutral-900 text-white border border-neutral-900"
-                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
-                )}
-                title="Show products missing on this platform"
-              >
-                <Filter size={14} className={showMissing ? "fill-current" : ""} />
-                {showMissing ? 'Showing Missing' : 'Show Missing'}
-              </button>
-            )}
+            <div className={cn(
+              "flex items-center gap-3 px-3 py-1.5 mb-0.5 transition-opacity duration-200",
+              platformFilter === 'all' ? "opacity-50 blur-[0.5px] pointer-events-none grayscale" : ""
+            )}>
+              <span className="text-sm font-medium text-gray-700">Show Missing</span>
+              <Switch
+                checked={showMissing}
+                onCheckedChange={setShowMissing}
+                disabled={platformFilter === 'all'}
+              />
+            </div>
           </div>
         </div>
 
@@ -558,10 +557,10 @@ export default function CategoriesPage() {
             sortConfig={sortConfig}
             onSort={requestSort}
             loading={loading}
-            onProductClick={(product) => {
+            onProductClick={React.useCallback((product) => {
               setSelectedProduct(product);
               setIsDetailsOpen(true);
-            }}
+            }, [])}
           />
         </div>
 

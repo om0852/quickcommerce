@@ -53,50 +53,121 @@ function ProductDetailsDialog({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                         {availablePlatforms.map(platform => {
                             const data = selectedProduct[platform];
+
+                            // Calculate discount if missing
+                            let displayDiscount = data.discountPercentage > 0 ? `${data.discountPercentage}% Off` : null;
+                            if (!displayDiscount && data.originalPrice && data.currentPrice && data.originalPrice > data.currentPrice) {
+                                const calculatedDiscount = Math.round(((data.originalPrice - data.currentPrice) / data.originalPrice) * 100);
+                                if (calculatedDiscount > 0) {
+                                    displayDiscount = `${calculatedDiscount}% Off`;
+                                }
+                            }
+
+                            const inStock = !data.isOutOfStock;
+
                             return (
-                                <div key={platform} className="bg-white p-4 rounded-lg border border-neutral-200 shadow-sm">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-sm font-bold uppercase tracking-wider text-neutral-700">{platform}</span>
-                                        {data.productUrl && (
+                                <div key={platform} className="bg-white p-4 rounded-lg border border-neutral-200 shadow-sm hover:shadow-md transition-shadow">
+                                    {/* Platform Header with Link */}
+                                    <div className="flex items-center justify-between mb-3 pb-2 border-b border-neutral-100">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold uppercase tracking-wider text-neutral-700">{platform}</span>
+                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${data.isAd ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}`}>
+                                                Ad: {data.isAd ? 'Yes' : 'No'}
+                                            </span>
+                                        </div>
+                                        {data.productUrl ? (
                                             <a
                                                 href={data.productUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-blue-600 hover:text-blue-800 transition-colors"
+                                                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 px-2 py-1 rounded-full"
                                                 title="View on Platform"
                                             >
-                                                <ExternalLink size={16} />
+                                                View <ExternalLink size={12} />
                                             </a>
+                                        ) : (
+                                            <span className="text-xs text-neutral-400 italic">No Link</span>
                                         )}
                                     </div>
 
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-neutral-500">Price:</span>
-                                            <span className="font-semibold">₹{data.currentPrice}</span>
+                                    <div className="flex gap-4">
+                                        {/* Image Section */}
+                                        <div className="w-24 h-24 flex-shrink-0 border border-neutral-100 rounded-md p-1 bg-white">
+                                            {data.productImage && data.productImage.length > 5 ? (
+                                                <img
+                                                    src={data.productImage}
+                                                    alt={selectedProduct.name}
+                                                    className="w-full h-full object-contain mix-blend-multiply"
+                                                    onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-[10px] text-neutral-300">No Img</div>'; }}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[10px] text-neutral-300">
+                                                    No Img
+                                                </div>
+                                            )}
                                         </div>
-                                        {data.originalPrice && data.originalPrice > data.currentPrice && (
-                                            <div className="flex justify-between">
-                                                <span className="text-neutral-500">Original:</span>
-                                                <span className="line-through text-neutral-400">₹{data.originalPrice}</span>
+
+                                        {/* info section */}
+                                        <div className="flex-1 space-y-2 text-sm">
+                                            <div className="flex justify-between items-baseline">
+                                                <span className="text-neutral-500">Price:</span>
+                                                <span className="font-bold text-base">₹{data.currentPrice}</span>
                                             </div>
-                                        )}
-                                        {data.discountPercentage > 0 && (
-                                            <div className="flex justify-between">
-                                                <span className="text-neutral-500">Discount:</span>
-                                                <span className="text-green-600 font-medium">{data.discountPercentage}% Off</span>
+
+                                            {(data.originalPrice || displayDiscount) && (
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="text-neutral-500">MRP:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        {data.originalPrice && (
+                                                            <span className="line-through text-neutral-400">₹{data.originalPrice}</span>
+                                                        )}
+                                                        {displayDiscount && (
+                                                            <span className="text-green-600 font-bold">{displayDiscount}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="flex justify-between items-center pt-1">
+                                                <span className="text-neutral-500">Stock:</span>
+                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${inStock ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                                                    {inStock ? 'In Stock' : 'Out of Stock'}
+                                                </span>
+                                            </div>
+
+                                            {data.deliveryTime && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-neutral-500">Delivery:</span>
+                                                    <span className="text-neutral-700 font-medium text-xs">{data.deliveryTime}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Extra Details */}
+                                    <div className="mt-3 pt-3 border-t border-neutral-100 space-y-2 text-xs">
+                                        {data.combo && (
+                                            <div className="flex gap-2">
+                                                <span className="text-neutral-400 font-medium">Combo:</span>
+                                                <span className="text-neutral-600 truncate" title={data.combo}>{data.combo}</span>
                                             </div>
                                         )}
 
-                                        {data.officialCategory && (
-                                            <div className="pt-2 border-t border-neutral-100 mt-2">
-                                                <div className="text-xs text-neutral-400 mb-0.5">Category</div>
-                                                <div className="font-medium truncate" title={data.officialCategory}>{data.officialCategory}</div>
-                                                {data.officialSubCategory && (
-                                                    <div className="text-xs text-neutral-500 truncate" title={data.officialSubCategory}>{data.officialSubCategory}</div>
+                                        <div className="flex gap-2">
+                                            <span className="text-neutral-400 font-medium">Platform Cat:</span>
+                                            <div className="flex-1 min-w-0">
+                                                {data.officialCategory ? (
+                                                    <>
+                                                        <div className="text-neutral-700 truncate" title={data.officialCategory}>{data.officialCategory}</div>
+                                                        {data.officialSubCategory && (
+                                                            <div className="text-neutral-500 truncate mt-0.5" title={data.officialSubCategory}>↳ {data.officialSubCategory}</div>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <span className="text-neutral-300 italic">--</span>
                                                 )}
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
                             );

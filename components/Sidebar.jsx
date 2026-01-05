@@ -31,7 +31,7 @@ export default function Sidebar() {
     <aside className="fixed top-0 left-0 h-screen w-64 bg-neutral-900 text-white flex flex-col border-r border-neutral-800 z-50">
       <div className="p-6 border-b border-neutral-800">
         <h1 className="text-xl font-bold tracking-tight mb-1">QuickCommerce</h1>
-        <p className="text-sm text-neutral-400">Price Tracker</p>
+        <p className="text-sm text-neutral-400">Category Tracker</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">

@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import dbConnect from './local-scraper-service/config/db.js';
 import ScraperLog from './local-scraper-service/models/ScraperLog.js';
 import fetch from 'node-fetch';
-
+// when  we click on row a popup apear show more dtails about product like image ,ad or not ,discount if not present then calculate and delivery time and combo and product weight ,isout of stock or not ,productUrl
 dotenv.config({ path: './local-scraper-service/.env' });
 
 async function verifyLogging() {
