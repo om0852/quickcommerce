@@ -85,7 +85,11 @@ export async function GET(request) {
       zepto: [],
       blinkit: [],
       jiomart: [],
-      dmart: []
+      zepto: [],
+      blinkit: [],
+      jiomart: [],
+      dmart: [],
+      flipkartMinutes: []
     };
 
     snapshots.forEach(snap => {
@@ -113,7 +117,11 @@ export async function GET(request) {
       productsByPlatform.zepto,
       productsByPlatform.blinkit,
       productsByPlatform.jiomart,
-      productsByPlatform.dmart
+      productsByPlatform.zepto,
+      productsByPlatform.blinkit,
+      productsByPlatform.jiomart,
+      productsByPlatform.dmart,
+      productsByPlatform.flipkartMinutes
     );
 
     return NextResponse.json({
@@ -127,7 +135,8 @@ export async function GET(request) {
         zepto: productsByPlatform.zepto.length,
         blinkit: productsByPlatform.blinkit.length,
         jiomart: productsByPlatform.jiomart.length,
-        dmart: productsByPlatform.dmart.length
+        dmart: productsByPlatform.dmart.length,
+        flipkartMinutes: productsByPlatform.flipkartMinutes.length
       }
     });
 

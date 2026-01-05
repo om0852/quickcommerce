@@ -77,6 +77,10 @@ function AnalyticsTab({ category, pincode, platform, historyData, stockData, sel
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
+                    <linearGradient id="colorFlipkart" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2874f0" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#2874f0" stopOpacity={0} />
+                    </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
@@ -85,6 +89,7 @@ function AnalyticsTab({ category, pincode, platform, historyData, stockData, sel
                   <Area type="monotone" dataKey="Zepto" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorZepto)" strokeWidth={2} />
                   <Area type="monotone" dataKey="Blinkit" stroke="#f59e0b" fillOpacity={1} fill="url(#colorBlinkit)" strokeWidth={2} />
                   <Area type="monotone" dataKey="JioMart" stroke="#3b82f6" fillOpacity={1} fill="url(#colorJio)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="Flipkart Minutes" stroke="#2874f0" fillOpacity={1} fill="url(#colorFlipkart)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -106,6 +111,7 @@ function AnalyticsTab({ category, pincode, platform, historyData, stockData, sel
                   <Area type="monotone" dataKey="Zepto Rank" stroke="#8b5cf6" fill="none" strokeWidth={2} />
                   <Area type="monotone" dataKey="Blinkit Rank" stroke="#f59e0b" fill="none" strokeWidth={2} />
                   <Area type="monotone" dataKey="JioMart Rank" stroke="#3b82f6" fill="none" strokeWidth={2} />
+                  <Area type="monotone" dataKey="Flipkart Minutes Rank" stroke="#2874f0" fill="none" strokeWidth={2} />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: '0.75rem', paddingTop: '10px' }} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -133,6 +139,7 @@ function AnalyticsTab({ category, pincode, platform, historyData, stockData, sel
                 <Area type="step" dataKey="Zepto" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.1} strokeWidth={2} />
                 <Area type="step" dataKey="Blinkit" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.1} strokeWidth={2} />
                 <Area type="step" dataKey="JioMart" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={2} />
+                <Area type="step" dataKey="Flipkart Minutes" stroke="#2874f0" fill="#2874f0" fillOpacity={0.1} strokeWidth={2} />
                 <Legend iconType="square" wrapperStyle={{ fontSize: '0.75rem' }} />
               </AreaChart>
             </ResponsiveContainer>
@@ -187,7 +194,8 @@ function AnalyticsTab({ category, pincode, platform, historyData, stockData, sel
                               "text-xs font-bold uppercase tracking-wide",
                               item.category?.toLowerCase() === 'zepto' ? 'text-purple-700' :
                                 item.category?.toLowerCase() === 'blinkit' ? 'text-yellow-700' :
-                                  item.category?.toLowerCase() === 'jiomart' ? 'text-blue-700' : 'text-neutral-600'
+                                  item.category?.toLowerCase() === 'jiomart' ? 'text-blue-700' :
+                                    item.category?.toLowerCase() === 'flipkart minutes' ? 'text-blue-600' : 'text-neutral-600'
                             )}>
                               {item.category}
                             </span>

@@ -28,7 +28,7 @@ export default function Home() {
     if (showMissing) {
       return products.filter(product => {
         const missingInSelected = !product[platformFilter];
-        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart']
+        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes']
           .filter(p => p !== platformFilter)
           .some(p => product[p]);
         return missingInSelected && presentInOthers;
@@ -75,6 +75,7 @@ export default function Home() {
     if (product.jiomart?.currentPrice) prices.push(product.jiomart.currentPrice);
     if (product.dmart?.currentPrice) prices.push(product.dmart.currentPrice);
     if (product.instamart?.currentPrice) prices.push(product.instamart.currentPrice);
+    if (product.flipkartMinutes?.currentPrice) prices.push(product.flipkartMinutes.currentPrice);
     return prices.length > 0 ? Math.min(...prices) : null;
   };
 
@@ -85,6 +86,7 @@ export default function Home() {
     if (product.jiomart?.currentPrice) prices.push(product.jiomart.currentPrice);
     if (product.dmart?.currentPrice) prices.push(product.dmart.currentPrice);
     if (product.instamart?.currentPrice) prices.push(product.instamart.currentPrice);
+    if (product.flipkartMinutes?.currentPrice) prices.push(product.flipkartMinutes.currentPrice);
     if (prices.length >= 2) {
       return Math.max(...prices) - Math.min(...prices);
     }
@@ -167,7 +169,7 @@ export default function Home() {
           <div className="mb-6 flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap gap-2">
-                {['all', 'zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'].map(platform => (
+                {['all', 'zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'].map(platform => (
                   <button
                     key={platform}
                     onClick={() => setPlatformFilter(platform)}
@@ -207,7 +209,7 @@ export default function Home() {
               const savings = calculateSavings(product);
 
               // Find first available image
-              const productImage = product.image || product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage || product.instamart?.productImage;
+              const productImage = product.image || product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage || product.instamart?.productImage || product.flipkartMinutes?.productImage;
 
 
               return (
@@ -247,7 +249,7 @@ export default function Home() {
                     )}
 
                     <div className="space-y-2">
-                      {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'].map(p => {
+                      {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'].map(p => {
                         const pData = product[p];
                         if (!pData) return null;
                         return (

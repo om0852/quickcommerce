@@ -55,7 +55,8 @@ export default function CategoriesPage() {
     { label: 'Blinkit', value: 'blinkit' },
     { label: 'JioMart', value: 'jiomart' },
     { label: 'DMart', value: 'dmart' },
-    { label: 'Instamart', value: 'instamart' }
+    { label: 'Instamart', value: 'instamart' },
+    { label: 'Flipkart Minutes', value: 'flipkartMinutes' }
   ];
 
   const fetchCategoryData = async (customTimestamp = null) => {
@@ -100,11 +101,13 @@ export default function CategoriesPage() {
       if (selectedProduct.zepto?.productId) productIds.zepto = selectedProduct.zepto.productId;
       if (selectedProduct.blinkit?.productId) productIds.blinkit = selectedProduct.blinkit.productId;
       if (selectedProduct.jiomart?.productId) productIds.jiomart = selectedProduct.jiomart.productId;
+      if (selectedProduct.flipkartMinutes?.productId) productIds.flipkartMinutes = selectedProduct.flipkartMinutes.productId;
 
       const productNames = {};
       if (selectedProduct.zepto?.name) productNames.zepto = selectedProduct.zepto.name;
       if (selectedProduct.blinkit?.name) productNames.blinkit = selectedProduct.blinkit.name;
       if (selectedProduct.jiomart?.name) productNames.jiomart = selectedProduct.jiomart.name;
+      if (selectedProduct.flipkartMinutes?.name) productNames.flipkartMinutes = selectedProduct.flipkartMinutes.name;
 
       const response = await fetch('/api/product-history', {
         method: 'POST',
@@ -125,9 +128,11 @@ export default function CategoriesPage() {
           Zepto: h.Zepto,
           Blinkit: h.Blinkit,
           JioMart: h.JioMart,
+          'Flipkart Minutes': h['Flipkart Minutes'],
           'Zepto Rank': h['Zepto Rank'],
           'Blinkit Rank': h['Blinkit Rank'],
           'JioMart Rank': h['JioMart Rank'],
+          'Flipkart Minutes Rank': h['Flipkart Minutes Rank'],
         }));
         setHistoryData(transformedData);
       }
@@ -185,6 +190,7 @@ export default function CategoriesPage() {
       if (selectedProduct.zepto?.productId) productIds.zepto = selectedProduct.zepto.productId;
       if (selectedProduct.blinkit?.productId) productIds.blinkit = selectedProduct.blinkit.productId;
       if (selectedProduct.jiomart?.productId) productIds.jiomart = selectedProduct.jiomart.productId;
+      if (selectedProduct.flipkartMinutes?.productId) productIds.flipkartMinutes = selectedProduct.flipkartMinutes.productId;
 
       fetch('/api/product-history', {
         method: 'POST',
@@ -196,7 +202,8 @@ export default function CategoriesPage() {
           productNames: {
             zepto: selectedProduct.zepto?.name,
             blinkit: selectedProduct.blinkit?.name,
-            jiomart: selectedProduct.jiomart?.name
+            jiomart: selectedProduct.jiomart?.name,
+            flipkartMinutes: selectedProduct.flipkartMinutes?.name
           }
         })
       })
@@ -211,7 +218,8 @@ export default function CategoriesPage() {
               timestamp: date.getTime(),
               Zepto: item.Zepto !== null ? (item.zeptoStock === false ? 0 : 1) : null,
               Blinkit: item.Blinkit !== null ? (item.blinkitStock === false ? 0 : 1) : null,
-              JioMart: item.JioMart !== null ? (item.jiomartStock === false ? 0 : 1) : null
+              JioMart: item.JioMart !== null ? (item.jiomartStock === false ? 0 : 1) : null,
+              'Flipkart Minutes': item['Flipkart Minutes'] !== null ? (item.flipkartMinutesStock === false ? 0 : 1) : null
             };
           }) || [];
 
@@ -278,7 +286,7 @@ export default function CategoriesPage() {
     if (showMissing) {
       return products.filter(product => {
         const missingInSelected = !product[platformFilter];
-        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart']
+        const presentInOthers = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes']
           .filter(p => p !== platformFilter)
           .some(p => product[p]);
         return missingInSelected && presentInOthers;
@@ -634,7 +642,7 @@ export default function CategoriesPage() {
                     fixedHeaderContent={() => (
                       <tr className="bg-neutral-50">
                         <th scope="col" className="px-8 py-4 text-left text-xs font-bold text-neutral-500 uppercase tracking-wider sticky left-0 bg-neutral-50 z-20 w-[350px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">Product</th>
-                        {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'].map((platform) => (
+                        {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'].map((platform) => (
                           <th
                             key={platform}
                             scope="col"
@@ -654,7 +662,7 @@ export default function CategoriesPage() {
                       </tr>
                     )}
                     itemContent={(index, product) => {
-                      const productImage = product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage || product.instamart?.productImage;
+                      const productImage = product.zepto?.productImage || product.blinkit?.productImage || product.jiomart?.productImage || product.dmart?.productImage || product.instamart?.productImage || product.flipkartMinutes?.productImage;
                       return (
                         <>
                           <td className="px-8 py-4 whitespace-nowrap sticky left-0 bg-white z-10 group-hover:bg-neutral-50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)]">
@@ -676,7 +684,7 @@ export default function CategoriesPage() {
                               </div>
                             </div>
                           </td>
-                          {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'].map(p => {
+                          {['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'].map(p => {
                             const data = product[p];
                             return (
                               <td key={p} className="px-8 py-4 whitespace-nowrap">
