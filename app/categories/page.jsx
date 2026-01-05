@@ -416,7 +416,7 @@ export default function CategoriesPage() {
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Price Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
-            <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
+            <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'}`}></span>
             <span className="font-medium text-neutral-600">
               {isLiveMode ? 'Live Mode' : 'Historical Snapshot'}
             </span>
@@ -428,10 +428,10 @@ export default function CategoriesPage() {
 
           <div className="flex items-center gap-4">
             {!isLiveMode && (
-              <div className="flex items-center gap-2 text-sm bg-rose-50 text-rose-700 px-3 py-1.5 rounded-lg border border-rose-100 animate-in fade-in">
+              <div className="flex items-center gap-2 text-sm bg-neutral-100 text-neutral-900 px-3 py-1.5 rounded-lg border border-neutral-200 animate-in fade-in">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neutral-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-neutral-500"></span>
                 </span>
                 <span className="font-medium">Viewing Past Data</span>
               </div>
@@ -484,7 +484,7 @@ export default function CategoriesPage() {
               {!isLiveMode && (
                 <button
                   onClick={() => setIsLiveMode(true)}
-                  className="mt-6 p-2 text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                  className="mt-6 p-2 text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors"
                   title="Return to Live Mode"
                 >
                   <RefreshCw size={18} />
@@ -503,7 +503,7 @@ export default function CategoriesPage() {
               </button>
               <button
                 onClick={() => setIsExportOpen(true)}
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
+                className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
               >
                 <Download size={16} />
                 Export
@@ -539,7 +539,7 @@ export default function CategoriesPage() {
                 className={cn(
                   "flex-none flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap mb-0.5",
                   showMissing
-                    ? "bg-amber-100 text-amber-800 border border-amber-200"
+                    ? "bg-neutral-900 text-white border border-neutral-900"
                     : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
                 )}
                 title="Show products missing on this platform"

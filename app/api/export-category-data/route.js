@@ -137,7 +137,9 @@ async function processExportInBackground(body) {
                         zepto: [],
                         blinkit: [],
                         jiomart: [],
-                        dmart: []
+                        dmart: [],
+                        flipkartMinutes: [],
+                        instamart: []
                     };
 
                     snapshots.forEach(snap => {
@@ -177,7 +179,9 @@ async function processExportInBackground(body) {
                         productsByPlatform.zepto,
                         productsByPlatform.blinkit,
                         productsByPlatform.jiomart,
-                        productsByPlatform.dmart
+                        productsByPlatform.dmart,
+                        productsByPlatform.flipkartMinutes,
+                        productsByPlatform.instamart
                     );
 
                     // 5. Add to processed rows IF not already seen (for unique mode)
@@ -210,7 +214,7 @@ async function processExportInBackground(body) {
                         };
 
                         // Platforms
-                        ['zepto', 'blinkit', 'jiomart', 'dmart'].forEach(p => {
+                        ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].forEach(p => {
                             if (product[p]) {
                                 rowData[`${p}_available`] = 'Yes';
                                 rowData[`${p}_price`] = product[p].currentPrice;

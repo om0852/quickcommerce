@@ -131,8 +131,8 @@ export default function ProductTable({
                                                     <div className="h-full w-full flex items-center justify-center bg-neutral-100 text-[10px] text-neutral-400">No Img</div>
                                                 )}
                                             </div>
-                                            <div className="max-w-[200px]">
-                                                <div className="text-sm font-medium text-neutral-900 truncate" title={product.name}>{product.name}</div>
+                                            <div className="w-full">
+                                                <div className="text-sm font-medium text-neutral-900" title={product.name}>{product.name}</div>
                                             </div>
                                         </div>
                                     </TableCell>
@@ -160,8 +160,7 @@ export default function ProductTable({
                                                             {/* Ranking Badge */}
                                                             {data.ranking && !isNaN(data.ranking) && (
                                                                 <span className={cn(
-                                                                    "text-[10px] font-bold px-1.5 py-0.5 rounded border",
-                                                                    data.ranking === 1 ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-neutral-50 text-neutral-500 border-neutral-200"
+                                                                    "text-[10px] font-bold px-1.5 py-0.5 rounded border bg-neutral-100 text-neutral-900 border-neutral-200"
                                                                 )}>
                                                                     #{data.ranking}
                                                                 </span>
@@ -171,8 +170,7 @@ export default function ProductTable({
                                                         <div className="text-xs text-neutral-500 mt-1 flex flex-col gap-0.5">
                                                             {data.priceChange && !isNaN(data.priceChange) && data.priceChange !== 0 ? (
                                                                 <span className={cn(
-                                                                    "inline-flex items-center gap-0.5",
-                                                                    data.priceChange < 0 ? "text-emerald-600" : "text-rose-600"
+                                                                    "inline-flex items-center gap-0.5 text-neutral-700"
                                                                 )}>
                                                                     {data.priceChange < 0 ? <TrendingDown size={10} /> : <TrendingUp size={10} />}
                                                                     {Math.abs(data.priceChange)}
