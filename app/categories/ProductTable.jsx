@@ -251,7 +251,7 @@ const ProductTable = React.memo(function ProductTable({
                             <div className="animate-spin text-neutral-900">
                                 <RefreshCw size={32} />
                             </div>
-                            <span className="text-sm font-medium text-neutral-900">Updaing data...</span>
+                            <span className="text-sm font-medium text-neutral-900">Updating data...</span>
                         </div>
                     </div>
                 )
