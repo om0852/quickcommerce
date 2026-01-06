@@ -202,16 +202,14 @@ const ProductTable = React.memo(function ProductTable({
                                                             )}
                                                         </div>
                                                         {/* Ad Status - New Line */}
-                                                        <div className="mt-1">
-                                                            <span className={cn(
-                                                                "text-[10px] font-bold px-1.5 py-0.5 rounded border",
-                                                                data.isAd
-                                                                    ? "bg-green-50 text-green-700 border-green-200"
-                                                                    : "bg-red-50 text-red-700 border-red-200"
-                                                            )}>
-                                                                {data.isAd ? "Ad" : "No"}
-                                                            </span>
-                                                        </div>
+                                                        {/* Ad Status - New Line */}
+                                                        {data.isAd && (
+                                                            <div className="mt-1">
+                                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-green-50 text-green-700 border-green-200">
+                                                                    Ad
+                                                                </span>
+                                                            </div>
+                                                        )}
 
                                                         <div className="text-xs text-neutral-500 mt-1 flex flex-col gap-0.5">
                                                             {data.priceChange && !isNaN(data.priceChange) && data.priceChange !== 0 ? (
