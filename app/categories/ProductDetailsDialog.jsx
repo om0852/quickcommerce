@@ -135,37 +135,37 @@ function ProductDetailsDialog({
                                                 </span>
                                             </div>
 
-                                            {data.deliveryTime && (
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-neutral-500">Delivery:</span>
-                                                    <span className="text-neutral-700 font-medium text-xs">{data.deliveryTime}</span>
-                                                </div>
-                                            )}
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-neutral-500">Delivery:</span>
+                                                <span className={`text-neutral-700 font-medium text-xs ${!data.deliveryTime ? 'italic text-neutral-400' : ''}`}>
+                                                    {data.deliveryTime || 'N/A'}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Extra Details */}
+                                    {/* Extra Details */}
                                     <div className="mt-3 pt-3 border-t border-neutral-100 space-y-2 text-xs">
-                                        {data.combo && (
-                                            <div className="flex gap-2">
-                                                <span className="text-neutral-400 font-medium">Combo:</span>
-                                                <span className="text-neutral-600 truncate" title={data.combo}>{data.combo}</span>
-                                            </div>
-                                        )}
-
                                         <div className="flex gap-2">
-                                            <span className="text-neutral-400 font-medium">Platform Cat:</span>
-                                            <div className="flex-1 min-w-0">
-                                                {data.officialCategory ? (
-                                                    <>
-                                                        <div className="text-neutral-700 truncate" title={data.officialCategory}>{data.officialCategory}</div>
-                                                        {data.officialSubCategory && (
-                                                            <div className="text-neutral-500 truncate mt-0.5" title={data.officialSubCategory}>↳ {data.officialSubCategory}</div>
-                                                        )}
-                                                    </>
-                                                ) : (
-                                                    <span className="text-neutral-300 italic">--</span>
-                                                )}
+                                            <span className="text-neutral-400 font-medium min-w-[70px]">Combo:</span>
+                                            <span className={`text-neutral-600 truncate ${!data.combo ? 'italic text-neutral-400' : ''}`} title={data.combo}>
+                                                {data.combo || 'No Combo'}
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <div className="flex gap-2">
+                                                <span className="text-neutral-400 font-medium min-w-[70px]">Category:</span>
+                                                <span className="text-neutral-700 truncate flex-1" title={data.officialCategory}>
+                                                    {data.officialCategory || <span className="italic text-neutral-300">--</span>}
+                                                </span>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <span className="text-neutral-400 font-medium min-w-[70px]">Subcategory:</span>
+                                                <span className="text-neutral-500 truncate flex-1" title={data.officialSubCategory}>
+                                                    {data.officialSubCategory || <span className="italic text-neutral-300">--</span>}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

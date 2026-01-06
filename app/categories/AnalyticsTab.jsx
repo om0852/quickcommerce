@@ -75,6 +75,11 @@ function AnalyticsTab({ products, pincode }) {
             'Blinkit Rank': h['Blinkit Rank'],
             'JioMart Rank': h['JioMart Rank'],
             'Flipkart Minutes Rank': h['Flipkart Minutes Rank'],
+            // Stock Status (1 = In Stock, 0 = Out of Stock)
+            'Zepto Stock': h['zeptoStock'] ? 0 : 1,
+            'Blinkit Stock': h['blinkitStock'] ? 0 : 1,
+            'JioMart Stock': h['jiomartStock'] ? 0 : 1,
+            'Flipkart Minutes Stock': h['flipkartMinutesStock'] ? 0 : 1,
           }));
           setHistoryData(transformedData);
         }
@@ -163,6 +168,29 @@ function AnalyticsTab({ products, pincode }) {
                       <Area type="monotone" dataKey="Blinkit" stroke="#f59e0b" fillOpacity={1} fill="url(#colorBlinkit)" strokeWidth={2} />
                       <Area type="monotone" dataKey="JioMart" stroke="#3b82f6" fillOpacity={1} fill="url(#colorJio)" strokeWidth={2} />
                       <Area type="monotone" dataKey="Flipkart Minutes" stroke="#2874f0" fillOpacity={1} fill="url(#colorFlipkart)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Stock Availability History */}
+              <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-200">
+                <div className="mb-6">
+                  <h2 className="text-lg font-bold text-neutral-900 mb-1">Stock Availability History</h2>
+                  <p className="text-xs text-neutral-500">Availability over time (1 = In Stock, 0 = Out of Stock)</p>
+                </div>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={historyData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} domain={[0, 1]} ticks={[0, 1]} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area type="step" dataKey="Zepto Stock" name="Zepto" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.1} strokeWidth={2} />
+                      <Area type="step" dataKey="Blinkit Stock" name="Blinkit" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.1} strokeWidth={2} />
+                      <Area type="step" dataKey="JioMart Stock" name="JioMart" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={2} />
+                      <Area type="step" dataKey="Flipkart Minutes Stock" name="Flipkart" stroke="#2874f0" fill="#2874f0" fillOpacity={0.1} strokeWidth={2} />
+                      <Legend iconType="square" wrapperStyle={{ fontSize: '0.75rem' }} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>

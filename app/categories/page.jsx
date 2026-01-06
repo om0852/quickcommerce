@@ -65,14 +65,38 @@ export default function CategoriesPage() {
   ];
 
   const PLATFORM_OPTIONS = [
-    { label: 'All Platforms', value: 'all' },
+    { label: 'All', value: 'all' },
     { label: 'JioMart', value: 'jiomart' },
     { label: 'Zepto', value: 'zepto' },
     { label: 'Blinkit', value: 'blinkit' },
     { label: 'DMart', value: 'dmart' },
     { label: 'Flipkart', value: 'flipkartMinutes' },
-    { label: 'Instamart', value: 'instamart' }
+    { label: 'Swiggy', value: 'instamart' }
   ];
+
+  // Calculate platform counts
+  const platformCounts = useMemo(() => {
+    const counts = {
+      all: products.length,
+      jiomart: 0,
+      zepto: 0,
+      blinkit: 0,
+      dmart: 0,
+      flipkartMinutes: 0,
+      instamart: 0
+    };
+
+    products.forEach(product => {
+      if (product.jiomart) counts.jiomart++;
+      if (product.zepto) counts.zepto++;
+      if (product.blinkit) counts.blinkit++;
+      if (product.dmart) counts.dmart++;
+      if (product.flipkartMinutes) counts.flipkartMinutes++;
+      if (product.instamart) counts.instamart++;
+    });
+
+    return counts;
+  }, [products]);
 
   const fetchCategoryData = async (customTimestamp = null) => {
     setLoading(true);
@@ -526,7 +550,9 @@ export default function CategoriesPage() {
           {/* Bottom Row: Platform Filter */}
           <div className="w-full border-t border-gray-100 pt-3 flex items-end justify-between gap-4">
             <div className="flex-1 overflow-hidden">
-              <label className="text-xs font-semibold text-gray-500 mb-2 block">Platform Filter</label>
+              <label className="text-xs font-semibold text-gray-500 mb-2 block">
+                Platform Filter <span className="text-neutral-400 font-normal ml-1">({platformCounts[platformFilter] || 0})</span>
+              </label>
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
                 {PLATFORM_OPTIONS.map(opt => (
                   <button
@@ -611,7 +637,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Footer/Pagination */}
-        {sortedProducts.length > ITEMS_PER_PAGE && (
+        {activeTab === 'products' && sortedProducts.length > ITEMS_PER_PAGE && (
           <div className="flex-none flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm">
             <span className="text-sm text-gray-600 font-medium">
               Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, sortedProducts.length)} - {Math.min(currentPage * ITEMS_PER_PAGE, sortedProducts.length)} of {sortedProducts.length} products

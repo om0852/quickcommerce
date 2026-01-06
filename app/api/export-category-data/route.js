@@ -221,7 +221,7 @@ async function processExportInBackground(body) {
                                 rowData[`${p}_originalPrice`] = product[p].originalPrice || '-';
                                 rowData[`${p}_discount`] = product[p].discountPercentage ? `${Math.round(product[p].discountPercentage)}%` : '-';
                                 rowData[`${p}_stock`] = product[p].isOutOfStock ? 'Out of Stock' : 'In Stock';
-                                rowData[`${p}_link`] = product[p].url || '';
+                                rowData[`${p}_link`] = product[p].productUrl || '';
                                 rowData[`${p}_isAd`] = product[p].isAd ? 'Yes' : 'No';
                                 rowData[`${p}_rating`] = product[p].rating || '-';
                                 rowData[`${p}_rank`] = product[p].ranking || '-';
@@ -348,9 +348,6 @@ async function processExportInBackground(body) {
                 { header: `${pName} Quantity`, key: `${platform}_quantity`, width: 12 },
                 { header: `${pName} Combo`, key: `${platform}_combo`, width: 12 },
                 { header: `${pName} Link`, key: `${platform}_link`, width: 15 },
-
-                // Platform Category Columns
-                { header: `${pName} Category`, key: `${platform}_platformCategory`, width: 20 },
 
                 // Official Category Columns
                 { header: `${pName} Official Cat`, key: `${platform}_officialCategory`, width: 20 },

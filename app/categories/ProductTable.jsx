@@ -200,6 +200,15 @@ const ProductTable = React.memo(function ProductTable({
                                                                     #{data.ranking}
                                                                 </span>
                                                             )}
+                                                            {/* Ad Status */}
+                                                            <span className={cn(
+                                                                "text-[10px] font-bold px-1.5 py-0.5 rounded border",
+                                                                data.isAd
+                                                                    ? "bg-green-50 text-green-700 border-green-200"
+                                                                    : "bg-red-50 text-red-700 border-red-200"
+                                                            )}>
+                                                                {data.isAd ? "Ad" : "No"}
+                                                            </span>
                                                         </div>
 
                                                         <div className="text-xs text-neutral-500 mt-1 flex flex-col gap-0.5">
