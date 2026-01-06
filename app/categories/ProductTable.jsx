@@ -200,7 +200,9 @@ const ProductTable = React.memo(function ProductTable({
                                                                     #{data.ranking}
                                                                 </span>
                                                             )}
-                                                            {/* Ad Status */}
+                                                        </div>
+                                                        {/* Ad Status - New Line */}
+                                                        <div className="mt-1">
                                                             <span className={cn(
                                                                 "text-[10px] font-bold px-1.5 py-0.5 rounded border",
                                                                 data.isAd
