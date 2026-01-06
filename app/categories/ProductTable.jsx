@@ -79,7 +79,7 @@ const ProductTable = React.memo(function ProductTable({
             }}
         >
             <TableContainer sx={{ flex: 1, maxHeight: '100%', height: '100%' }}>
-                <Table stickyHeader aria-label="sticky table">
+                <Table stickyHeader aria-label="sticky table" size="small">
                     <TableHead>
                         <TableRow>
                             {/* Product Header - Sticky Left */}

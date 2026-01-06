@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight } from 'lucide-react';
 import AnalyticsTab from './AnalyticsTab';
+import StockAnalysisTab from './StockAnalysisTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
 import CustomDropdown from '@/components/CustomDropdown';
 import ProductDetailsDialog from './ProductDetailsDialog';
@@ -57,10 +58,10 @@ export default function CategoriesPage() {
 
   const PINCODE_OPTIONS = [
     { label: 'Delhi NCR — 201303', value: '201303' },
-    { label: 'Delhi NCR — 201014', value: '201014' },
-    { label: 'Delhi NCR — 122008', value: '122008' },
-    { label: 'Delhi NCR — 122010', value: '122010' },
-    { label: 'Delhi NCR — 122016', value: '122016' }
+    // { label: 'Delhi NCR — 201014', value: '201014' },
+    // { label: 'Delhi NCR — 122008', value: '122008' },
+    // { label: 'Delhi NCR — 122010', value: '122010' },
+    // { label: 'Delhi NCR — 122016', value: '122016' }
   ];
 
   const PLATFORM_OPTIONS = [
@@ -351,6 +352,11 @@ export default function CategoriesPage() {
     });
   }, []);
 
+  const handleProductClick = React.useCallback((product) => {
+    setSelectedProduct(product);
+    setIsDetailsOpen(true);
+  }, []);
+
 
 
   useEffect(() => {
@@ -504,6 +510,9 @@ export default function CategoriesPage() {
               >
                 <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
               </button>
+
+
+
               <button
                 onClick={() => setIsExportOpen(true)}
                 className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
@@ -550,18 +559,55 @@ export default function CategoriesPage() {
           </div>
         </div>
 
-        {/* Product Table */}
-        <div className="h-[180vh] bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-          <ProductTable
-            products={paginatedProducts}
-            sortConfig={sortConfig}
-            onSort={requestSort}
-            loading={loading}
-            onProductClick={React.useCallback((product) => {
-              setSelectedProduct(product);
-              setIsDetailsOpen(true);
-            }, [])}
-          />
+        {/* Tab Switcher */}
+        <div className="flex-none">
+          <div className="inline-flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+            {['products', 'analytics', 'stock'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize",
+                  activeTab === tab
+                    ? "bg-neutral-900 text-white shadow-sm"
+                    : "text-neutral-500 hover:text-neutral-700 hover:bg-gray-100"
+                )}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1">
+          {activeTab === 'products' && (
+            <div className="h-[calc(100vh-200px)] bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+              <ProductTable
+                products={paginatedProducts}
+                sortConfig={sortConfig}
+                onSort={requestSort}
+                loading={loading}
+                onProductClick={handleProductClick}
+              />
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <AnalyticsTab
+              products={products}
+              category={category}
+              pincode={pincode}
+            />
+          )}
+
+          {activeTab === 'stock' && (
+            <StockAnalysisTab
+              category={category}
+              pincode={pincode}
+              platform={platformFilter}
+            />
+          )}
         </div>
 
         {/* Footer/Pagination */}
