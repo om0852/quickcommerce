@@ -109,6 +109,11 @@ function ProductDetailsDialog({
 
                                         {/* info section */}
                                         <div className="flex-1 space-y-2 text-sm">
+                                            <div className="mb-2">
+                                                <span className="font-medium text-neutral-900 line-clamp-2" title={data.name}>
+                                                    {data.name}
+                                                </span>
+                                            </div>
                                             <div className="flex justify-between items-baseline">
                                                 <span className="text-neutral-500">Price:</span>
                                                 <span className="font-bold text-base">₹{data.currentPrice}</span>

@@ -121,6 +121,7 @@ function AnalyticsTab({ products, pincode }) {
             onChange={setSelectedProductValue}
             options={productOptions}
             placeholder="Search product..."
+            searchable
           />
         </div>
       </div>

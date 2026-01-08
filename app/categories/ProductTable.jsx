@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search, X } from 'lucide-react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -119,8 +119,16 @@ const ProductTable = React.memo(function ProductTable({
                                             placeholder="Search..."
                                             value={searchQuery}
                                             onChange={(e) => onSearchChange(e.target.value)}
-                                            className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-all font-medium normal-case placeholder:text-gray-400 text-neutral-700"
+                                            className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-all font-medium normal-case placeholder:text-gray-400 text-neutral-700"
                                         />
+                                        {searchQuery && (
+                                            <button
+                                                onClick={() => onSearchChange('')}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </TableCell>
