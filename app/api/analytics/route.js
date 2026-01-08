@@ -15,26 +15,37 @@ export async function GET(request) {
 
     await dbConnect();
 
-    // 1. Get the latest snapshot timestamp for this category/pincode
-    const latestSnapshot = await ProductSnapshot.findOne({ category, pincode })
+    // 1. Get the latest 2 snapshot timestamps for this category/pincode
+    const recentSnapshots = await ProductSnapshot.find({ category, pincode })
       .sort({ scrapedAt: -1 })
-      .select('scrapedAt');
+      .select('scrapedAt')
+      .limit(2000); // Fetch enough to find distinct dates, or use aggregate
 
-    if (!latestSnapshot) {
-      return NextResponse.json({ 
-        priceDistribution: [], 
-        stockOverview: [], 
-        rankingData: [] 
+    // Better way to get distinct sorted timestamps
+    const distinctTimestamps = await ProductSnapshot.distinct('scrapedAt', { category, pincode });
+    // Sort desc
+    distinctTimestamps.sort((a, b) => b - a);
+
+    const latestTime = distinctTimestamps[0];
+    const previousTime = distinctTimestamps[1]; // Might be undefined if only 1 snapshot
+
+    if (!latestTime) {
+      return NextResponse.json({
+        priceDistribution: [],
+        stockOverview: [],
+        rankingData: [],
+        stockAvailability: []
       });
     }
 
-    const latestTime = latestSnapshot.scrapedAt;
+    // 2. Fetch products from BOTH latest and previous snapshot
+    const timesToFetch = [latestTime];
+    if (previousTime) timesToFetch.push(previousTime);
 
-    // 2. Fetch all products from the latest snapshot
     const query = {
       category,
       pincode,
-      scrapedAt: latestTime
+      scrapedAt: { $in: timesToFetch }
     };
 
     // Add platform filter if specified and not 'all'
@@ -42,8 +53,40 @@ export async function GET(request) {
       query.platform = platform;
     }
 
-    const products = await ProductSnapshot.find(query)
-      .select('productName platform currentPrice priceChange ranking rankingChange discountPercentage isOutOfStock');
+    const allProducts = await ProductSnapshot.find(query)
+      .select('productName platform currentPrice priceChange ranking rankingChange discountPercentage isOutOfStock scrapedAt name');
+
+    // Separate into current and previous maps
+    const currentProducts = [];
+    const prevProductsMap = new Map(); // Key: name+platform
+
+    const getKey = (p) => `${p.productName}|${p.platform}`.toLowerCase();
+
+    allProducts.forEach(p => {
+      if (p.scrapedAt.getTime() === latestTime.getTime()) {
+        currentProducts.push(p);
+      } else if (previousTime && p.scrapedAt.getTime() === previousTime.getTime()) {
+        prevProductsMap.set(getKey(p), p);
+      }
+    });
+
+    // 3. Compute changes dynamically if not present
+    currentProducts.forEach(curr => {
+      const prev = prevProductsMap.get(getKey(curr));
+      if (prev) {
+        // Recalculate changes if 0 (or always to be safe)
+        if (curr.rankingChange === 0 && curr.ranking && prev.ranking) {
+          // Rank 5 -> Rank 1. Change = 1 - 5 = -4.
+          // If logic expects rankingChange < 0 for improvement, then this is correct.
+          curr.rankingChange = curr.ranking - prev.ranking;
+        }
+        if (curr.priceChange === 0 && curr.currentPrice && prev.currentPrice) {
+          curr.priceChange = curr.currentPrice - prev.currentPrice;
+        }
+      }
+    });
+
+    const products = currentProducts;
 
     // 3. Price Point Analysis
     const priceRanges = [
@@ -67,7 +110,7 @@ export async function GET(request) {
     const stockOverview = products
       .filter(p => p.priceChange !== 0 || p.rankingChange !== 0)
       .map(p => ({
-        name: p.productName,
+        name: p.productName || p.name, // Handle possible missing name
         category: p.platform, // Using platform as "category" column for now
         price: p.currentPrice,
         stockChange: p.rankingChange < 0 ? 'Rank ↑' : (p.rankingChange > 0 ? 'Rank ↓' : (p.priceChange < 0 ? 'Price ↓' : 'Price ↑')),
@@ -100,11 +143,24 @@ export async function GET(request) {
     const stockByPlatform = [
       { name: 'Zepto', inStock: 0, outOfStock: 0 },
       { name: 'Blinkit', inStock: 0, outOfStock: 0 },
-      { name: 'JioMart', inStock: 0, outOfStock: 0 }
+      { name: 'JioMart', inStock: 0, outOfStock: 0 },
+      { name: 'DMart', inStock: 0, outOfStock: 0 },
+      { name: 'Flipkart Minutes', inStock: 0, outOfStock: 0 },
+      { name: 'Instamart', inStock: 0, outOfStock: 0 }
     ];
 
     products.forEach(product => {
-      const platformIndex = stockByPlatform.findIndex(p => p.name.toLowerCase() === product.platform);
+      // Normalize platform name comparison
+      // Product platform is typically lowercase (e.g. 'zepto', 'flipkartMinutes')
+      // stockByPlatform names are Display Names
+      const pPlatform = (product.platform || '').toLowerCase();
+
+      const platformIndex = stockByPlatform.findIndex(p => {
+        const target = p.name.toLowerCase().replace(/\s+/g, '');
+        const current = pPlatform.replace(/\s+/g, '');
+        return target.includes(current) || current.includes(target);
+      });
+
       if (platformIndex !== -1) {
         if (product.isOutOfStock) {
           stockByPlatform[platformIndex].outOfStock++;

@@ -14,10 +14,10 @@ export default function Home() {
 
   const PINCODE_OPTIONS = [
     { label: 'Delhi NCR — 201303', value: '201303' },
-    { label: 'Delhi NCR — 201014', value: '201014' },
-    { label: 'Delhi NCR — 122008', value: '122008' },
-    { label: 'Delhi NCR — 122010', value: '122010' },
-    { label: 'Delhi NCR — 122016', value: '122016' }
+    // { label: 'Delhi NCR — 201014', value: '201014' },
+    // { label: 'Delhi NCR — 122008', value: '122008' },
+    // { label: 'Delhi NCR — 122010', value: '122010' },
+    // { label: 'Delhi NCR — 122016', value: '122016' }
   ];
 
   const filteredProducts = useMemo(() => {

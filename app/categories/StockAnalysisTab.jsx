@@ -133,6 +133,30 @@ function StockAnalysisTab({ category, pincode, platform }) {
                     </div>
                 </div>
 
+                {/* Stock Availability by Platform */}
+                <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-200 lg:col-span-2">
+                    <div className="mb-6">
+                        <h2 className="text-lg font-bold text-neutral-900 mb-1">Platform Stock Availability</h2>
+                        <p className="text-xs text-neutral-500">In-stock vs Out-of-stock items by platform</p>
+                    </div>
+                    <div className="h-64 bg-white rounded-lg p-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                                data={data.stockAvailability}
+                                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={{ stroke: '#e5e7eb' }} />
+                                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={{ stroke: '#e5e7eb' }} />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend wrapperStyle={{ fontSize: '0.8125rem', paddingTop: '1rem' }} />
+                                <Bar dataKey="inStock" name="In Stock" stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} maxBarSize={40} />
+                                <Bar dataKey="outOfStock" name="Out of Stock" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
                 {/* Stock Overview Table */}
                 <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
                     <div className="p-6 bg-gradient-to-br from-neutral-50 to-neutral-100 border-b border-neutral-200 flex justify-between items-center">
