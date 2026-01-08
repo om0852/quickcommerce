@@ -107,9 +107,9 @@ const ProductTable = React.memo(function ProductTable({
                                     display: 'flex',
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    justifyContent: 'space-between',
+                                    justifyContent: 'flex-start',
                                     width: '100%',
-                                    gap: 12
+                                    gap: '10px'
                                 }}>
                                     <span>PRODUCT</span>
                                     <div className="relative flex-1 max-w-[160px]" onClick={(e) => e.stopPropagation()}>
