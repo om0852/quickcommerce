@@ -553,7 +553,15 @@ export default function CategoriesPage() {
             <div className="flex items-center gap-4">
               <div className="w-64 relative z-50">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Category</label>
-                <CustomDropdown value={category} onChange={setCategory} options={CATEGORY_OPTIONS} />
+                <CustomDropdown
+                  value={category}
+                  onChange={(val) => {
+                    setCategory(val);
+                    setSortConfig({ key: null, direction: 'asc' });
+                    setSearchQuery('');
+                  }}
+                  options={CATEGORY_OPTIONS}
+                />
               </div>
               <div className="w-48 relative z-40">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Region</label>

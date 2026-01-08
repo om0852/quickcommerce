@@ -183,7 +183,11 @@ const ProductTable = React.memo(function ProductTable({
                                             borderBottom: '1px solid #e5e5e5',
                                             borderRight: '1px solid #e5e5e5',
                                             boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
-                                            padding: '16px 32px' // px-8 py-4
+                                            padding: '16px 32px', // px-8 py-4
+                                            transition: 'background-color 0.2s',
+                                            '.MuiTableRow-root:hover &': {
+                                                backgroundColor: '#fafafa'
+                                            }
                                         }}
                                     >
                                         <div className="flex items-center gap-4">
