@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search } from 'lucide-react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -60,7 +60,9 @@ const ProductTable = React.memo(function ProductTable({
     sortConfig,
     onSort,
     onProductClick,
-    loading
+    loading,
+    searchQuery,
+    onSearchChange
 }) {
     return (
         <Paper
@@ -96,10 +98,31 @@ const ProductTable = React.memo(function ProductTable({
                                     width: { xs: 150, md: 250 },
                                     maxWidth: { xs: 150, md: 250 },
                                     borderBottom: '1px solid #e5e5e5',
-                                    boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)'
+                                    borderRight: '1px solid #e5e5e5',
+                                    boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
+                                    padding: '8px 16px'
                                 }}
                             >
-                                Product
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                    gap: 12
+                                }}>
+                                    <span>PRODUCT</span>
+                                    <div className="relative flex-1 max-w-[160px]" onClick={(e) => e.stopPropagation()}>
+                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search..."
+                                            value={searchQuery}
+                                            onChange={(e) => onSearchChange(e.target.value)}
+                                            className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-all font-medium normal-case placeholder:text-gray-400 text-neutral-700"
+                                        />
+                                    </div>
+                                </div>
                             </TableCell>
 
                             {/* Platform Headers */}
@@ -158,6 +181,7 @@ const ProductTable = React.memo(function ProductTable({
                                             width: { xs: 150, md: 250 },
                                             maxWidth: { xs: 150, md: 250 },
                                             borderBottom: '1px solid #e5e5e5',
+                                            borderRight: '1px solid #e5e5e5',
                                             boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
                                             padding: '16px 32px' // px-8 py-4
                                         }}
@@ -167,7 +191,10 @@ const ProductTable = React.memo(function ProductTable({
                                                 <ProductImage product={product} />
                                             </div>
                                             <div className="w-full">
-                                                <div className="text-sm font-medium text-neutral-900" title={product.name}>{product.name}</div>
+                                                <div className="text-sm font-medium text-neutral-900" title={product.name}>
+                                                    {product.name}
+                                                    {product.weight && <span className="text-neutral-500 font-normal"> - ({product.weight})</span>}
+                                                </div>
                                             </div>
                                         </div>
                                     </TableCell>

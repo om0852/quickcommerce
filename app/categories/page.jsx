@@ -54,6 +54,7 @@ export default function CategoriesPage() {
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const ITEMS_PER_PAGE = 200;
 
   const PINCODE_OPTIONS = [
@@ -318,12 +319,21 @@ export default function CategoriesPage() {
   }, [snapshotDate, availableSnapshots]);
 
   const filteredProducts = useMemo(() => {
+    let result = products;
+
+    // 1. Search Filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p => p.name.toLowerCase().includes(q));
+    }
+
+    // 2. Platform Filter
     if (platformFilter === 'all') {
-      return products;
+      return result;
     }
 
     if (showMissing) {
-      return products.filter(product => {
+      return result.filter(product => {
         const missingInSelected = !product[platformFilter];
         const presentInOthers = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart']
           .filter(p => p !== platformFilter)
@@ -332,8 +342,8 @@ export default function CategoriesPage() {
       });
     }
 
-    return products.filter(product => product[platformFilter]);
-  }, [products, platformFilter, showMissing]);
+    return result.filter(product => product[platformFilter]);
+  }, [products, platformFilter, showMissing, searchQuery]);
 
   const sortedProducts = useMemo(() => {
     let sortableProducts = [...filteredProducts];
@@ -344,10 +354,39 @@ export default function CategoriesPage() {
         const itemA = a[platformKey];
         const itemB = b[platformKey];
 
-        // Get ranking, treating missing or non-numeric rankings as Infinity (always push to bottom)
-        const rankA = itemA && itemA.ranking && !isNaN(itemA.ranking) ? itemA.ranking : Infinity;
-        const rankB = itemB && itemB.ranking && !isNaN(itemB.ranking) ? itemB.ranking : Infinity;
+        // 0. Handle products not present on the platform
+        // We ALWAYS want existing products to appear before missing products
+        if (!itemA && !itemB) return 0;
+        if (!itemA) return 1;
+        if (!itemB) return -1;
 
+        // 1. Sort by officialCategory
+        const catA = itemA.officialCategory || '';
+        const catB = itemB.officialCategory || '';
+        if (catA !== catB) {
+          return catA.localeCompare(catB);
+        }
+
+        // 2. Sort by officialSubCategory (with fallback)
+        const getSubCat = (item) => {
+          if (!item) return 'zzz'; // Should be handled by step 0, but just in case
+          return item.officialSubCategory || item.subCategory || 'Other';
+        };
+
+        const subCatA = getSubCat(itemA);
+        const subCatB = getSubCat(itemB);
+
+        if (subCatA !== subCatB) {
+          return subCatA.localeCompare(subCatB);
+        }
+
+        // 3. Then sort by ranking within the subcategory
+        // Get ranking, treating missing or non-numeric rankings as Infinity (always push to bottom)
+        const rankA = itemA.ranking && !isNaN(itemA.ranking) ? itemA.ranking : Infinity;
+        const rankB = itemB.ranking && !isNaN(itemB.ranking) ? itemB.ranking : Infinity;
+
+        // Always sort rank ascending (1 -> N) unless user explicitly wants reverse
+        // But for "grouping", typically 1-N is the expected default view
         if (rankA < rankB) {
           return sortConfig.direction === 'asc' ? -1 : 1;
         }
@@ -355,6 +394,35 @@ export default function CategoriesPage() {
           return sortConfig.direction === 'asc' ? 1 : -1;
         }
         return 0;
+      });
+    } else {
+      // Default Sort: SubCategory -> Ranking
+      sortableProducts.sort((a, b) => {
+        // 1. Sort by officialCategory
+        const catA = a.officialCategory || '';
+        const catB = b.officialCategory || '';
+        if (catA !== catB) return catA.localeCompare(catB);
+
+        // 2. Sort by officialSubCategory
+        const getSubCat = (item) => item.officialSubCategory || item.subCategory || 'Other';
+        const subA = getSubCat(a);
+        const subB = getSubCat(b);
+        if (subA !== subB) return subA.localeCompare(subB);
+
+        // 3. Sort by Ranking (Minimum rank across platforms)
+        const getMinRank = (p) => {
+          let min = Infinity;
+          ['flipkartMinutes', 'blinkit', 'zepto', 'jiomart', 'instamart', 'dmart'].forEach(key => {
+            if (p[key] && p[key].ranking && !isNaN(p[key].ranking)) {
+              if (p[key].ranking < min) min = p[key].ranking;
+            }
+          });
+          return min;
+        };
+        const rankA = getMinRank(a);
+        const rankB = getMinRank(b);
+
+        return rankA - rankB;
       });
     }
     return sortableProducts;
@@ -615,6 +683,8 @@ export default function CategoriesPage() {
                 onSort={requestSort}
                 loading={loading}
                 onProductClick={handleProductClick}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
               />
             </div>
           )}

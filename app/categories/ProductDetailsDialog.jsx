@@ -128,6 +128,15 @@ function ProductDetailsDialog({
                                                 </div>
                                             )}
 
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-neutral-500">Weight:</span>
+                                                <span className={`text-neutral-700 font-medium text-xs ${!data.productWeight ? 'italic text-neutral-400' : ''}`}>
+                                                    {data.productWeight || 'N/A'}
+                                                </span>
+                                            </div>
+
+
+
                                             <div className="flex justify-between items-center pt-1">
                                                 <span className="text-neutral-500">Stock:</span>
                                                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${inStock ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
