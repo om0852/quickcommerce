@@ -59,6 +59,7 @@ export default function CategoriesPage() {
 
   const PINCODE_OPTIONS = [
     { label: 'Delhi NCR — 201303', value: '201303' },
+    { label: 'Navi Mumbai — 400706', value: '400706' },
     // { label: 'Delhi NCR — 201014', value: '201014' },
     // { label: 'Delhi NCR — 122008', value: '122008' },
     // { label: 'Delhi NCR — 122010', value: '122010' },

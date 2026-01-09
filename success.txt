@@ -1,1 +1,0 @@
-Successfully updated categories_with_urls.json. Total updates: 451
