@@ -348,6 +348,31 @@ export default function CategoriesPage() {
 
   const sortedProducts = useMemo(() => {
     let sortableProducts = [...filteredProducts];
+
+    // Helper to intelligently resolve subcategory
+    // Because some scrapers (Flipkart) might set root subCategory to "General", breaking grouping.
+    // We prefer: 1. Specific Root Official SubCat, 2. Specific Platform SubCat, 3. Root SubCat, 4. "Other"
+    const resolveSubCategory = (item) => {
+      // 1. Try root official (if meaningful)
+      if (item.officialSubCategory && item.officialSubCategory !== 'General') {
+        return item.officialSubCategory;
+      }
+
+      // 2. Try looking into platforms for a better name
+      const platforms = ['zepto', 'blinkit', 'instamart', 'flipkartMinutes', 'jiomart', 'dmart'];
+      for (const p of platforms) {
+        if (item[p]) {
+          const sub = item[p].subcategory || item[p].officialSubCategory;
+          if (sub && sub !== 'General') {
+            return sub;
+          }
+        }
+      }
+
+      // 3. Fallback to root (even if General) or Other
+      return item.officialSubCategory || item.subCategory || 'Other';
+    };
+
     if (sortConfig.key !== null) {
       sortableProducts.sort((a, b) => {
         const platformKey = sortConfig.key;
@@ -368,26 +393,18 @@ export default function CategoriesPage() {
           return catA.localeCompare(catB);
         }
 
-        // 2. Sort by officialSubCategory (with fallback)
-        const getSubCat = (item) => {
-          if (!item) return 'zzz'; // Should be handled by step 0, but just in case
-          return item.officialSubCategory || item.subCategory || 'Other';
-        };
-
-        const subCatA = getSubCat(itemA);
-        const subCatB = getSubCat(itemB);
+        // 2. Sort by officialSubCategory (using smart resolver)
+        const subCatA = resolveSubCategory(a);
+        const subCatB = resolveSubCategory(b);
 
         if (subCatA !== subCatB) {
           return subCatA.localeCompare(subCatB);
         }
 
         // 3. Then sort by ranking within the subcategory
-        // Get ranking, treating missing or non-numeric rankings as Infinity (always push to bottom)
         const rankA = itemA.ranking && !isNaN(itemA.ranking) ? itemA.ranking : Infinity;
         const rankB = itemB.ranking && !isNaN(itemB.ranking) ? itemB.ranking : Infinity;
 
-        // Always sort rank ascending (1 -> N) unless user explicitly wants reverse
-        // But for "grouping", typically 1-N is the expected default view
         if (rankA < rankB) {
           return sortConfig.direction === 'asc' ? -1 : 1;
         }
@@ -397,17 +414,24 @@ export default function CategoriesPage() {
         return 0;
       });
     } else {
-      // Default Sort: SubCategory -> Ranking
+      // Default Sort: Match Count (Desc) -> SubCategory -> Ranking
       sortableProducts.sort((a, b) => {
+        // 0. Sort by Match Count (High availability first)
+        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+        const countA = platforms.filter(p => a[p]).length;
+        const countB = platforms.filter(p => b[p]).length;
+
+        // If one has more matches than the other, it comes first
+        if (countA !== countB) return countB - countA;
+
         // 1. Sort by officialCategory
         const catA = a.officialCategory || '';
         const catB = b.officialCategory || '';
         if (catA !== catB) return catA.localeCompare(catB);
 
-        // 2. Sort by officialSubCategory
-        const getSubCat = (item) => item.officialSubCategory || item.subCategory || 'Other';
-        const subA = getSubCat(a);
-        const subB = getSubCat(b);
+        // 2. Sort by SubCategory (Smart Resolve)
+        const subA = resolveSubCategory(a);
+        const subB = resolveSubCategory(b);
         if (subA !== subB) return subA.localeCompare(subB);
 
         // 3. Sort by Ranking (Minimum rank across platforms)
@@ -518,7 +542,7 @@ export default function CategoriesPage() {
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
-            <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'}`}></span>
+            <span className={`w - 2 h - 2 rounded - full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'} `}></span>
             <span className="font-medium text-neutral-600">
               {isLiveMode ? 'Live Mode' : 'Historical Snapshot'}
             </span>
