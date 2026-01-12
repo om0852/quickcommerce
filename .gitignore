@@ -12,8 +12,9 @@
 /local-scraper-service
 /cron-service
 # testing
+/logs
 /coverage
-
+/scripts/logs
 # next.js
 /.next/
 /out/
