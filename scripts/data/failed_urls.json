@@ -1,0 +1,682 @@
+[
+  {
+    "timestamp": "2026-01-12T03:22:07.582Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Mouthwash",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/gsfs/pr?sid=hloc%2F0056%2Fgsfs&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:08.113Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Oral Accessories",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/hqfy/pr?sid=hloc%2F0056%2Fhqfy&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:08.584Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Shaving Razors & Blades",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/lvnm/pr?sid=hloc%2F0056%2Flvnm&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:09.054Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Women Shaving Razor",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/fiqu/pr?sid=hloc%2F0056%2Ffiqu&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:09.514Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Hair Oil & Cream",
+    "url": "https://www.flipkart.com/hyperlocal/Tea-Coffee-Milk-Drinks/pr?sid=hloc%2F0011&marketplace=HYPERLOCAL&param=141199888&BU=Minutes&pageUID=1766504141258",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:09.993Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Hair Colour",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4404/pr?sid=hloc%2F0044%2F4404&marketplace=HYPERLOCAL&pageUID=1766504715599",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:10.453Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Sanitary pad",
+    "url": "https://www.flipkart.com/hyperlocal/Fruits/pr?sid=hloc%2Fqbq2&marketplace=HYPERLOCAL&param=32117834&BU=Minutes&pageUID=1766504871910",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:10.878Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Hair serum & gel",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4405/pr?sid=hloc%2F0044%2F4405&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:11.313Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Hair straightners & dryer",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4406/pr?sid=hloc%2F0044%2F4406&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:11.818Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Hair Styling Needs",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4407/pr?sid=hloc%2F0044%2F4407&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:12.315Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Hair Accessories",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4408/pr?sid=hloc%2F0044%2F4408&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:12.763Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Trimmers",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4409/pr?sid=hloc%2F0044%2F4409&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:13.275Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Saniitary Pads",
+    "url": "https://www.flipkart.com/hyperlocal/Fruits/pr?sid=hloc%2Fqbq2&marketplace=HYPERLOCAL&param=32117834&BU=Minutes&pageUID=1767097481292",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:13.712Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Hair Removal",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/icez/pr?sid=hloc%2Fqbq2%2Ficez&marketplace=HYPERLOCAL&pageUID=1767097481292",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:14.180Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Deodorant",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/vvuo/pr?sid=hloc%2Fqbq2%2Fvvuo&marketplace=HYPERLOCAL&pageUID=1767097481292",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:14.613Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Personal Care - Menstual Cups",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/pdup/pr?sid=hloc%2Fqbq2%2Fpdup&marketplace=HYPERLOCAL&pageUID=1767097481292",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:15.506Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Toothpaste",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/iong/pr?sid=hloc%2F0056%2Fiong&marketplace=HYPERLOCAL&pageUID=1766504207157",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:15.958Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Shampoo",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/pmer/pr?sid=hloc%2F0056%2Fpmer&marketplace=HYPERLOCAL&pageUID=1766504207157",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:16.460Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Conditioner",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/newh/pr?sid=hloc%2F0056%2Fnewh&marketplace=HYPERLOCAL&pageUID=1766504207157",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:16.878Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Toothbrush",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/yjor/pr?sid=hloc%2F0056%2Fyjor&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:17.310Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Mouthwash",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/gsfs/pr?sid=hloc%2F0056%2Fgsfs&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:17.800Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Oral Accessories",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/hqfy/pr?sid=hloc%2F0056%2Fhqfy&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:18.271Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Shaving Razors & Blades",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/lvnm/pr?sid=hloc%2F0056%2Flvnm&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:18.719Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Women Shaving Razor",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/fiqu/pr?sid=hloc%2F0056%2Ffiqu&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:19.211Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Hair Oil & Cream",
+    "url": "https://www.flipkart.com/hyperlocal/Tea-Coffee-Milk-Drinks/pr?sid=hloc%2F0011&marketplace=HYPERLOCAL&param=141199888&BU=Minutes&pageUID=1766504141258",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:19.659Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Hair Colour",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4404/pr?sid=hloc%2F0044%2F4404&marketplace=HYPERLOCAL&pageUID=1766504715599",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:20.139Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Sanitary pad",
+    "url": "https://www.flipkart.com/hyperlocal/Fruits/pr?sid=hloc%2Fqbq2&marketplace=HYPERLOCAL&param=32117834&BU=Minutes&pageUID=1766504871910",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:20.606Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Hair serum & gel",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4405/pr?sid=hloc%2F0044%2F4405&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:21.085Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Hair straightners & dryer",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4406/pr?sid=hloc%2F0044%2F4406&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:21.815Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Hair Styling Needs",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4407/pr?sid=hloc%2F0044%2F4407&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:22.245Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Hair Accessories",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4408/pr?sid=hloc%2F0044%2F4408&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:22.732Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Trimmers",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/4409/pr?sid=hloc%2F0044%2F4409&marketplace=HYPERLOCAL&pageUID=1767096360706",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:23.206Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Saniitary Pads",
+    "url": "https://www.flipkart.com/hyperlocal/Fruits/pr?sid=hloc%2Fqbq2&marketplace=HYPERLOCAL&param=32117834&BU=Minutes&pageUID=1767097481292",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:23.749Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Hair Removal",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/icez/pr?sid=hloc%2Fqbq2%2Ficez&marketplace=HYPERLOCAL&pageUID=1767097481292",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:24.199Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Deodorant",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/vvuo/pr?sid=hloc%2Fqbq2%2Fvvuo&marketplace=HYPERLOCAL&pageUID=1767097481292",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:24.646Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Personal Care - Menstual Cups",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/pdup/pr?sid=hloc%2Fqbq2%2Fpdup&marketplace=HYPERLOCAL&pageUID=1767097481292",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:25.113Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Fresh Vegetable",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7201/pr?sid=hloc%2F0072%2F7201&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:25.564Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Seasonal Vegetables",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7213/pr?sid=hloc%2F0072%2F7213&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:26.058Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Leafy and Seasonings",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7203/pr?sid=hloc%2F0072%2F7203&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:36.703Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Exotic Vegetables",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7204/pr?sid=hloc%2F0072%2F7204&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:37.217Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Sprouts & Cut Vegetables",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7206/pr?sid=hloc%2F0072%2F7206&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:37.685Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Fresh Fruits",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7202/pr?sid=hloc%2F0072%2F7202&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:38.105Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Fresh Cuts and Fruits",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7207/pr?sid=hloc%2F0072%2F7207&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:38.535Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Flowers & Bouquets",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7210/pr?sid=hloc%2F0072%2F7210&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:39.087Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Exotic Fruits",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7205/pr?sid=hloc%2F0072%2F7205&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:39.634Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Frozen Vegetables",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/jcen/pr?sid=hloc%2F0072%2Fjcen&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:41.176Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Fruits & Vegetables - Seasonal Fruits",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7113/pr?sid=hloc%2F0071%2F7113&marketplace=HYPERLOCAL&pageUID=1766500173190",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:41.639Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Fresh Vegetable",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7201/pr?sid=hloc%2F0072%2F7201&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:47.199Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Seasonal Vegetables",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7213/pr?sid=hloc%2F0072%2F7213&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:52.878Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Leafy and Seasonings",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7203/pr?sid=hloc%2F0072%2F7203&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:53.363Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Exotic Vegetables",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7204/pr?sid=hloc%2F0072%2F7204&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:53.891Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Sprouts & Cut Vegetables",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7206/pr?sid=hloc%2F0072%2F7206&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:54.322Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Fresh Fruits",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7202/pr?sid=hloc%2F0072%2F7202&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:54.800Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Fresh Cuts and Fruits",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7207/pr?sid=hloc%2F0072%2F7207&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:55.240Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Flowers & Bouquets",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7210/pr?sid=hloc%2F0072%2F7210&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:55.750Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Exotic Fruits",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7205/pr?sid=hloc%2F0072%2F7205&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:56.181Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Frozen Vegetables",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/jcen/pr?sid=hloc%2F0072%2Fjcen&marketplace=HYPERLOCAL&pageUID=1766499285460",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:56.599Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Fruits & Vegetables - Seasonal Fruits",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/7113/pr?sid=hloc%2F0071%2F7113&marketplace=HYPERLOCAL&pageUID=1766500173190",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:22:57.098Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Atta, Rice, Oil & Dals - Atta & Other Flours",
+    "url": "https://www.flipkart.com/hyperlocal/Atta-Rice-Dal/pr?sid=hloc%2F0003&marketplace=HYPERLOCAL&param=29468594&BU=Minutes&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:07.600Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Atta, Rice, Oil & Dals - Suji, Besan & Maida",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0307/pr?sid=hloc%2F0003%2F0307&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:08.014Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Atta, Rice, Oil & Dals - Dals & Pulses",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0303/pr?sid=hloc%2F0003%2F0303&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:08.448Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Atta, Rice, Oil & Dals - Poha",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0309/pr?sid=hloc%2F0003%2F0309&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:08.849Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Atta, Rice, Oil & Dals - Rice",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0302/pr?sid=hloc%2F0003%2F0302&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:09.346Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Atta, Rice, Oil & Dals - Rajma & Chole",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0310/pr?sid=hloc%2F0003%2F0310&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:09.809Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Atta, Rice, Oil & Dals - Ragi & Other Grains",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0304/pr?sid=hloc%2F0003%2F0304&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:10.225Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Atta, Rice, Oil & Dals - Organic Grains",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0311/pr?sid=hloc%2F0003%2F0311&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:10.669Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Atta, Rice, Oil & Dals - Organic Atta & Flours",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0305/pr?sid=hloc%2F0003%2F0305&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:16.240Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Atta, Rice, Oil & Dals - Atta & Other Flours",
+    "url": "https://www.flipkart.com/hyperlocal/Atta-Rice-Dal/pr?sid=hloc%2F0003&marketplace=HYPERLOCAL&param=29468594&BU=Minutes&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:16.738Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Atta, Rice, Oil & Dals - Suji, Besan & Maida",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0307/pr?sid=hloc%2F0003%2F0307&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:17.171Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Atta, Rice, Oil & Dals - Dals & Pulses",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0303/pr?sid=hloc%2F0003%2F0303&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:17.618Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Atta, Rice, Oil & Dals - Poha",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0309/pr?sid=hloc%2F0003%2F0309&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:23.121Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Atta, Rice, Oil & Dals - Rice",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0302/pr?sid=hloc%2F0003%2F0302&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:28.637Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Atta, Rice, Oil & Dals - Rajma & Chole",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0310/pr?sid=hloc%2F0003%2F0310&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:29.090Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Atta, Rice, Oil & Dals - Ragi & Other Grains",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0304/pr?sid=hloc%2F0003%2F0304&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:29.557Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Atta, Rice, Oil & Dals - Organic Grains",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0311/pr?sid=hloc%2F0003%2F0311&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:30.007Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201303",
+    "category": "Atta, Rice, Oil & Dals - Organic Atta & Flours",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/0305/pr?sid=hloc%2F0003%2F0305&marketplace=HYPERLOCAL&pageUID=1766500709808",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:30.447Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Dairy, Bread & Eggs - Milk",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/3001/pr?sid=hloc%2F0030%2F3001&marketplace=HYPERLOCAL&param=42220101022&BU=Minutes&pageUID=1766502340761",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:41.164Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Dairy, Bread & Eggs - Bread and Bun",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/3002/pr?sid=hloc%2F0030%2F3002&marketplace=HYPERLOCAL&pageUID=1766502340761",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:41.687Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Dairy, Bread & Eggs - Curd & Yoghurt",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/3004/pr?sid=hloc%2F0030%2F3004&marketplace=HYPERLOCAL&pageUID=1766502340761",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:42.172Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Dairy, Bread & Eggs - Butter & Spread",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/3005/pr?sid=hloc%2F0030%2F3005&marketplace=HYPERLOCAL&pageUID=1766502340761",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:42.619Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Dairy, Bread & Eggs - Cheese",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/3006/pr?sid=hloc%2F0030%2F3006&marketplace=HYPERLOCAL&pageUID=1766502340761",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:43.080Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Dairy, Bread & Eggs - Buttermilk & Lassi",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/3007/pr?sid=hloc%2F0030%2F3007&marketplace=HYPERLOCAL&pageUID=1766502340761",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:43.529Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Dairy, Bread & Eggs - Paneer & Tofu",
+    "url": "http://flipkart.com/hyperlocal/hloc/3008/pr?sid=hloc%2F0030%2F3008&marketplace=HYPERLOCAL&pageUID=1766502340761",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T03:23:43.978Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Dairy, Bread & Eggs - Milkshakes & Flavoured Milk",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/3009/pr?sid=hloc%2F0030%2F3009&marketplace=HYPERLOCAL&pageUID=1766502340761",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T04:03:28.732Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201014",
+    "category": "Personal Care - Women Shaving Razor",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/fiqu/pr?sid=hloc%2F0056%2Ffiqu&marketplace=HYPERLOCAL&pageUID=1767096100239",
+    "error": "{\"detail\":\"Internal server error: cannot unpack non-iterable NoneType object\"}"
+  }
+]

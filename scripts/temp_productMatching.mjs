@@ -82,10 +82,15 @@ function combinedSimilarity(nameA, nameB) {
 }
 
 // Helper function to normalize weight for comparison
+// Helper function to normalize weight for comparison
 const normalizeWeight = (weight) => {
     if (!weight) return '';
-    return String(weight).toLowerCase()
-        .replace(/\s+/g, '')
+    let w = String(weight).toLowerCase();
+
+    // transform "pack of N" to "xN"
+    w = w.replace(/pack\s+of\s+(\d+)/g, 'x$1');
+
+    return w.replace(/\s+/g, '')
         .replace(/pack/g, '')
         .replace(/\(|\)/g, '')
         // Standardize units
@@ -109,8 +114,31 @@ const weightsMatch = (weight1, weight2) => {
     if (w1 === w2) return true;
 
     const parseWeight = (w) => {
-        const match = w.match(/(\d+(?:\.\d+)?)([a-z]+)/);
-        if (match) return { val: parseFloat(match[1]), unit: match[2] };
+        // Special handle for "NxWeight" format (e.g. 3x100g)
+        const multMatch = w.match(/^(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)([a-z]+)(.*)$/);
+        if (multMatch) {
+            let count = parseFloat(multMatch[1]);
+            let baseVal = parseFloat(multMatch[2]);
+            let unit = multMatch[3];
+            // multiply
+            return { val: count * baseVal, unit };
+        }
+
+        // Capture value, unit, and any trailing chars (extra)
+        const match = w.match(/^(\d+(?:\.\d+)?)([a-z]+)(.*)$/);
+        if (match) {
+            let val = parseFloat(match[1]);
+            let unit = match[2];
+            let extra = match[3];
+
+            // Check for multiplier in 'extra' part
+            // e.g. "x3", "*3"
+            const mult = extra.match(/[\*x](\d+)/);
+            if (mult) {
+                val *= parseInt(mult[1]);
+            }
+            return { val, unit };
+        }
         return null;
     };
 
@@ -118,11 +146,11 @@ const weightsMatch = (weight1, weight2) => {
     const p2 = parseWeight(w2);
 
     if (p1 && p2) {
-        if (p1.unit === p2.unit) return p1.val === p2.val;
-        if (p1.unit === 'kg' && p2.unit === 'g') return p1.val * 1000 === p2.val;
-        if (p1.unit === 'g' && p2.unit === 'kg') return p1.val === p2.val * 1000;
-        if (p1.unit === 'l' && p2.unit === 'ml') return p1.val * 1000 === p2.val;
-        if (p1.unit === 'ml' && p2.unit === 'l') return p1.val === p2.val * 1000;
+        if (p1.unit === p2.unit) return Math.abs(p1.val - p2.val) < 0.1;
+        if (p1.unit === 'kg' && p2.unit === 'g') return Math.abs(p1.val * 1000 - p2.val) < 0.1;
+        if (p1.unit === 'g' && p2.unit === 'kg') return Math.abs(p1.val - p2.val * 1000) < 0.1;
+        if (p1.unit === 'l' && p2.unit === 'ml') return Math.abs(p1.val * 1000 - p2.val) < 0.1;
+        if (p1.unit === 'ml' && p2.unit === 'l') return Math.abs(p1.val - p2.val * 1000) < 0.1;
     }
 
     return false;
@@ -172,10 +200,10 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
                 isAd: item.isAd,
                 rating: item.rating,
                 productImage: item.productImage,
-                officialCategory: item.officialCategory,
                 officialSubCategory: item.officialSubCategory,
                 categoryUrl: item.categoryUrl,
-                combo: item.combo
+                combo: item.combo,
+                productWeight: item.productWeight // Added for debugging/output
             };
 
             used[s].add(idx);
@@ -204,9 +232,14 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
                     // 3. Check Weight
                     const wMatch = weightsMatch(item.productWeight, oItem.productWeight);
 
-                    // Logic: If weights mismatch, ONLY allow if score is very high (strong name match implies same product or acceptable variant)
-                    // Threshold 0.8 allows slight differences (like "69 g" vs "230 g" in long names)
-                    if (!wMatch && score < 0.8) {
+                    // STRICTER Logic: If weights mismatch, DO NOT GROUP, regardless of score.
+                    // weightsMatch returns false only if both exist and are different.
+                    if (!wMatch) {
+                        return;
+                    }
+
+                    // If score is too low, skip.
+                    if (score < 0.75) {
                         return;
                     }
 
@@ -217,7 +250,7 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
                 });
 
                 // Lower threshold slightly to 0.75 to capture more variations
-                if (bestIdx >= 0 && bestScore >= 0.75) {
+                if (bestIdx >= 0) {
                     const matched = other.items[bestIdx];
                     used[t].add(bestIdx);
                     group[other.key] = {
@@ -243,7 +276,8 @@ export function mergeProductsAcrossPlatforms(zeptoProducts = [], blinkitProducts
                         officialCategory: matched.officialCategory,
                         officialSubCategory: matched.officialSubCategory,
                         categoryUrl: matched.categoryUrl,
-                        combo: matched.combo
+                        combo: matched.combo,
+                        productWeight: matched.productWeight // Added for output
                     };
                 }
             }

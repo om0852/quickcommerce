@@ -1,0 +1,1090 @@
+[
+  {
+    "timestamp": "2026-01-10T01:39:02.549Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Breakfast & Sauces - Noodles",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2001/pr?sid=hloc%2F0020%2F2001&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:03.123Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Breakfast & Sauces - Pasta",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2002/pr?sid=hloc%2F0020%2F2002&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:03.533Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Breakfast & Sauces - Frozen Veg Snacks",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2004/pr?sid=hloc%2F0020%2F2004&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:03.928Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Breakfast & Sauces - Noodles",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2001/pr?sid=hloc%2F0020%2F2001&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:04.432Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Breakfast & Sauces - Pasta",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2002/pr?sid=hloc%2F0020%2F2002&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:04.803Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Breakfast & Sauces - Frozen Veg Snacks",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2004/pr?sid=hloc%2F0020%2F2004&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:05.273Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Tea, Coffee & More - Coffee",
+    "url": "https://www.flipkart.com/hyperlocal/Tea-Coffee-Milk-Drinks/pr?sid=hloc%2F0011&marketplace=HYPERLOCAL&param=141199888&BU=Minutes&pageUID=1766504141258",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:05.684Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Tea, Coffee & More - Tea",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1101/pr?sid=hloc%2F0011%2F1101&marketplace=HYPERLOCAL&pageUID=1766504141258",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:06.195Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Tea, Coffee & More - Coffee",
+    "url": "https://www.flipkart.com/hyperlocal/Tea-Coffee-Milk-Drinks/pr?sid=hloc%2F0011&marketplace=HYPERLOCAL&param=141199888&BU=Minutes&pageUID=1766504141258",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:06.584Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Tea, Coffee & More - Tea",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1101/pr?sid=hloc%2F0011%2F1101&marketplace=HYPERLOCAL&pageUID=1766504141258",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:07.117Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Antiseptic",
+    "url": "https://www.flipkart.com/hyperlocal/Fruits/pr?sid=hloc%2F0015&marketplace=HYPERLOCAL&param=param%3D811632217&BU=Minutes&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:07.483Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Protein & Vitamins",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1506/pr?sid=hloc%2F0015%2F1506&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:07.930Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Band-aid and Pain Relief",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1508/pr?sid=hloc%2F0015%2F1508&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:08.370Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Milk Drinks",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1509/pr?sid=hloc%2F0015%2F1509&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:08.756Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Probiotics",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/evzy/pr?sid=hloc%2F0015%2Fevzy&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:09.164Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Ayurveda",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/xsgz/pr?sid=hloc%2F0015%2Fxsgz&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:09.576Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Cough Syrup",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1507/pr?sid=hloc%2F0015%2F1507&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:09.983Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Digestive Care",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1505/pr?sid=hloc%2F0015%2F1505&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:10.394Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Immunity Boosters",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1511/pr?sid=hloc%2F0015%2F1511&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:10.797Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400706",
+    "category": "Health & Wellness - Supports & Braces",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/jwdm/pr?sid=hloc%2F0015%2Fjwdm&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:11.197Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Health & Wellness - Antiseptic",
+    "url": "https://www.flipkart.com/hyperlocal/Fruits/pr?sid=hloc%2F0015&marketplace=HYPERLOCAL&param=param%3D811632217&BU=Minutes&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:11.726Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Health & Wellness - Protein & Vitamins",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1506/pr?sid=hloc%2F0015%2F1506&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:12.134Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Health & Wellness - Band-aid and Pain Relief",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1508/pr?sid=hloc%2F0015%2F1508&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:12.495Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Health & Wellness - Milk Drinks",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1509/pr?sid=hloc%2F0015%2F1509&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:13.005Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Health & Wellness - Probiotics",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/evzy/pr?sid=hloc%2F0015%2Fevzy&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:13.470Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Health & Wellness - Ayurveda",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/xsgz/pr?sid=hloc%2F0015%2Fxsgz&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:13.877Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Health & Wellness - Cough Syrup",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1507/pr?sid=hloc%2F0015%2F1507&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-10T01:39:14.277Z",
+    "platform": "flipkartMinutes",
+    "pincode": "400001",
+    "category": "Health & Wellness - Digestive Care",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1505/pr?sid=hloc%2F0015%2F1505&marketplace=HYPERLOCAL&pageUID=1767096799519",
+    "error": "{\"detail\":\"Please Provide Authenticate Apikey\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:16.253Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201014",
+    "category": "Breakfast & Sauces - Noodles",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2001/pr?sid=hloc%2F0020%2F2001&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:17.289Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201014",
+    "category": "Breakfast & Sauces - Pasta",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2002/pr?sid=hloc%2F0020%2F2002&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:18.036Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201014",
+    "category": "Breakfast & Sauces - Frozen Veg Snacks",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2004/pr?sid=hloc%2F0020%2F2004&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:18.800Z",
+    "platform": "flipkartMinutes",
+    "pincode": "122008",
+    "category": "Breakfast & Sauces - Noodles",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2001/pr?sid=hloc%2F0020%2F2001&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:19.583Z",
+    "platform": "flipkartMinutes",
+    "pincode": "122008",
+    "category": "Breakfast & Sauces - Pasta",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2002/pr?sid=hloc%2F0020%2F2002&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:20.299Z",
+    "platform": "flipkartMinutes",
+    "pincode": "122008",
+    "category": "Breakfast & Sauces - Frozen Veg Snacks",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2004/pr?sid=hloc%2F0020%2F2004&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:21.159Z",
+    "platform": "flipkartMinutes",
+    "pincode": "122010",
+    "category": "Breakfast & Sauces - Noodles",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2001/pr?sid=hloc%2F0020%2F2001&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:22.010Z",
+    "platform": "flipkartMinutes",
+    "pincode": "122010",
+    "category": "Breakfast & Sauces - Pasta",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2002/pr?sid=hloc%2F0020%2F2002&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:22.759Z",
+    "platform": "flipkartMinutes",
+    "pincode": "122010",
+    "category": "Breakfast & Sauces - Frozen Veg Snacks",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2004/pr?sid=hloc%2F0020%2F2004&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:23.580Z",
+    "platform": "flipkartMinutes",
+    "pincode": "122016",
+    "category": "Breakfast & Sauces - Noodles",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2001/pr?sid=hloc%2F0020%2F2001&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:24.339Z",
+    "platform": "flipkartMinutes",
+    "pincode": "122016",
+    "category": "Breakfast & Sauces - Pasta",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2002/pr?sid=hloc%2F0020%2F2002&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:25.120Z",
+    "platform": "flipkartMinutes",
+    "pincode": "122016",
+    "category": "Breakfast & Sauces - Frozen Veg Snacks",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/2004/pr?sid=hloc%2F0020%2F2004&marketplace=HYPERLOCAL&pageUID=1766502737179",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:30.933Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201014",
+    "category": "Tea, Coffee & More - Coffee",
+    "url": "https://www.flipkart.com/hyperlocal/Tea-Coffee-Milk-Drinks/pr?sid=hloc%2F0011&marketplace=HYPERLOCAL&param=141199888&BU=Minutes&pageUID=1766504141258",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-11T20:08:32.319Z",
+    "platform": "flipkartMinutes",
+    "pincode": "201014",
+    "category": "Tea, Coffee & More - Tea",
+    "url": "https://www.flipkart.com/hyperlocal/hloc/1101/pr?sid=hloc%2F0011%2F1101&marketplace=HYPERLOCAL&pageUID=1766504141258",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T06:50:05.863Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25acc&filterName=Muesli+%26+Granola&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T06:50:41.863Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Oats",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25acd&filterName=Oats&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T06:54:48.705Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Pancake Mixes",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25ad3&filterName=Pancake+Mixes&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T06:54:57.739Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Peanut Butters",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25ad4&filterName=Peanut+Butters&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T06:55:04.042Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Chocolate Spreads",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25ad5&filterName=Chocolate+Spreads&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T06:55:23.578Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Mayo & Spreads",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25ad6&filterName=Mayo+%26+Spreads&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T06:55:29.652Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Instant Oats",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25ad7&filterName=Instant+Oats&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T06:55:42.811Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Seeds & Trail Mixes",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25ad8&filterName=Seeds+and+trail+Mixes&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T06:55:49.083Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Hot Beverages",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25ad9&filterName=Hot+Beverages&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T06:55:55.565Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Juices & Fruit Drinks",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25ada&filterName=Juices+%26+Fruit+Drinks&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T06:56:01.556Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cereals & Breakfast - Jams",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cereals+and+Breakfast&filterId=6822eeeded32000001e25adb&filterName=Jams&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:04:52.616Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Noodles",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Noodles%2C+Pasta%2C+Vermicelli&filterId=6822eeebed32000001e25a7d&filterName=Instant+Noodles&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:04:59.041Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Biscuits & Cakes - Cakes & Pies",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b15&filterName=Cakes+%26+Pies&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:05:05.136Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Biscuits & Cakes - Cookies",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b16&filterName=Cookies&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:05:24.506Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Biscuits & Cakes - Cream Biscuits",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b17&filterName=Cream+Biscuits&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:05:37.743Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Biscuits & Cakes - Marie & Digestive",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b18&filterName=Marie+%26+Digestive&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:05:43.957Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Biscuits & Cakes - Salted & Plain",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b19&filterName=Salted+%26+Plain&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:05:57.211Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Biscuits & Cakes - Wafers",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b1b&filterName=Wafers&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:06:25.631Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Biscuits & Cakes - Rusk",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b1c&filterName=Rusk&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:07:15.369Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Biscuits & Cakes - Dessert Mixes",
+    "url": "http://swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b1c&filterName=Rusk&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:07:21.386Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Noodles, Pasta & Vermicelli - Instant Noodles",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Noodles%2C+Pasta%2C+Vermicelli&filterId=6822eeebed32000001e25a7d&filterName=Instant+Noodles&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:07:27.483Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Noodles, Pasta & Vermicelli - Cup Noodles",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Noodles%2C+Pasta%2C+Vermicelli&filterId=6822eeebed32000001e25a7e&filterName=Cup+Noodles&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:08:14.675Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Noodles, Pasta & Vermicelli - Vermicelli",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Noodles%2C+Pasta%2C+Vermicelli&filterId=6822eeebed32000001e25a84&filterName=Vermicelli&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:29:38.615Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Tea",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Tea%2C+Coffee+and+Milk+drinks&filterId=6822eeeded32000001e25b26&filterName=Tea&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:29:45.065Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Coffee",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Tea%2C+Coffee+and+Milk+drinks&filterId=6822eeeded32000001e25b27&filterName=Instant+Coffee&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:29:54.265Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Tea & coffee - Tea",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Tea%2C+Coffee+and+Milk+drinks&filterId=6822eeeded32000001e25b26&filterName=Tea&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:30:44.308Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Tea & coffee - Instant Coffee",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Tea%2C+Coffee+and+Milk+drinks&filterId=6822eeeded32000001e25b27&filterName=Instant+Coffee&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:30:57.541Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Tea & coffee - Filter & Ground Coffee",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Tea%2C+Coffee+and+Milk+drinks&filterId=6822eeeded32000001e25b28&filterName=Filter+%26+Ground+Coffee&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:31:04.277Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Tea & coffee - Cold Coffee",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Tea%2C+Coffee+and+Milk+drinks&filterId=6822eeeded32000001e25b2a&filterName=Cold+Coffee&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:43:11.783Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Ice Creams",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Ice%20Creams%20and%20Frozen%20Desserts&storeId=1404643&offset=0&filterName=&taxonomyType=Speciality%20taxonomy%203&showAgeConsent=false",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:44:07.914Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Ice Creams & Frozen Desserts - Gourmet",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Ice+Creams+and+Frozen+Desserts&filterId=68875c50eee7050001f1f3be&filterName=Gourmet&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T07:44:46.225Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Ice Creams & Frozen Desserts - Cakes & Sandwiches",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Ice+Creams+and+Frozen+Desserts&filterId=6822eeebed32000001e25a60&filterName=Cakes+%26+Sandwiches&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:44:53.661Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Ice Creams & Frozen Desserts - Brownies & Cakes",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Ice+Creams+and+Frozen+Desserts&filterId=68246bc8cc67390001a095e9&filterName=Brownies+%26+Cakes&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T07:59:51.219Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Chocolates",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Chocolates&filterId=6822eeebed32000001e25a75&filterName=Dark+Chocolates&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T08:00:12.393Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Chocolates - Milk Chocolates",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Chocolates&filterId=6822eeebed32000001e25a79&filterName=Wafers&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T08:02:33.623Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cold Drinks - Energy Drinks",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cold+Drinks+and+Juices&filterId=6822eeebed32000001e25a4a&filterName=Energy+Drinks&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T08:03:20.830Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cold Drinks - Non Alcoholic Beverages",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cold+Drinks+and+Juices&filterId=6822eeebed32000001e25a53&filterName=Non+Alcoholic+Beverages&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T08:10:10.756Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Chips & Crisps",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Chips+and+Namkeens&filterId=6822eeebed32000001e25a64&filterName=Chips+and+Crisps&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+3",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T08:17:34.877Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cookies",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b16&filterName=Cookies&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T08:17:48.655Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cream Biscuits",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Biscuits+and+Cakes&filterId=6822eeeded32000001e25b17&filterName=Cream+Biscuits&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T08:23:25.659Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cleaning",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Cleaning+Essentials&filterId=6822eef009ab2e00019aa602&filterName=Detergent+Powders+%26+Bars&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Health+and+Wellness+Stores",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T08:24:22.377Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Home and Furnishing - Home Decor",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Home+and+Furnishing&filterId=6822eef009ab2e00019aa5e4&filterName=Home+Decor&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Health+and+Wellness+Stores",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T08:24:28.850Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Home and Furnishing - Organizers",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Home+and+Furnishing&filterId=6822eef009ab2e00019aa5e5&filterName=Storage+%26+Organizers&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Health+and+Wellness+Stores",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T09:13:27.209Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Books & Stationery - Office Stationery",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Books+and+Stationery&filterId=6822eef009ab2e00019aa642&filterName=Office+Stationery&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Health+and+Wellness+Stores",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T09:13:35.286Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Books & Stationery - School Supplies",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Books+and+Stationery&filterId=6822eef009ab2e00019aa643&filterName=School+Supplies&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Health+and+Wellness+Stores",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T09:29:38.738Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Baby Care - Baby Oral Care",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Baby+Care&filterId=6822eeefed32000001e25b90&filterName=Baby+Oral+Care&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T09:30:01.264Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Baby Care - Baby Pharma",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Baby+Care&filterId=6822eeefed32000001e25b92&filterName=Baby+Pharma&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T09:31:59.580Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Baby Care - Clothes & Accessories",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Baby+Care&filterId=6822eeefed32000001e25b96&filterName=Clothes+%26+Accessories&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T09:59:36.319Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Makeup",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Makeup&filterId=6822eeefed32000001e25b6b&filterName=Lips&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:00:15.251Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Makeup - Eyes",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Makeup&filterId=6822eeefed32000001e25b6c&filterName=Eyes&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:00:42.044Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Makeup - Face",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Makeup&filterId=6822eeefed32000001e25b6d&filterName=Face&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:01:07.726Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Makeup - Tools & Brushes",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Makeup&filterId=6822eeefed32000001e25b6f&filterName=Tools+%26+Brushes&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:01:13.905Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Makeup - Beauty Supplements",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Makeup&filterId=6824a99856df9b0001250154&filterName=Beauty+Supplements&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:18:13.865Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Bath & Body - Conditioner",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Bath+and+Body&filterId=6822eeefed32000001e25b55&filterName=Conditioner+%26+Mask&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:18:34.621Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Bath & Body - Bathing Kits / Gifts",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Bath+and+Body&filterId=6822eeefed32000001e25b57&filterName=Bathing+Kits%2FGifts&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:26:52.499Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Hair Care - Conditioners & Masks",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Hair+Care&filterId=6822eeefed32000001e25b5c&filterName=Conditioners+%26+Masks&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:27:09.847Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Hair Care - Combs & Brushes",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Hair+Care&filterId=6822eeefed32000001e25b60&filterName=Combs+%26+Brushes&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:31:35.954Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Fruits & Vegetables - Fresh Vegetables",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Fresh%20Vegetables&storeId=1404643&offset=0&filterName=&taxonomyType=Speciality%20taxonomy%201&showAgeConsent=false",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:31:42.245Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Fruits & Vegetables - Fresh Fruits",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Fresh%20Fruits&storeId=1404643&offset=0&filterName=&taxonomyType=Speciality%20taxonomy%201&showAgeConsent=false",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:37:47.143Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Atta, Rice & Dal - Atta",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Atta%2C+Rice+and+Dal&filterId=6822eeeded32000001e25ae0&filterName=Atta&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:37:54.487Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Atta, Rice & Dal - Rice",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Atta%2C+Rice+and+Dal&filterId=6822eeeded32000001e25ae1&filterName=Rice&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:37:59.296Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Atta, Rice & Dal - Besan, Sooji, Maida",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Atta%2C+Rice+and+Dal&filterId=6822eeeded32000001e25ae2&filterName=Besan%2C+Sooji+and+Maida&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:38:05.000Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Atta, Rice & Dal - Toor, Moong and Urad",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Atta%2C+Rice+and+Dal&filterId=6822eeeded32000001e25ae3&filterName=Toor%2C+Moong+and+Urad&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:38:31.021Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Atta, Rice & Dal - Rajma, Chana & Others",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Atta%2C+Rice+and+Dal&filterId=6822eeeded32000001e25ae5&filterName=Rajma%2C+Chola+and+Others&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T10:38:37.228Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Atta, Rice & Dal - Poha",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Atta%2C+Rice+and+Dal&filterId=6822eeeded32000001e25ae6&filterName=Poha+%26+Puffed+Rice&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:38:43.294Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Atta, Rice & Dal - Millets & Daliya",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Atta%2C+Rice+and+Dal&filterId=6822eeeded32000001e25ae8&filterName=Millets+%26+Daliya&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:38:49.571Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Oil & Ghee - All Oils",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Oils+and+Ghee&filterId=6822eeeded32000001e25aee&filterName=Sunflower+%26+Other+Oils&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:39:27.205Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Oil & Ghee - Ghee",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Oils+and+Ghee&filterId=6822eeeded32000001e25af0&filterName=Ghee&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T10:47:10.450Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dairy & Breads - Bread & Buns",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dairy%20%2C%20Bread%20and%20Eggs&storeId=1404643&offset=0&filterName=&taxonomyType=Speciality%20taxonomy%201&showAgeConsent=false",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:47:16.771Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dairy & Breads - Milk",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dairy%2C+Bread+and+Eggs&filterId=6822eeeded32000001e25abe&filterName=Milk&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:47:22.515Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dairy & Breads - Paneer & Cream",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dairy%2C+Bread+and+Eggs&filterId=6822eeeded32000001e25ac2&filterName=Paneer+and+Cream&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:47:27.833Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dairy & Breads - Cheese",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dairy%2C+Bread+and+Eggs&filterId=6822eeeded32000001e25ac3&filterName=Cheese&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:47:33.682Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dairy & Breads - Batters & Chutneys",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dairy%2C+Bread+and+Eggs&filterId=6822eeeded32000001e25ac5&filterName=Batters+and+Chutneys&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:47:38.026Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dairy & Breads - Curd & Yogurts",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dairy%2C+Bread+and+Eggs&filterId=6822eeeded32000001e25ac0&filterName=Curd+and+Yogurts&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:48:33.416Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dairy & Breads - Indian Breads",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dairy%2C+Bread+and+Eggs&filterId=6822eeeded32000001e25ac6&filterName=Indian+Breads&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:48:39.623Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dairy & Breads - Dairy Alternatives",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dairy%2C+Bread+and+Eggs&filterId=6822eeeded32000001e25ac7&filterName=Dairy+Alternatives&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:49:48.316Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dairy & Breads - Bakery",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dairy%2C+Bread+and+Eggs&filterId=6870b89db6c3fa00019319db&filterName=Bakery&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:55:10.719Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Powdered Spices",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Masalas&filterId=6822eeeded32000001e25aec&filterName=Powdered+Spices&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T10:55:16.987Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Salt",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Salt+and+Sugar&filterId=6822eeeded32000001e25ae8&filterName=Salt&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:55:26.848Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Whole Spices",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Masalas&filterId=6822eeeded32000001e25aeb&filterName=Whole+Spices&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T10:55:33.001Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Ready Masala",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Masalas&filterId=6822eeeded32000001e25aed&filterName=Ready+Masala&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:55:39.294Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Sugar",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Salt+and+Sugar&filterId=6822eeeded32000001e25ae9&filterName=Sugar&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:56:17.133Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Herbs & Seasoning",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Masalas&filterId=6822eeeded32000001e25aea&filterName=Herbs+%2C+%26+Seasoning&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T10:56:23.520Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Pickles & Chutney",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pickles+and+Chutney&filterId=6822eeeded32000001e25af2&filterName=Pickles+%26+Chutney&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:56:43.013Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Jaggery",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Jaggery&filterId=6822eef0e9e21700015e39c4&filterName=Jaggery&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T10:56:49.323Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Coconut Milk & Powder",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Rice+and+Rice+Products&filterId=6822eeeded32000001e25ae5&filterName=Coconut+Milk+%26+Powder&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:56:55.594Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Mixed Dry Fruits",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dry+Fruits+and+Seeds+Mix&filterId=6822eeeded32000001e25af4&filterName=Mixed+Dry+Fruits&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:57:33.556Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Almonds",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dry+Fruits+and+Seeds+Mix&filterId=6822eeeded32000001e25af5&filterName=Almonds&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T10:57:39.979Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Cashews",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dry+Fruits+and+Seeds+Mix&filterId=6822eeeded32000001e25af6&filterName=Cashews&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:57:46.975Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Raisins",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dry+Fruits+and+Seeds+Mix&filterId=6822eeeded32000001e25af7&filterName=Raisins&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:57:53.994Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Pistas & Walnuts",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dry+Fruits+and+Seeds+Mix&filterId=6822eeeded32000001e25af8&filterName=Pistas+%26+Walnuts&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  },
+  {
+    "timestamp": "2026-01-12T10:58:22.187Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Makhana & Seeds",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dry+Fruits+and+Seeds+Mix&filterId=6822eeeded32000001e25af9&filterName=Makhana+%26+Seeds&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T10:59:00.067Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Dates & Dried Fruits",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dry+Fruits+and+Seeds+Mix&filterId=6822eeeded32000001e25afa&filterName=Dates+%26+Dried+Fruits&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":\"Internal Server Error\"}"
+  },
+  {
+    "timestamp": "2026-01-12T10:59:06.292Z",
+    "platform": "instamart",
+    "pincode": "122016",
+    "category": "Nuts & Seeds Mix",
+    "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Dry+Fruits+and+Seeds+Mix&filterId=6822eeeded32000001e25afb&filterName=Nuts+%26+Seeds+Mix&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1",
+    "error": "{\"detail\":{\"error_message\":\"122016 is not serviceable\"}}"
+  }
+]

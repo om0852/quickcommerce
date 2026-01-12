@@ -1,14 +1,4 @@
 {
-  "date": "2026-01-04",
-  "completed": {
-    "fruits_&_vegetables_201303_zepto": true,
-    "fruits_&_vegetables_201303_blinkit": true,
-    "fruits_&_vegetables_201303_jiomart": true,
-    "dairy,_bread_&_eggs_201303_zepto": true,
-    "dairy,_bread_&_eggs_201303_blinkit": true,
-    "dairy,_bread_&_eggs_201303_jiomart": true,
-    "atta,_rice,_oil_&_dals_201303_zepto": true,
-    "atta,_rice,_oil_&_dals_201303_blinkit": true,
-    "atta,_rice,_oil_&_dals_201303_jiomart": true
-  }
+  "date": "2026-01-12",
+  "completed": {}
 }
