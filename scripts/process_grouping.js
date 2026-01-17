@@ -1,25 +1,33 @@
 
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import dbConnect from '../lib/mongodb.js';
-import ProductSnapshot from '../models/ProductSnapshot.js';
-import { getGroupingId } from '../lib/productGrouper.js';
 
-dotenv.config({ path: '../.env' }); // Adjust path if needed
+// Load env vars BEFORE importing files that depend on them
+dotenv.config({ path: '../local-scraper-service/.env' });
 
 async function processGrouping() {
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        const { default: dbConnect } = await import('../lib/mongodb.js');
+        const { default: ProductSnapshot } = await import('../models/ProductSnapshot.js');
+        const { getGroupingId } = await import('../lib/productGrouper.js');
+
+        await dbConnect(); // Use the dbConnect function from lib/mongodb
+        // Or if dbConnect directly connects, just importing might be enough but calling it ensures connection
+        // Actually lib/mongodb.js exports dbConnect as default.
+        // It uses mongoose.connect.
+
         console.log('✅ Connected to MongoDB');
 
-        // Get latest snapshots (e.g. from last 24h or just all that don't have groupingId)
-        // For initial run, maybe distinct products by platform+productId?
-        // Or just iterate recent snapshots.
+        // CLEAR OLD DATA (User Request)
+        console.log('🗑️  Clearing previous groupings...');
+        await mongoose.model('ProductGrouping').deleteMany({});
+        await mongoose.models.ProductSnapshot.updateMany({}, { $unset: { groupingId: "" } });
+        console.log('✅ Previous groupings cleared.');
 
-        console.log('🔍 Fetching products without groupingId...');
-        const products = await ProductSnapshot.find({ groupingId: { $exists: false } })
-            .sort({ scrapedAt: -1 })
-            .limit(1000); // Process in batches
+        // Get latest snapshots (e.g. from last 24h or just all that don't have groupingId)
+        console.log('🔍 Fetching products for grouping...');
+        const products = await ProductSnapshot.find({}) // Fetch ALL since we cleared ids
+            .sort({ scrapedAt: -1 });
 
         console.log(`📦 Found ${products.length} products to process`);
 
@@ -40,7 +48,7 @@ async function processGrouping() {
                     productName: product.productName,
                     productWeight: product.productWeight || product.quantity, // Fallback
                     productImage: product.productImage
-                });
+                }, product.scrapedAt);
 
                 // Update snapshot
                 product.groupingId = groupId;

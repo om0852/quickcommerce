@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig = {
   experimental: {
-    instrumentationHook: true,
+    // instrumentationHook: true, // Deprecated
   },
 } as NextConfig;
 

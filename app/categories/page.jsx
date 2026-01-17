@@ -63,7 +63,11 @@ export default function CategoriesPage() {
     { label: 'Delhi NCR — 201014', value: '201014' },
     { label: 'Delhi NCR — 122008', value: '122008' },
     { label: 'Delhi NCR — 122010', value: '122010' },
-    { label: 'Delhi NCR — 122016', value: '122016' }
+    { label: 'Delhi NCR — 122016', value: '122016' },
+    { label: 'Mumbai — 400070', value: '400070' },
+    { label: 'Mumbai — 400703', value: '400703' },
+    { label: 'Mumbai — 401101', value: '401101' },
+    { label: 'Mumbai — 401202', value: '401202' }
   ];
 
   const PLATFORM_OPTIONS = [
