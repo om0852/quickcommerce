@@ -196,34 +196,58 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     const fetchSnapshots = async () => {
-      const res = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`);
-      const data = await res.json();
+      // Clear previous data while loading new config
+      setLoading(true);
+      setProducts([]);
+      setError(null);
 
-      if (data.snapshots && data.snapshots.length > 0) {
-        setAvailableSnapshots(data.snapshots);
+      try {
+        const res = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`);
+        const data = await res.json();
 
-        if (isLiveMode) {
-          const latestTS = data.snapshots[0];
-          const dateObj = new Date(latestTS);
-          setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
-          setSnapshotTime(latestTS);
-          fetchCategoryData(latestTS);
-        } else {
-          const snapshotsForSameDate = data.snapshots.filter(ts =>
-            new Date(ts).toLocaleDateString('en-CA') === snapshotDate
-          );
-          if (snapshotDate && snapshotsForSameDate.length > 0) {
-            setSnapshotTime(snapshotsForSameDate[0]);
-            fetchCategoryData(snapshotsForSameDate[0]);
+        if (data.snapshots && data.snapshots.length > 0) {
+          setAvailableSnapshots(data.snapshots);
+
+          if (isLiveMode) {
+            const latestTS = data.snapshots[0];
+            const dateObj = new Date(latestTS);
+            setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
+            setSnapshotTime(latestTS);
+            fetchCategoryData(latestTS);
           } else {
-            setIsLiveMode(true);
+            const snapshotsForSameDate = data.snapshots.filter(ts =>
+              new Date(ts).toLocaleDateString('en-CA') === snapshotDate
+            );
+            if (snapshotDate && snapshotsForSameDate.length > 0) {
+              setSnapshotTime(snapshotsForSameDate[0]);
+              fetchCategoryData(snapshotsForSameDate[0]);
+            } else {
+              // If date not found for this pincode, reset to live
+              setIsLiveMode(true);
+              // Re-run for live mode (or just let the effect re-run if we depend on isLiveMode?)
+              // Better to just force fetch live data here
+              const latestTS = data.snapshots[0];
+              const dateObj = new Date(latestTS);
+              setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
+              setSnapshotTime(latestTS);
+              fetchCategoryData(latestTS);
+            }
           }
+        } else {
+          // No snapshots found for this pincode/category
+          setAvailableSnapshots([]);
+          setSnapshotTime('');
+          setSnapshotDate('');
+          setProducts([]);
+          setLoading(false);
         }
-      } else {
-        // If no snapshots found, turn off loading directly (as fetchCategoryData won't be called)
+      } catch (err) {
+        console.error("Error fetching snapshots:", err);
+        setAvailableSnapshots([]);
         setLoading(false);
       }
     };
+
     fetchSnapshots();
   }, [category, pincode, isLiveMode]);
 
