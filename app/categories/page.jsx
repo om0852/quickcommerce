@@ -352,8 +352,11 @@ export default function CategoriesPage() {
 
     // 1. Search Filter
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(p => p.name.toLowerCase().includes(q));
+      const tokens = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+      result = result.filter(p => {
+        const nameLower = p.name.toLowerCase();
+        return tokens.every(token => nameLower.includes(token));
+      });
     }
 
     // 2. Platform Filter

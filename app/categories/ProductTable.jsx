@@ -1,17 +1,5 @@
+import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-
-// ... (in imports)
-
-// ... (inside component)
-platformCounts && platformCounts[p] === 0 ? (
-    <Tooltip title="Unserviceable">
-        <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-full border border-rose-100 whitespace-nowrap cursor-help">
-            U/S
-        </span>
-    </Tooltip>
-) : (
-    <span className="text-sm text-neutral-400 italic">--</span>
-)
 import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search, X } from 'lucide-react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -284,9 +272,11 @@ const ProductTable = React.memo(function ProductTable({
                                                     </div>
                                                 ) : (
                                                     platformCounts && platformCounts[p] === 0 ? (
-                                                        <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-full border border-rose-100 whitespace-nowrap">
-                                                            U/S
-                                                        </span>
+                                                        <Tooltip title="Unserviceable">
+                                                            <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-full border border-rose-100 whitespace-nowrap cursor-help">
+                                                                U/S
+                                                            </span>
+                                                        </Tooltip>
                                                     ) : (
                                                         <span className="text-sm text-neutral-400 italic">--</span>
                                                     )
