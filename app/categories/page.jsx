@@ -646,7 +646,7 @@ export default function CategoriesPage() {
               {!isLiveMode && (
                 <button
                   onClick={() => setIsLiveMode(true)}
-                  className="mt-6 p-2 text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors"
+                  className="mt-6 p-2 text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors cursor-pointer"
                   title="Return to Live Mode"
                 >
                   <RefreshCw size={18} />
@@ -658,7 +658,7 @@ export default function CategoriesPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => fetchCategoryData()}
-                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all"
+                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all cursor-pointer"
                 title="Refresh Data"
               >
                 <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
@@ -668,7 +668,7 @@ export default function CategoriesPage() {
 
               <button
                 onClick={() => setIsExportOpen(true)}
-                className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
+                className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm cursor-pointer"
               >
                 <Download size={16} />
                 Export
@@ -691,7 +691,7 @@ export default function CategoriesPage() {
                       setCurrentPage(1);
                     }}
                     className={cn(
-                      "px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap",
+                      "px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer",
                       platformFilter === opt.value
                         ? "bg-neutral-900 text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -725,7 +725,7 @@ export default function CategoriesPage() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={cn(
-                  "px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize",
+                  "px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize cursor-pointer",
                   activeTab === tab
                     ? "bg-neutral-900 text-white shadow-sm"
                     : "text-neutral-500 hover:text-neutral-700 hover:bg-gray-100"
@@ -780,7 +780,7 @@ export default function CategoriesPage() {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(c => c - 1)}
-                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
+                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
               >
                 <ArrowRight size={18} className="rotate-180" />
               </button>
@@ -788,7 +788,7 @@ export default function CategoriesPage() {
               <button
                 disabled={currentPage >= Math.ceil(sortedProducts.length / ITEMS_PER_PAGE)}
                 onClick={() => setCurrentPage(c => c + 1)}
-                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
+                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
               >
                 <ArrowRight size={18} />
               </button>
