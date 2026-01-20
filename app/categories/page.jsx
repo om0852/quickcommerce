@@ -13,7 +13,7 @@ import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianG
 
 
 
-import categoriesData from '@/data/categories_with_urls.json';
+import categoriesData from '../utils/categories_with_urls.json';
 
 // Defined outside component to prevent re-creation
 
@@ -77,7 +77,7 @@ export default function CategoriesPage() {
     { label: 'Blinkit', value: 'blinkit' },
     { label: 'DMart', value: 'dmart' },
     { label: 'Flipkart', value: 'flipkartMinutes' },
-    { label: 'Swiggy', value: 'instamart' }
+    { label: 'Instamart', value: 'instamart' }
   ];
 
   // Calculate platform counts
@@ -686,7 +686,10 @@ export default function CategoriesPage() {
                 {PLATFORM_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
-                    onClick={() => setPlatformFilter(opt.value)}
+                    onClick={() => {
+                      setPlatformFilter(opt.value);
+                      setCurrentPage(1);
+                    }}
                     className={cn(
                       "px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap",
                       platformFilter === opt.value
