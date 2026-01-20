@@ -32,9 +32,12 @@ export async function GET(request) {
       // Optional Robustness: Verify this timestamp actually exists for this category/pincode
       // This prevents returning an empty array if the frontend sends a slightly mismatched time.
       const exactBatch = await ProductSnapshot.findOne({
-        category,
         pincode,
-        scrapedAt: searchDate
+        scrapedAt: searchDate,
+        $or: [
+          { category: category },
+          { officialCategory: category }
+        ]
       }).select('scrapedAt');
 
       if (!exactBatch) {
@@ -50,9 +53,13 @@ export async function GET(request) {
 
     } else {
       // LIVE MODE: Find the absolute latest scraping timestamp
+      // We need to match EITHER category OR officialCategory
       const latestSnapshot = await ProductSnapshot.findOne({
-        category,
-        pincode
+        pincode,
+        $or: [
+          { category: category },
+          { officialCategory: category }
+        ]
       }).sort({ scrapedAt: -1 });
 
       if (!latestSnapshot) {
@@ -72,10 +79,16 @@ export async function GET(request) {
     // 3. FETCH PRODUCTS FOR THAT SPECIFIC SLOT ONLY
     // The key here is 'scrapedAt: targetScrapedAt'. 
     // This acts as a strict firewall, ensuring no data from previous/future batches appears.
+    // 3. FETCH PRODUCTS FOR THAT SPECIFIC SLOT ONLY
+    // The key here is 'scrapedAt: targetScrapedAt'. 
+    // This acts as a strict firewall, ensuring no data from previous/future batches appears.
     const snapshots = await ProductSnapshot.find({
-      category,
       pincode,
-      scrapedAt: targetScrapedAt
+      scrapedAt: targetScrapedAt,
+      $or: [
+        { category: category },
+        { officialCategory: category }
+      ]
     }).sort({ platform: 1, ranking: 1 });
 
     // --- (Rest of your processing logic remains the same) ---

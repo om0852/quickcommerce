@@ -607,7 +607,7 @@ export default function CategoriesPage() {
           <div className="flex items-center justify-between gap-4">
             {/* Left: Selectors */}
             <div className="flex items-center gap-4">
-              <div className="w-64 relative z-50">
+              <div className="w-64 relative z-[100]">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Category</label>
                 <CustomDropdown
                   value={category}
@@ -619,13 +619,13 @@ export default function CategoriesPage() {
                   options={CATEGORY_OPTIONS}
                 />
               </div>
-              <div className="w-48 relative z-40">
+              <div className="w-48 relative z-[90]">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Region</label>
                 <CustomDropdown value={pincode} onChange={setPincode} options={PINCODE_OPTIONS} />
               </div>
 
               {/* Snapshot Selectors */}
-              <div className="w-40 relative z-30 mr-4">
+              <div className="w-40 relative z-[80] mr-4">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Date</label>
                 <CustomDropdown
                   value={snapshotDate}
@@ -635,7 +635,7 @@ export default function CategoriesPage() {
                   minimal
                 />
               </div>
-              <div className="w-32 relative z-20">
+              <div className="w-32 relative z-[70]">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Time</label>
                 <CustomDropdown
                   value={snapshotTime}

@@ -299,7 +299,7 @@ const ProductTable = React.memo(function ProductTable({
             {/* Loading Overlay */}
             {
                 loading && (
-                    <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-50 flex items-center justify-center rounded-xl">
+                    <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-35 flex items-center justify-center rounded-xl">
                         <div className="flex flex-col items-center gap-3">
                             <div className="animate-spin text-neutral-900">
                                 <RefreshCw size={32} />
