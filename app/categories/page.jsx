@@ -749,6 +749,7 @@ export default function CategoriesPage() {
                 onProductClick={handleProductClick}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
+                platformCounts={platformCounts}
               />
             </div>
           )}

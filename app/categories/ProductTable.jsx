@@ -62,7 +62,8 @@ const ProductTable = React.memo(function ProductTable({
     onProductClick,
     loading,
     searchQuery,
-    onSearchChange
+    onSearchChange,
+    platformCounts
 }) {
     return (
         <Paper
@@ -241,7 +242,6 @@ const ProductTable = React.memo(function ProductTable({
                                                             )}
                                                         </div>
                                                         {/* Ad Status - New Line */}
-                                                        {/* Ad Status - New Line */}
                                                         {data.isAd && (
                                                             <div className="mt-1">
                                                                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-green-50 text-green-700 border-green-200">
@@ -265,7 +265,13 @@ const ProductTable = React.memo(function ProductTable({
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-sm text-neutral-400 italic">--</span>
+                                                    platformCounts && platformCounts[p] === 0 ? (
+                                                        <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-full border border-rose-100 whitespace-nowrap">
+                                                            U/S
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-sm text-neutral-400 italic">--</span>
+                                                    )
                                                 )}
                                             </TableCell>
                                         );
