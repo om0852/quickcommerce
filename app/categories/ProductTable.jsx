@@ -273,7 +273,7 @@ const ProductTable = React.memo(function ProductTable({
                                                 ) : (
                                                     platformCounts && platformCounts[p] === 0 ? (
                                                         <Tooltip title="Unserviceable">
-                                                            <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-full border border-rose-100 whitespace-nowrap cursor-help">
+                                                            <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-full border border-rose-100 whitespace-nowrap cursor-default">
                                                                 U/S
                                                             </span>
                                                         </Tooltip>
