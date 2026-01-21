@@ -1,5 +1,29 @@
-"use client"
-import React, { useState, useEffect, useMemo } from 'react';
+// ... (existing code, ensure imports)
+import { useSearchParams } from 'next/navigation'; // Add import if not exists, wait, it's a client component.
+// Actually, I should check if useSearchParams is imported. 
+// It's not in the file I saw. I need to add it.
+
+// Let's assume I need to do a broader replacement or inserts.
+// But wait, page.jsx is huge. I should inspect imports first.
+
+return (
+  // ... existing JSX
+  <ProductDetailsDialog
+    isOpen={isDetailsOpen}
+    onClose={() => setIsDetailsOpen(false)}
+    category={category}
+    pincode={pincode}
+    platformFilter={platformFilter}
+    historyData={historyData}
+    historyLoading={historyLoading}
+    stockData={stockData}
+    selectedProduct={selectedProduct}
+    isAdmin={searchParams?.get('admin') === 'true'} // Wait, I need to get searchParams via hook or props
+  />
+  // ...
+);
+// STOP. I need to see the file imports and component definition again to do this cleanly.
+
 import { Switch } from '@/components/ui/switch';
 import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight } from 'lucide-react';
 import AnalyticsTab from './AnalyticsTab';
@@ -31,6 +55,9 @@ export default function CategoriesPage() {
     label: cat,
     value: cat
   }));
+
+  const searchParams = useSearchParams();
+  const isAdmin = searchParams.get('admin') === 'true';
 
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0]?.value || 'Fruits & Vegetables');
   const [pincode, setPincode] = useState('201303');
@@ -817,6 +844,7 @@ export default function CategoriesPage() {
         historyLoading={historyLoading}
         stockData={stockData}
         selectedProduct={selectedProduct}
+        isAdmin={isAdmin}
       />
 
 

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
-import { mergeProductsAcrossPlatforms } from '@/lib/productMatching';
+import ProductGrouping from '@/models/ProductGrouping';
 
 export async function GET(request) {
   try {
@@ -25,12 +25,9 @@ export async function GET(request) {
     // 2. DECIDE WHICH TIMESTAMP TO USE (SLOT SELECTION)
     if (requestedTimestamp) {
       // TIME TRAVEL MODE
-      // We parse the requested date. 
-      // CRITICAL: This date must match the DB 'scrapedAt' exactly (ms precision).
       const searchDate = new Date(requestedTimestamp);
 
-      // Optional Robustness: Verify this timestamp actually exists for this category/pincode
-      // This prevents returning an empty array if the frontend sends a slightly mismatched time.
+      // Verify this timestamp actually exists for this category/pincode
       const exactBatch = await ProductSnapshot.findOne({
         pincode,
         scrapedAt: searchDate,
@@ -53,7 +50,6 @@ export async function GET(request) {
 
     } else {
       // LIVE MODE: Find the absolute latest scraping timestamp
-      // We need to match EITHER category OR officialCategory
       const latestSnapshot = await ProductSnapshot.findOne({
         pincode,
         $or: [
@@ -76,12 +72,22 @@ export async function GET(request) {
       console.log(`🔴 Live Mode: Fetching latest snapshot for ${targetScrapedAt.toISOString()}`);
     }
 
-    // 3. FETCH PRODUCTS FOR THAT SPECIFIC SLOT ONLY
-    // The key here is 'scrapedAt: targetScrapedAt'. 
-    // This acts as a strict firewall, ensuring no data from previous/future batches appears.
-    // 3. FETCH PRODUCTS FOR THAT SPECIFIC SLOT ONLY
-    // The key here is 'scrapedAt: targetScrapedAt'. 
-    // This acts as a strict firewall, ensuring no data from previous/future batches appears.
+    // 3. FETCH GROUPED DATA
+    // First, try to fetch from ProductGrouping
+    const groups = await ProductGrouping.find({
+      category: category
+    });
+
+    // We need to fetch snapshots for the specific timestamp
+    // Get all product IDs from the groups
+    const productIdsInGroups = [];
+    groups.forEach(group => {
+      group.products.forEach(p => {
+        productIdsInGroups.push(p.productId);
+      });
+    });
+
+    // Fetch snapshots for these products at the target timestamp
     const snapshots = await ProductSnapshot.find({
       pincode,
       scrapedAt: targetScrapedAt,
@@ -89,70 +95,164 @@ export async function GET(request) {
         { category: category },
         { officialCategory: category }
       ]
-    }).sort({ platform: 1, ranking: 1 });
+    });
 
-    // --- (Rest of your processing logic remains the same) ---
-
-    // Group products by platform
-    const productsByPlatform = {
-      zepto: [],
-      blinkit: [],
-      jiomart: [],
-      dmart: [],
-      flipkartMinutes: [],
-      instamart: []
-    };
-
+    // Create a map of snapshots for easy lookup: platform:productId -> snapshot
+    const snapshotMap = {};
     snapshots.forEach(snap => {
-      if (productsByPlatform[snap.platform]) {
-        productsByPlatform[snap.platform].push({
-          productId: snap.productId,
-          productName: snap.productName,
-          productImage: snap.productImage,
-          productWeight: snap.productWeight,
-          rating: snap.rating,
-          currentPrice: snap.currentPrice,
-          originalPrice: snap.originalPrice,
-          discountPercentage: snap.discountPercentage,
-          ranking: snap.ranking,
-          isOutOfStock: snap.isOutOfStock,
-          productUrl: snap.productUrl,
-          quantity: snap.quantity,
-          deliveryTime: snap.deliveryTime,
-          isAd: snap.isAd,
-          officialCategory: snap.officialCategory,
-          officialSubCategory: snap.officialSubCategory,
-          subCategory: snap.subCategory,
-          combo: snap.combo,
-          scrapedAt: snap.scrapedAt
-        });
+      const key = `${snap.platform}:${snap.productId}`;
+      snapshotMap[key] = snap;
+    });
+
+    const mergedProducts = [];
+    const usedSnapshotIds = new Set();
+
+    // Process Groups
+    groups.forEach(group => {
+      const productObj = {
+        groupingId: group.groupingId,
+        name: group.primaryName, // Use primary name from group
+        image: group.primaryImage,
+        weight: group.primaryWeight,
+        // Initialize platform buckets
+        zepto: null,
+        blinkit: null,
+        jiomart: null,
+        dmart: null,
+        flipkartMinutes: null,
+        instamart: null,
+        // Default fields to be populated from the "best" snapshot if needed
+        officialCategory: group.category,
+        officialSubCategory: null,
+        scrapedAt: targetScrapedAt,
+        isGrouped: true
+      };
+
+      let hasData = false;
+
+      group.products.forEach(p => {
+        const key = `${p.platform}:${p.productId}`;
+        const snap = snapshotMap[key];
+
+        if (snap) {
+          usedSnapshotIds.add(snap._id.toString());
+          hasData = true;
+
+          // Populate platform specific data
+          productObj[p.platform] = {
+            productId: snap.productId,
+            productName: snap.productName, // Keep original name per platform
+            productImage: snap.productImage,
+            productWeight: snap.productWeight,
+            rating: snap.rating,
+            currentPrice: snap.currentPrice,
+            originalPrice: snap.originalPrice,
+            discountPercentage: snap.discountPercentage,
+            ranking: snap.ranking,
+            isOutOfStock: snap.isOutOfStock,
+            productUrl: snap.productUrl,
+            quantity: snap.quantity,
+            deliveryTime: snap.deliveryTime,
+            isAd: snap.isAd,
+            officialCategory: snap.officialCategory,
+            officialSubCategory: snap.officialSubCategory,
+            subCategory: snap.subCategory,
+            combo: snap.combo,
+            scrapedAt: snap.scrapedAt
+          };
+
+          // If main name/image is missing (should stick to group defaults, but fallback just in case)
+          if (!productObj.name) productObj.name = snap.productName;
+          if (!productObj.image) productObj.image = snap.productImage;
+          if (!productObj.officialSubCategory) productObj.officialSubCategory = snap.officialSubCategory;
+        }
+      });
+
+      if (hasData) {
+        mergedProducts.push(productObj);
       }
     });
 
-    const mergedProducts = mergeProductsAcrossPlatforms(
-      productsByPlatform.zepto,
-      productsByPlatform.blinkit,
-      productsByPlatform.jiomart,
-      productsByPlatform.dmart,
-      productsByPlatform.flipkartMinutes,
-      productsByPlatform.instamart
-    );
+    // 4. Handle Ungrouped Products (Optional but good for completeness)
+    snapshots.forEach(snap => {
+      if (!usedSnapshotIds.has(snap._id.toString())) {
+        // Check if we already have a partial product for this? 
+        // Logic: mergeProductsAcrossPlatforms normally handles this by matching names.
+        // Here we are strictly using the Grouping collection. 
+        // If a product is NOT in any group in the DB, it should ideally be treated as a standalone item.
+        // However, for this specific task "based on this grouping data", strictly showing groups might be safer.
+        // BUT, if the grouping data is incomplete, we lose products.
+        // Let's create a standalone entry for it.
+
+        const productObj = {
+          groupingId: null,
+          name: snap.productName,
+          image: snap.productImage,
+          weight: snap.productWeight,
+          // Platforms
+          [snap.platform]: {
+            productId: snap.productId,
+            productName: snap.productName,
+            productImage: snap.productImage,
+            productWeight: snap.productWeight,
+            rating: snap.rating,
+            currentPrice: snap.currentPrice,
+            originalPrice: snap.originalPrice,
+            discountPercentage: snap.discountPercentage,
+            ranking: snap.ranking,
+            isOutOfStock: snap.isOutOfStock,
+            productUrl: snap.productUrl,
+            quantity: snap.quantity,
+            deliveryTime: snap.deliveryTime,
+            isAd: snap.isAd,
+            officialCategory: snap.officialCategory,
+            officialSubCategory: snap.officialSubCategory,
+            subCategory: snap.subCategory,
+            combo: snap.combo,
+            scrapedAt: snap.scrapedAt
+          },
+          officialCategory: snap.officialCategory,
+          officialSubCategory: snap.officialSubCategory || snap.subCategory,
+          scrapedAt: targetScrapedAt,
+          isGrouped: false
+        };
+
+        // Check if we already added a standalone product with this name? 
+        // The mergeProductsAcrossPlatforms helper did name matching. 
+        // We can try to do a simple name match here if needed, or just push.
+        // For now, let's just push to ensure visibility.
+        mergedProducts.push(productObj);
+      }
+    });
+
+    // Calculate counts
+    const counts = {
+      zepto: 0,
+      blinkit: 0,
+      jiomart: 0,
+      dmart: 0,
+      flipkartMinutes: 0,
+      instamart: 0
+    };
+
+    mergedProducts.forEach(p => {
+      if (p.zepto) counts.zepto++;
+      if (p.blinkit) counts.blinkit++;
+      if (p.jiomart) counts.jiomart++;
+      if (p.dmart) counts.dmart++;
+      if (p.flipkartMinutes) counts.flipkartMinutes++;
+      if (p.instamart) counts.instamart++;
+    });
+
 
     return NextResponse.json({
       success: true,
       category,
       pincode,
-      lastUpdated: targetScrapedAt, // Return the exact timestamp used
+      lastUpdated: targetScrapedAt,
       products: mergedProducts,
       totalProducts: mergedProducts.length,
-      platformCounts: {
-        zepto: productsByPlatform.zepto.length,
-        blinkit: productsByPlatform.blinkit.length,
-        jiomart: productsByPlatform.jiomart.length,
-        dmart: productsByPlatform.dmart.length,
-        flipkartMinutes: productsByPlatform.flipkartMinutes.length,
-        instamart: productsByPlatform.instamart.length
-      }
+      platformCounts: counts
     });
 
   } catch (error) {

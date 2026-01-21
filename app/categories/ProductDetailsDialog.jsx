@@ -10,7 +10,8 @@ function ProductDetailsDialog({
     historyData,
     historyLoading,
     stockData,
-    selectedProduct
+    selectedProduct,
+    isAdmin = false
 }) {
     if (!isOpen || !selectedProduct) return null;
 
@@ -32,10 +33,19 @@ function ProductDetailsDialog({
                 <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
                     <div>
                         <h2 className="text-xl font-bold text-neutral-900">{selectedProduct.name}</h2>
-                        <div className="flex gap-2 text-xs text-neutral-500 mt-1">
-                            <span>{category}</span>
-                            <span>•</span>
-                            <span>{pincode}</span>
+                        <div className="flex flex-col gap-1 mt-1">
+                            <div className="flex gap-2 text-xs text-neutral-500">
+                                <span>{category}</span>
+                                <span>•</span>
+                                <span>{pincode}</span>
+                            </div>
+                            {isAdmin && selectedProduct.groupingId && (
+                                <div className="mt-1 flex items-center gap-2">
+                                    <span className="bg-neutral-100 text-neutral-600 text-[10px] font-mono px-1.5 py-0.5 rounded border border-neutral-200">
+                                        GID: {selectedProduct.groupingId}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <button
@@ -113,6 +123,13 @@ function ProductDetailsDialog({
                                                 <span className="font-medium text-neutral-900 line-clamp-2" title={data.name}>
                                                     {data.name}
                                                 </span>
+                                                {isAdmin && (
+                                                    <div className="mt-1">
+                                                        <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text" title="Product ID">
+                                                            {data.productId}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex justify-between items-baseline">
                                                 <span className="text-neutral-500">Price:</span>

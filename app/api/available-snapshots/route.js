@@ -11,9 +11,16 @@ export async function GET(request) {
     await dbConnect();
 
     // 1. Build a dynamic filter
+    // 1. Build a dynamic filter
     const filter = {};
-    if (category) filter.category = category;
-    if (pincode) filter.pincode = pincode;
+    if (pincode) filter.pincode = pincode; // Pincode is mandatory constraint if provided
+
+    if (category) {
+      filter.$or = [
+        { category: category },
+        { officialCategory: category }
+      ];
+    }
 
     // 2. Fetch distinct timestamps based on BOTH category and pincode
     const timestamps = await ProductSnapshot.distinct('scrapedAt', filter);
@@ -21,9 +28,9 @@ export async function GET(request) {
     // 3. Sort them: Newest first
     const sortedSnapshots = timestamps.sort((a, b) => new Date(b) - new Date(a));
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      snapshots: sortedSnapshots 
+      snapshots: sortedSnapshots
     });
 
   } catch (error) {

@@ -10,7 +10,7 @@ import ProductTable from '../categories/ProductTable';
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
-import categoriesData from '@/data/categories_with_urls.json';
+import categoriesData from '../utils/categories_with_urls.json';
 
 export default function TestingPage() {
   // Generate options from the JSON keys (Master Categories)
