@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 
@@ -21,7 +21,7 @@ import categoriesData from '../utils/categories_with_urls.json';
 // Defined outside component to prevent re-creation
 
 
-export default function CategoriesPage() {
+function CategoriesPageContent() {
   // ... (keep existing state)
 
   // Memoize fixed header content
@@ -841,5 +841,13 @@ export default function CategoriesPage() {
 
 
     </div >
+  );
+}
+
+export default function CategoriesPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-900"></div></div>}>
+      <CategoriesPageContent />
+    </Suspense>
   );
 }
