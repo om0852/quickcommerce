@@ -14,13 +14,20 @@ const ProductGroupingSchema = new mongoose.Schema({
         platform: {
             type: String,
             required: true,
-            enum: ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkart']
+            enum: ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes', 'flipkart'] // Added flipkartMinutes
         },
         productId: {
             type: String,
             required: true
         }
     }],
+
+    // Category for this group (Enforce constraint)
+    category: {
+        type: String,
+        required: true,
+        index: true
+    },
 
     // Metadata (snapshot from the first/primary product for easy display)
     primaryName: String,
@@ -31,6 +38,13 @@ const ProductGroupingSchema = new mongoose.Schema({
     isManuallyVerified: {
         type: Boolean,
         default: false
+    },
+
+    // Count of products in this group (for sorting)
+    totalProducts: {
+        type: Number,
+        default: 0,
+        index: true
     }
 
 }, {
@@ -40,5 +54,6 @@ const ProductGroupingSchema = new mongoose.Schema({
 // Index for fast lookup of a specific product to find its group
 ProductGroupingSchema.index({ 'products.platform': 1, 'products.productId': 1 });
 ProductGroupingSchema.index({ primaryName: 'text' }); // Text index for candidate search
+ProductGroupingSchema.index({ totalProducts: -1 }); // Index for sorting by popularity/count
 
 export default mongoose.models.ProductGrouping || mongoose.model('ProductGrouping', ProductGroupingSchema);
