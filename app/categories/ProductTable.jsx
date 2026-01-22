@@ -223,7 +223,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     <ProductImage product={product} />
                                                 </div>
                                                 <div className="w-full min-w-0">
-                                                    <div className="text-sm font-medium text-neutral-900 truncate" title={product.name}>
+                                                    <div className="text-sm font-medium text-neutral-900 whitespace-normal break-words" title={product.name}>
                                                         {product.name}
                                                         {product.weight && <span className="text-neutral-500 font-normal"> - ({product.weight})</span>}
                                                     </div>

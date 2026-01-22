@@ -123,13 +123,11 @@ function ProductDetailsDialog({
                                                 <span className="font-medium text-neutral-900 line-clamp-2" title={data.name}>
                                                     {data.name}
                                                 </span>
-                                                {isAdmin && (
-                                                    <div className="mt-1">
-                                                        <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text" title="Product ID">
-                                                            {data.productId}
-                                                        </span>
-                                                    </div>
-                                                )}
+                                                <div className="mt-1">
+                                                    <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text" title="Product ID">
+                                                        PID:-{data.productId}
+                                                    </span>
+                                                </div>
                                             </div>
                                             <div className="flex justify-between items-baseline">
                                                 <span className="text-neutral-500">Price:</span>
