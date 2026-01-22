@@ -1,3 +1,4 @@
+"use client"
 // ... (existing code, ensure imports)
 import { useSearchParams } from 'next/navigation'; // Add import if not exists, wait, it's a client component.
 // Actually, I should check if useSearchParams is imported. 
