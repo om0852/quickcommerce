@@ -1,3 +1,4 @@
+"use client"
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Check, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
