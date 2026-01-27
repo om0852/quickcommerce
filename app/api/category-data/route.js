@@ -173,55 +173,64 @@ export async function GET(request) {
       }
     });
 
-    // 4. Handle Ungrouped Products (Optional but good for completeness)
+    // 4. Handle Ungrouped Products
     snapshots.forEach(snap => {
       if (!usedSnapshotIds.has(snap._id.toString())) {
-        // Check if we already have a partial product for this? 
-        // Logic: mergeProductsAcrossPlatforms normally handles this by matching names.
-        // Here we are strictly using the Grouping collection. 
-        // If a product is NOT in any group in the DB, it should ideally be treated as a standalone item.
-        // However, for this specific task "based on this grouping data", strictly showing groups might be safer.
-        // BUT, if the grouping data is incomplete, we lose products.
-        // Let's create a standalone entry for it.
+        // Try to find an existing product (grouped or previously added ungrouped) with the same name
+        // This acts as a dynamic "soft grouping" to prevent duplicates on the frontend
+        const existingProduct = mergedProducts.find(p => p.name.trim().toLowerCase() === snap.productName.trim().toLowerCase());
 
-        const productObj = {
-          groupingId: null,
-          name: snap.productName,
-          image: snap.productImage,
-          weight: snap.productWeight,
-          // Platforms
-          [snap.platform]: {
-            productId: snap.productId,
-            productName: snap.productName,
-            productImage: snap.productImage,
-            productWeight: snap.productWeight,
-            rating: snap.rating,
-            currentPrice: snap.currentPrice,
-            originalPrice: snap.originalPrice,
-            discountPercentage: snap.discountPercentage,
-            ranking: snap.ranking,
-            isOutOfStock: snap.isOutOfStock,
-            productUrl: snap.productUrl,
-            quantity: snap.quantity,
-            deliveryTime: snap.deliveryTime,
-            isAd: snap.isAd,
-            officialCategory: snap.officialCategory,
-            officialSubCategory: snap.officialSubCategory,
-            subCategory: snap.subCategory,
-            combo: snap.combo,
-            scrapedAt: snap.scrapedAt
-          },
+        const platformData = {
+          productId: snap.productId,
+          productName: snap.productName,
+          productImage: snap.productImage,
+          productWeight: snap.productWeight,
+          rating: snap.rating,
+          currentPrice: snap.currentPrice,
+          originalPrice: snap.originalPrice,
+          discountPercentage: snap.discountPercentage,
+          ranking: snap.ranking,
+          isOutOfStock: snap.isOutOfStock,
+          productUrl: snap.productUrl,
+          quantity: snap.quantity,
+          deliveryTime: snap.deliveryTime,
+          isAd: snap.isAd,
           officialCategory: snap.officialCategory,
-          officialSubCategory: snap.officialSubCategory || snap.subCategory,
-          scrapedAt: targetScrapedAt,
-          isGrouped: false
+          officialSubCategory: snap.officialSubCategory,
+          subCategory: snap.subCategory,
+          combo: snap.combo,
+          scrapedAt: snap.scrapedAt
         };
 
-        // Check if we already added a standalone product with this name? 
-        // The mergeProductsAcrossPlatforms helper did name matching. 
-        // We can try to do a simple name match here if needed, or just push.
-        // For now, let's just push to ensure visibility.
-        mergedProducts.push(productObj);
+        if (existingProduct) {
+          // Merge into existing product if that platform slot is empty
+          if (!existingProduct[snap.platform]) {
+            existingProduct[snap.platform] = platformData;
+          }
+        } else {
+          // Create new standalone entry
+          const productObj = {
+            groupingId: null,
+            name: snap.productName,
+            image: snap.productImage,
+            weight: snap.productWeight,
+            // Platforms
+            zepto: null,
+            blinkit: null,
+            jiomart: null,
+            dmart: null,
+            flipkartMinutes: null,
+            instamart: null,
+            // Populate current platform
+            [snap.platform]: platformData,
+
+            officialCategory: snap.officialCategory,
+            officialSubCategory: snap.officialSubCategory || snap.subCategory,
+            scrapedAt: targetScrapedAt,
+            isGrouped: false
+          };
+          mergedProducts.push(productObj);
+        }
       }
     });
 

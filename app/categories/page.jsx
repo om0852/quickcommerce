@@ -155,7 +155,30 @@ function CategoriesPageContent() {
 
       if (!response.ok) throw new Error(data.error || 'Failed to fetch category data');
 
-      setProducts(data.products || []);
+      // Deduplicate products on the client side to ensure no duplicates show up
+      // regardless of API behavior.
+      const rawProducts = data.products || [];
+      const uniqueMap = new Map();
+
+      rawProducts.forEach(p => {
+        if (!p.name) return;
+        const key = p.name.trim().toLowerCase();
+
+        if (uniqueMap.has(key)) {
+          // Merge missing platforms into existing entry
+          const existing = uniqueMap.get(key);
+          ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].forEach(platform => {
+            if (p[platform] && !existing[platform]) {
+              existing[platform] = p[platform];
+            }
+          });
+        } else {
+          uniqueMap.set(key, { ...p });
+        }
+      });
+
+      const uniqueProducts = Array.from(uniqueMap.values());
+      setProducts(uniqueProducts);
 
       if (!timeToFetch) {
         setLastUpdated(data.lastUpdated);
