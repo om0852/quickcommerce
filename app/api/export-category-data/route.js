@@ -12,6 +12,8 @@ import categoryData from '@/app/utils/categories_with_urls.json';
 
 // Build a quick lookup map for URL -> Official Category info
 const urlToCategoryMap = new Map();
+// Build a lookup map for Master Category -> Official Category info (Fallback)
+const masterCategoryMap = new Map();
 
 try {
     Object.keys(categoryData).forEach(masterCat => {
@@ -19,26 +21,59 @@ try {
         Object.keys(platforms).forEach(platform => {
             const items = platforms[platform];
             if (Array.isArray(items)) {
+                // For master category fallback, we just need the FIRST valid item for this platform+masterCategory
+                let firstValidItem = null;
+
                 items.forEach(item => {
+                    // Populate URL map (existing logic)
                     if (item.url) {
-                        // Normalize URL: remove query params for robust matching if needed, 
-                        // but strictly following user instructions we check "url". 
-                        // For now, we store exact URL and assume scraper keeps it intact.
-                        // Key: platform + '|' + url
-                        const key = `${platform}|${item.url.trim()}`;
-                        urlToCategoryMap.set(key, {
-                            officialCategory: item.officialCategory || item.officalCategory,
-                            officialSubCategory: item.officialSubCategory || item.officalSubCategory
-                        });
+                        try {
+                            let key;
+                            // Instamart relies on query params (e.g. ?categoryName=...) so we MUST preserve them.
+                            if (platform.toLowerCase() === 'instamart') {
+                                key = `${platform}|${item.url.trim().toLowerCase()}`;
+                            } else {
+                                // For others, normalize to origin+pathname
+                                const urlObj = new URL(item.url);
+                                const cleanUrl = urlObj.origin + urlObj.pathname;
+                                key = `${platform}|${cleanUrl.toLowerCase().trim()}`;
+                            }
+
+                            urlToCategoryMap.set(key, {
+                                officialCategory: item.officialCategory || item.officalCategory,
+                                officialSubCategory: item.officialSubCategory || item.officalSubCategory
+                            });
+                        } catch (e) {
+                            // Fallback for invalid URLs or relative paths if any
+                            const key = `${platform}|${item.url.trim().toLowerCase()}`;
+                            urlToCategoryMap.set(key, {
+                                officialCategory: item.officialCategory || item.officalCategory,
+                                officialSubCategory: item.officialSubCategory || item.officalSubCategory
+                            });
+                        }
+                    }
+
+                    if (!firstValidItem && (item.officialCategory || item.officalCategory)) {
+                        firstValidItem = item;
                     }
                 });
+
+                // Populate Master Category map
+                if (firstValidItem) {
+                    const masterKey = `${platform}|${masterCat}`;
+                    masterCategoryMap.set(masterKey, {
+                        officialCategory: firstValidItem.officialCategory || firstValidItem.officalCategory,
+                        officialSubCategory: firstValidItem.officialSubCategory || firstValidItem.officalSubCategory
+                    });
+                }
             }
         });
     });
-    console.log(`✅ Loaded ${urlToCategoryMap.size} URLs into category lookup map`);
+    console.log(`✅ Loaded ${urlToCategoryMap.size} URLs and ${masterCategoryMap.size} Master Categories into lookup maps`);
 } catch (err) {
     console.error('❌ Failed to build category lookup map:', err);
 }
+
 
 // Background processing function
 async function processExportInBackground(body) {
@@ -260,18 +295,40 @@ async function processExportInBackground(body) {
                                     rowData[`${p}_officialSubCategory`] = officialSubCategory || '-';
                                 } else {
                                     // Fallback lookup
-                                    const lookupKey = `${p}|${(product[p].categoryUrl || '').trim()}`;
-                                    const fallback = urlToCategoryMap.get(lookupKey);
+                                    let lookupKey = `${p}|${(product[p].categoryUrl || '').trim().toLowerCase()}`;
+                                    try {
+                                        if (product[p].categoryUrl && p.toLowerCase() !== 'instamart') {
+                                            const urlObj = new URL(product[p].categoryUrl);
+                                            const cleanUrl = urlObj.origin + urlObj.pathname;
+                                            lookupKey = `${p}|${cleanUrl.toLowerCase().trim()}`;
+                                        }
+                                    } catch (e) {
+                                        // Keep original key if parsing fails
+                                    }
 
+                                    const fallback = urlToCategoryMap.get(lookupKey);
                                     if (fallback) {
                                         rowData[`${p}_officialCategory`] = fallback.officialCategory || '-';
                                         rowData[`${p}_officialSubCategory`] = fallback.officialSubCategory || '-';
                                     } else {
-                                        rowData[`${p}_officialCategory`] = '-';
-                                        rowData[`${p}_officialSubCategory`] = '-';
+                                        // FINAL FALLBACK: Use Master Category
+                                        // product.category is the Master Category name (unreliable but best guess if passed correctly)
+                                        // However, in this loop structure we are iterating over `cat` (line 95) which IS the Master Category being exported.
+                                        // But wait, the inner loops might be mixing products?
+                                        // Line 137 queries by `category: cat`. So all products here belong to `cat`.
+
+                                        const masterKey = `${p}|${cat}`; // 'cat' is the master category from the outer loop
+                                        const masterFallback = masterCategoryMap.get(masterKey);
+
+                                        if (masterFallback) {
+                                            rowData[`${p}_officialCategory`] = masterFallback.officialCategory || '-';
+                                            rowData[`${p}_officialSubCategory`] = masterFallback.officialSubCategory || '-';
+                                        } else {
+                                            rowData[`${p}_officialCategory`] = '-';
+                                            rowData[`${p}_officialSubCategory`] = '-';
+                                        }
                                     }
                                 }
-
                             } else {
                                 rowData[`${p}_available`] = 'No';
                                 rowData[`${p}_price`] = null;
