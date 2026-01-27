@@ -29,11 +29,26 @@ function CategoriesPageContent() {
 
   // ... (rest of component)
 
-  // Generate options from the JSON keys (Master Categories)
-  const CATEGORY_OPTIONS = Object.keys(categoriesData).map(cat => ({
-    label: cat,
-    value: cat
-  }));
+  // Generate options from the JSON data
+  // The JSON structure is { "Platform": [ { masterCategory: "Name", ... } ] }
+  // We need to extract unique masterCategory values across all platforms
+  const CATEGORY_OPTIONS = useMemo(() => {
+    const allItems = Object.values(categoriesData).flat();
+    const uniqueCategories = [...new Set(allItems.map(item => item.masterCategory).filter(Boolean))].sort();
+
+    // Move 'Fruits & Vegetables' to the start if it exists
+    const prioritized = 'Fruits & Vegetables';
+    if (uniqueCategories.includes(prioritized)) {
+      const index = uniqueCategories.indexOf(prioritized);
+      uniqueCategories.splice(index, 1);
+      uniqueCategories.unshift(prioritized);
+    }
+
+    return uniqueCategories.map(cat => ({
+      label: cat,
+      value: cat
+    }));
+  }, []);
 
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get('admin') === 'true';
@@ -86,10 +101,21 @@ function CategoriesPageContent() {
     { label: 'Instamart', value: 'instamart' }
   ];
 
-  // Calculate platform counts
+  // Apply search filter first
+  const searchedProducts = useMemo(() => {
+    if (!searchQuery) return products;
+
+    const tokens = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+    return products.filter(p => {
+      const nameLower = p.name.toLowerCase();
+      return tokens.every(token => nameLower.includes(token));
+    });
+  }, [products, searchQuery]);
+
+  // Calculate platform counts from searched products
   const platformCounts = useMemo(() => {
     const counts = {
-      all: products.length,
+      all: searchedProducts.length,
       jiomart: 0,
       zepto: 0,
       blinkit: 0,
@@ -98,7 +124,7 @@ function CategoriesPageContent() {
       instamart: 0
     };
 
-    products.forEach(product => {
+    searchedProducts.forEach(product => {
       if (product.jiomart) counts.jiomart++;
       if (product.zepto) counts.zepto++;
       if (product.blinkit) counts.blinkit++;
@@ -108,7 +134,7 @@ function CategoriesPageContent() {
     });
 
     return counts;
-  }, [products]);
+  }, [searchedProducts]);
 
   const fetchCategoryData = async (customTimestamp = null) => {
     setLoading(true);
@@ -354,18 +380,9 @@ function CategoriesPageContent() {
   }, [snapshotDate, availableSnapshots]);
 
   const filteredProducts = useMemo(() => {
-    let result = products;
+    let result = searchedProducts;
 
-    // 1. Search Filter
-    if (searchQuery) {
-      const tokens = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
-      result = result.filter(p => {
-        const nameLower = p.name.toLowerCase();
-        return tokens.every(token => nameLower.includes(token));
-      });
-    }
-
-    // 2. Platform Filter
+    // Platform Filter
     if (platformFilter === 'all') {
       return result;
     }
@@ -381,7 +398,7 @@ function CategoriesPageContent() {
     }
 
     return result.filter(product => product[platformFilter]);
-  }, [products, platformFilter, showMissing, searchQuery]);
+  }, [searchedProducts, platformFilter, showMissing]);
 
   const sortedProducts = useMemo(() => {
     let sortableProducts = [...filteredProducts];
@@ -784,7 +801,7 @@ function CategoriesPageContent() {
         </div>
 
         {/* Footer/Pagination */}
-        {activeTab === 'products' && sortedProducts.length > ITEMS_PER_PAGE && (
+        {activeTab === 'products' && sortedProducts.length > 0 && (
           <div className="flex-none flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm">
             <span className="text-sm text-gray-600 font-medium">
               Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, sortedProducts.length)} - {Math.min(currentPage * ITEMS_PER_PAGE, sortedProducts.length)} of {sortedProducts.length} products

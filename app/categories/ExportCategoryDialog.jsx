@@ -68,7 +68,7 @@ export default function ExportCategoryDialog({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-[4px] transition-opacity duration-200">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[200] backdrop-blur-[4px] transition-opacity duration-200">
             <div className="bg-white rounded-xl w-[90%] max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}

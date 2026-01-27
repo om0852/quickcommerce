@@ -27,8 +27,8 @@ try {
                         // Key: platform + '|' + url
                         const key = `${platform}|${item.url.trim()}`;
                         urlToCategoryMap.set(key, {
-                            officialCategory: item.officialCategory,
-                            officialSubCategory: item.officialSubCategory
+                            officialCategory: item.officialCategory || item.officalCategory,
+                            officialSubCategory: item.officialSubCategory || item.officalSubCategory
                         });
                     }
                 });
