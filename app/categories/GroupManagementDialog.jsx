@@ -128,7 +128,8 @@ export default function GroupManagementDialog({
         if (productsInGroup && productsInGroup[p]) {
             platformItems.push({
                 ...productsInGroup[p],
-                srcKey: p // Store platform key for logic
+                srcKey: p, // Store platform key for logic
+                pincode: productsInGroup[p].pincode || currentPincode // Ensure pincode is present for accurate deletion
             });
         }
     });
@@ -279,6 +280,45 @@ export default function GroupManagementDialog({
                                     Delete Group
                                 </button>
                             </div>
+
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between mt-4">
+                                <div>
+                                    <p className="text-sm font-medium text-red-900">Delete Group & All Products</p>
+                                    <p className="text-xs text-red-600 mt-1">
+                                        <span className="font-bold">DESTRUCTIVE:</span> This will delete the group AND permanently delete all products inside it from the database.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={async () => {
+                                        if (confirm('⚠️ ARE YOU SURE? \n\nThis will PERMANENTLY DELETE current group and ALL its products from the database.\n\nThis action cannot be undone.')) {
+                                            setLoading(true);
+                                            try {
+                                                const res = await fetch('/api/grouping/delete-recursive', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        groupingId,
+                                                        products: platformItems // Pass the list of visible products
+                                                    })
+                                                });
+                                                const data = await res.json();
+                                                if (!res.ok) throw new Error(data.error);
+
+                                                alert(`Success: Deleted ${data.stats.deletedGroup} group and ${data.stats.deletedSnapshots} products.`);
+                                                onClose();
+                                                if (onUpdate) onUpdate();
+                                            } catch (err) {
+                                                setError(err.message);
+                                                setLoading(false);
+                                            }
+                                        }
+                                    }}
+                                    className="bg-red-900 hover:bg-black text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors"
+                                >
+                                    Delete Group & Products
+                                </button>
+                            </div>
+
                         </div>
                     </div>
 
