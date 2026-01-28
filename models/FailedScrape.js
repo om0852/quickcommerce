@@ -59,7 +59,8 @@ const FailedScrapeSchema = new mongoose.Schema({
     resolvedAt: Date,
     resolutionNote: String
 }, {
-    timestamps: true
+    timestamps: true,
+    suppressReservedKeysWarning: true
 });
 
 // Compound index for efficient querying
