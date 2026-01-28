@@ -243,6 +243,43 @@ export default function GroupManagementDialog({
                                 </p>
                             </div>
                         </div>
+
+                        {/* DANGER ZONE: Delete Entire Group */}
+                        <div className="mt-8 pt-8 border-t border-red-100">
+                            <h4 className="text-sm font-bold text-red-700 uppercase tracking-wider mb-2">Danger Zone</h4>
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-red-900">Delete this entire group</p>
+                                    <p className="text-xs text-red-600 mt-1">This will dissolve the group. Products will remain in the database but will be ungrouped.</p>
+                                </div>
+                                <button
+                                    onClick={async () => {
+                                        if (confirm('Are you sure you want to DELETE this entire group? all products inside it will be ungrouped.')) {
+                                            setLoading(true);
+                                            try {
+                                                const res = await fetch('/api/grouping/delete-group', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ groupingId })
+                                                });
+                                                const data = await res.json();
+                                                if (!res.ok) throw new Error(data.error);
+
+                                                alert('Group deleted successfully!');
+                                                onClose();
+                                                if (onUpdate) onUpdate();
+                                            } catch (err) {
+                                                setError(err.message);
+                                                setLoading(false);
+                                            }
+                                        }
+                                    }}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors"
+                                >
+                                    Delete Group
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
