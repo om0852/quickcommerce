@@ -133,12 +133,9 @@ function ProductDetailsDialog({
                                         {/* info section */}
                                         <div className="flex-1 space-y-2 text-sm">
                                             <div className="mb-2">
-                                                <span className="font-medium text-neutral-900 line-clamp-2" title={data.name}>
-                                                    {data.name}
-                                                </span>
-                                                <div className="mt-1 flex items-center gap-2">
+                                                <div className="flex items-center gap-2 mb-1">
                                                     <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text" title="Product ID">
-                                                        PID:-{data.productId}
+                                                        PID: {data.productId}
                                                     </span>
                                                     <button
                                                         onClick={() => handleCopy(data.productId)}
@@ -148,6 +145,9 @@ function ProductDetailsDialog({
                                                         {copiedId === data.productId ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
                                                     </button>
                                                 </div>
+                                                <span className="font-medium text-neutral-900 text-sm block" title={data.productName || data.name}>
+                                                    {data.productName || data.name}
+                                                </span>
                                             </div>
                                             <div className="flex justify-between items-baseline">
                                                 <span className="text-neutral-500">Price:</span>
@@ -188,6 +188,20 @@ function ProductDetailsDialog({
                                                 <span className="text-neutral-500">Delivery:</span>
                                                 <span className={`text-neutral-700 font-medium text-xs ${!data.deliveryTime ? 'italic text-neutral-400' : ''}`}>
                                                     {data.deliveryTime || 'N/A'}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-neutral-500">Rating:</span>
+                                                <span className={`text-neutral-700 font-medium text-xs ${!data.rating ? 'italic text-neutral-400' : ''}`}>
+                                                    {data.rating || 'N/A'}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-neutral-500">Ranking:</span>
+                                                <span className={`text-neutral-700 font-medium text-xs ${!data.ranking ? 'italic text-neutral-400' : ''}`}>
+                                                    {data.ranking || 'N/A'}
                                                 </span>
                                             </div>
                                         </div>
