@@ -66,7 +66,8 @@ const ProductTable = React.memo(function ProductTable({
     loading,
     searchQuery,
     onSearchChange,
-    platformCounts
+    platformCounts,
+    pincode // NEW Prop
 }) {
     // Check for admin param
     const [isAdmin, setIsAdmin] = useState(false);
@@ -353,6 +354,7 @@ const ProductTable = React.memo(function ProductTable({
                         // If we want auto-refresh, we can pass a callback from parent.
                         setManageGroup(null);
                     }}
+                    currentPincode={pincode} // Pass it down
                 />
             )}
         </>

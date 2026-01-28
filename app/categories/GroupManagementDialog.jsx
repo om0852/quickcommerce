@@ -9,13 +9,14 @@ export default function GroupManagementDialog({
     onClose,
     groupingId,
     productsInGroup, // Array of products already in this group (from merged data)
-    onUpdate // Callback to refresh data after changes
+    onUpdate, // Callback to refresh data after changes
+    currentPincode = '201303' // Default to 201303 if not provided
 }) {
     if (!isOpen) return null;
 
     const [loading, setLoading] = useState(false);
     const [addProductState, setAddProductState] = useState({
-        pincode: '201303', // Default
+        pincode: currentPincode, // Use passed prop as default
         platform: 'zepto',
         productId: ''
     });
@@ -25,10 +26,16 @@ export default function GroupManagementDialog({
     const PINCODE_OPTIONS = [
         { label: 'Delhi NCR — 201303', value: '201303' },
         { label: 'Navi Mumbai — 400706', value: '400706' },
+        { label: 'Delhi NCR — 201014', value: '201014' },
+        { label: 'Delhi NCR — 122008', value: '122008' },
+        { label: 'Delhi NCR — 122010', value: '122010' },
+        { label: 'Delhi NCR — 122016', value: '122016' },
         { label: 'Mumbai — 400070', value: '400070' },
         { label: 'Mumbai — 400703', value: '400703' },
         { label: 'Mumbai — 401101', value: '401101' },
-        { label: 'Mumbai — 401202', value: '401202' }
+        { label: 'Mumbai — 401202', value: '401202' },
+        { label: 'Delhi — 110001', value: '110001' },
+        { label: 'Delhi — 110075', value: '110075' }
     ];
 
     const PLATFORM_OPTIONS = [
@@ -157,7 +164,7 @@ export default function GroupManagementDialog({
                             <h4 className="text-sm sm:text-base font-bold text-neutral-900 uppercase tracking-wider">Current Products in Group</h4>
                             <span className="bg-neutral-900 text-white text-xs font-bold px-3 py-1 rounded-full">{platformItems.length} Items</span>
                         </div>
-                        
+
                         {platformItems.length === 0 ? (
                             <div className="p-8 text-center bg-neutral-50 rounded-lg border border-dashed border-neutral-300">
                                 <p className="text-neutral-500 text-sm">No products in this group yet. Add one below!</p>

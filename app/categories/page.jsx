@@ -88,7 +88,9 @@ function CategoriesPageContent() {
     { label: 'Mumbai — 400070', value: '400070' },
     { label: 'Mumbai — 400703', value: '400703' },
     { label: 'Mumbai — 401101', value: '401101' },
-    { label: 'Mumbai — 401202', value: '401202' }
+    { label: 'Mumbai — 401202', value: '401202' },
+    { label: 'Delhi — 110001', value: '110001' },
+    { label: 'Delhi — 110075', value: '110075' }
   ];
 
   const PLATFORM_OPTIONS = [
@@ -802,6 +804,7 @@ function CategoriesPageContent() {
                   setCurrentPage(1);
                 }}
                 platformCounts={platformCounts}
+                pincode={pincode}
               />
             </div>
           )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ExternalLink, Loader2 } from 'lucide-react';
+import { X, ExternalLink, Loader2, Copy, Check } from 'lucide-react';
 
 function ProductDetailsDialog({
     isOpen,
@@ -17,6 +17,19 @@ function ProductDetailsDialog({
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
     const availablePlatforms = platforms.filter(p => selectedProduct[p]);
+
+    const [toast, setToast] = React.useState(null);
+    const [copiedId, setCopiedId] = React.useState(null);
+
+    const handleCopy = (text) => {
+        navigator.clipboard.writeText(text);
+        setToast('Product ID Copied!');
+        setCopiedId(text);
+        setTimeout(() => {
+            setToast(null);
+            setCopiedId(null);
+        }, 2000);
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -123,10 +136,17 @@ function ProductDetailsDialog({
                                                 <span className="font-medium text-neutral-900 line-clamp-2" title={data.name}>
                                                     {data.name}
                                                 </span>
-                                                <div className="mt-1">
+                                                <div className="mt-1 flex items-center gap-2">
                                                     <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text" title="Product ID">
                                                         PID:-{data.productId}
                                                     </span>
+                                                    <button
+                                                        onClick={() => handleCopy(data.productId)}
+                                                        className="text-neutral-400 hover:text-neutral-600 transition-colors p-0.5 rounded cursor-pointer"
+                                                        title="Copy PID"
+                                                    >
+                                                        {copiedId === data.productId ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+                                                    </button>
                                                 </div>
                                             </div>
                                             <div className="flex justify-between items-baseline">
@@ -205,6 +225,14 @@ function ProductDetailsDialog({
 
                 </div>
             </div>
+
+            {/* Toast Notification */}
+            {toast && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-neutral-900 text-white px-4 py-2.5 rounded-lg shadow-xl text-sm font-medium z-[150] animate-in fade-in slide-in-from-bottom-2 flex items-center gap-2">
+                    <Check size={16} className="text-green-400" />
+                    {toast}
+                </div>
+            )}
         </div>
     );
 }
