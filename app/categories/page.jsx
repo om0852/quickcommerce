@@ -387,21 +387,7 @@ function CategoriesPageContent() {
     return [...new Set(dates)];
   }, [availableSnapshots]);
 
-  const availableTimes = useMemo(() => {
-    if (!snapshotDate) return [];
-    return availableSnapshots
-      .filter(ts => {
-        const d = new Date(ts);
-        return d.toLocaleDateString('en-CA') === snapshotDate;
-      })
-      .map(ts => {
-        const d = new Date(ts);
-        return {
-          value: ts,
-          label: d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })
-        };
-      });
-  }, [snapshotDate, availableSnapshots]);
+
 
   const filteredProducts = useMemo(() => {
     let result = searchedProducts;
@@ -676,19 +662,28 @@ function CategoriesPageContent() {
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Date</label>
                 <CustomDropdown
                   value={snapshotDate}
-                  onChange={(newDate) => { setSnapshotDate(newDate); setIsLiveMode(false); }}
+                  onChange={(newDate) => {
+                    setSnapshotDate(newDate);
+                    setIsLiveMode(false);
+
+                    // Auto-select the latest time for this date
+                    const timesForDate = availableSnapshots.filter(ts => {
+                      const d = new Date(ts);
+                      return d.toLocaleDateString('en-CA') === newDate;
+                    });
+
+                    if (timesForDate.length > 0) {
+                      // Assuming availableSnapshots is sorted desc (latest first) or we sort it
+                      // The backend usually sends them sorted? 
+                      // Let's sort to be safe: latest first
+                      timesForDate.sort((a, b) => new Date(b) - new Date(a));
+                      const latestTime = timesForDate[0];
+                      setSnapshotTime(latestTime);
+                      fetchCategoryData(latestTime);
+                    }
+                  }}
                   options={uniqueDates.map(d => ({ value: d, label: d }))}
                   placeholder="Date"
-                  minimal
-                />
-              </div>
-              <div className="w-32 relative z-[70]">
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Time</label>
-                <CustomDropdown
-                  value={snapshotTime}
-                  onChange={(ts) => { setSnapshotTime(ts); setIsLiveMode(false); if (ts) fetchCategoryData(ts); }}
-                  options={availableTimes}
-                  placeholder="Time"
                   minimal
                 />
               </div>
