@@ -76,17 +76,9 @@ export async function GET(request) {
     // First, try to fetch from ProductGrouping
     const groups = await ProductGrouping.find({
       category: category
-    });
+    }).lean();
 
     // We need to fetch snapshots for the specific timestamp
-    // Get all product IDs from the groups
-    const productIdsInGroups = [];
-    groups.forEach(group => {
-      group.products.forEach(p => {
-        productIdsInGroups.push(p.productId);
-      });
-    });
-
     // Fetch snapshots for these products at the target timestamp
     const snapshots = await ProductSnapshot.find({
       pincode,
@@ -95,7 +87,7 @@ export async function GET(request) {
         { category: category },
         { officialCategory: category }
       ]
-    });
+    }).lean();
 
     // Create a map of snapshots for easy lookup: platform:productId -> snapshot
     const snapshotMap = {};
