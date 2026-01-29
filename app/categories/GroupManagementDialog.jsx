@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Loader2, Save } from 'lucide-react';
+import { X, Plus, Trash2, Loader2, Save, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CustomDropdown from '@/components/CustomDropdown';
 
@@ -22,6 +22,8 @@ export default function GroupManagementDialog({
     });
     const [error, setError] = useState(null);
     const [successMsg, setSuccessMsg] = useState(null);
+    const [productToDelete, setProductToDelete] = useState(''); // ID of product to delete in Danger Zone
+
 
     const PINCODE_OPTIONS = [
         { label: 'Delhi NCR — 201303', value: '201303' },
@@ -76,6 +78,36 @@ export default function GroupManagementDialog({
             if (!res.ok) throw new Error(data.error);
 
             setSuccessMsg('Product removed!');
+            if (onUpdate) onUpdate();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteFromDB = async (product) => {
+        if (!confirm(`⚠️ PERMANENT DELETE WARNING ⚠️\n\nAre you sure you want to PERMANENTLY DELETE "${product.name}" from the database?\n\nThis action cannot be undone.`)) return;
+
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch('/api/product/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    products: [{
+                        productId: product.productId,
+                        platform: product.srcKey,
+                        pincode: product.pincode
+                    }]
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            setSuccessMsg(`Permanently deleted product: ${product.name}`);
             if (onUpdate) onUpdate();
         } catch (err) {
             setError(err.message);
@@ -317,6 +349,41 @@ export default function GroupManagementDialog({
                                 >
                                     Delete Group & Products
                                 </button>
+                            </div>
+
+                            {/* Delete Individual Product from DB */}
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+                                <div className="mb-4">
+                                    <p className="text-sm font-medium text-red-900">Delete Individual Product from Database</p>
+                                    <p className="text-xs text-red-600 mt-1">
+                                        <span className="font-bold">PERMANENT:</span> Select a product to permanently delete it from the database.
+                                    </p>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <div className="flex-1">
+                                        <CustomDropdown
+                                            value={productToDelete}
+                                            onChange={setProductToDelete}
+                                            options={[
+                                                { label: 'Select product to delete...', value: '' },
+                                                ...platformItems.map(p => ({
+                                                    label: `${p.name} (${p.srcKey})`,
+                                                    value: p.productId
+                                                }))
+                                            ]}
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            const product = platformItems.find(p => p.productId === productToDelete);
+                                            if (product) handleDeleteFromDB(product);
+                                        }}
+                                        disabled={!productToDelete || loading}
+                                        className="bg-red-800 hover:bg-red-900 text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                    >
+                                        Delete Product
+                                    </button>
+                                </div>
                             </div>
 
                         </div>
