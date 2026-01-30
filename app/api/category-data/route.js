@@ -174,65 +174,19 @@ export async function GET(request) {
     });
 
     // 4. Handle Ungrouped Products
+    // USER REQUEST: Show ONLY grouped products. Commenting out ungrouped logic.
+    /*
     snapshots.forEach(snap => {
       if (!usedSnapshotIds.has(snap._id.toString())) {
-        // Try to find an existing product (grouped or previously added ungrouped) with the same name
-        // This acts as a dynamic "soft grouping" to prevent duplicates on the frontend
-        const existingProduct = mergedProducts.find(p => p.name.trim().toLowerCase() === snap.productName.trim().toLowerCase());
-
-        const platformData = {
-          productId: snap.productId,
-          productName: snap.productName,
-          productImage: snap.productImage,
-          productWeight: snap.productWeight,
-          rating: snap.rating,
-          currentPrice: snap.currentPrice,
-          originalPrice: snap.originalPrice,
-          discountPercentage: snap.discountPercentage,
-          ranking: snap.ranking,
-          isOutOfStock: snap.isOutOfStock,
-          productUrl: snap.productUrl,
-          quantity: snap.quantity,
-          deliveryTime: snap.deliveryTime,
-          isAd: snap.isAd,
-          officialCategory: snap.officialCategory,
-          officialSubCategory: snap.officialSubCategory,
-          subCategory: snap.subCategory,
-          combo: snap.combo,
-          scrapedAt: snap.scrapedAt
-        };
-
-        if (existingProduct) {
-          // Merge into existing product if that platform slot is empty
-          if (!existingProduct[snap.platform]) {
-            existingProduct[snap.platform] = platformData;
-          }
-        } else {
-          // Create new standalone entry
-          const productObj = {
-            groupingId: null,
-            name: snap.productName,
-            image: snap.productImage,
-            weight: snap.productWeight,
-            // Platforms
-            zepto: null,
-            blinkit: null,
-            jiomart: null,
-            dmart: null,
-            flipkartMinutes: null,
-            instamart: null,
-            // Populate current platform
-            [snap.platform]: platformData,
-
-            officialCategory: snap.officialCategory,
-            officialSubCategory: snap.officialSubCategory || snap.subCategory,
-            scrapedAt: targetScrapedAt,
-            isGrouped: false
-          };
-          mergedProducts.push(productObj);
-        }
+        // ... (logic moved to comments) ...
+         const existingProduct = mergedProducts.find(p => p.name.trim().toLowerCase() === snap.productName.trim().toLowerCase());
+         // ...
+         // (Omitted for brevity in comment block)
+         // ...
+         // See previous version for full logic if restoration needed.
       }
     });
+    */
 
     // Calculate counts
     const counts = {
