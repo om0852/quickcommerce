@@ -137,6 +137,30 @@ function CategoriesPageContent() {
     return counts;
   }, [searchedProducts]);
 
+  // Calculate TOTAL platform counts (unfiltered by search) to distinguish "Not Found" vs "Unserviceable"
+  const totalPlatformCounts = useMemo(() => {
+    const counts = {
+      all: products.length,
+      jiomart: 0,
+      zepto: 0,
+      blinkit: 0,
+      dmart: 0,
+      flipkartMinutes: 0,
+      instamart: 0
+    };
+
+    products.forEach(product => {
+      if (product.jiomart) counts.jiomart++;
+      if (product.zepto) counts.zepto++;
+      if (product.blinkit) counts.blinkit++;
+      if (product.dmart) counts.dmart++;
+      if (product.flipkartMinutes) counts.flipkartMinutes++;
+      if (product.instamart) counts.instamart++;
+    });
+
+    return counts;
+  }, [products]);
+
   const fetchCategoryData = async (customTimestamp = null) => {
     setLoading(true);
     setProducts([]);
@@ -798,6 +822,7 @@ function CategoriesPageContent() {
                   setCurrentPage(1);
                 }}
                 platformCounts={platformCounts}
+                totalPlatformCounts={totalPlatformCounts}
                 pincode={pincode}
               />
             </div>

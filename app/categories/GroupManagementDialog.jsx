@@ -10,7 +10,8 @@ export default function GroupManagementDialog({
     groupingId,
     productsInGroup, // Array of products already in this group (from merged data)
     onUpdate, // Callback to refresh data after changes
-    currentPincode = '201303' // Default to 201303 if not provided
+    currentPincode = '201303', // Default to 201303 if not provided
+    showToast // NEW: Function to show toast notifications
 }) {
     if (!isOpen) return null;
 
@@ -21,7 +22,7 @@ export default function GroupManagementDialog({
         productId: ''
     });
     const [error, setError] = useState(null);
-    const [successMsg, setSuccessMsg] = useState(null);
+    // const [successMsg, setSuccessMsg] = useState(null); // REMOVED: Using toast instead
     const [productToDelete, setProductToDelete] = useState(''); // ID of product to delete in Danger Zone
 
 
@@ -50,7 +51,9 @@ export default function GroupManagementDialog({
     ];
 
     const handleRemove = async (product) => {
-        if (!confirm(`Remove ${product.name} (${product.platform}) from this group?`)) return;
+        const displayName = product.productName || product.name || 'Product';
+        const displayPlatform = product.srcKey || product.platform || 'Platform';
+        if (!confirm(`Remove ${displayName} (${displayPlatform}) from this group?`)) return;
 
         setLoading(true);
         setError(null);
@@ -77,10 +80,14 @@ export default function GroupManagementDialog({
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
 
-            setSuccessMsg('Product removed!');
+            if (!res.ok) throw new Error(data.error);
+
+            // setSuccessMsg('Product removed!'); // REMOVED
+            if (showToast) showToast('Product removed from group!', 'success');
             if (onUpdate) onUpdate();
         } catch (err) {
             setError(err.message);
+            if (showToast) showToast(err.message, 'error'); // Also show toast for visibility
         } finally {
             setLoading(false);
         }
@@ -107,10 +114,14 @@ export default function GroupManagementDialog({
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
 
-            setSuccessMsg(`Permanently deleted product: ${product.name}`);
+            if (!res.ok) throw new Error(data.error);
+
+            // setSuccessMsg(`Permanently deleted product: ${product.name}`);
+            if (showToast) showToast(`Permanently deleted product: ${product.name}`, 'success');
             if (onUpdate) onUpdate();
         } catch (err) {
             setError(err.message);
+            if (showToast) showToast(err.message, 'error');
         } finally {
             setLoading(false);
         }
@@ -124,7 +135,7 @@ export default function GroupManagementDialog({
 
         setLoading(true);
         setError(null);
-        setSuccessMsg(null);
+        // setSuccessMsg(null);
 
         try {
             const res = await fetch('/api/grouping/add', {
@@ -141,12 +152,15 @@ export default function GroupManagementDialog({
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
 
-            setSuccessMsg('Product added successfully!');
+            // setSuccessMsg('Product added successfully!');
+            if (showToast) showToast('Product added successfully!', 'success');
+
             setAddProductState(prev => ({ ...prev, productId: '' })); // Clear ID
             if (onUpdate) onUpdate();
 
         } catch (err) {
             setError(err.message);
+            if (showToast) showToast(err.message, 'error');
         } finally {
             setLoading(false);
         }
@@ -187,9 +201,9 @@ export default function GroupManagementDialog({
 
                 <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8">
 
-                    {/* Status Messages */}
+                    {/* Status Messages - Error block kept for persistent errors, but successMsg removed */}
                     {error && <div className="p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200 flex items-start gap-3"><span className="text-lg">⚠️</span>{error}</div>}
-                    {successMsg && <div className="p-4 bg-green-50 text-green-700 text-sm rounded-lg border border-green-200 flex items-start gap-3"><span className="text-lg">✓</span>{successMsg}</div>}
+                    {/* {successMsg && <div className="p-4 bg-green-50 text-green-700 text-sm rounded-lg border border-green-200 flex items-start gap-3"><span className="text-lg">✓</span>{successMsg}</div>} */}
 
                     {/* Current Products Section */}
                     <div className="space-y-4">
@@ -298,11 +312,13 @@ export default function GroupManagementDialog({
                                                 const data = await res.json();
                                                 if (!res.ok) throw new Error(data.error);
 
-                                                alert('Group deleted successfully!');
+                                                // alert('Group deleted successfully!');
+                                                if (showToast) showToast('Group deleted successfully!', 'success');
                                                 onClose();
                                                 if (onUpdate) onUpdate();
                                             } catch (err) {
                                                 setError(err.message);
+                                                if (showToast) showToast(err.message, 'error');
                                                 setLoading(false);
                                             }
                                         }
@@ -336,11 +352,13 @@ export default function GroupManagementDialog({
                                                 const data = await res.json();
                                                 if (!res.ok) throw new Error(data.error);
 
-                                                alert(`Success: Deleted ${data.stats.deletedGroup} group and ${data.stats.deletedSnapshots} products.`);
+                                                // alert(`Success: Deleted ${data.stats.deletedGroup} group and ${data.stats.deletedSnapshots} products.`);
+                                                if (showToast) showToast(`Success: Deleted ${data.stats.deletedGroup} group and ${data.stats.deletedSnapshots} products.`, 'success');
                                                 onClose();
                                                 if (onUpdate) onUpdate();
                                             } catch (err) {
                                                 setError(err.message);
+                                                if (showToast) showToast(err.message, 'error');
                                                 setLoading(false);
                                             }
                                         }

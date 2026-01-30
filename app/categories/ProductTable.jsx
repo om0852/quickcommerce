@@ -8,6 +8,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import { cn } from '@/lib/utils'; // Keep cn for tailwind utility usage if needed
 
 const ProductImage = ({ product }) => {
@@ -67,7 +69,8 @@ const ProductTable = React.memo(function ProductTable({
     searchQuery,
     onSearchChange,
     platformCounts,
-    pincode // NEW Prop
+    totalPlatformCounts, // NEW Prop
+    pincode
 }) {
     // Check for admin param
     const [isAdmin, setIsAdmin] = useState(false);
@@ -78,6 +81,28 @@ const ProductTable = React.memo(function ProductTable({
             setIsAdmin(true);
         }
     }, []);
+
+    // TOAST STATE
+    const [toastState, setToastState] = useState({
+        open: false,
+        message: '',
+        severity: 'success' // 'success' | 'error' | 'info' | 'warning'
+    });
+
+    const handleCloseToast = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setToastState(prev => ({ ...prev, open: false }));
+    };
+
+    const showToast = (message, severity = 'success') => {
+        setToastState({
+            open: true,
+            message,
+            severity
+        });
+    };
 
     return (
         <>
@@ -297,7 +322,7 @@ const ProductTable = React.memo(function ProductTable({
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        platformCounts && platformCounts[p] === 0 ? (
+                                                        totalPlatformCounts && totalPlatformCounts[p] === 0 ? (
                                                             <Tooltip title="Unserviceable">
                                                                 <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-full border border-rose-100 whitespace-nowrap cursor-default">
                                                                     U/S
@@ -355,8 +380,20 @@ const ProductTable = React.memo(function ProductTable({
                         setManageGroup(null);
                     }}
                     currentPincode={pincode} // Pass it down
+                    showToast={showToast}
                 />
             )}
+
+            <Snackbar
+                open={toastState.open}
+                autoHideDuration={4000}
+                onClose={handleCloseToast}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={handleCloseToast} severity={toastState.severity} sx={{ width: '100%' }}>
+                    {toastState.message}
+                </Alert>
+            </Snackbar>
         </>
     );
 });
