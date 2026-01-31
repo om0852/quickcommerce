@@ -21,10 +21,31 @@ export async function POST(request) {
         }
 
         const productsToExplode = group.products || [];
-        console.log(`💥 Exploding group ${groupingId} with ${productsToExplode.length} products...`);
+        console.log(`💥 Processing delete for group ${groupingId} with ${productsToExplode.length} products...`);
 
         // 2. Delete the Grouping
         await ProductGrouping.deleteOne({ groupingId });
+
+        // Logic Check:
+        // - If Multiple Products: EXPLODE (Create new groups so they are visible separate items)
+        // - If Single Product: UNGROUP (Just unlink, don't create new group, so it disappears from view)
+
+        if (productsToExplode.length <= 1) {
+            console.log("Single product group: Ungrouping only.");
+            for (const p of productsToExplode) {
+                await ProductSnapshot.updateMany(
+                    { platform: p.platform, productId: p.productId },
+                    { $unset: { groupingId: "" } }
+                );
+            }
+            return NextResponse.json({
+                success: true,
+                message: 'Group deleted. Product ungrouped (removed from view).',
+                stats: { deletedGroup: 1, createdGroups: 0 }
+            });
+        }
+
+        // MULTIPLE PRODUCTS -> Explode logic continues below...
 
         // 3. Create INDIVIDUAL Groups for each product (Explosion)
         let newlyCreatedGroups = 0;
