@@ -28,17 +28,10 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Failed to ungroup (product not found in group)' }, { status: 404 });
         }
 
-        // 2. CHECK if this product exists in ANY OTHER group
-        const existingCount = await ProductGrouping.countDocuments({
-            products: { $elemMatch: { platform, productId } }
-        });
+        // 2. CHECK REMOVED: User wants it to ALWAYS pop out as a new group, even if it's a duplicate.
+        // This prevents "disappearing" products.
+        // const existingCount = await ProductGrouping.countDocuments({ ... });
 
-        if (existingCount > 0) {
-            // It exists elsewhere (e.g. valid duplicate or cross-list). 
-            // We successfully removed it from THIS group, and it's safe elsewhere.
-            // Do NOT create a new group.
-            return NextResponse.json({ success: true, message: 'Product removed from group (exists globally)' });
-        }
 
         // 3. If NOT found anywhere else, Create NEW Group for this single product (Ungrouping behavior)
         const newGroupId = uuidv4();
