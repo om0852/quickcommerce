@@ -242,6 +242,7 @@ const ProductTable = React.memo(function ProductTable({
                                                 boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
                                                 padding: '16px 32px', // px-8 py-4
                                                 transition: 'background-color 0.2s',
+                                                verticalAlign: 'top', // ALIGNMENT FIX
                                                 '.MuiTableRow-root:hover &': {
                                                     backgroundColor: '#fafafa'
                                                 }
@@ -293,7 +294,8 @@ const ProductTable = React.memo(function ProductTable({
                                                         width: 110,
                                                         maxWidth: 110,
                                                         borderBottom: '1px solid #e5e5e5',
-                                                        padding: '16px 32px'
+                                                        padding: '16px 32px',
+                                                        verticalAlign: 'top' // ALIGNMENT FIX
                                                     }}
                                                 >
                                                     {data ? (

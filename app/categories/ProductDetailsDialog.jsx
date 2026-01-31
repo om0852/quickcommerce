@@ -147,7 +147,7 @@ function ProductDetailsDialog({
                                         <div className="flex-1 space-y-2 text-sm">
                                             <div className="mb-2">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text" title="Product ID">
+                                                    <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text break-all" title="Product ID">
                                                         PID: {data.productId}
                                                     </span>
                                                     <button
@@ -158,7 +158,7 @@ function ProductDetailsDialog({
                                                         {copiedId === data.productId ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
                                                     </button>
                                                 </div>
-                                                <span className="font-medium text-neutral-900 text-sm block" title={data.productName || data.name}>
+                                                <span className="font-medium text-neutral-900 text-sm block line-clamp-2 h-10 mb-1" title={data.productName || data.name}>
                                                     {data.productName || data.name}
                                                 </span>
                                             </div>
