@@ -25,7 +25,7 @@ const ProductSnapshotSchema = new mongoose.Schema({
   platform: {
     type: String,
     required: true,
-    enum: ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart'],
+    enum: ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'],
     index: true
   },
   groupingId: {
