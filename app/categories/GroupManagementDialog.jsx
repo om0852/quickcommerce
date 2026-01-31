@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Loader2, Save, AlertTriangle } from 'lucide-react';
+import { X, Plus, Trash2, Loader2, Save, AlertTriangle, Unlink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CustomDropdown from '@/components/CustomDropdown';
 

@@ -93,7 +93,6 @@ export async function GET(request) {
       scrapedAt: targetScrapedAt,
       $or: [
         { category: category },
-        { officialCategory: category }
       ]
     });
 
@@ -158,7 +157,9 @@ export async function GET(request) {
             officialSubCategory: snap.officialSubCategory,
             subCategory: snap.subCategory,
             combo: snap.combo,
-            scrapedAt: snap.scrapedAt
+            combo: snap.combo,
+            scrapedAt: snap.scrapedAt,
+            snapshotId: snap._id.toString() // Expose unique ID for updates
           };
 
           // If main name/image is missing (should stick to group defaults, but fallback just in case)
@@ -216,6 +217,12 @@ export async function GET(request) {
       products: mergedProducts,
       totalProducts: mergedProducts.length,
       platformCounts: counts
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
     });
 
   } catch (error) {

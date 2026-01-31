@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search, X, Pencil } from 'lucide-react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -58,7 +58,8 @@ const ProductImage = ({ product }) => {
     );
 };
 
-import GroupManagementDialog from './GroupManagementDialog'; // NEW Import
+import GroupManagementDialog from './GroupManagementDialog';
+import ProductEditDialog from './ProductEditDialog'; // NEW Import
 
 const ProductTable = React.memo(function ProductTable({
     products,
@@ -70,11 +71,13 @@ const ProductTable = React.memo(function ProductTable({
     onSearchChange,
     platformCounts,
     totalPlatformCounts, // NEW Prop
-    pincode
+    pincode,
+    onRefresh // NEW Prop
 }) {
     // Check for admin param
     const [isAdmin, setIsAdmin] = useState(false);
     const [manageGroup, setManageGroup] = useState(null); // Group currently being managed
+    const [editProduct, setEditProduct] = useState(null); // Product currently being edited
 
     React.useEffect(() => {
         if (window.location.search.includes('admin=true')) {
@@ -252,6 +255,16 @@ const ProductTable = React.memo(function ProductTable({
                                                     <div className="text-sm font-medium text-neutral-900 whitespace-normal break-words" title={product.name}>
                                                         {product.name}
                                                         {product.weight && <span className="text-neutral-500 font-normal"> - ({product.weight})</span>}
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setEditProduct(product);
+                                                            }}
+                                                            className="ml-2 p-1 text-neutral-400 hover:text-neutral-900 rounded-full hover:bg-neutral-100 transition-colors inline-block align-middle"
+                                                            title="Edit Values"
+                                                        >
+                                                            <Pencil size={12} />
+                                                        </button>
                                                     </div>
                                                     {/* ADMIN MANAGE BUTTON */}
                                                     {isAdmin && (
@@ -381,6 +394,19 @@ const ProductTable = React.memo(function ProductTable({
                     }}
                     currentPincode={pincode} // Pass it down
                     showToast={showToast}
+                />
+            )}
+
+            {/* Edit Product Dialog */}
+            {editProduct && (
+                <ProductEditDialog
+                    isOpen={!!editProduct}
+                    onClose={() => setEditProduct(null)}
+                    product={editProduct}
+                    onUpdate={() => {
+                        if (onRefresh) onRefresh();
+                        setEditProduct(null);
+                    }}
                 />
             )}
 

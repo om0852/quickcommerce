@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, ExternalLink, Loader2, Copy, Check } from 'lucide-react';
+import { X, ExternalLink, Loader2, Copy, Check, Pencil } from 'lucide-react';
+import ProductEditDialog from './ProductEditDialog';
 
 function ProductDetailsDialog({
     isOpen,
@@ -11,9 +12,12 @@ function ProductDetailsDialog({
     historyLoading,
     stockData,
     selectedProduct,
-    isAdmin = false
+    isAdmin = false,
+    onRefresh // NEW Prop
 }) {
     if (!isOpen || !selectedProduct) return null;
+
+    const [isEditOpen, setIsEditOpen] = React.useState(false); // State for edit dialog
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
     const availablePlatforms = platforms.filter(p => selectedProduct[p]);
@@ -45,7 +49,16 @@ function ProductDetailsDialog({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
                     <div>
-                        <h2 className="text-xl font-bold text-neutral-900">{selectedProduct.name}</h2>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-xl font-bold text-neutral-900">{selectedProduct.name}</h2>
+                            <button
+                                onClick={() => setIsEditOpen(true)}
+                                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200 rounded-full transition-colors"
+                                title="Edit Product Details"
+                            >
+                                <Pencil size={16} />
+                            </button>
+                        </div>
                         <div className="flex flex-col gap-1 mt-1">
                             <div className="flex gap-2 text-xs text-neutral-500">
                                 <span>{category}</span>
@@ -247,6 +260,20 @@ function ProductDetailsDialog({
                     {toast}
                 </div>
             )}
+            {/* Nested Edit Dialog */}
+            {
+                isEditOpen && (
+                    <ProductEditDialog
+                        isOpen={isEditOpen}
+                        onClose={() => setIsEditOpen(false)}
+                        product={selectedProduct}
+                        onUpdate={() => {
+                            if (onRefresh) onRefresh();
+                            setIsEditOpen(false);
+                        }}
+                    />
+                )
+            }
         </div>
     );
 }
