@@ -784,13 +784,15 @@ function CategoriesPageContent() {
               />
             </div>
 
-            <div className="flex items-center gap-3 px-3 py-1.5 mb-0.5">
-              <span className="text-sm font-medium text-gray-700">Show New First</span>
-              <Switch
-                checked={showNewFirst}
-                onCheckedChange={setShowNewFirst}
-              />
-            </div>
+            {isAdmin && (
+              <div className="flex items-center gap-3 px-3 py-1.5 mb-0.5">
+                <span className="text-sm font-medium text-gray-700">Show New First</span>
+                <Switch
+                  checked={showNewFirst}
+                  onCheckedChange={setShowNewFirst}
+                />
+              </div>
+            )}
           </div>
         </div>
 

@@ -256,16 +256,18 @@ const ProductTable = React.memo(function ProductTable({
                                                     <div className="text-sm font-medium text-neutral-900 whitespace-normal break-words" title={product.name}>
                                                         {product.name}
                                                         {product.weight && <span className="text-neutral-500 font-normal"> - ({product.weight})</span>}
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setEditProduct(product);
-                                                            }}
-                                                            className="ml-2 p-1 text-neutral-400 hover:text-neutral-900 rounded-full hover:bg-neutral-100 transition-colors inline-block align-middle"
-                                                            title="Edit Values"
-                                                        >
-                                                            <Pencil size={12} />
-                                                        </button>
+                                                        {isAdmin && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setEditProduct(product);
+                                                                }}
+                                                                className="ml-2 p-1 text-neutral-400 hover:text-neutral-900 rounded-full hover:bg-neutral-100 transition-colors inline-block align-middle"
+                                                                title="Edit Values"
+                                                            >
+                                                                <Pencil size={12} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                     {/* ADMIN MANAGE BUTTON */}
                                                     {isAdmin && (
