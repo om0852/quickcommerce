@@ -156,7 +156,7 @@ export async function GET(request) {
             officialSubCategory: snap.officialSubCategory,
             subCategory: snap.subCategory,
             combo: snap.combo,
-            combo: snap.combo,
+            new: snap.new,
             scrapedAt: snap.scrapedAt,
             snapshotId: snap._id.toString() // Expose unique ID for updates
           };
