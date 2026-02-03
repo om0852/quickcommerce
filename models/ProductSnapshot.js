@@ -25,7 +25,7 @@ const ProductSnapshotSchema = new mongoose.Schema({
   platform: {
     type: String,
     required: true,
-    enum: ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'],
+    enum: ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes', 'flipkart'],
     index: true
   },
   groupingId: {
@@ -96,6 +96,12 @@ const ProductSnapshotSchema = new mongoose.Schema({
 
   // Stock availability
   isOutOfStock: {
+    type: Boolean,
+    default: false
+  },
+
+  // New product indicator (compared to previous scrape)
+  new: {
     type: Boolean,
     default: false
   },
