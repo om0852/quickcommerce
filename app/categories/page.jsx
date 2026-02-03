@@ -57,6 +57,7 @@ function CategoriesPageContent() {
   const [pincode, setPincode] = useState('201303');
   const [platformFilter, setPlatformFilter] = useState('all');
   const [showMissing, setShowMissing] = useState(false);
+  const [showNewFirst, setShowNewFirst] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -438,6 +439,12 @@ function CategoriesPageContent() {
       return item.officialSubCategory || item.subCategory || 'Other';
     };
 
+    // Helper to check if product has "new" flag in any platform
+    const hasNewFlag = (product) => {
+      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+      return platforms.some(p => product[p]?.new === true);
+    };
+
     if (sortConfig.key !== null) {
       sortableProducts.sort((a, b) => {
         const platformKey = sortConfig.key;
@@ -450,6 +457,14 @@ function CategoriesPageContent() {
         if (!itemA && !itemB) return 0;
         if (!itemA) return 1;
         if (!itemB) return -1;
+
+        // 0.5. If showNewFirst is enabled, prioritize new products
+        if (showNewFirst) {
+          const aIsNew = hasNewFlag(a);
+          const bIsNew = hasNewFlag(b);
+          if (aIsNew && !bIsNew) return -1;
+          if (!aIsNew && bIsNew) return 1;
+        }
 
         // 1. Sort by officialCategory
         const catA = itemA.officialCategory || '';
@@ -481,7 +496,15 @@ function CategoriesPageContent() {
     } else {
       // Default Sort: Match Count (Desc) -> SubCategory -> Ranking
       sortableProducts.sort((a, b) => {
-        // 0. Sort by Match Count (High availability first)
+        // 0. If showNewFirst is enabled, prioritize new products
+        if (showNewFirst) {
+          const aIsNew = hasNewFlag(a);
+          const bIsNew = hasNewFlag(b);
+          if (aIsNew && !bIsNew) return -1;
+          if (!aIsNew && bIsNew) return 1;
+        }
+
+        // 1. Sort by Match Count (High availability first)
         const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
         const countA = platforms.filter(p => a[p]).length;
         const countB = platforms.filter(p => b[p]).length;
@@ -489,17 +512,17 @@ function CategoriesPageContent() {
         // If one has more matches than the other, it comes first
         if (countA !== countB) return countB - countA;
 
-        // 1. Sort by officialCategory
+        // 2. Sort by officialCategory
         const catA = a.officialCategory || '';
         const catB = b.officialCategory || '';
         if (catA !== catB) return catA.localeCompare(catB);
 
-        // 2. Sort by SubCategory (Smart Resolve)
+        // 3. Sort by SubCategory (Smart Resolve)
         const subA = resolveSubCategory(a);
         const subB = resolveSubCategory(b);
         if (subA !== subB) return subA.localeCompare(subB);
 
-        // 3. Sort by Ranking (Minimum rank across platforms)
+        // 4. Sort by Ranking (Minimum rank across platforms)
         const getMinRank = (p) => {
           let min = Infinity;
           ['flipkartMinutes', 'blinkit', 'zepto', 'jiomart', 'instamart', 'dmart'].forEach(key => {
@@ -516,7 +539,7 @@ function CategoriesPageContent() {
       });
     }
     return sortableProducts;
-  }, [filteredProducts, sortConfig]);
+  }, [filteredProducts, sortConfig, showNewFirst]);
 
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -758,6 +781,14 @@ function CategoriesPageContent() {
                 checked={showMissing}
                 onCheckedChange={setShowMissing}
                 disabled={platformFilter === 'all'}
+              />
+            </div>
+
+            <div className="flex items-center gap-3 px-3 py-1.5 mb-0.5">
+              <span className="text-sm font-medium text-gray-700">Show New First</span>
+              <Switch
+                checked={showNewFirst}
+                onCheckedChange={setShowNewFirst}
               />
             </div>
           </div>
