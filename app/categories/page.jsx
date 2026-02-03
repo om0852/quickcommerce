@@ -11,6 +11,7 @@ import ExportCategoryDialog from './ExportCategoryDialog';
 import CustomDropdown from '@/components/CustomDropdown';
 import ProductDetailsDialog from './ProductDetailsDialog';
 import ProductTable from './ProductTable';
+import LinksTab from './LinksTab';
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
@@ -799,7 +800,7 @@ function CategoriesPageContent() {
         {/* Tab Switcher */}
         <div className="flex-none">
           <div className="inline-flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-            {['products', 'analytics', 'stock'].map((tab) => (
+            {['products', 'analytics', 'stock', 'links'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -837,6 +838,11 @@ function CategoriesPageContent() {
                 onRefresh={fetchCategoryData}
               />
             </div>
+          )}
+
+          {/* Links Tab */}
+          {activeTab === 'links' && (
+            <LinksTab data={categoriesData} />
           )}
 
           {activeTab === 'analytics' && (
