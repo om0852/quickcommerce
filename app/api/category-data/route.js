@@ -33,7 +33,6 @@ export async function GET(request) {
         scrapedAt: searchDate,
         $or: [
           { category: category },
-          { officialCategory: category }
         ]
       }).select('scrapedAt');
 

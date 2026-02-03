@@ -32,19 +32,13 @@
     },
     {
       "officalCategory": "Fruits & Vegetables",
-      "officalSubCategory": "Bouquet & Plants",
-      "masterCategory": "Fruits & Vegetables",
-      "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Fresh+Vegetables&filterId=6822eeeded32000001e25aaa&filterName=Bouquet+%26+Plants&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1"
-    },
-    {
-      "officalCategory": "Fruits & Vegetables",
       "officalSubCategory": "Cuts & Sprouts",
       "masterCategory": "Fruits & Vegetables",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Fresh+Vegetables&filterId=6822eeeded32000001e25aa6&filterName=Cuts+and+sprouts&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1"
     },
     {
       "officalCategory": "Fruits & Vegetables",
-      "officalSubCategory": "Cuts & Sprouts",
+      "officalSubCategory": "Certified Organics",
       "masterCategory": "Fruits & Vegetables",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Fresh+Vegetables&filterId=6822eeeded32000001e25aa8&filterName=Certified+Organics&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1"
     },
@@ -59,6 +53,12 @@
       "officalSubCategory": "Cut Fruits & Juices",
       "masterCategory": "Fruits & Vegetables",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Fresh+Vegetables&filterId=6822eeeded32000001e25aac&filterName=Cut+Fruits+and+Juices&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1"
+    },
+    {
+      "officalCategory": "Fruits & Vegetables",
+      "officalSubCategory": "Combos",
+      "masterCategory": "Fruits & Vegetables",
+      "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Fresh+Vegetables&filterId=6822eeeded32000001e25aa9&filterName=Combos&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Speciality+taxonomy+1"
     },
     {
       "officalCategory": "Fruits & Vegetables",
