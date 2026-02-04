@@ -842,7 +842,7 @@ function CategoriesPageContent() {
 
           {/* Links Tab */}
           {activeTab === 'links' && (
-            <LinksTab data={categoriesData} />
+            <LinksTab data={categoriesData} selectedCategory={category} />
           )}
 
           {activeTab === 'analytics' && (

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, ExternalLink, Link as LinkIcon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const LinksTab = ({ data }) => {
+const LinksTab = ({ data, selectedCategory }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [platformFilter, setPlatformFilter] = useState('all');
 
@@ -25,6 +25,11 @@ const LinksTab = ({ data }) => {
     // Filter data
     const filteredData = useMemo(() => {
         return flatData.filter(item => {
+            // Category filter
+            if (selectedCategory && item.masterCategory !== selectedCategory) {
+                return false;
+            }
+
             // Platform filter
             if (platformFilter !== 'all' && item.platform.toLowerCase() !== platformFilter.toLowerCase()) {
                 return false;
