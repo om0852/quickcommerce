@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 
@@ -79,6 +79,7 @@ function CategoriesPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const ITEMS_PER_PAGE = 200;
+  const lastActivePageRef = useRef(1);
 
   const PINCODE_OPTIONS = [
     { label: 'Delhi NCR — 201303', value: '201303' },
@@ -829,8 +830,20 @@ function CategoriesPageContent() {
                 onProductClick={handleProductClick}
                 searchQuery={searchQuery}
                 onSearchChange={(q) => {
+                  // If we are starting a search (and current query was empty), save the current page
+                  if (q && !searchQuery) {
+                    lastActivePageRef.current = currentPage;
+                    setCurrentPage(1);
+                  }
+                  // If we are clearing the search, restore the last active page
+                  else if (!q) {
+                    setCurrentPage(lastActivePageRef.current);
+                  }
+                  // If just modifying an existing search, stay on page 1 (implied, or redundant set)
+                  else {
+                    setCurrentPage(1);
+                  }
                   setSearchQuery(q);
-                  setCurrentPage(1);
                 }}
                 platformCounts={platformCounts}
                 totalPlatformCounts={totalPlatformCounts}

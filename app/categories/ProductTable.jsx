@@ -323,8 +323,8 @@ const ProductTable = React.memo(function ProductTable({
                                                                     </span>
                                                                 </div>
                                                             )}
-                                                            {/* NEW Status - Admin Only */}
-                                                            {isAdmin && data.new && (
+                                                            {/* NEW Status - Visible to All */}
+                                                            {data.new && (
                                                                 <div className="mt-1">
                                                                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200">
                                                                         NEW
