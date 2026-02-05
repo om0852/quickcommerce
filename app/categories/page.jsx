@@ -11,6 +11,7 @@ import ExportCategoryDialog from './ExportCategoryDialog';
 import CustomDropdown from '@/components/CustomDropdown';
 import ProductDetailsDialog from './ProductDetailsDialog';
 import ProductTable from './ProductTable';
+import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import LinksTab from './LinksTab';
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
@@ -111,7 +112,7 @@ function CategoriesPageContent() {
 
     const tokens = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
     return products.filter(p => {
-      const nameLower = p.name.toLowerCase();
+      const nameLower = (p.name || '').toLowerCase();
       return tokens.every(token => nameLower.includes(token));
     });
   }, [products, searchQuery]);
@@ -128,17 +129,35 @@ function CategoriesPageContent() {
       instamart: 0
     };
 
+    const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
+
     searchedProducts.forEach(product => {
-      if (product.jiomart) counts.jiomart++;
-      if (product.zepto) counts.zepto++;
-      if (product.blinkit) counts.blinkit++;
-      if (product.dmart) counts.dmart++;
-      if (product.flipkartMinutes) counts.flipkartMinutes++;
-      if (product.instamart) counts.instamart++;
+      // Check if product exists on ANY platform (to filter out complete ghosts, though unlikely)
+      const existsSomewhere = platforms.some(p => product[p]);
+
+      if (!existsSomewhere) return;
+
+      if (showMissing) {
+        // Count MISSING: If product is NOT on platform P (but exists somewhere else)
+        if (!product.jiomart) counts.jiomart++;
+        if (!product.zepto) counts.zepto++;
+        if (!product.blinkit) counts.blinkit++;
+        if (!product.dmart) counts.dmart++;
+        if (!product.flipkartMinutes) counts.flipkartMinutes++;
+        if (!product.instamart) counts.instamart++;
+      } else {
+        // Count PRESENT: If product IS on platform P
+        if (product.jiomart) counts.jiomart++;
+        if (product.zepto) counts.zepto++;
+        if (product.blinkit) counts.blinkit++;
+        if (product.dmart) counts.dmart++;
+        if (product.flipkartMinutes) counts.flipkartMinutes++;
+        if (product.instamart) counts.instamart++;
+      }
     });
 
     return counts;
-  }, [searchedProducts]);
+  }, [searchedProducts, showMissing]);
 
   // Calculate TOTAL platform counts (unfiltered by search) to distinguish "Not Found" vs "Unserviceable"
   const totalPlatformCounts = useMemo(() => {
@@ -172,7 +191,9 @@ function CategoriesPageContent() {
 
     try {
       const timeToFetch = customTimestamp !== null ? customTimestamp : (snapshotTime || null);
-      let url = `/api/category-data?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`;
+      // Join pincodes with comma
+      const pincodeParam = pincode;
+      let url = `/api/category-data?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincodeParam)}`;
 
       if (timeToFetch) {
         url += `&timestamp=${encodeURIComponent(timeToFetch)}`;
@@ -218,7 +239,7 @@ function CategoriesPageContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pincode,
+          pincode: pincode,
           productIds,
           productNames
         })
@@ -262,7 +283,8 @@ function CategoriesPageContent() {
       setError(null);
 
       try {
-        const res = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincode)}`);
+        const pincodeParam = pincode;
+        const res = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincodeParam)}`);
         const data = await res.json();
 
         if (data.snapshots && data.snapshots.length > 0) {
@@ -326,7 +348,7 @@ function CategoriesPageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           category,
-          pincode,
+          pincode: pincode,
           productIds,
           productNames: {
             zepto: selectedProduct.zepto?.name,
@@ -415,52 +437,210 @@ function CategoriesPageContent() {
   }, [searchedProducts, platformFilter, showMissing]);
 
   const sortedProducts = useMemo(() => {
-    let sortableProducts = [...filteredProducts];
+    // If no grouping (no headers), just filter and sort normally
+    if (!filteredProducts.some(p => p.isHeader)) {
+      // ... (Existing logic for single group) ...
+      let sortableProducts = [...filteredProducts];
 
-    // Helper to intelligently resolve subcategory
-    // Because some scrapers (Flipkart) might set root subCategory to "General", breaking grouping.
-    // We prefer: 1. Specific Root Official SubCat, 2. Specific Platform SubCat, 3. Root SubCat, 4. "Other"
-    const resolveSubCategory = (item) => {
-      // 1. Try root official (if meaningful)
-      if (item.officialSubCategory && item.officialSubCategory !== 'General') {
-        return item.officialSubCategory;
+      // Helper to intelligently resolve subcategory
+      const resolveSubCategory = (item) => {
+        if (item.officialSubCategory && item.officialSubCategory !== 'General') return item.officialSubCategory;
+        const platforms = ['zepto', 'blinkit', 'instamart', 'flipkartMinutes', 'jiomart', 'dmart'];
+        for (const p of platforms) {
+          if (item[p]) {
+            const sub = item[p].subcategory || item[p].officialSubCategory;
+            if (sub && sub !== 'General') return sub;
+          }
+        }
+        return item.officialSubCategory || item.subCategory || 'Other';
+      };
+
+      const hasNewFlag = (product) => {
+        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+        return platforms.some(p => product[p]?.new === true);
+      };
+
+
+      // ... inside useMemo for sortedProducts ...
+
+      const sortFunction = (a, b) => {
+        if (sortConfig.key === 'name') {
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          if (sortConfig.direction === 'asc') return nameA.localeCompare(nameB);
+          return nameB.localeCompare(nameA);
+        }
+        if (sortConfig.key !== null) {
+          const platformKey = sortConfig.key;
+          // ... existing sort by platform logic ...
+          const itemA = a[platformKey];
+          const itemB = b[platformKey];
+          if (!itemA && !itemB) return 0;
+          if (!itemA) return 1;
+          if (!itemB) return -1;
+          if (showNewFirst) {
+            const aIsNew = hasNewFlag(a);
+            const bIsNew = hasNewFlag(b);
+            if (aIsNew && !bIsNew) return -1;
+            if (!aIsNew && bIsNew) return 1;
+          }
+          const catA = itemA.officialCategory || '';
+          const catB = itemB.officialCategory || '';
+          if (catA !== catB) return catA.localeCompare(catB);
+          const subCatA = resolveSubCategory(a);
+          const subCatB = resolveSubCategory(b);
+          if (subCatA !== subCatB) return subCatA.localeCompare(subCatB);
+          const rankA = itemA.ranking && !isNaN(itemA.ranking) ? itemA.ranking : Infinity;
+          const rankB = itemB.ranking && !isNaN(itemB.ranking) ? itemB.ranking : Infinity;
+          if (rankA < rankB) return sortConfig.direction === 'asc' ? -1 : 1;
+          if (rankA > rankB) return sortConfig.direction === 'asc' ? 1 : -1;
+          return 0;
+        } else {
+          if (showNewFirst) {
+            const aIsNew = hasNewFlag(a);
+            const bIsNew = hasNewFlag(b);
+            if (aIsNew && !bIsNew) return -1;
+            if (!aIsNew && bIsNew) return 1;
+          }
+          const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+          const countA = platforms.filter(p => a[p]).length;
+          const countB = platforms.filter(p => b[p]).length;
+          if (countA !== countB) return countB - countA;
+
+          // Sort by Name alphabetically if counts are equal
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          if (nameA !== nameB) return nameA.localeCompare(nameB);
+
+          const catA = a.officialCategory || '';
+          const catB = b.officialCategory || '';
+          if (catA !== catB) return catA.localeCompare(catB);
+          const subA = resolveSubCategory(a);
+          const subB = resolveSubCategory(b);
+          if (subA !== subB) return subA.localeCompare(subB);
+          const getMinRank = (p) => {
+            let min = Infinity;
+            platforms.forEach(key => {
+              if (p[key] && p[key].ranking && !isNaN(p[key].ranking)) {
+                if (p[key].ranking < min) min = p[key].ranking;
+              }
+            });
+            return min;
+          };
+          return getMinRank(a) - getMinRank(b);
+        }
+      };
+
+      return sortableProducts.sort(sortFunction);
+    }
+
+    // --- MULTI-PINCODE GROUPING LOGIC ---
+    // Split into groups based on Headers
+    const groups = [];
+    let currentGroup = null;
+
+    filteredProducts.forEach(item => {
+      if (item.isHeader) {
+        if (currentGroup) groups.push(currentGroup);
+        currentGroup = { header: item, items: [] };
+      } else {
+        if (currentGroup) {
+          currentGroup.items.push(item);
+        } else {
+          // Should not happen if data is well-formed (header first), but handle strays
+          // If there's a stray item before any header? Treat as a "Misc" group or just ignore?
+          // Or create a dummy group? Let's safeguard.
+          if (groups.length === 0) {
+            // Maybe these are items belonging to previous selection? Just put them in a temp group
+            currentGroup = { header: { isHeader: true, title: "Uncategorized Region", pincode: "Unknown" }, items: [item] };
+          } else {
+            // This is weird, but append to last group?
+            // Actually better:
+          }
+        }
       }
+    });
+    if (currentGroup) groups.push(currentGroup);
 
-      // 2. Try looking into platforms for a better name
+    // Reuse the exact same sorting logic
+    const resolveSubCategory = (item) => {
+      if (item.officialSubCategory && item.officialSubCategory !== 'General') return item.officialSubCategory;
       const platforms = ['zepto', 'blinkit', 'instamart', 'flipkartMinutes', 'jiomart', 'dmart'];
       for (const p of platforms) {
         if (item[p]) {
           const sub = item[p].subcategory || item[p].officialSubCategory;
-          if (sub && sub !== 'General') {
-            return sub;
-          }
+          if (sub && sub !== 'General') return sub;
         }
       }
-
-      // 3. Fallback to root (even if General) or Other
       return item.officialSubCategory || item.subCategory || 'Other';
     };
 
-    // Helper to check if product has "new" flag in any platform
     const hasNewFlag = (product) => {
       const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
       return platforms.some(p => product[p]?.new === true);
     };
 
-    if (sortConfig.key !== null) {
-      sortableProducts.sort((a, b) => {
+    // ... inside useMemo ...
+
+    const getAveragePrice = (product) => {
+      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+      let total = 0;
+      let count = 0;
+      platforms.forEach(p => {
+        if (product[p] && product[p].price && !isNaN(product[p].price)) {
+          total += Number(product[p].price);
+          count++;
+        }
+      });
+      return count > 0 ? total / count : 0;
+    };
+
+    const sortFunction = (a, b) => {
+      if (sortConfig.key === 'name') {
+        // ... (existing name sort)
+      }
+
+      // Handle Price Sorting (Low to High / High to Low)
+      // The key coming from onSort might be 'name' with direction, OR 'price_asc'/'price_desc' if passed as key directly?
+      // Wait, in ProductTable I passed `onSort('name', direction)`. 
+      // For price, I should probably pass `onSort('averagePrice', 'asc')` or use the custom keys passed from menu.
+      // Let's check ProductTable call: `handleNameSort` passed 'name' and dir.
+      // I added `onClick={() => handleNameSort('price_asc')}` -> wait, handleNameSort calls `onSort('name', direction)`.
+      // I should update ProductTable to call `onSort('averagePrice', 'asc')` instead OR modify logic here.
+      // ACTUALLY, I stuck the price sort calls into `handleNameSort` in the previous step? 
+      // Checking previous step: `onClick={() => handleNameSort('price_asc')}`
+      // This means it calls `onSort('name', 'price_asc')`. This is awkward.
+      // I should FIX ProductTable to call a generic handler or specific handlers.
+
+      // Assuming I fix ProductTable in next step or use this logic:
+      if (sortConfig.key === 'name' && (sortConfig.direction === 'price_asc' || sortConfig.direction === 'price_desc')) {
+        // This is a bit hacky but works without changing ProductTable right now. 
+        // Better to use a clean key 'averagePrice'.
+      }
+
+      // Let's stick to a clean implementation. I will use 'averagePrice' as key.
+      if (sortConfig.key === 'averagePrice') {
+        const priceA = getAveragePrice(a);
+        const priceB = getAveragePrice(b);
+        if (sortConfig.direction === 'asc') return priceA - priceB;
+        return priceB - priceA;
+      }
+
+      if (sortConfig.key === 'name') {
+        const nameA = a.name || '';
+        const nameB = b.name || '';
+        if (sortConfig.direction === 'asc') return nameA.localeCompare(nameB);
+        return nameB.localeCompare(nameA);
+      }
+      // ... existing code ...
+      if (sortConfig.key !== null) {
         const platformKey = sortConfig.key;
-        // Access nested object property safely
         const itemA = a[platformKey];
         const itemB = b[platformKey];
-
-        // 0. Handle products not present on the platform
-        // We ALWAYS want existing products to appear before missing products
         if (!itemA && !itemB) return 0;
         if (!itemA) return 1;
         if (!itemB) return -1;
 
-        // 0.5. If showNewFirst is enabled, prioritize new products
         if (showNewFirst) {
           const aIsNew = hasNewFlag(a);
           const bIsNew = hasNewFlag(b);
@@ -468,79 +648,74 @@ function CategoriesPageContent() {
           if (!aIsNew && bIsNew) return 1;
         }
 
-        // 1. Sort by officialCategory
+        // Handle Price Sort Direction
+        if (sortConfig.direction === 'price_asc' || sortConfig.direction === 'price_desc') {
+          const priceA = itemA.currentPrice && !isNaN(itemA.currentPrice) ? Number(itemA.currentPrice) : Infinity;
+          const priceB = itemB.currentPrice && !isNaN(itemB.currentPrice) ? Number(itemB.currentPrice) : Infinity;
+
+          if (priceA < priceB) return sortConfig.direction === 'price_asc' ? -1 : 1;
+          if (priceA > priceB) return sortConfig.direction === 'price_asc' ? 1 : -1;
+          return 0;
+        }
+
+        // Default / Rank Sort
         const catA = itemA.officialCategory || '';
         const catB = itemB.officialCategory || '';
-        if (catA !== catB) {
-          return catA.localeCompare(catB);
-        }
-
-        // 2. Sort by officialSubCategory (using smart resolver)
+        if (catA !== catB) return catA.localeCompare(catB);
         const subCatA = resolveSubCategory(a);
         const subCatB = resolveSubCategory(b);
-
-        if (subCatA !== subCatB) {
-          return subCatA.localeCompare(subCatB);
-        }
-
-        // 3. Then sort by ranking within the subcategory
+        if (subCatA !== subCatB) return subCatA.localeCompare(subCatB);
         const rankA = itemA.ranking && !isNaN(itemA.ranking) ? itemA.ranking : Infinity;
         const rankB = itemB.ranking && !isNaN(itemB.ranking) ? itemB.ranking : Infinity;
-
-        if (rankA < rankB) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (rankA > rankB) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
+        if (rankA < rankB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (rankA > rankB) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
-      });
-    } else {
-      // Default Sort: Match Count (Desc) -> SubCategory -> Ranking
-      sortableProducts.sort((a, b) => {
-        // 0. If showNewFirst is enabled, prioritize new products
+      } else {
         if (showNewFirst) {
           const aIsNew = hasNewFlag(a);
           const bIsNew = hasNewFlag(b);
           if (aIsNew && !bIsNew) return -1;
           if (!aIsNew && bIsNew) return 1;
         }
-
-        // 1. Sort by Match Count (High availability first)
         const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
         const countA = platforms.filter(p => a[p]).length;
         const countB = platforms.filter(p => b[p]).length;
-
-        // If one has more matches than the other, it comes first
         if (countA !== countB) return countB - countA;
 
-        // 2. Sort by officialCategory
+        // Sort by Name alphabetically if counts are equal
+        const nameA = a.name || '';
+        const nameB = b.name || '';
+        if (nameA !== nameB) return nameA.localeCompare(nameB);
+
+
         const catA = a.officialCategory || '';
         const catB = b.officialCategory || '';
         if (catA !== catB) return catA.localeCompare(catB);
-
-        // 3. Sort by SubCategory (Smart Resolve)
         const subA = resolveSubCategory(a);
         const subB = resolveSubCategory(b);
         if (subA !== subB) return subA.localeCompare(subB);
-
-        // 4. Sort by Ranking (Minimum rank across platforms)
         const getMinRank = (p) => {
           let min = Infinity;
-          ['flipkartMinutes', 'blinkit', 'zepto', 'jiomart', 'instamart', 'dmart'].forEach(key => {
+          platforms.forEach(key => {
             if (p[key] && p[key].ranking && !isNaN(p[key].ranking)) {
               if (p[key].ranking < min) min = p[key].ranking;
             }
           });
           return min;
         };
-        const rankA = getMinRank(a);
-        const rankB = getMinRank(b);
+        return getMinRank(a) - getMinRank(b);
+      }
+    };
 
-        return rankA - rankB;
-      });
-    }
-    return sortableProducts;
+    let flatList = [];
+    groups.forEach(group => {
+      flatList.push(group.header);
+      const sortedItems = [...group.items].sort(sortFunction);
+      flatList = flatList.concat(sortedItems);
+    });
+
+    return flatList;
+
   }, [filteredProducts, sortConfig, showNewFirst]);
 
   const paginatedProducts = useMemo(() => {
@@ -549,13 +724,19 @@ function CategoriesPageContent() {
   }, [sortedProducts, currentPage]);
 
 
-  const requestSort = React.useCallback((key) => {
+  const requestSort = React.useCallback((key, direction = null) => {
     setSortConfig(currentConfig => {
-      let direction = 'asc';
-      if (currentConfig.key === key && currentConfig.direction === 'asc') {
-        direction = 'desc';
+      let newDirection = 'asc';
+      if (direction) {
+        newDirection = direction;
+      } else if (currentConfig.key === key) {
+        // Cycle: asc (Rank) -> desc (Rank) -> price_asc (Price) -> price_desc (Price) -> asc...
+        if (currentConfig.direction === 'asc') newDirection = 'desc';
+        else if (currentConfig.direction === 'desc') newDirection = 'price_asc';
+        else if (currentConfig.direction === 'price_asc') newDirection = 'price_desc';
+        else if (currentConfig.direction === 'price_desc') newDirection = 'asc';
       }
-      return { key, direction };
+      return { key, direction: newDirection };
     });
   }, []);
 
@@ -678,9 +859,15 @@ function CategoriesPageContent() {
                   options={CATEGORY_OPTIONS}
                 />
               </div>
-              <div className="w-48 relative z-[90]">
+              <div className="w-64 relative z-[90]">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Region</label>
-                <CustomDropdown value={pincode} onChange={setPincode} options={PINCODE_OPTIONS} />
+                <CustomDropdown
+                  value={pincode}
+                  onChange={(val) => {
+                    setPincode(val);
+                  }}
+                  options={PINCODE_OPTIONS}
+                />
               </div>
 
               {/* Snapshot Selectors */}
@@ -768,7 +955,7 @@ function CategoriesPageContent() {
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     )}
                   >
-                    {opt.label}
+                    {opt.label} ({platformCounts[opt.value] || 0})
                   </button>
                 ))}
               </div>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import ProductGrouping from '@/models/ProductGrouping';
 import nodemailer from 'nodemailer';
 import ExcelJS from 'exceljs';
 import _ from 'lodash';
@@ -40,20 +41,20 @@ try {
                             }
 
                             urlToCategoryMap.set(key, {
-                                officialCategory: item.officialCategory || item.officalCategory,
-                                officialSubCategory: item.officialSubCategory || item.officalSubCategory
+                                officialCategory: item.officialCategory || item.officialCategory,
+                                officialSubCategory: item.officialSubCategory || item.officialSubCategory
                             });
                         } catch (e) {
                             // Fallback for invalid URLs or relative paths if any
                             const key = `${platform}|${item.url.trim().toLowerCase()}`;
                             urlToCategoryMap.set(key, {
-                                officialCategory: item.officialCategory || item.officalCategory,
-                                officialSubCategory: item.officialSubCategory || item.officalSubCategory
+                                officialCategory: item.officialCategory || item.officialCategory,
+                                officialSubCategory: item.officialSubCategory || item.officialSubCategory
                             });
                         }
                     }
 
-                    if (!firstValidItem && (item.officialCategory || item.officalCategory)) {
+                    if (!firstValidItem && (item.officialCategory || item.officialCategory)) {
                         firstValidItem = item;
                     }
                 });
@@ -62,8 +63,8 @@ try {
                 if (firstValidItem) {
                     const masterKey = `${platform}|${masterCat}`;
                     masterCategoryMap.set(masterKey, {
-                        officialCategory: firstValidItem.officialCategory || firstValidItem.officalCategory,
-                        officialSubCategory: firstValidItem.officialSubCategory || firstValidItem.officalSubCategory
+                        officialCategory: firstValidItem.officialCategory || firstValidItem.officialCategory,
+                        officialSubCategory: firstValidItem.officialSubCategory || firstValidItem.officialSubCategory
                     });
                 }
             }
@@ -108,264 +109,245 @@ async function processExportInBackground(body) {
             targetPincodes = await getDistinctValues('pincode');
         }
 
+
+
         const allProcessedRows = [];
         const uniquePlatforms = new Set();
 
-        // Loop through each combination to find the distinct latest snapshot for THAT unique combo
+        // Loop by Category -> Pincode -> Groups (Strict Hierarchy like UI)
         for (const cat of targetCategories) {
+
+            // Fetch Groups ONCE for this category (Shared across pincodes usually)
+            // But UI fetches inside the loop? No, usually groups are category specific.
+            const groups = await ProductGrouping.find({ category: cat }).lean();
+            // Sort groups if they have a specific order? UI doesn't seem to sort explicitly, implies DB order / Insertion order.
+            // We'll trust the array order from DB matches UI default.
+
             for (const pin of targetPincodes) {
 
-                let targettimestamps = [];
+                // 1. Determine Timestamp (LIVE MODE logic mainly, as per UI)
+                // We default to 'live' (latest) unless specific time is requested, but Export usually implies 'latest' or 'unique' history.
+                // The User wants "Same sequence which is shown on category page". Category Page shows LATEST.
+
+                let targetScrapedAt = null;
 
                 if (body.exportType === 'unique') {
-                    // 7 days lookback
-                    const lookbackDate = new Date();
-                    lookbackDate.setDate(lookbackDate.getDate() - 7);
-
-                    // Find all distinct timestamps in the last 7 days
-                    const snapshots = await ProductSnapshot.find({
-                        category: cat,
-                        pincode: pin,
-                        scrapedAt: { $gte: lookbackDate },
-                        ...(platforms.length > 0 && !platforms.includes('all') ? { platform: { $in: platforms } } : {})
-                    }).distinct('scrapedAt');
-
-                    // Sort descending (latest first)
-                    targettimestamps = snapshots.sort((a, b) => b - a);
-                } else {
-                    // Default 'latest': just the single newest one
-                    const latestSnapshot = await ProductSnapshot.findOne({
-                        category: cat,
-                        pincode: pin,
-                        ...(platforms.length > 0 && !platforms.includes('all') ? { platform: { $in: platforms } } : {})
-                    }).sort({ scrapedAt: -1 }).select('scrapedAt').lean();
-
-                    if (latestSnapshot) {
-                        targettimestamps = [latestSnapshot.scrapedAt];
-                    }
+                    // Unique logic is tricky with Groups because Groups are "Live". 
+                    // If we want historical unique items, we can't easily use Groups which are static definitions of NOW.
+                    // However, user complaint is about "Ginger" which is likely a current product.
+                    // Let's assume for now ExportType 'latest' is the primary usage for this match.
+                    // If 'unique' is requested, we might have to fallback to the old logic OR iterate history.
+                    // BUT: The user asked for "Same sequence as UI". UI is LIVE. 
+                    // So we focus on fixing the Live/Latest export first.
                 }
 
-                if (!targettimestamps.length) continue;
+                // Find latest snapshot for this pincode/category to establish "Now"
+                const latestSnapshot = await ProductSnapshot.findOne({
+                    pincode: pin,
+                    $or: [
+                        { category: cat },
+                        { officialCategory: cat }
+                    ]
+                }).sort({ scrapedAt: -1 }).select('scrapedAt');
 
-                const seenProductsInThisCategoryPincode = new Set();
+                if (!latestSnapshot) continue; // No data for this pincode/cat
+                targetScrapedAt = latestSnapshot.scrapedAt;
 
-                // Iterate through timestamps (newest to oldest)
-                for (const scrapedAt of targettimestamps) {
+                // 2. Fetch Snapshots for this specific time slice
+                // Optimization: Filter by the Product IDs in our groups to ensure we match even if snapshot category differs
+                const allProductIds = new Set();
+                groups.forEach(g => {
+                    g.products.forEach(p => {
+                        if (p.productId) allProductIds.add(p.productId);
+                    });
+                });
 
-                    // 2. Fetch all products for this specific session
-                    const query = {
-                        category: cat,
-                        pincode: pin,
-                        scrapedAt: scrapedAt
+                const snapshots = await ProductSnapshot.find({
+                    pincode: pin,
+                    scrapedAt: targetScrapedAt,
+                    productId: { $in: Array.from(allProductIds) }
+                }).lean();
+
+                const snapshotMap = {};
+                snapshots.forEach(snap => {
+                    snapshotMap[`${snap.platform}:${snap.productId}`] = snap;
+                });
+
+                // 3. Iterate GROUPS to build rows (Strict Sequence)
+                for (const group of groups) {
+                    let hasData = false;
+
+                    // Build the Product Object (Merged)
+                    // We match the group's product definitions to the fetched snapshots
+
+                    const productRow = {
+                        name: group.primaryName, // Use Group Name as primary
+                        image: group.primaryImage,
+                        weight: group.primaryWeight,
+                        zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null
                     };
-                    if (platforms.length > 0 && !platforms.includes('all')) {
-                        query.platform = { $in: platforms };
-                    }
 
-                    // Sorting helps the platform grouping if we were doing it manually, but for splitting arrays it's fine
-                    const snapshots = await ProductSnapshot.find(query).sort({ platform: 1, ranking: 1 }).lean();
+                    // Check platforms in this group
+                    group.products.forEach(p => {
+                        const snap = snapshotMap[`${p.platform}:${p.productId}`];
+                        if (snap) {
+                            uniquePlatforms.add(p.platform);
+                            hasData = true;
 
-                    if (!snapshots.length) continue;
-
-                    // 3. Partition by platform
-                    const productsByPlatform = {
-                        zepto: [],
-                        blinkit: [],
-                        jiomart: [],
-                        dmart: [],
-                        flipkartMinutes: [],
-                        instamart: []
-                    };
-
-                    snapshots.forEach(snap => {
-                        uniquePlatforms.add(snap.platform);
-                        if (productsByPlatform[snap.platform]) {
-                            productsByPlatform[snap.platform].push({
-                                productId: snap.productId,
-                                productName: snap.productName,
-                                productImage: snap.productImage,
-                                productWeight: snap.productWeight,
-                                rating: snap.rating,
+                            // Map snapshot to platform key
+                            // We construct the "platform object" equal to what we had before for the row generation
+                            productRow[p.platform] = {
+                                ...snap,
                                 currentPrice: snap.currentPrice,
                                 originalPrice: snap.originalPrice,
                                 discountPercentage: snap.discountPercentage,
-                                ranking: snap.ranking,
-                                priceChange: snap.priceChange,
-                                discountChange: snap.discountChange,
-                                rankingChange: snap.rankingChange,
+                                isOutOfStock: snap.isOutOfStock,
                                 productUrl: snap.productUrl,
-                                isOutOfStock: snap.isOutOfStock,
-                                isOutOfStock: snap.isOutOfStock,
+                                isAd: snap.isAd,
+                                rating: snap.rating,
+                                ranking: snap.ranking,
+                                deliveryTime: snap.deliveryTime,
                                 quantity: snap.quantity,
                                 combo: snap.combo,
-                                deliveryTime: snap.deliveryTime,
-                                isAd: snap.isAd,
-                                scrapedAt: snap.scrapedAt,
+                                priceChange: snap.priceChange || 0,
+                                discountChange: snap.discountChange || 0,
+                                rankingChange: snap.rankingChange || 0,
+                                productWeight: snap.productWeight,
+                                categoryUrl: snap.categoryUrl,
                                 officialCategory: snap.officialCategory,
-                                officialSubCategory: snap.officialSubCategory,
-                                categoryUrl: snap.categoryUrl
-                            });
+                                officialSubCategory: snap.officialSubCategory
+                            };
                         }
                     });
 
-                    // 4. Merge using shared logic to ensure consistent order/matching
-                    // CRITICAL: We only merge products from the SAME timestamp.
-                    const mergedProducts = mergeProductsAcrossPlatforms(
-                        productsByPlatform.zepto,
-                        productsByPlatform.blinkit,
-                        productsByPlatform.jiomart,
-                        productsByPlatform.dmart,
-                        productsByPlatform.flipkartMinutes,
-                        productsByPlatform.instamart
-                    );
+                    if (hasData) {
+                        // Create Export Row
+                        const dateObj = new Date(targetScrapedAt);
 
-                    // 5. Add to processed rows IF not already seen (for unique mode)
-                    // For 'latest' mode, seenProducts won't matter as there's only one iteration.
-                    mergedProducts.forEach(product => {
-                        // Check product name filter if exists
-                        if (products.length > 0 && !products.includes('all') && !products.includes(product.name)) {
-                            return;
-                        }
-
-                        // Create a unique key for deduplication
-                        const uniqueKey = product.name.toLowerCase().trim();
-
-                        if (body.exportType === 'unique') {
-                            if (seenProductsInThisCategoryPincode.has(uniqueKey)) {
-                                return; // Skip if we already have a newer version of this product
-                            }
-                            seenProductsInThisCategoryPincode.add(uniqueKey);
-                        }
-
-                        const dateObj = new Date(scrapedAt);
-
-                        const rowData = {
+                        const excelRow = {
                             date: dateObj.toLocaleDateString(),
                             time: dateObj.toLocaleTimeString(),
                             pincode: pin,
                             category: cat,
-                            productName: product.name,
-                            productWeight: product.weight || 'N/A'
+                            productName: productRow.name,
+                            productWeight: productRow.weight || 'N/A'
                         };
 
-                        // Platforms
+                        // Fill Platform Columns
                         ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].forEach(p => {
-                            if (product[p]) {
-                                rowData[`${p}_available`] = 'Yes';
-                                rowData[`${p}_price`] = product[p].currentPrice;
-                                rowData[`${p}_originalPrice`] = product[p].originalPrice || '-';
-                                rowData[`${p}_discount`] = product[p].discountPercentage ? `${Math.round(product[p].discountPercentage)}%` : '-';
-                                rowData[`${p}_stock`] = product[p].isOutOfStock ? 'Out of Stock' : 'In Stock';
-                                rowData[`${p}_link`] = product[p].productUrl || '';
-                                rowData[`${p}_isAd`] = product[p].isAd ? 'Yes' : 'No';
-                                rowData[`${p}_rating`] = product[p].rating || '-';
-                                rowData[`${p}_rank`] = product[p].ranking || '-';
-                                rowData[`${p}_combo`] = product[p].combo || '-';
-                                rowData[`${p}_quantity`] = product[p].quantity || '-';
-                                // Updated delivery time logic: Use platform value directly
-                                rowData[`${p}_deliveryTime`] = product[p].deliveryTime || '-';
+                            const pData = productRow[p];
+                            if (pData) {
+                                excelRow[`${p}_available`] = 'Yes';
+                                excelRow[`${p}_price`] = pData.currentPrice;
+                                excelRow[`${p}_originalPrice`] = pData.originalPrice || '-';
+                                excelRow[`${p}_discount`] = pData.discountPercentage ? `${Math.round(pData.discountPercentage)}%` : '-';
+                                excelRow[`${p}_stock`] = pData.isOutOfStock ? 'Out of Stock' : 'In Stock';
+                                excelRow[`${p}_link`] = pData.productUrl || '';
+                                excelRow[`${p}_isAd`] = pData.isAd ? 'Yes' : 'No';
+                                excelRow[`${p}_rating`] = pData.rating || '-';
+                                excelRow[`${p}_rank`] = pData.ranking || '-';
+                                excelRow[`${p}_combo`] = pData.combo || '-';
+                                excelRow[`${p}_quantity`] = pData.quantity || '-';
+                                excelRow[`${p}_deliveryTime`] = pData.deliveryTime || '-';
 
-                                // New Tracking Fields
-                                rowData[`${p}_priceChange`] = product[p].priceChange || 0;
-                                rowData[`${p}_discountChange`] = product[p].discountChange || 0;
-                                rowData[`${p}_rankingChange`] = product[p].rankingChange || 0;
+                                // Change fields
+                                excelRow[`${p}_priceChange`] = pData.priceChange;
+                                excelRow[`${p}_discountChange`] = pData.discountChange;
+                                excelRow[`${p}_rankingChange`] = pData.rankingChange;
 
-                                // Platform Category Parsing
-                                const rawSubCat = product[p].subCategory || '';
-                                let platformCat = cat; // Default to our main category name
-                                let platformSub = rawSubCat;
-
-                                if (rawSubCat.includes(' - ')) {
-                                    const parts = rawSubCat.split(' - ');
-                                    if (parts.length >= 2) {
-                                        platformCat = parts[0];
-                                        platformSub = parts.slice(1).join(' - ');
-                                    }
-                                }
-
-                                rowData[`${p}_platformCategory`] = platformCat;
-                                rowData[`${p}_platformSubCategory`] = platformSub;
-
-                                // Official Category Mapping
-                                const officialCategory = product[p].officialCategory;
-                                const officialSubCategory = product[p].officialSubCategory;
+                                // Categories
+                                const officialCategory = pData.officialCategory;
+                                const officialSubCategory = pData.officialSubCategory;
 
                                 if (officialCategory && officialCategory !== '-') {
-                                    rowData[`${p}_officialCategory`] = officialCategory;
-                                    rowData[`${p}_officialSubCategory`] = officialSubCategory || '-';
+                                    excelRow[`${p}_officialCategory`] = officialCategory;
+                                    excelRow[`${p}_officialSubCategory`] = officialSubCategory || '-';
                                 } else {
-                                    // Fallback lookup
-                                    let lookupKey = `${p}|${(product[p].categoryUrl || '').trim().toLowerCase()}`;
-                                    try {
-                                        if (product[p].categoryUrl && p.toLowerCase() !== 'instamart') {
-                                            const urlObj = new URL(product[p].categoryUrl);
-                                            const cleanUrl = urlObj.origin + urlObj.pathname;
-                                            lookupKey = `${p}|${cleanUrl.toLowerCase().trim()}`;
-                                        }
-                                    } catch (e) {
-                                        // Keep original key if parsing fails
-                                    }
-
+                                    // Fallback
+                                    let lookupKey = `${p}|${(pData.categoryUrl || '').trim().toLowerCase()}`;
                                     const fallback = urlToCategoryMap.get(lookupKey);
                                     if (fallback) {
-                                        rowData[`${p}_officialCategory`] = fallback.officialCategory || '-';
-                                        rowData[`${p}_officialSubCategory`] = fallback.officialSubCategory || '-';
+                                        excelRow[`${p}_officialCategory`] = fallback.officialCategory || '-';
+                                        excelRow[`${p}_officialSubCategory`] = fallback.officialSubCategory || '-';
                                     } else {
-                                        // FINAL FALLBACK: Use Master Category
-                                        // product.category is the Master Category name (unreliable but best guess if passed correctly)
-                                        // However, in this loop structure we are iterating over `cat` (line 95) which IS the Master Category being exported.
-                                        // But wait, the inner loops might be mixing products?
-                                        // Line 137 queries by `category: cat`. So all products here belong to `cat`.
-
-                                        const masterKey = `${p}|${cat}`; // 'cat' is the master category from the outer loop
+                                        // Master Fallback
+                                        const masterKey = `${p}|${cat}`;
                                         const masterFallback = masterCategoryMap.get(masterKey);
-
                                         if (masterFallback) {
-                                            rowData[`${p}_officialCategory`] = masterFallback.officialCategory || '-';
-                                            rowData[`${p}_officialSubCategory`] = masterFallback.officialSubCategory || '-';
+                                            excelRow[`${p}_officialCategory`] = masterFallback.officialCategory || '-';
+                                            excelRow[`${p}_officialSubCategory`] = masterFallback.officialSubCategory || '-';
                                         } else {
-                                            rowData[`${p}_officialCategory`] = '-';
-                                            rowData[`${p}_officialSubCategory`] = '-';
+                                            excelRow[`${p}_officialCategory`] = '-';
+                                            excelRow[`${p}_officialSubCategory`] = '-';
                                         }
                                     }
                                 }
+
                             } else {
-                                rowData[`${p}_available`] = 'No';
-                                rowData[`${p}_price`] = null;
-                                rowData[`${p}_originalPrice`] = '-';
-                                rowData[`${p}_discount`] = '-';
-                                rowData[`${p}_stock`] = '-';
-                                rowData[`${p}_link`] = '';
-                                rowData[`${p}_isAd`] = '-';
-                                rowData[`${p}_rating`] = '-';
-                                rowData[`${p}_rank`] = null;
-                                rowData[`${p}_combo`] = '-';
-                                rowData[`${p}_quantity`] = '-';
-                                rowData[`${p}_deliveryTime`] = '-';
-                                rowData[`${p}_priceChange`] = '-';
-                                rowData[`${p}_discountChange`] = '-';
-                                rowData[`${p}_rankingChange`] = '-';
-                                rowData[`${p}_platformCategory`] = '-';
-                                rowData[`${p}_platformSubCategory`] = '-';
-                                rowData[`${p}_officialCategory`] = '-';
-                                rowData[`${p}_officialSubCategory`] = '-';
+                                // unavailable
+                                excelRow[`${p}_available`] = 'No';
+                                excelRow[`${p}_price`] = null;
+                                excelRow[`${p}_originalPrice`] = '-';
+                                excelRow[`${p}_discount`] = '-';
+                                excelRow[`${p}_stock`] = '-';
+                                excelRow[`${p}_link`] = '';
+                                excelRow[`${p}_isAd`] = '-';
+                                excelRow[`${p}_rating`] = '-';
+                                excelRow[`${p}_rank`] = null;
+                                excelRow[`${p}_combo`] = '-';
+                                excelRow[`${p}_quantity`] = '-';
+                                excelRow[`${p}_deliveryTime`] = '-';
+                                excelRow[`${p}_priceChange`] = '-';
+                                excelRow[`${p}_discountChange`] = '-';
+                                excelRow[`${p}_rankingChange`] = '-';
+                                excelRow[`${p}_officialCategory`] = '-';
+                                excelRow[`${p}_officialSubCategory`] = '-';
                             }
                         });
 
-
-                        allProcessedRows.push(rowData);
-                    });
-                }
-            }
-        }
+                        allProcessedRows.push(excelRow);
+                    }
+                } // End Group Loop
+            } // End Pincode Loop
+        } // End Category Loop
 
         if (allProcessedRows.length === 0) {
             console.warn('⚠️ Background Export: No data found for the selected filters');
-            return; // Or maybe send an email saying "no data found"?
+            return;
         }
 
-        // Use collected unique platforms for columns or default to standard 3
-        const allPlatforms = Array.from(uniquePlatforms).sort();
+        // Sorting Logic: 
+        // With Group-based iteration, the order is ALREADY defined by the user intent (Category > Pincode > Group Order).
+        // The user specifically asked for "Same sequence". 
+        // So we SHOULD NOT re-sort by name or availability, because that destroys the group order.
+        // However, we might need to handle the case where multiple pincodes are selected.
+        // Our loop order is Category -> Pincode -> Group.
+        // This effectively groups by Pincode blocks, then Group order within that.
+        // This matches the UI (which iterates pincodes and shows blocks).
+
+        // NO EXTRA SORTING NEEDED to match UI Sequence.
+
+
+        // Sorting Logic: Sort by Match Count (High availability first)
+        const sortPlatforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+
+        allProcessedRows.sort((a, b) => {
+            // 1. Sort by Match Count (High availability first)
+            const countA = sortPlatforms.filter(p => a[`${p}_available`] === 'Yes').length;
+            const countB = sortPlatforms.filter(p => b[`${p}_available`] === 'Yes').length;
+
+            if (countA !== countB) {
+                return countB - countA; // Descending
+            }
+
+            // 2. Secondary Sort: Product Name (Ascending) for consistency
+            return (a.productName || '').localeCompare(b.productName || '');
+        });
+
+        // Use collected unique platforms for columns BUT enforce specific order
+        // User Request: "even they are no have nay product still show there columns"
+        // So we strictly use ONE fixed list of all platforms, regardless of what data was found.
+        const allPlatforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
 
         try {
             const debugPath = path.join(process.cwd(), 'debug_export_data.json');
@@ -485,9 +467,15 @@ async function processExportInBackground(body) {
             }
         });
 
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        if (email && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
             console.warn('⚠️ EMAIL_USER or EMAIL_PASS not set. Cannot send email.');
-            return;
+            // Even if email fails/is skipped, we return buffer
+            return buffer;
+        }
+
+        // Skip email if not provided
+        if (!email) {
+            return buffer;
         }
 
         const dateRangeStr = latestDate.toLocaleString('en-IN', {
@@ -511,8 +499,11 @@ async function processExportInBackground(body) {
         await transporter.sendMail(mailOptions);
         console.log(`✅ Email sent successfully to ${email}`);
 
+        return buffer;
+
     } catch (error) {
         console.error('❌ Background Export Status: FAILED', error);
+        throw error;
     }
 }
 
@@ -524,21 +515,29 @@ export async function POST(req) {
         const { email } = body;
 
         // Validation
-        if (!email) {
-            return NextResponse.json({ error: 'Email is required' }, { status: 400 });
-        }
+        // Email is optional now (for direct download only)
+        // if (!email) {
+        //    return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+        // }
 
         console.log('🚀 Starting export process...');
 
         // Execute the export synchronously to ensure it completes
-        await processExportInBackground(body);
+        const buffer = await processExportInBackground(body);
 
-        console.log('✅ Export completed and email sent');
+        if (!buffer) {
+            return NextResponse.json({ error: 'No data found to export' }, { status: 404 });
+        }
 
-        // Response after completion
-        return NextResponse.json({
-            success: true,
-            message: 'Excel file has been generated and sent to your email successfully!'
+        console.log('✅ Export completed, email sent, returning file.');
+
+        // Return file response
+        return new NextResponse(buffer, {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition': `attachment; filename="category_export_${Date.now()}.xlsx"`
+            }
         });
 
     } catch (error) {

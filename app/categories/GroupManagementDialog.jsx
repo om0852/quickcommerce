@@ -170,7 +170,7 @@ export default function GroupManagementDialog({
     // The `productsInGroup` prop passed from parent should be the `product` object from the table.
     // It has keys like 'zepto', 'blinkit', etc.
     const platformItems = [];
-    ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].forEach(p => {
+    ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'].forEach(p => {
         if (productsInGroup && productsInGroup[p]) {
             platformItems.push({
                 ...productsInGroup[p],

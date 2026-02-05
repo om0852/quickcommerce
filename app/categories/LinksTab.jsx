@@ -40,9 +40,9 @@ const LinksTab = ({ data, selectedCategory }) => {
                 const query = searchQuery.toLowerCase();
                 return (
                     item.masterCategory?.toLowerCase().includes(query) ||
-                    item.officalCategory?.toLowerCase().includes(query) ||
+                    item.officialCategory?.toLowerCase().includes(query) ||
                     item.officialCategory?.toLowerCase().includes(query) || // Handle typo in JSON if exists
-                    item.officalSubCategory?.toLowerCase().includes(query) ||
+                    item.officialSubCategory?.toLowerCase().includes(query) ||
                     item.officialSubCategory?.toLowerCase().includes(query) ||
                     item.platform.toLowerCase().includes(query)
                 );
@@ -126,10 +126,10 @@ const LinksTab = ({ data, selectedCategory }) => {
                                         {item.masterCategory}
                                     </td>
                                     <td className="px-6 py-3 text-gray-600">
-                                        {item.officalCategory || item.officialCategory || '-'}
+                                        {item.officialCategory || item.officialCategory || '-'}
                                     </td>
                                     <td className="px-6 py-3 text-gray-600">
-                                        {item.officalSubCategory || item.officialSubCategory || '-'}
+                                        {item.officialSubCategory || item.officialSubCategory || '-'}
                                     </td>
                                     <td className="px-6 py-3 text-right">
                                         <a

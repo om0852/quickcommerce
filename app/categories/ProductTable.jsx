@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search, X, Pencil } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search, X, Pencil, Menu as MenuIcon } from 'lucide-react';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -99,6 +101,28 @@ const ProductTable = React.memo(function ProductTable({
         setToastState(prev => ({ ...prev, open: false }));
     };
 
+    // Sort Menu State
+    const [sortMenuAnchor, setSortMenuAnchor] = useState(null);
+    const isSortMenuOpen = Boolean(sortMenuAnchor);
+
+    const handleSortMenuClick = (event) => {
+        setSortMenuAnchor(event.currentTarget);
+    };
+
+    const handleSortMenuClose = () => {
+        setSortMenuAnchor(null);
+    };
+
+    const handleNameSort = (direction) => {
+        onSort('name', direction);
+        handleSortMenuClose();
+    };
+
+    const handlePriceSort = (direction) => {
+        onSort('averagePrice', direction);
+        handleSortMenuClose();
+    };
+
     const showToast = (message, severity = 'success') => {
         setToastState({
             open: true,
@@ -155,8 +179,8 @@ const ProductTable = React.memo(function ProductTable({
                                         width: '100%',
                                         gap: '10px'
                                     }}>
-                                        <span>PRODUCT</span>
-                                        <div className="relative flex-1 max-w-[160px]" onClick={(e) => e.stopPropagation()}>
+                                        <span>SKUs</span>
+                                        <div className="relative flex-1 max-w-[full]" onClick={(e) => e.stopPropagation()}>
                                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
                                             <input
                                                 type="text"
@@ -174,6 +198,48 @@ const ProductTable = React.memo(function ProductTable({
                                                 </button>
                                             )}
                                         </div>
+
+                                        {/* Hamburger Sort Menu */}
+                                        <button
+                                            onClick={handleSortMenuClick}
+                                            className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-500"
+                                            title="Filter & Sort"
+                                        >
+                                            <MenuIcon size={16} />
+                                        </button>
+                                        <Menu
+                                            anchorEl={sortMenuAnchor}
+                                            open={isSortMenuOpen}
+                                            onClose={handleSortMenuClose}
+                                            MenuListProps={{
+                                                'aria-labelledby': 'basic-button',
+                                            }}
+                                            anchorOrigin={{
+                                                vertical: 'bottom',
+                                                horizontal: 'right',
+                                            }}
+                                            transformOrigin={{
+                                                vertical: 'top',
+                                                horizontal: 'right',
+                                            }}
+                                        >
+                                            <MenuItem onClick={() => handleNameSort('asc')} className="text-sm gap-2">
+                                                <TrendingUp size={14} className="text-gray-500" />
+                                                <span className="text-sm">Sort Name (A to Z)</span>
+                                            </MenuItem>
+                                            <MenuItem onClick={() => handleNameSort('desc')} className="text-sm gap-2">
+                                                <TrendingDown size={14} className="text-gray-500" />
+                                                <span className="text-sm">Sort Name (Z to A)</span>
+                                            </MenuItem>
+                                            <MenuItem onClick={() => handleNameSort('price_asc')} className="text-sm gap-2">
+                                                <TrendingUp size={14} className="text-gray-500" />
+                                                <span className="text-sm">Sort Price (Low to High)</span>
+                                            </MenuItem>
+                                            <MenuItem onClick={() => handleNameSort('price_desc')} className="text-sm gap-2">
+                                                <TrendingDown size={14} className="text-gray-500" />
+                                                <span className="text-sm">Sort Price (High to Low)</span>
+                                            </MenuItem>
+                                        </Menu>
                                     </div>
                                 </TableCell>
 
@@ -200,7 +266,11 @@ const ProductTable = React.memo(function ProductTable({
                                         <div className="flex items-center gap-1">
                                             {platform === 'flipkartMinutes' ? 'Flipkart' : platform}
                                             {sortConfig.key === platform ? (
-                                                sortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                                                sortConfig.direction === 'asc' ? <ChevronUp size={14} /> :
+                                                    sortConfig.direction === 'desc' ? <ChevronDown size={14} /> :
+                                                        sortConfig.direction === 'price_asc' ? <div className="flex items-center text-emerald-600"><span className="text-[10px] mr-0.5">₹</span><ChevronUp size={14} /></div> :
+                                                            sortConfig.direction === 'price_desc' ? <div className="flex items-center text-emerald-600"><span className="text-[10px] mr-0.5">₹</span><ChevronDown size={14} /></div> :
+                                                                <ChevronsUpDown size={14} className="text-neutral-300" />
                                             ) : (
                                                 <ChevronsUpDown size={14} className="text-neutral-300" />
                                             )}
@@ -211,12 +281,34 @@ const ProductTable = React.memo(function ProductTable({
                         </TableHead>
                         <TableBody>
                             {products.map((product, index) => {
+                                // Check if it's a header row
+                                if (product.isHeader) {
+                                    return (
+                                        <TableRow key={`header-${index}`} sx={{ backgroundColor: '#f0f0f0' }}>
+                                            <TableCell
+                                                colSpan={7} // Spanning across all columns (Product + 6 Platforms)
+                                                sx={{
+                                                    fontWeight: 'bold',
+                                                    padding: '12px 24px',
+                                                    color: '#333',
+                                                    borderBottom: '1px solid #e5e5e5',
+                                                    position: 'sticky',
+                                                    left: 0,
+                                                    zIndex: 25 // Slightly above normal cells
+                                                }}
+                                            >
+                                                {product.title}
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                }
+
                                 return (
                                     <TableRow
                                         hover
                                         role="checkbox"
                                         tabIndex={-1}
-                                        key={product.name + index}
+                                        key={product.name + index} // Use index fallback if names are same across regions (though backend should handle)
                                         onClick={() => {
                                             const selection = window.getSelection();
                                             if (selection.toString().length === 0) {
@@ -365,12 +457,14 @@ const ProductTable = React.memo(function ProductTable({
                             })}
                         </TableBody>
                     </Table>
-                </TableContainer>
-                {products.length === 0 && (
-                    <div className="px-6 py-12 text-center text-sm text-neutral-500">
-                        No products found matching your filters.
-                    </div>
-                )}
+                </TableContainer >
+                {
+                    products.filter(p => !p.isHeader).length === 0 && ( /* Only show if no actual products, ignoring headers */
+                        <div className="px-6 py-12 text-center text-sm text-neutral-500">
+                            No products found matching your filters.
+                        </div>
+                    )
+                }
 
                 {/* Loading Overlay */}
                 {
@@ -388,39 +482,43 @@ const ProductTable = React.memo(function ProductTable({
             </Paper >
 
             {/* Manage Group Dialog */}
-            {manageGroup && (
-                <GroupManagementDialog
-                    isOpen={!!manageGroup}
-                    onClose={() => setManageGroup(null)}
-                    groupingId={manageGroup.groupingId} // passed from merged data
-                    productsInGroup={manageGroup} // passed full object to parse platforms
-                    onUpdate={() => {
-                        // Ideally trigger a refresh of the table data
-                        // We don't have easy access to fetchCategoryData here unless we pass it down or use context.
-                        // User might need to manually refresh or we can try to pass a callback.
-                        // The simplest way for now is just close; user hits refresh button.
-                        // Or we can add a simple window reload or context trigger.
-                        // For now, let's just close dialog.
-                        // If we want auto-refresh, we can pass a callback from parent.
-                        setManageGroup(null);
-                    }}
-                    currentPincode={pincode} // Pass it down
-                    showToast={showToast}
-                />
-            )}
+            {
+                manageGroup && (
+                    <GroupManagementDialog
+                        isOpen={!!manageGroup}
+                        onClose={() => setManageGroup(null)}
+                        groupingId={manageGroup.groupingId} // passed from merged data
+                        productsInGroup={manageGroup} // passed full object to parse platforms
+                        onUpdate={() => {
+                            // Ideally trigger a refresh of the table data
+                            // We don't have easy access to fetchCategoryData here unless we pass it down or use context.
+                            // User might need to manually refresh or we can try to pass a callback.
+                            // The simplest way for now is just close; user hits refresh button.
+                            // Or we can add a simple window reload or context trigger.
+                            // For now, let's just close dialog.
+                            // If we want auto-refresh, we can pass a callback from parent.
+                            setManageGroup(null);
+                        }}
+                        currentPincode={pincode} // Pass it down
+                        showToast={showToast}
+                    />
+                )
+            }
 
             {/* Edit Product Dialog */}
-            {editProduct && (
-                <ProductEditDialog
-                    isOpen={!!editProduct}
-                    onClose={() => setEditProduct(null)}
-                    product={editProduct}
-                    onUpdate={() => {
-                        if (onRefresh) onRefresh();
-                        setEditProduct(null);
-                    }}
-                />
-            )}
+            {
+                editProduct && (
+                    <ProductEditDialog
+                        isOpen={!!editProduct}
+                        onClose={() => setEditProduct(null)}
+                        product={editProduct}
+                        onUpdate={() => {
+                            if (onRefresh) onRefresh();
+                            setEditProduct(null);
+                        }}
+                    />
+                )
+            }
 
             <Snackbar
                 open={toastState.open}

@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Download, X, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import MultiSelectDropdown from '@/components/MultiSelectDropdown';
+
 export default function ExportCategoryDialog({
     isOpen,
     onClose,
@@ -16,6 +18,7 @@ export default function ExportCategoryDialog({
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
+    const [progress, setProgress] = useState(0);
 
     // Form State
     const [email, setEmail] = useState('');
@@ -23,44 +26,101 @@ export default function ExportCategoryDialog({
     // Dropdown States - defaulting to first option or specific values if needed
     const [selectedPlatform, setSelectedPlatform] = useState('all');
     const [selectedCategory, setSelectedCategory] = useState(currentCategory || 'all');
-    const [selectedPincode, setSelectedPincode] = useState(currentPincode || (pincodeOptions[0]?.value) || '');
+    // Initialize with current pincode as array, or empty/first option
+    const [selectedPincodes, setSelectedPincodes] = useState(currentPincode ? [currentPincode] : (pincodeOptions[0]?.value ? [pincodeOptions[0].value] : []));
     const [exportType, setExportType] = useState('latest');
 
     if (!isOpen) return null;
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleAction = async (actionType) => {
+        // Validation for Email action
+        if (actionType === 'email' && !email) {
+            setError("Email address is required for sending email.");
+            return;
+        }
+
         setLoading(true);
         setError(null);
         setSuccess(false);
+        setProgress(0);
+
+        // Simulate progress for UX
+        const duration = 2000; // Estimated time
+        const interval = 100;
+        const steps = duration / interval;
+        const increment = 90 / steps;
+
+        const progressInterval = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 90) {
+                    clearInterval(progressInterval);
+                    return 90;
+                }
+                return prev + increment;
+            });
+        }, interval);
 
         try {
+            // Logic:
+            // Download -> Send no email
+            // Email button -> Sends email. 
+
+            const payloadEmail = actionType === 'email' ? email : '';
+
             const response = await fetch('/api/export-category-data', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email,
+                    email: payloadEmail,
                     exportType,
-                    // Sending arrays to match expected backend format even though UI is single select
                     platforms: selectedPlatform === 'all' ? ['all'] : [selectedPlatform],
                     categories: selectedCategory === 'all' ? ['all'] : [selectedCategory],
-                    pincodes: [selectedPincode],
-                    products: ['all'] // Removed from UI, default to all
+                    pincodes: selectedPincodes.length > 0 ? selectedPincodes : ['all'],
+                    products: ['all']
                 })
             });
 
-            const data = await response.json();
+            clearInterval(progressInterval); // Stop simulation
 
             if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
                 throw new Error(data.error || 'Export failed');
             }
 
-            setSuccess(data.message || "Excel file has been sent to your email!");
+            setProgress(100);
+
+            // If Download Action, process the blob
+            if (actionType === 'download') {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const disposition = response.headers.get('Content-Disposition');
+                let filename = `category_export_${Date.now()}.xlsx`;
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                    if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
+                }
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                setSuccess("Download started!");
+            } else {
+                setSuccess("Email sent successfully!");
+            }
+
             setTimeout(() => {
-                onClose();
+                if (actionType === 'email') onClose();
                 setSuccess(false);
+                setProgress(0);
             }, 3000);
+
         } catch (err) {
+            clearInterval(progressInterval);
+            setProgress(0);
             setError(err.message);
         } finally {
             setLoading(false);
@@ -79,26 +139,19 @@ export default function ExportCategoryDialog({
                             Generate an Excel report
                         </p>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-1.5 rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors border border-transparent hover:border-neutral-200"
-                    >
-                        <X size={18} />
-                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6">
+                <div className="p-6">
 
                     {/* Email Input */}
                     <div className="mb-6">
                         <label className="block mb-2 text-sm font-semibold text-neutral-900">
-                            Email Address <span className="text-red-500">*</span>
+                            Email Address <span className="text-neutral-400 font-normal">(Required for Email)</span>
                         </label>
                         <div className="relative">
                             <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
                             <input
                                 type="email"
-                                required
                                 placeholder="name@company.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -158,50 +211,86 @@ export default function ExportCategoryDialog({
 
                                 <div>
                                     <label className="block mb-1.5 text-sm font-medium text-neutral-600">Pincode</label>
-                                    <select
-                                        value={selectedPincode}
-                                        onChange={(e) => setSelectedPincode(e.target.value)}
-                                        className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
-                                    >
-                                        {pincodeOptions.map(p => (
-                                            <option key={p.value} value={p.value}>{p.value}</option>
-                                        ))}
-                                    </select>
+                                    <MultiSelectDropdown
+                                        value={selectedPincodes}
+                                        onChange={setSelectedPincodes}
+                                        options={pincodeOptions}
+                                        placeholder="Select Pincodes"
+                                    />
                                 </div>
                             </div>
                         </div>
                     </div>
 
+
+                    {/* Progress Bar */}
+                    {loading && (
+                        <div className="mb-6">
+                            <div className="flex justify-between text-xs font-medium text-neutral-500 mb-2">
+                                <span>Exporting...</span>
+                                <span>{Math.round(progress)}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-neutral-900 transition-all duration-300 ease-out"
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Footer actions */}
                     <div className="flex gap-3 pt-6 border-t border-neutral-100">
+                        {/* Cancel */}
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-600 text-sm font-medium hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
+                            className="px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-600 text-sm font-medium hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
                         >
                             Cancel
                         </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={cn(
-                                "flex-1 px-4 py-2.5 rounded-md border border-neutral-900 bg-neutral-900 text-white text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-black hover:shadow-md",
-                                loading && "opacity-70 cursor-not-allowed hover:bg-neutral-900 hover:shadow-none"
-                            )}
-                        >
-                            {loading ? (
-                                'Processing...'
-                            ) : success ? (
-                                <>
-                                    <CheckCircle size={16} /> Sent!
-                                </>
-                            ) : (
-                                <>
-                                    <Download size={16} /> Export
-                                </>
-                            )}
-                        </button>
+
+                        <div className="flex-1 flex gap-2">
+                            {/* Download Button */}
+                            <button
+                                type="button"
+                                onClick={() => handleAction('download')}
+                                disabled={loading}
+                                className={cn(
+                                    "flex-1 px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-900 text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-gray-50 hover:border-neutral-300",
+                                    loading && "opacity-50 cursor-not-allowed"
+                                )}
+                            >
+                                <Download size={16} /> Download
+                            </button>
+
+                            {/* Email Button */}
+                            <button
+                                type="button"
+                                onClick={() => handleAction('email')}
+                                disabled={loading}
+                                className={cn(
+                                    "flex-1 px-4 py-2.5 rounded-md border border-neutral-900 bg-neutral-900 text-white text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-black hover:shadow-md",
+                                    loading && "opacity-70 cursor-not-allowed"
+                                )}
+                            >
+                                {loading && (email) ? ( // Crude loading check logic? Better to maybe separate loading states or just generic spinner
+                                    'Sending...'
+                                ) : (
+                                    <>
+                                        <Mail size={16} /> Email
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
+
+                    {success && (
+                        <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-md text-sm flex items-center gap-2 border border-green-100">
+                            <CheckCircle size={16} />
+                            {success}
+                        </div>
+                    )}
 
                     {error && (
                         <div className="mt-6 p-3 bg-red-50 text-red-700 rounded-md text-sm flex items-center gap-2 border border-red-100">
@@ -209,7 +298,7 @@ export default function ExportCategoryDialog({
                             {error}
                         </div>
                     )}
-                </form>
+                </div>
             </div>
         </div>
     );
