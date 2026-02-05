@@ -202,6 +202,21 @@ export async function GET(request) {
         }
       });
 
+      // Sort items by Best Rank (Ascending) before adding to list
+      currentPincodeItems.sort((a, b) => {
+        const getMinRank = (p) => {
+          let min = Infinity;
+          ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].forEach(key => {
+            if (p[key] && p[key].ranking && !isNaN(p[key].ranking)) {
+              const r = Number(p[key].ranking);
+              if (r < min) min = r;
+            }
+          });
+          return min;
+        };
+        return getMinRank(a) - getMinRank(b);
+      });
+
       if (currentPincodeItems.length > 0) {
         // Let's simply show "Pincode: XXXXXX" for now.
         let regionName = `Region: ${currentPincode}`;

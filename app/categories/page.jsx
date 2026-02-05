@@ -293,12 +293,12 @@ function CategoriesPageContent() {
           if (isLiveMode) {
             const latestTS = data.snapshots[0];
             const dateObj = new Date(latestTS);
-            setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
+            setSnapshotDate(dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
             setSnapshotTime(latestTS);
             fetchCategoryData(latestTS);
           } else {
             const snapshotsForSameDate = data.snapshots.filter(ts =>
-              new Date(ts).toLocaleDateString('en-CA') === snapshotDate
+              new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) === snapshotDate
             );
             if (snapshotDate && snapshotsForSameDate.length > 0) {
               setSnapshotTime(snapshotsForSameDate[0]);
@@ -310,7 +310,7 @@ function CategoriesPageContent() {
               // Better to just force fetch live data here
               const latestTS = data.snapshots[0];
               const dateObj = new Date(latestTS);
-              setSnapshotDate(dateObj.toLocaleDateString('en-CA'));
+              setSnapshotDate(dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
               setSnapshotTime(latestTS);
               fetchCategoryData(latestTS);
             }
@@ -399,7 +399,7 @@ function CategoriesPageContent() {
   useEffect(() => {
     if (lastUpdated && !snapshotTime) {
       const dateObj = new Date(lastUpdated);
-      const dateStr = dateObj.toLocaleDateString('en-CA');
+      const dateStr = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       setSnapshotDate(dateStr);
       setSnapshotTime(lastUpdated);
     }
@@ -408,7 +408,7 @@ function CategoriesPageContent() {
   const uniqueDates = useMemo(() => {
     const dates = availableSnapshots.map(ts => {
       const d = new Date(ts);
-      return d.toLocaleDateString('en-CA');
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     });
     return [...new Set(dates)];
   }, [availableSnapshots]);
@@ -484,16 +484,27 @@ function CategoriesPageContent() {
             if (aIsNew && !bIsNew) return -1;
             if (!aIsNew && bIsNew) return 1;
           }
-          const catA = itemA.officialCategory || '';
-          const catB = itemB.officialCategory || '';
+          // Prioritize Rank Sort first!
+          const getRank = (item) => {
+            if (item && item.ranking !== undefined && item.ranking !== null) {
+              const num = Number(item.ranking);
+              return isNaN(num) ? Infinity : num;
+            }
+            return Infinity;
+          };
+          const rankA = getRank(itemA);
+          const rankB = getRank(itemB);
+          if (rankA < rankB) return sortConfig.direction === 'asc' ? -1 : 1;
+          if (rankA > rankB) return sortConfig.direction === 'asc' ? 1 : -1;
+
+          // If ranks are equal (unlikely given logic, but for safety), fallback to Category
+          const catA = a.officialCategory || '';
+          const catB = b.officialCategory || '';
           if (catA !== catB) return catA.localeCompare(catB);
           const subCatA = resolveSubCategory(a);
           const subCatB = resolveSubCategory(b);
           if (subCatA !== subCatB) return subCatA.localeCompare(subCatB);
-          const rankA = itemA.ranking && !isNaN(itemA.ranking) ? itemA.ranking : Infinity;
-          const rankB = itemB.ranking && !isNaN(itemB.ranking) ? itemB.ranking : Infinity;
-          if (rankA < rankB) return sortConfig.direction === 'asc' ? -1 : 1;
-          if (rankA > rankB) return sortConfig.direction === 'asc' ? 1 : -1;
+
           return 0;
         } else {
           if (showNewFirst) {
@@ -521,8 +532,12 @@ function CategoriesPageContent() {
           const getMinRank = (p) => {
             let min = Infinity;
             platforms.forEach(key => {
-              if (p[key] && p[key].ranking && !isNaN(p[key].ranking)) {
-                if (p[key].ranking < min) min = p[key].ranking;
+              const item = p[key];
+              if (item && item.ranking !== undefined && item.ranking !== null) {
+                const num = Number(item.ranking);
+                if (!isNaN(num)) {
+                  if (num < min) min = num;
+                }
               }
             });
             return min;
@@ -762,11 +777,11 @@ function CategoriesPageContent() {
       if (direction) {
         newDirection = direction;
       } else if (currentConfig.key === key) {
-        // Cycle: asc (Rank) -> desc (Rank) -> price_asc (Price) -> price_desc (Price) -> asc...
+        // Cycle: asc (Rank) -> desc (Rank) -> price_asc (Price) -> price_desc (Price) -> Reset
         if (currentConfig.direction === 'asc') newDirection = 'desc';
         else if (currentConfig.direction === 'desc') newDirection = 'price_asc';
         else if (currentConfig.direction === 'price_asc') newDirection = 'price_desc';
-        else if (currentConfig.direction === 'price_desc') newDirection = 'asc';
+        else if (currentConfig.direction === 'price_desc') return { key: null, direction: null };
       }
       return { key, direction: newDirection };
     });
@@ -1005,15 +1020,7 @@ function CategoriesPageContent() {
               />
             </div>
 
-            {isAdmin && (
-              <div className="flex items-center gap-3 px-3 py-1.5 mb-0.5">
-                <span className="text-sm font-medium text-gray-700">Show New First</span>
-                <Switch
-                  checked={showNewFirst}
-                  onCheckedChange={setShowNewFirst}
-                />
-              </div>
-            )}
+
           </div>
         </div>
 
@@ -1068,6 +1075,9 @@ function CategoriesPageContent() {
                 totalPlatformCounts={totalPlatformCounts}
                 pincode={pincode}
                 onRefresh={fetchCategoryData}
+                showNewFirst={showNewFirst}
+                onShowNewFirstChange={setShowNewFirst}
+                isAdmin={isAdmin}
               />
             </div>
           )}

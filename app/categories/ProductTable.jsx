@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search, X, Pencil, Menu as MenuIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search, X, Pencil, Menu as MenuIcon, Check } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
@@ -74,18 +74,13 @@ const ProductTable = React.memo(function ProductTable({
     platformCounts,
     totalPlatformCounts, // NEW Prop
     pincode,
-    onRefresh // NEW Prop
+    onRefresh, // NEW Prop
+    showNewFirst,
+    onShowNewFirstChange,
+    isAdmin // Passed from parent
 }) {
-    // Check for admin param
-    const [isAdmin, setIsAdmin] = useState(false);
     const [manageGroup, setManageGroup] = useState(null); // Group currently being managed
     const [editProduct, setEditProduct] = useState(null); // Product currently being edited
-
-    React.useEffect(() => {
-        if (window.location.search.includes('admin=true')) {
-            setIsAdmin(true);
-        }
-    }, []);
 
     // TOAST STATE
     const [toastState, setToastState] = useState({
@@ -239,6 +234,20 @@ const ProductTable = React.memo(function ProductTable({
                                                 <TrendingDown size={14} className="text-gray-500" />
                                                 <span className="text-sm">Sort Price (High to Low)</span>
                                             </MenuItem>
+                                            {isAdmin && (
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        onShowNewFirstChange(!showNewFirst);
+                                                        handleSortMenuClose();
+                                                    }}
+                                                    className="text-sm gap-2 border-t border-gray-100 mt-1 pt-2"
+                                                >
+                                                    <div className="flex items-center justify-between w-full">
+                                                        <span className="text-sm font-medium">Show New First</span>
+                                                        {showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                    </div>
+                                                </MenuItem>
+                                            )}
                                         </Menu>
                                     </div>
                                 </TableCell>
@@ -283,24 +292,7 @@ const ProductTable = React.memo(function ProductTable({
                             {products.map((product, index) => {
                                 // Check if it's a header row
                                 if (product.isHeader) {
-                                    return (
-                                        <TableRow key={`header-${index}`} sx={{ backgroundColor: '#f0f0f0' }}>
-                                            <TableCell
-                                                colSpan={7} // Spanning across all columns (Product + 6 Platforms)
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    padding: '12px 24px',
-                                                    color: '#333',
-                                                    borderBottom: '1px solid #e5e5e5',
-                                                    position: 'sticky',
-                                                    left: 0,
-                                                    zIndex: 25 // Slightly above normal cells
-                                                }}
-                                            >
-                                                {product.title}
-                                            </TableCell>
-                                        </TableRow>
-                                    )
+                                    return null;
                                 }
 
                                 return (
