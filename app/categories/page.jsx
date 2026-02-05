@@ -1114,7 +1114,7 @@ function CategoriesPageContent() {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(c => c - 1)}
-                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
+                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <ArrowRight size={18} className="rotate-180" />
               </button>
@@ -1122,7 +1122,7 @@ function CategoriesPageContent() {
               <button
                 disabled={currentPage >= Math.ceil(sortedProducts.length / ITEMS_PER_PAGE)}
                 onClick={() => setCurrentPage(c => c + 1)}
-                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
+                className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <ArrowRight size={18} />
               </button>

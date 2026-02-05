@@ -53,7 +53,7 @@ function ProductDetailsDialog({
                             <h2 className="text-xl font-bold text-neutral-900">{selectedProduct.name}</h2>
                             <button
                                 onClick={() => setIsEditOpen(true)}
-                                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200 rounded-full transition-colors"
+                                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200 rounded-full transition-colors cursor-pointer"
                                 title="Edit Product Details"
                             >
                                 <Pencil size={16} />
@@ -76,7 +76,7 @@ function ProductDetailsDialog({
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 -mr-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-colors"
+                        className="p-2 -mr-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-colors cursor-pointer"
                     >
                         <X size={20} />
                     </button>

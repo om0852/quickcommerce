@@ -143,7 +143,7 @@ export default function ProductEditDialog({
                         <h3 className="text-xl font-bold text-gray-900">Edit Product Details</h3>
                         <p className="text-sm text-gray-500">Edit master group and individual platform data</p>
                     </div>
-                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200/50">
+                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200/50 cursor-pointer">
                         <X size={20} />
                     </button>
                 </div>

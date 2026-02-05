@@ -194,7 +194,7 @@ export default function GroupManagementDialog({
                         <h3 className="text-lg sm:text-2xl font-bold text-neutral-900">Manage Product Group</h3>
                         <p className="text-xs sm:text-sm text-neutral-500 mt-1">Group ID: <span className="font-mono font-semibold text-neutral-700">{groupingId}</span></p>
                     </div>
-                    <button onClick={onClose} className="p-2 -mr-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-200 rounded-full transition-colors">
+                    <button onClick={onClose} className="p-2 -mr-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-200 rounded-full transition-colors cursor-pointer">
                         <X size={24} />
                     </button>
                 </div>
@@ -225,7 +225,7 @@ export default function GroupManagementDialog({
                                             <button
                                                 onClick={() => handleRemove(item)}
                                                 disabled={loading}
-                                                className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                                                className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 cursor-pointer"
                                                 title="Remove from group"
                                             >
                                                 {loading ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
@@ -280,7 +280,7 @@ export default function GroupManagementDialog({
                                 <button
                                     onClick={handleAdd}
                                     disabled={loading || !addProductState.productId}
-                                    className="w-full bg-neutral-900 hover:bg-neutral-800 text-white px-6 py-3 rounded-lg text-sm font-bold uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                                    className="w-full bg-neutral-900 hover:bg-neutral-800 text-white px-6 py-3 rounded-lg text-sm font-bold uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors cursor-pointer"
                                 >
                                     {loading ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
                                     Add Product to Group
@@ -323,7 +323,7 @@ export default function GroupManagementDialog({
                                             }
                                         }
                                     }}
-                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors"
+                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors cursor-pointer"
                                 >
                                     Delete Group
                                 </button>
@@ -363,7 +363,7 @@ export default function GroupManagementDialog({
                                             }
                                         }
                                     }}
-                                    className="bg-red-900 hover:bg-black text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors"
+                                    className="bg-red-900 hover:bg-black text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors cursor-pointer"
                                 >
                                     Delete Group & Products
                                 </button>
@@ -397,7 +397,7 @@ export default function GroupManagementDialog({
                                             if (product) handleDeleteFromDB(product);
                                         }}
                                         disabled={!productToDelete || loading}
-                                        className="bg-red-800 hover:bg-red-900 text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                        className="bg-red-800 hover:bg-red-900 text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
                                     >
                                         Delete Product
                                     </button>
