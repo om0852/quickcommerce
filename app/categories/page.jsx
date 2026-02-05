@@ -587,12 +587,24 @@ function CategoriesPageContent() {
       let total = 0;
       let count = 0;
       platforms.forEach(p => {
-        if (product[p] && product[p].price && !isNaN(product[p].price)) {
-          total += Number(product[p].price);
-          count++;
+        const item = product[p];
+        if (item) {
+          // Pure Frontend Calculation: Use currentPrice
+          // Ensure we parse standard price format safely
+          const priceVal = item.currentPrice;
+          if (priceVal !== undefined && priceVal !== null) {
+            const num = Number(priceVal);
+            // Filter out invalid numbers or 0 if 0 is considered invalid price
+            if (!isNaN(num) && num > 0) {
+              total += num;
+              count++;
+            }
+          }
         }
       });
-      return count > 0 ? total / count : 0;
+
+      // Return Infinity for unserviceable to sort to bottom
+      return count > 0 ? total / count : Infinity;
     };
 
     const sortFunction = (a, b) => {
@@ -622,6 +634,12 @@ function CategoriesPageContent() {
       if (sortConfig.key === 'averagePrice') {
         const priceA = getAveragePrice(a);
         const priceB = getAveragePrice(b);
+
+        // Always push Infinity (Unserviceable) to the bottom
+        if (priceA === Infinity && priceB === Infinity) return 0;
+        if (priceA === Infinity) return 1;
+        if (priceB === Infinity) return -1;
+
         if (sortConfig.direction === 'asc') return priceA - priceB;
         return priceB - priceA;
       }
@@ -633,6 +651,13 @@ function CategoriesPageContent() {
         return nameB.localeCompare(nameA);
       }
       // ... existing code ...
+      if (sortConfig.key === 'averagePrice') {
+        const priceA = getAveragePrice(a);
+        const priceB = getAveragePrice(b);
+        if (sortConfig.direction === 'asc') return priceA - priceB;
+        return priceB - priceA;
+      }
+
       if (sortConfig.key !== null) {
         const platformKey = sortConfig.key;
         const itemA = a[platformKey];
@@ -650,8 +675,15 @@ function CategoriesPageContent() {
 
         // Handle Price Sort Direction
         if (sortConfig.direction === 'price_asc' || sortConfig.direction === 'price_desc') {
-          const priceA = itemA.currentPrice && !isNaN(itemA.currentPrice) ? Number(itemA.currentPrice) : Infinity;
-          const priceB = itemB.currentPrice && !isNaN(itemB.currentPrice) ? Number(itemB.currentPrice) : Infinity;
+          // Use averagePrice if available (from backend), else fallback to currentPrice
+          const getPrice = (item) => {
+            if (item.averagePrice !== undefined && item.averagePrice !== null) return Number(item.averagePrice);
+            if (item.currentPrice !== undefined && item.currentPrice !== null) return Number(item.currentPrice);
+            return Infinity;
+          };
+
+          const priceA = getPrice(itemA);
+          const priceB = getPrice(itemB);
 
           if (priceA < priceB) return sortConfig.direction === 'price_asc' ? -1 : 1;
           if (priceA > priceB) return sortConfig.direction === 'price_asc' ? 1 : -1;

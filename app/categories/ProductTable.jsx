@@ -231,11 +231,11 @@ const ProductTable = React.memo(function ProductTable({
                                                 <TrendingDown size={14} className="text-gray-500" />
                                                 <span className="text-sm">Sort Name (Z to A)</span>
                                             </MenuItem>
-                                            <MenuItem onClick={() => handleNameSort('price_asc')} className="text-sm gap-2">
+                                            <MenuItem onClick={() => handlePriceSort('asc')} className="text-sm gap-2">
                                                 <TrendingUp size={14} className="text-gray-500" />
                                                 <span className="text-sm">Sort Price (Low to High)</span>
                                             </MenuItem>
-                                            <MenuItem onClick={() => handleNameSort('price_desc')} className="text-sm gap-2">
+                                            <MenuItem onClick={() => handlePriceSort('desc')} className="text-sm gap-2">
                                                 <TrendingDown size={14} className="text-gray-500" />
                                                 <span className="text-sm">Sort Price (High to Low)</span>
                                             </MenuItem>

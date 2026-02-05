@@ -37,6 +37,10 @@ export async function GET(request) {
     let lastUpdatedTimestamp = null;
     let anyDataFound = false;
 
+    // Maps to store context for the second pass
+    const targetScrapedAtMap = new Map();
+    const allSnapshots = [];
+
     // Iterate over each pincode strictly in order
     for (const currentPincode of pincodeList) {
       let targetScrapedAt;
@@ -54,9 +58,6 @@ export async function GET(request) {
         if (exactBatch) {
           targetScrapedAt = exactBatch.scrapedAt;
         } else {
-          // If requested time not found for this pincode, skip or mark as no data
-          // We will skip adding products, but maybe add a header saying "No Data"?
-          // For now, let's just skip to avoid clutter
           continue;
         }
       } else {
@@ -71,9 +72,9 @@ export async function GET(request) {
 
         if (latestSnapshot) {
           targetScrapedAt = latestSnapshot.scrapedAt;
-          // Update global lastUpdated (use the most recent of all pincodes? or first? usually they are close)
+          // Update global lastUpdated
           if (!lastUpdatedTimestamp || targetScrapedAt > lastUpdatedTimestamp) {
-            lastUpdatedTimestamp = targetScrapedAt; // Take the newest one
+            lastUpdatedTimestamp = targetScrapedAt;
           }
         } else {
           continue; // No data for this pincode
@@ -81,11 +82,9 @@ export async function GET(request) {
       }
 
       anyDataFound = true;
+      targetScrapedAtMap.set(currentPincode, targetScrapedAt);
 
       // --- Step B: Fetch Data for this Pincode ---
-      // Fetch Groups (Common across pincodes usually, but we fetch to map)
-      const groups = await ProductGrouping.find({ category: category });
-
       // Fetch Snapshots
       const snapshots = await ProductSnapshot.find({
         pincode: currentPincode,
@@ -93,91 +92,125 @@ export async function GET(request) {
         $or: [{ category: category }]
       });
 
-      const snapshotMap = {};
-      snapshots.forEach(snap => {
-        snapshotMap[`${snap.platform}:${snap.productId}`] = snap;
-      });
+      allSnapshots.push(...snapshots);
+    } // End of initial pincode loop
 
-      // --- Step C: Merge Products ---
-      const pincodeProducts = [];
-      const usedSnapshotIds = new Set();
+    // Create a single snapshot map for efficient lookup across all fetched snapshots
+    const snapshotMap = {};
+    allSnapshots.forEach(snap => {
+      // Key includes pincode to avoid collisions if product IDs are not unique across pincodes
+      snapshotMap[`${snap.platform}:${snap.productId}:${snap.pincode}`] = snap;
+    });
+
+    const finalProducts = [];
+    const usedSnapshotIds = new Set();
+
+    // Fetch Groups (Common across pincodes usually, but we fetch to map)
+    const groups = await ProductGrouping.find({ category: category });
+
+    // Iterate over each selected pincode to maintain order and separation for merging
+    for (const currentPincode of pincodeList) {
+      const targetScrapedAt = targetScrapedAtMap.get(currentPincode);
+      if (!targetScrapedAt) {
+        continue;
+      }
+
+      const currentPincodeItems = [];
 
       groups.forEach(group => {
-        const productObj = {
-          groupingId: group.groupingId,
-          name: group.primaryName,
-          image: group.primaryImage,
-          weight: group.primaryWeight,
-          zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
-          officialCategory: group.category,
-          officialSubCategory: null,
-          scrapedAt: targetScrapedAt,
-          isGrouped: true,
-          pincode: currentPincode // Tagging product with pincode
+        // Temp storage for all matches in this group, separated by platform
+        const platformMatches = {
+          zepto: [], blinkit: [], jiomart: [], dmart: [], flipkartMinutes: [], instamart: []
         };
 
         let hasData = false;
+
+        // 1. Collect all matching snapshots for this group AND this pincode
         group.products.forEach(p => {
-          const snap = snapshotMap[`${p.platform}:${p.productId}`];
+          const snap = snapshotMap[`${p.platform}:${p.productId}:${currentPincode}`];
           if (snap) {
-            usedSnapshotIds.add(snap._id.toString());
-            hasData = true;
-            // Populate platform data (SAME AS BEFORE)
-            productObj[p.platform] = {
-              productId: snap.productId,
-              productName: snap.productName,
-              productImage: snap.productImage,
-              productWeight: snap.productWeight,
-              rating: snap.rating,
-              currentPrice: snap.currentPrice,
-              originalPrice: snap.originalPrice,
-              discountPercentage: snap.discountPercentage,
-              ranking: snap.ranking,
-              isOutOfStock: snap.isOutOfStock,
-              productUrl: snap.productUrl,
-              quantity: snap.quantity,
-              deliveryTime: snap.deliveryTime,
-              isAd: snap.isAd,
-              officialCategory: snap.officialCategory,
-              officialSubCategory: snap.officialSubCategory,
-              subCategory: snap.subCategory,
-              combo: snap.combo,
-              new: snap.new,
-              scrapedAt: snap.scrapedAt,
-              snapshotId: snap._id.toString()
-            };
-            if (!productObj.name) productObj.name = snap.productName;
-            if (!productObj.image) productObj.image = snap.productImage;
-            if (!productObj.officialSubCategory) productObj.officialSubCategory = snap.officialSubCategory;
+            if (platformMatches[p.platform]) {
+              platformMatches[p.platform].push(snap);
+              hasData = true;
+              usedSnapshotIds.add(snap._id.toString());
+            }
           }
         });
 
         if (hasData) {
-          pincodeProducts.push(productObj);
+          const productObj = {
+            groupingId: group.groupingId,
+            name: group.primaryName,
+            image: group.primaryImage,
+            weight: group.primaryWeight,
+            zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
+            officialCategory: group.category,
+            officialSubCategory: null,
+            scrapedAt: targetScrapedAt,
+            isGrouped: true,
+            pincode: currentPincode,
+            isHeader: false
+          };
 
-          // Aggregate Counts
-          if (productObj.zepto) aggregatedCounts.zepto++;
-          if (productObj.blinkit) aggregatedCounts.blinkit++;
-          if (productObj.jiomart) aggregatedCounts.jiomart++;
-          if (productObj.dmart) aggregatedCounts.dmart++;
-          if (productObj.flipkartMinutes) aggregatedCounts.flipkartMinutes++;
-          if (productObj.instamart) aggregatedCounts.instamart++;
+          // 2. Process matches per platform
+          Object.keys(platformMatches).forEach(platform => {
+            const matches = platformMatches[platform];
+            if (matches.length > 0) {
+              // B. Select "Best" Snapshot to display
+              const bestSnap = matches.sort((a, b) => {
+                const rA = a.ranking && !isNaN(a.ranking) ? a.ranking : Infinity;
+                const rB = b.ranking && !isNaN(b.ranking) ? b.ranking : Infinity;
+                if (rA !== rB) return rA - rB;
+                return Number(a.currentPrice || 0) - Number(b.currentPrice || 0);
+              })[0];
+
+              // C. Populate Object
+              productObj[platform] = {
+                productId: bestSnap.productId,
+                productName: bestSnap.productName,
+                productImage: bestSnap.productImage,
+                productWeight: bestSnap.productWeight,
+                rating: bestSnap.rating,
+                currentPrice: bestSnap.currentPrice,
+                // averagePrice removed as per user request
+                originalPrice: bestSnap.originalPrice,
+                discountPercentage: bestSnap.discountPercentage,
+                ranking: bestSnap.ranking,
+                isOutOfStock: bestSnap.isOutOfStock,
+                productUrl: bestSnap.productUrl,
+                quantity: bestSnap.quantity,
+                deliveryTime: bestSnap.deliveryTime,
+                isAd: bestSnap.isAd,
+                officialCategory: bestSnap.officialCategory,
+                officialSubCategory: bestSnap.officialSubCategory,
+                subCategory: bestSnap.subCategory,
+                combo: bestSnap.combo,
+                new: bestSnap.new,
+                scrapedAt: bestSnap.scrapedAt,
+                snapshotId: bestSnap._id.toString()
+              };
+
+              if (!productObj.name) productObj.name = bestSnap.productName;
+              if (!productObj.image) productObj.image = bestSnap.productImage;
+              if (!productObj.officialSubCategory) productObj.officialSubCategory = bestSnap.officialSubCategory;
+
+              aggregatedCounts[platform]++;
+            }
+          });
+
+          currentPincodeItems.push(productObj);
         }
       });
 
-      // --- Step D: Add Header and Append ---
-      if (pincodeProducts.length > 0) {
-        // Find a formatted name for pincode if possible, or just use code
-        // We don't have the label map here easily unless we hardcode or fetch. 
+      if (currentPincodeItems.length > 0) {
         // Let's simply show "Pincode: XXXXXX" for now.
-        // Or better, since we know few pincodes, we can map if we want, but "Region: XXXXXX" is safe.
         let regionName = `Region: ${currentPincode}`;
         if (currentPincode === '201303') regionName = "Delhi NCR — 201303";
         if (currentPincode === '400706') regionName = "Navi Mumbai — 400706";
         if (currentPincode === '201014') regionName = "Delhi NCR — 201014";
         if (currentPincode === '122008') regionName = "Delhi NCR — 122008";
         if (currentPincode === '122010') regionName = "Delhi NCR — 122010";
-        if (currentPincode === '122016') regionName = "Delhi NCR — 122016"; // Added for completeness if matches page
+        if (currentPincode === '122016') regionName = "Delhi NCR — 122016";
         if (currentPincode === '400070') regionName = "Mumbai — 400070";
         if (currentPincode === '400703') regionName = "Mumbai — 400703";
         if (currentPincode === '401101') regionName = "Mumbai — 401101";
@@ -188,7 +221,7 @@ export async function GET(request) {
           title: regionName,
           pincode: currentPincode
         });
-        allMergedProducts = allMergedProducts.concat(pincodeProducts);
+        allMergedProducts.push(...currentPincodeItems);
       }
     } // End Loop
 
