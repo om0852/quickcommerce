@@ -38,7 +38,7 @@ export default function CustomDropdown({
 
   const filteredOptions = searchable
     ? options.filter(opt =>
-      opt.label.toLowerCase().includes(searchQuery.toLowerCase())
+      opt.label && opt.label.toLowerCase().includes(searchQuery.toLowerCase())
     )
     : options;
 

@@ -497,14 +497,7 @@ function CategoriesPageContent() {
           if (rankA < rankB) return sortConfig.direction === 'asc' ? -1 : 1;
           if (rankA > rankB) return sortConfig.direction === 'asc' ? 1 : -1;
 
-          // If ranks are equal (unlikely given logic, but for safety), fallback to Category
-          const catA = a.officialCategory || '';
-          const catB = b.officialCategory || '';
-          if (catA !== catB) return catA.localeCompare(catB);
-          const subCatA = resolveSubCategory(a);
-          const subCatB = resolveSubCategory(b);
-          if (subCatA !== subCatB) return subCatA.localeCompare(subCatB);
-
+          // If ranks are equal, maintain stable order (return 0)
           return 0;
         } else {
           if (showNewFirst) {
@@ -705,15 +698,9 @@ function CategoriesPageContent() {
           return 0;
         }
 
-        // Default / Rank Sort
-        const catA = itemA.officialCategory || '';
-        const catB = itemB.officialCategory || '';
-        if (catA !== catB) return catA.localeCompare(catB);
-        const subCatA = resolveSubCategory(a);
-        const subCatB = resolveSubCategory(b);
-        if (subCatA !== subCatB) return subCatA.localeCompare(subCatB);
-        const rankA = itemA.ranking && !isNaN(itemA.ranking) ? itemA.ranking : Infinity;
-        const rankB = itemB.ranking && !isNaN(itemB.ranking) ? itemB.ranking : Infinity;
+        // Pure Rank Sort (no category grouping)
+        const rankA = itemA.ranking && !isNaN(itemA.ranking) ? Number(itemA.ranking) : Infinity;
+        const rankB = itemB.ranking && !isNaN(itemB.ranking) ? Number(itemB.ranking) : Infinity;
         if (rankA < rankB) return sortConfig.direction === 'asc' ? -1 : 1;
         if (rankA > rankB) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
