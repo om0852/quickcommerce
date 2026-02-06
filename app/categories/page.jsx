@@ -1034,7 +1034,7 @@ function CategoriesPageContent() {
         {/* Content Area */}
         <div className="flex-1">
           {activeTab === 'products' && (
-            <div className="h-[calc(100vh-200px)] bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
               <ProductTable
                 products={paginatedProducts}
                 sortConfig={sortConfig}

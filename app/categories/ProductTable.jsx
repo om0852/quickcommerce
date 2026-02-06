@@ -130,10 +130,7 @@ const ProductTable = React.memo(function ProductTable({
         <>
             <Paper
                 sx={{
-                    height: '100%',
                     width: '100%',
-                    overflow: 'hidden',
-                    flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
                     maxWidth: 'calc(100vw - 2rem)', // Constraint to prevent page overflow
@@ -143,7 +140,7 @@ const ProductTable = React.memo(function ProductTable({
                     position: 'relative' // Ensure relative positioning for overlay
                 }}
             >
-                <TableContainer sx={{ flex: 1, maxHeight: '100%', height: '100%' }}>
+                <TableContainer>
                     <Table stickyHeader aria-label="sticky table" size="small">
                         <TableHead>
                             <TableRow>
