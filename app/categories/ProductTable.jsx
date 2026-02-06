@@ -198,79 +198,90 @@ const ProductTable = React.memo(function ProductTable({
                                         >
                                             <MenuIcon size={16} />
                                         </button>
-                                        <Menu
-                                            anchorEl={sortMenuAnchor}
-                                            open={isSortMenuOpen}
-                                            onClose={handleSortMenuClose}
-                                            MenuListProps={{
-                                                'aria-labelledby': 'basic-button',
-                                            }}
-                                            anchorOrigin={{
-                                                vertical: 'bottom',
-                                                horizontal: 'right',
-                                            }}
-                                            transformOrigin={{
-                                                vertical: 'top',
-                                                horizontal: 'right',
-                                            }}
-                                            slotProps={{
-                                                paper: {
-                                                    sx: {
-                                                        borderRadius: '12px',
-                                                        boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-                                                        border: '1px solid #e5e5e5',
-                                                        minWidth: '200px',
-                                                        mt: 1,
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            <div className="px-3 py-2 border-b border-gray-100">
-                                                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sort By</span>
-                                            </div>
-                                            <MenuItem onClick={() => handleNameSort('asc')} sx={{ py: 1.5, px: 2 }}>
-                                                <div className="flex items-center gap-3">
-                                                    <TrendingUp size={16} className="text-emerald-500" />
-                                                    <span className="text-sm font-medium text-gray-700">Name (A to Z)</span>
-                                                </div>
-                                            </MenuItem>
-                                            <MenuItem onClick={() => handleNameSort('desc')} sx={{ py: 1.5, px: 2 }}>
-                                                <div className="flex items-center gap-3">
-                                                    <TrendingDown size={16} className="text-rose-500" />
-                                                    <span className="text-sm font-medium text-gray-700">Name (Z to A)</span>
-                                                </div>
-                                            </MenuItem>
-                                            <div className="border-t border-gray-100 my-1" />
-                                            <MenuItem onClick={() => handlePriceSort('asc')} sx={{ py: 1.5, px: 2 }}>
-                                                <div className="flex items-center gap-3">
-                                                    <TrendingUp size={16} className="text-emerald-500" />
-                                                    <span className="text-sm font-medium text-gray-700">Price (Low to High)</span>
-                                                </div>
-                                            </MenuItem>
-                                            <MenuItem onClick={() => handlePriceSort('desc')} sx={{ py: 1.5, px: 2 }}>
-                                                <div className="flex items-center gap-3">
-                                                    <TrendingDown size={16} className="text-rose-500" />
-                                                    <span className="text-sm font-medium text-gray-700">Price (High to Low)</span>
-                                                </div>
-                                            </MenuItem>
-                                            {isAdmin && (
-                                                <>
+                                        {/* Custom lightweight dropdown - no animations */}
+                                        {isSortMenuOpen && (
+                                            <>
+                                                <div
+                                                    className="fixed inset-0 z-40"
+                                                    onClick={handleSortMenuClose}
+                                                />
+                                                <div className="absolute top-full right-0 mt-1 z-50 bg-white rounded-xl shadow-lg border border-gray-200 min-w-[200px]">
+                                                    <div className="px-3 py-2 border-b border-gray-100">
+                                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sort By</span>
+                                                    </div>
+                                                    <div
+                                                        onClick={() => handleNameSort('asc')}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <TrendingUp size={16} className="text-emerald-500" />
+                                                            <span className="text-sm font-medium text-gray-700">Name (A to Z)</span>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        onClick={() => handleNameSort('desc')}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <TrendingDown size={16} className="text-rose-500" />
+                                                            <span className="text-sm font-medium text-gray-700">Name (Z to A)</span>
+                                                        </div>
+                                                    </div>
                                                     <div className="border-t border-gray-100 my-1" />
-                                                    <MenuItem
+                                                    <div
+                                                        onClick={() => handlePriceSort('asc')}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <TrendingUp size={16} className="text-emerald-500" />
+                                                            <span className="text-sm font-medium text-gray-700">Price (Low to High)</span>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        onClick={() => handlePriceSort('desc')}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <TrendingDown size={16} className="text-rose-500" />
+                                                            <span className="text-sm font-medium text-gray-700">Price (High to Low)</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="border-t border-gray-100 my-1" />
+                                                    <div className="px-3 py-2 border-b border-gray-100">
+                                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Filters</span>
+                                                    </div>
+                                                    <div
                                                         onClick={() => {
                                                             onShowNewFirstChange(!showNewFirst);
                                                             handleSortMenuClose();
                                                         }}
-                                                        sx={{ py: 1.5, px: 2 }}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
                                                     >
                                                         <div className="flex items-center justify-between w-full">
-                                                            <span className="text-sm font-medium text-gray-700">Show New First</span>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-blue-500 text-xs font-bold">NEW</span>
+                                                                <span className="text-sm font-medium text-gray-700">Show New First</span>
+                                                            </div>
                                                             {showNewFirst && <Check size={16} className="text-emerald-500" />}
                                                         </div>
-                                                    </MenuItem>
-                                                </>
-                                            )}
-                                        </Menu>
+                                                    </div>
+                                                    <div className="border-t border-gray-100 my-1" />
+                                                    <div
+                                                        onClick={() => {
+                                                            onSort(null);
+                                                            if (showNewFirst) onShowNewFirstChange(false);
+                                                            handleSortMenuClose();
+                                                        }}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <RefreshCw size={16} className="text-gray-500" />
+                                                            <span className="text-sm font-medium text-gray-700">Reset All Filters</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </TableCell>
 
