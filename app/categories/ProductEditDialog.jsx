@@ -6,9 +6,16 @@ import { brands } from '@/app/utils/brandarray';
 // Searchable Brand Combobox Component
 function BrandCombobox({ brand, setBrand }) {
     const [isOpen, setIsOpen] = useState(false);
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(brand || '');
     const inputRef = useRef(null);
     const dropdownRef = useRef(null);
+
+    // Sync search with brand when brand changes externally
+    useEffect(() => {
+        if (!isOpen) {
+            setSearch(brand || '');
+        }
+    }, [brand, isOpen]);
 
     const filteredBrands = useMemo(() => {
         if (!search) return brands.slice(0, 50); // Show first 50 when no search
@@ -31,7 +38,7 @@ function BrandCombobox({ brand, setBrand }) {
 
     const handleSelect = (selectedBrand) => {
         setBrand(selectedBrand);
-        setSearch('');
+        setSearch(selectedBrand);
         setIsOpen(false);
     };
 
@@ -44,7 +51,6 @@ function BrandCombobox({ brand, setBrand }) {
 
     const handleInputFocus = () => {
         setIsOpen(true);
-        setSearch(brand); // Pre-fill search with current brand
     };
 
     return (
@@ -54,7 +60,7 @@ function BrandCombobox({ brand, setBrand }) {
                 <input
                     ref={inputRef}
                     type="text"
-                    value={isOpen ? search : brand}
+                    value={search}
                     onChange={handleInputChange}
                     onFocus={handleInputFocus}
                     className="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-colors"

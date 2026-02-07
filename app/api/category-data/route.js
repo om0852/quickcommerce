@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
 import ProductGrouping from '@/models/ProductGrouping';
+import Brand from '@/models/Brand';
 
 export async function GET(request) {
   try {
@@ -108,6 +109,13 @@ export async function GET(request) {
     // Fetch Groups (Common across pincodes usually, but we fetch to map)
     const groups = await ProductGrouping.find({ category: category });
 
+    // Fetch all brands and create a lookup map (brandId -> brandName)
+    const allBrands = await Brand.find({});
+    const brandMap = {};
+    allBrands.forEach(b => {
+      brandMap[b.brandId] = b.brandName;
+    });
+
     // Iterate over each selected pincode to maintain order and separation for merging
     for (const currentPincode of pincodeList) {
       const targetScrapedAt = targetScrapedAtMap.get(currentPincode);
@@ -143,7 +151,8 @@ export async function GET(request) {
             name: group.primaryName,
             image: group.primaryImage,
             weight: group.primaryWeight,
-            brand: group.brand || '',
+            brand: brandMap[group.brandId] || group.brand || '',
+            brandId: group.brandId || '',
             zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
             officialCategory: group.category,
             officialSubCategory: null,
