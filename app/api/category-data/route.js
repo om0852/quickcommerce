@@ -115,6 +115,7 @@ export async function GET(request) {
     allBrands.forEach(b => {
       brandMap[b.brandId] = b.brandName;
     });
+    console.log('[category-data] Loaded', Object.keys(brandMap).length, 'brands');
 
     // Iterate over each selected pincode to maintain order and separation for merging
     for (const currentPincode of pincodeList) {
