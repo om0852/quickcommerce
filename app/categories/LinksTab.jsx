@@ -50,7 +50,7 @@ const LinksTab = ({ data, selectedCategory }) => {
 
             return true;
         });
-    }, [flatData, searchQuery, platformFilter]);
+    }, [flatData, searchQuery, platformFilter, selectedCategory]);
 
     const platforms = useMemo(() => {
         return ['all', ...Object.keys(data || {})];
