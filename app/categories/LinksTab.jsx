@@ -53,7 +53,10 @@ const LinksTab = ({ data, selectedCategory }) => {
     }, [flatData, searchQuery, platformFilter, selectedCategory]);
 
     const platforms = useMemo(() => {
-        return ['all', ...Object.keys(data || {})];
+        // Fixed order to match main page sequence
+        const orderedPlatforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkart', 'instamart'];
+        const availablePlatforms = Object.keys(data || {}).map(p => p.toLowerCase());
+        return ['all', ...orderedPlatforms.filter(p => availablePlatforms.includes(p))];
     }, [data]);
 
     return (

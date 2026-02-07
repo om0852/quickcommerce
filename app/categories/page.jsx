@@ -13,6 +13,7 @@ import ProductDetailsDialog from './ProductDetailsDialog';
 import ProductTable from './ProductTable';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import LinksTab from './LinksTab';
+import BrandTab from './BrandTab';
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
@@ -1014,7 +1015,7 @@ function CategoriesPageContent() {
         {/* Tab Switcher */}
         <div className="flex-none">
           <div className="inline-flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-            {['products', 'analytics', 'stock', 'links'].map((tab) => (
+            {['products', 'analytics', 'stock', 'links', 'brands'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -1079,6 +1080,7 @@ function CategoriesPageContent() {
               products={products}
               category={category}
               pincode={pincode}
+              loading={loading}
             />
           )}
 
@@ -1088,6 +1090,10 @@ function CategoriesPageContent() {
               pincode={pincode}
               platform={platformFilter}
             />
+          )}
+
+          {activeTab === 'brands' && (
+            <BrandTab products={products} loading={loading} />
           )}
         </div>
 

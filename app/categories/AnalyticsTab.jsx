@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import CustomDropdown from '@/components/CustomDropdown';
+import { cn } from '@/lib/utils';
 
-function AnalyticsTab({ products, pincode }) {
+// Skeleton component
+const Skeleton = ({ className }) => (
+  <div className={cn("animate-pulse bg-gray-200 rounded", className)} />
+);
+
+// Chart skeleton
+const ChartSkeleton = () => (
+  <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-200">
+    <Skeleton className="h-6 w-40 mb-2" />
+    <Skeleton className="h-4 w-60 mb-6" />
+    <Skeleton className="h-64 w-full" />
+  </div>
+);
+
+function AnalyticsTab({ products, pincode, loading: productsLoading }) {
   const [selectedProductValue, setSelectedProductValue] = useState(null);
   const [historyData, setHistoryData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Prepare options for dropdown
   // Prepare options for dropdown (deduplicated by name)
@@ -37,7 +52,7 @@ function AnalyticsTab({ products, pincode }) {
     const product = products.find(p => p.name === selectedProductValue);
     if (!product) return;
 
-    setLoading(true);
+    setHistoryLoading(true);
 
     // Construct IDs for fetch
     const productIds = {};
@@ -83,11 +98,11 @@ function AnalyticsTab({ products, pincode }) {
           }));
           setHistoryData(transformedData);
         }
-        setLoading(false);
+        setHistoryLoading(false);
       })
       .catch(err => {
         console.error("Failed to fetch history", err);
-        setLoading(false);
+        setHistoryLoading(false);
       });
 
   }, [selectedProductValue, pincode, products]);
@@ -126,7 +141,13 @@ function AnalyticsTab({ products, pincode }) {
         </div>
       </div>
 
-      {loading ? (
+      {productsLoading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartSkeleton />
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
+      ) : historyLoading ? (
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
         </div>
