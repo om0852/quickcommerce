@@ -14,9 +14,10 @@ export async function POST(request) {
 
         // Map frontend specific names to DB fields
         const allowedUpdates = {};
-        // We expect updates to have 'name' and 'weight' keys
+        // We expect updates to have 'name', 'weight', 'brand' keys
         if (typeof updates.name !== 'undefined') allowedUpdates.primaryName = updates.name;
         if (typeof updates.weight !== 'undefined') allowedUpdates.primaryWeight = updates.weight;
+        if (typeof updates.brand !== 'undefined') allowedUpdates.brand = updates.brand;
 
         // Check if there are valid updates
         if (Object.keys(allowedUpdates).length === 0) {

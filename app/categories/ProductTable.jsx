@@ -434,6 +434,11 @@ const ProductTable = React.memo(function ProductTable({
                                                                 </button>
                                                             )}
                                                         </div>
+                                                        {product.brand && (
+                                                            <div className="text-xs text-neutral-500 mt-0.5">
+                                                                {product.brand}
+                                                            </div>
+                                                        )}
                                                         {isAdmin && (
                                                             <button
                                                                 onClick={(e) => {

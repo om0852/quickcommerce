@@ -332,7 +332,17 @@ async function processExportInBackground(body) {
         const sortPlatforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
 
         allProcessedRows.sort((a, b) => {
-            // 1. Sort by Match Count (High availability first)
+            // 1. Primary Sort: Pincode (Ascending) - Group by Location
+            if (a.pincode !== b.pincode) {
+                return (a.pincode || '').toString().localeCompare((b.pincode || '').toString());
+            }
+
+            // 2. Secondary Sort: Category (Ascending) - Group by Category within Pincode
+            if (a.category !== b.category) {
+                return (a.category || '').localeCompare(b.category || '');
+            }
+
+            // 3. Tertiary Sort: Match Count (High availability first)
             const countA = sortPlatforms.filter(p => a[`${p}_available`] === 'Yes').length;
             const countB = sortPlatforms.filter(p => b[`${p}_available`] === 'Yes').length;
 
@@ -340,7 +350,7 @@ async function processExportInBackground(body) {
                 return countB - countA; // Descending
             }
 
-            // 2. Secondary Sort: Product Name (Ascending) for consistency
+            // 4. Quaternary Sort: Product Name (Ascending)
             return (a.productName || '').localeCompare(b.productName || '');
         });
 

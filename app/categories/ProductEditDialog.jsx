@@ -1,6 +1,117 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Loader2, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { X, Save, Loader2, ChevronDown, ChevronUp, ExternalLink, Search } from 'lucide-react';
 import { Switch } from '@/components/ui/switch'; // Assuming you have a Switch component, if not will use standard input or create simple toggle
+import { brands } from '@/app/utils/brandarray';
+
+// Searchable Brand Combobox Component
+function BrandCombobox({ brand, setBrand }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const inputRef = useRef(null);
+    const dropdownRef = useRef(null);
+
+    const filteredBrands = useMemo(() => {
+        if (!search) return brands.slice(0, 50); // Show first 50 when no search
+        return brands.filter(b =>
+            b.toLowerCase().includes(search.toLowerCase())
+        ).slice(0, 50); // Limit to 50 results
+    }, [search]);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target) &&
+                inputRef.current && !inputRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleSelect = (selectedBrand) => {
+        setBrand(selectedBrand);
+        setSearch('');
+        setIsOpen(false);
+    };
+
+    const handleInputChange = (e) => {
+        const value = e.target.value;
+        setSearch(value);
+        setBrand(value); // Update brand as user types (allows custom entry)
+        if (!isOpen) setIsOpen(true);
+    };
+
+    const handleInputFocus = () => {
+        setIsOpen(true);
+        setSearch(brand); // Pre-fill search with current brand
+    };
+
+    return (
+        <div className="relative">
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <input
+                    ref={inputRef}
+                    type="text"
+                    value={isOpen ? search : brand}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    className="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-colors"
+                    placeholder="Search or add brand..."
+                />
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                    <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+            </div>
+
+            {isOpen && (
+                <div
+                    ref={dropdownRef}
+                    className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                >
+                    {filteredBrands.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-gray-500">
+                            No brands found.
+                            {search && (
+                                <button
+                                    onClick={() => handleSelect(search)}
+                                    className="block w-full mt-2 text-left text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                    + Add "{search}" as new brand
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <>
+                            {search && !filteredBrands.includes(search) && (
+                                <button
+                                    onClick={() => handleSelect(search)}
+                                    className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 font-medium border-b border-gray-100"
+                                >
+                                    + Add "{search}" as new brand
+                                </button>
+                            )}
+                            {filteredBrands.map((b, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => handleSelect(b)}
+                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${brand === b ? 'bg-gray-100 font-semibold' : ''}`}
+                                >
+                                    {b}
+                                </button>
+                            ))}
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function ProductEditDialog({
     isOpen,
@@ -13,6 +124,7 @@ export default function ProductEditDialog({
     // Group Level State
     const [name, setName] = useState('');
     const [weight, setWeight] = useState('');
+    const [brand, setBrand] = useState('');
 
     // Platform Level State - Array of objects to track edits
     const [platformData, setPlatformData] = useState([]);
@@ -28,6 +140,7 @@ export default function ProductEditDialog({
             // Group Init
             setName(product.name || '');
             setWeight(product.weight || '');
+            setBrand(product.brand || '');
 
             // Platform Init
             const initialData = [];
@@ -82,7 +195,7 @@ export default function ProductEditDialog({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     groupingId: product.groupingId,
-                    updates: { name, weight }
+                    updates: { name, weight, brand }
                 })
             });
 
@@ -178,6 +291,10 @@ export default function ProductEditDialog({
                                     onChange={(e) => setWeight(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-colors"
                                 />
+                            </div>
+                            <div className="space-y-1 relative">
+                                <label className="text-xs font-semibold text-gray-500">Brand</label>
+                                <BrandCombobox brand={brand} setBrand={setBrand} />
                             </div>
                         </div>
                     </div>

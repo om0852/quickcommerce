@@ -143,6 +143,7 @@ export async function GET(request) {
             name: group.primaryName,
             image: group.primaryImage,
             weight: group.primaryWeight,
+            brand: group.brand || '',
             zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
             officialCategory: group.category,
             officialSubCategory: null,
