@@ -45,6 +45,20 @@ const ProductGroupingSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         index: true
+    },
+
+    // Linked Brand ID
+    brandId: {
+        type: String,
+        default: 'N/A',
+        index: true
+    },
+
+    // Brand Name (Free text for display/editing)
+    brand: {
+        type: String,
+        default: '',
+        index: true
     }
 
 }, {
