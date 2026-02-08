@@ -230,18 +230,24 @@ const ProductTable = React.memo(function ProductTable({
                                                         onClick={() => handleNameSort('asc')}
                                                         className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            <TrendingUp size={16} className="text-emerald-500" />
-                                                            <span className="text-sm font-medium text-gray-700">Name (A to Z)</span>
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex items-center gap-3">
+                                                                <TrendingUp size={16} className="text-emerald-500" />
+                                                                <span className="text-sm font-medium text-gray-700">Name (A to Z)</span>
+                                                            </div>
+                                                            {sortConfig.key === 'name' && sortConfig.direction === 'asc' && <Check size={16} className="text-emerald-500" />}
                                                         </div>
                                                     </div>
                                                     <div
                                                         onClick={() => handleNameSort('desc')}
                                                         className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            <TrendingDown size={16} className="text-rose-500" />
-                                                            <span className="text-sm font-medium text-gray-700">Name (Z to A)</span>
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex items-center gap-3">
+                                                                <TrendingDown size={16} className="text-rose-500" />
+                                                                <span className="text-sm font-medium text-gray-700">Name (Z to A)</span>
+                                                            </div>
+                                                            {sortConfig.key === 'name' && sortConfig.direction === 'desc' && <Check size={16} className="text-emerald-500" />}
                                                         </div>
                                                     </div>
                                                     <div className="border-t border-gray-100 my-1" />
@@ -249,18 +255,24 @@ const ProductTable = React.memo(function ProductTable({
                                                         onClick={() => handlePriceSort('asc')}
                                                         className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            <TrendingUp size={16} className="text-emerald-500" />
-                                                            <span className="text-sm font-medium text-gray-700">Price (Low to High)</span>
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex items-center gap-3">
+                                                                <TrendingUp size={16} className="text-emerald-500" />
+                                                                <span className="text-sm font-medium text-gray-700">Price (Low to High)</span>
+                                                            </div>
+                                                            {sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && <Check size={16} className="text-emerald-500" />}
                                                         </div>
                                                     </div>
                                                     <div
                                                         onClick={() => handlePriceSort('desc')}
                                                         className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            <TrendingDown size={16} className="text-rose-500" />
-                                                            <span className="text-sm font-medium text-gray-700">Price (High to Low)</span>
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex items-center gap-3">
+                                                                <TrendingDown size={16} className="text-rose-500" />
+                                                                <span className="text-sm font-medium text-gray-700">Price (High to Low)</span>
+                                                            </div>
+                                                            {sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && <Check size={16} className="text-emerald-500" />}
                                                         </div>
                                                     </div>
                                                     <div className="border-t border-gray-100 my-1" />
