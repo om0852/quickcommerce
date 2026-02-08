@@ -206,6 +206,23 @@ const ProductTable = React.memo(function ProductTable({
                                                     onClick={handleSortMenuClose}
                                                 />
                                                 <div className="absolute top-full right-0 mt-1 z-50 bg-white rounded-xl shadow-lg border border-gray-200 min-w-[200px]">
+
+                                                    <div
+                                                        onClick={() => {
+                                                            onSort(null);
+                                                            if (showNewFirst) onShowNewFirstChange(false);
+                                                            handleSortMenuClose();
+                                                        }}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50 border-b border-gray-100"
+                                                    >
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex items-center gap-3">
+                                                                <RefreshCw size={16} className="text-blue-500" />
+                                                                <span className="text-sm font-medium text-gray-700">Default</span>
+                                                            </div>
+                                                            {sortConfig.key === null && !showNewFirst && <Check size={16} className="text-emerald-500" />}
+                                                        </div>
+                                                    </div>
                                                     <div className="px-3 py-2 border-b border-gray-100">
                                                         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sort By</span>
                                                     </div>
@@ -542,6 +559,7 @@ const ProductTable = React.memo(function ProductTable({
             {/* Edit Product Dialog */}
             {
                 editProduct && (
+
                     <ProductEditDialog
                         isOpen={!!editProduct}
                         onClose={() => setEditProduct(null)}
@@ -550,6 +568,7 @@ const ProductTable = React.memo(function ProductTable({
                             if (onRefresh) onRefresh();
                             setEditProduct(null);
                         }}
+                        showToast={showToast}
                     />
                 )
             }

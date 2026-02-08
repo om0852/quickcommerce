@@ -123,7 +123,8 @@ export default function ProductEditDialog({
     isOpen,
     onClose,
     product,
-    onUpdate
+    onUpdate,
+    showToast // NEW Prop
 }) {
     if (!isOpen || !product) return null;
 
@@ -160,10 +161,6 @@ export default function ProductEditDialog({
                         originalPrice: product[p].originalPrice || '',
                         productWeight: product[p].productWeight || '',
                         productImage: product[p].productImage || '', // Added
-                        officialCategory: product[p].officialCategory || '',
-                        officialSubCategory: product[p].officialSubCategory || '',
-                        officialSubCategory: product[p].officialSubCategory || '',
-                        productWeight: product[p].productWeight || '',
                         officialCategory: product[p].officialCategory || '',
                         officialSubCategory: product[p].officialSubCategory || '',
                         productUrl: product[p].productUrl || '', // Added
@@ -237,6 +234,7 @@ export default function ProductEditDialog({
             if (modifiedPlatforms.length > 0 && snapRes && !snapRes.ok) throw new Error('Failed to update snapshots');
 
             // Success
+            if (showToast) showToast('Product updated successfully', 'success'); // Trigger Toast
             onUpdate(); // Trigger refresh
             onClose();
 
