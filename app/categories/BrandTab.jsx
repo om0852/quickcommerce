@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Search, X, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import BrandProductsDialog from './BrandProductsDialog';
 
 // Skeleton component
 const Skeleton = ({ className }) => (
@@ -91,6 +92,20 @@ const BrandTab = ({ products, loading }) => {
         return result;
     }, [filteredBrands]);
 
+
+    // Interaction State
+    const [selectedBrandInteraction, setSelectedBrandInteraction] = useState(null);
+
+    const handleInteraction = (brandName, platform) => {
+        if (!selectedBrandInteraction) {
+            setSelectedBrandInteraction({ brandName, platform });
+        }
+    };
+
+    const handleCloseDialog = () => {
+        setSelectedBrandInteraction(null);
+    };
+
     return (
         <div className="flex flex-col gap-4 h-full">
             {/* Controls */}
@@ -156,11 +171,21 @@ const BrandTab = ({ products, loading }) => {
                                                 )}
                                             </td>
                                             {platforms.map(p => (
-                                                <td key={p} className="px-4 py-3 text-center text-gray-600">
+                                                <td
+                                                    key={p}
+                                                    className={cn(
+                                                        "px-4 py-3 text-center text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors",
+                                                        brand[p] > 0 ? "text-blue-600 font-medium" : "text-gray-300"
+                                                    )}
+                                                    onClick={() => brand[p] > 0 && handleInteraction(brand.name, p)}
+                                                >
                                                     {brand[p] > 0 ? brand[p] : <span className="text-gray-300">—</span>}
                                                 </td>
                                             ))}
-                                            <td className="px-4 py-3 text-center font-bold text-neutral-900 bg-gray-50">
+                                            <td
+                                                className="px-4 py-3 text-center font-bold text-neutral-900 bg-gray-50 cursor-pointer hover:bg-gray-200 transition-colors"
+                                                onClick={() => handleInteraction(brand.name, 'total')}
+                                            >
                                                 {brand.total}
                                             </td>
                                         </tr>
@@ -196,8 +221,21 @@ const BrandTab = ({ products, loading }) => {
                     </table>
                 </div>
             </div>
+
+            {/* Brand Products Dialog */}
+            {selectedBrandInteraction && (
+                <BrandProductsDialog
+                    isOpen={!!selectedBrandInteraction}
+                    onClose={handleCloseDialog}
+                    brandName={selectedBrandInteraction.brandName}
+                    platform={selectedBrandInteraction.platform}
+                    allProducts={products}
+                    onRefresh={() => { /* Handle refresh if needed */ }}
+                />
+            )}
         </div>
     );
 };
 
 export default BrandTab;
+
