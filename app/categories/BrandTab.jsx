@@ -2,28 +2,17 @@ import React, { useMemo, useState } from 'react';
 import { Search, X, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BrandProductsDialog from './BrandProductsDialog';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 
 // Skeleton component
 const Skeleton = ({ className }) => (
     <div className={cn("animate-pulse bg-gray-200 rounded", className)} />
-);
-
-// Table skeleton rows
-const TableSkeleton = () => (
-    <>
-        {Array.from({ length: 10 }).map((_, i) => (
-            <tr key={i} className="border-b border-gray-100">
-                <td className="px-6 py-3"><Skeleton className="h-4 w-32" /></td>
-                <td className="px-4 py-3 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
-                <td className="px-4 py-3 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
-                <td className="px-4 py-3 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
-                <td className="px-4 py-3 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
-                <td className="px-4 py-3 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
-                <td className="px-4 py-3 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
-                <td className="px-4 py-3 text-center bg-gray-50"><Skeleton className="h-4 w-10 mx-auto" /></td>
-            </tr>
-        ))}
-    </>
 );
 
 const BrandTab = ({ products, loading }) => {
@@ -136,91 +125,165 @@ const BrandTab = ({ products, loading }) => {
             </div>
 
             {/* Table */}
-            <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-                <div className="overflow-auto flex-1">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0 z-10">
-                            <tr>
-                                <th className="px-6 py-3 font-medium border-b border-gray-200">Brand</th>
+            <Paper
+                sx={{
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    // maxWidth: 'calc(100vw - 2rem)', // Same constraint as ProductTable
+                    flex: 1,
+                    borderRadius: '0.75rem', // rounded-xl
+                    border: '1px solid #e5e5e5', // border-neutral-200
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
+                    overflow: 'hidden'
+                }}
+            >
+                <TableContainer sx={{ flex: 1 }}>
+                    <Table stickyHeader aria-label="brand table" size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell
+                                    sx={{
+                                        fontWeight: 'bold',
+                                        color: '#737373',
+                                        backgroundColor: '#fafafa',
+                                        borderBottom: '1px solid #e5e5e5',
+                                        padding: '12px 24px' // Adjusted padding
+                                    }}
+                                >
+                                    Brand
+                                </TableCell>
                                 {platforms.map(p => (
-                                    <th key={p} className="px-4 py-3 font-medium border-b border-gray-200 text-center">
+                                    <TableCell
+                                        key={p}
+                                        align="center"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            color: '#737373',
+                                            backgroundColor: '#fafafa',
+                                            borderBottom: '1px solid #e5e5e5',
+                                            padding: '12px 16px',
+                                            minWidth: 100
+                                        }}
+                                    >
                                         {platformLabels[p]}
-                                    </th>
+                                    </TableCell>
                                 ))}
-                                <th className="px-4 py-3 font-medium border-b border-gray-200 text-center bg-gray-100">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
+                                <TableCell
+                                    align="center"
+                                    sx={{
+                                        fontWeight: 'bold',
+                                        color: '#171717', // darker for total
+                                        backgroundColor: '#f5f5f5', // slightly darker bg for total col header
+                                        borderBottom: '1px solid #e5e5e5',
+                                        padding: '12px 16px',
+                                        minWidth: 80
+                                    }}
+                                >
+                                    Total
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
                             {loading ? (
-                                <TableSkeleton />
+                                // Skeleton Rows
+                                Array.from({ length: 10 }).map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell sx={{ padding: '12px 24px' }}><Skeleton className="h-4 w-32" /></TableCell>
+                                        {platforms.map(p => (
+                                            <TableCell key={p} align="center" sx={{ padding: '12px 16px' }}><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                                        ))}
+                                        <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}><Skeleton className="h-4 w-10 mx-auto" /></TableCell>
+                                    </TableRow>
+                                ))
                             ) : (
                                 <>
                                     {filteredBrands.map((brand) => (
-                                        <tr
+                                        <TableRow
                                             key={brand.name}
-                                            className={cn(
-                                                "hover:bg-gray-50 transition-colors",
-                                                brand.name === 'Other' && "bg-amber-50/50"
-                                            )}
+                                            hover
+                                            sx={{
+                                                '&:hover': { backgroundColor: '#fafafa' },
+                                                backgroundColor: brand.name === 'Other' ? '#fffbeb' : 'inherit' // amber-50 for Other
+                                            }}
                                         >
-                                            <td className="px-6 py-3 font-medium text-neutral-900">
-                                                {brand.name === 'Other' ? (
-                                                    <span className="text-amber-700 italic">{brand.name}</span>
-                                                ) : (
-                                                    brand.name
-                                                )}
-                                            </td>
+                                            <TableCell
+                                                sx={{
+                                                    padding: '12px 24px',
+                                                    color: brand.name === 'Other' ? '#b45309' : '#171717', // amber-700 or neutral-900
+                                                    fontStyle: brand.name === 'Other' ? 'italic' : 'normal',
+                                                    fontWeight: 500
+                                                }}
+                                            >
+                                                {brand.name}
+                                            </TableCell>
                                             {platforms.map(p => (
-                                                <td
+                                                <TableCell
                                                     key={p}
-                                                    className={cn(
-                                                        "px-4 py-3 text-center text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors",
-                                                        brand[p] > 0 ? "text-blue-600 font-medium" : "text-gray-300"
-                                                    )}
+                                                    align="center"
                                                     onClick={() => brand[p] > 0 && handleInteraction(brand.name, p)}
+                                                    sx={{
+                                                        padding: '12px 16px',
+                                                        cursor: brand[p] > 0 ? 'pointer' : 'default',
+                                                        color: brand[p] > 0 ? '#2563eb' : '#d4d4d4', // blue-600 or gray-300
+                                                        fontWeight: brand[p] > 0 ? 500 : 'normal',
+                                                        '&:hover': brand[p] > 0 ? { backgroundColor: '#f3f4f6' } : {} // gray-100
+                                                    }}
                                                 >
-                                                    {brand[p] > 0 ? brand[p] : <span className="text-gray-300">—</span>}
-                                                </td>
+                                                    {brand[p] > 0 ? brand[p] : '—'}
+                                                </TableCell>
                                             ))}
-                                            <td
-                                                className="px-4 py-3 text-center font-bold text-neutral-900 bg-gray-50 cursor-pointer hover:bg-gray-200 transition-colors"
+                                            <TableCell
+                                                align="center"
                                                 onClick={() => handleInteraction(brand.name, 'total')}
+                                                sx={{
+                                                    padding: '12px 16px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 'bold',
+                                                    color: '#171717',
+                                                    backgroundColor: '#fafafa',
+                                                    '&:hover': { backgroundColor: '#e5e5e5' } // gray-200
+                                                }}
                                             >
                                                 {brand.total}
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
                                     {filteredBrands.length === 0 && (
-                                        <tr>
-                                            <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                                        <TableRow>
+                                            <TableCell colSpan={8} align="center" sx={{ padding: '48px 24px', color: '#737373' }}>
                                                 <div className="flex flex-col items-center gap-2">
                                                     <Package size={32} className="text-gray-300" />
                                                     <p>No brands found matching your criteria.</p>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     )}
                                 </>
                             )}
-                        </tbody>
+                        </TableBody>
                         {!loading && filteredBrands.length > 0 && (
-                            <tfoot className="bg-neutral-900 text-white font-semibold sticky bottom-0">
-                                <tr>
-                                    <td className="px-6 py-3">Total</td>
-                                    {platforms.map(p => (
-                                        <td key={p} className="px-4 py-3 text-center">
-                                            {totals[p]}
-                                        </td>
-                                    ))}
-                                    <td className="px-4 py-3 text-center bg-neutral-800">
-                                        {totals.total}
-                                    </td>
-                                </tr>
-                            </tfoot>
+                            // Sticky Footer for Totals
+                            <TableRow sx={{
+                                position: 'sticky',
+                                bottom: 0,
+                                backgroundColor: '#171717', // neutral-900
+                                zIndex: 10
+                            }}>
+                                <TableCell sx={{ color: 'white', fontWeight: 600, padding: '12px 24px' }}>Total</TableCell>
+                                {platforms.map(p => (
+                                    <TableCell key={p} align="center" sx={{ color: 'white', fontWeight: 600, padding: '12px 16px' }}>
+                                        {totals[p]}
+                                    </TableCell>
+                                ))}
+                                <TableCell align="center" sx={{ color: 'white', fontWeight: 600, backgroundColor: '#262626', padding: '12px 16px' }}> {/* neutral-800 */}
+                                    {totals.total}
+                                </TableCell>
+                            </TableRow>
                         )}
-                    </table>
-                </div>
-            </div>
+                    </Table>
+                </TableContainer>
+            </Paper>
 
             {/* Brand Products Dialog */}
             {selectedBrandInteraction && (

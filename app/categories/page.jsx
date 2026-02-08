@@ -32,6 +32,20 @@ function CategoriesPageContent() {
 
   // ... (rest of component)
 
+  // Move PINCODE_OPTIONS up to be accessible by hydration effect
+  const PINCODE_OPTIONS = useMemo(() => [
+    { label: 'Delhi NCR — 201303', value: '201303' },
+    { label: 'Navi Mumbai — 400706', value: '400706' },
+    { label: 'Delhi NCR — 201014', value: '201014' },
+    { label: 'Delhi NCR — 122008', value: '122008' },
+    { label: 'Delhi NCR — 122010', value: '122010' },
+    { label: 'Delhi NCR — 122016', value: '122016' },
+    { label: 'Mumbai — 400070', value: '400070' },
+    { label: 'Mumbai — 400703', value: '400703' },
+    { label: 'Mumbai — 401101', value: '401101' },
+    { label: 'Mumbai — 401202', value: '401202' },
+  ], []);
+
   // Generate options from the JSON data
   // The JSON structure is { "Platform": [ { masterCategory: "Name", ... } ] }
   // We need to extract unique masterCategory values across all platforms
@@ -58,6 +72,28 @@ function CategoriesPageContent() {
 
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0]?.value || 'Fruits & Vegetables');
   const [pincode, setPincode] = useState('201303');
+
+  // Load saved preferences on mount
+  useEffect(() => {
+    const savedCategory = localStorage.getItem('selectedCategory');
+    const savedPincode = localStorage.getItem('selectedPincode');
+
+    if (savedCategory && CATEGORY_OPTIONS.some(opt => opt.value === savedCategory)) {
+      setCategory(savedCategory);
+    }
+    if (savedPincode && PINCODE_OPTIONS.some(opt => opt.value === savedPincode)) {
+      setPincode(savedPincode);
+    }
+  }, [CATEGORY_OPTIONS, PINCODE_OPTIONS]); // Dependencies to ensure validation against options
+
+  // Save preferences on change
+  useEffect(() => {
+    localStorage.setItem('selectedCategory', category);
+  }, [category]);
+
+  useEffect(() => {
+    localStorage.setItem('selectedPincode', pincode);
+  }, [pincode]);
   const [platformFilter, setPlatformFilter] = useState('all');
   const [showMissing, setShowMissing] = useState(false);
   const [showNewFirst, setShowNewFirst] = useState(false);
@@ -80,22 +116,10 @@ function CategoriesPageContent() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const ITEMS_PER_PAGE = 200;
+  const ITEMS_PER_PAGE = 50;
   const lastActivePageRef = useRef(1);
 
-  const PINCODE_OPTIONS = [
-    { label: 'Delhi NCR — 201303', value: '201303' },
-    { label: 'Navi Mumbai — 400706', value: '400706' },
-    { label: 'Delhi NCR — 201014', value: '201014' },
-    { label: 'Delhi NCR — 122008', value: '122008' },
-    { label: 'Delhi NCR — 122010', value: '122010' },
-    { label: 'Delhi NCR — 122016', value: '122016' },
-    { label: 'Mumbai — 400070', value: '400070' },
-    { label: 'Mumbai — 400703', value: '400703' },
-    { label: 'Mumbai — 401101', value: '401101' },
-    { label: 'Mumbai — 401202', value: '401202' },
 
-  ];
 
   const PLATFORM_OPTIONS = [
     { label: 'All', value: 'all' },

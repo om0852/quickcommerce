@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Save, Loader2, ChevronDown, ChevronUp, ExternalLink, Search } from 'lucide-react';
 import { Switch } from '@/components/ui/switch'; // Assuming you have a Switch component, if not will use standard input or create simple toggle
-import { brands } from '@/app/utils/brandarray';
+// Removed: import { brands } from '@/app/utils/brandarray';
 
 // Searchable Brand Combobox Component
-function BrandCombobox({ brand, setBrand }) {
+function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand }) { // Added availableBrands, onAddNewBrand
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState(brand || '');
     const inputRef = useRef(null);
@@ -18,11 +18,12 @@ function BrandCombobox({ brand, setBrand }) {
     }, [brand, isOpen]);
 
     const filteredBrands = useMemo(() => {
-        if (!search) return brands.slice(0, 50); // Show first 50 when no search
-        return brands.filter(b =>
+        if (!availableBrands) return [];
+        if (!search) return availableBrands.slice(0, 50); // Show first 50 when no search
+        return availableBrands.filter(b =>
             b.toLowerCase().includes(search.toLowerCase())
         ).slice(0, 50); // Limit to 50 results
-    }, [search]);
+    }, [search, availableBrands]);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -36,10 +37,20 @@ function BrandCombobox({ brand, setBrand }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleSelect = (selectedBrand) => {
-        setBrand(selectedBrand);
-        setSearch(selectedBrand);
+    const handleSelect = async (selectedBrand) => {
         setIsOpen(false);
+        setSearch(selectedBrand);
+
+        // Check if it's a new brand
+        const isNew = availableBrands && !availableBrands.some(b => b.toLowerCase() === selectedBrand.toLowerCase());
+
+        if (isNew && onAddNewBrand) {
+            // Optimistically update parent
+            setBrand(selectedBrand);
+            await onAddNewBrand(selectedBrand);
+        } else {
+            setBrand(selectedBrand);
+        }
     };
 
     const handleInputChange = (e) => {
@@ -94,7 +105,7 @@ function BrandCombobox({ brand, setBrand }) {
                         </div>
                     ) : (
                         <>
-                            {search && !filteredBrands.includes(search) && (
+                            {search && !filteredBrands.some(b => b.toLowerCase() === search.toLowerCase()) && (
                                 <button
                                     onClick={() => handleSelect(search)}
                                     className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 font-medium border-b border-gray-100"
@@ -133,6 +144,9 @@ export default function ProductEditDialog({
     const [weight, setWeight] = useState('');
     const [brand, setBrand] = useState('');
 
+    // Access available brands from API
+    const [availableBrands, setAvailableBrands] = useState([]);
+
     // Platform Level State - Array of objects to track edits
     const [platformData, setPlatformData] = useState([]);
 
@@ -141,6 +155,46 @@ export default function ProductEditDialog({
     const [expandedPlatform, setExpandedPlatform] = useState(null); // Accordion state
 
     const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
+
+    // Fetch brands on mount
+    useEffect(() => {
+        const fetchBrands = async () => {
+            try {
+                const res = await fetch('/api/brands');
+                const data = await res.json();
+                if (data.success) {
+                    setAvailableBrands(data.brands.map(b => b.brandName));
+                }
+            } catch (err) {
+                console.error("Failed to fetch brands", err);
+            }
+        };
+        fetchBrands();
+    }, []);
+
+    // Function to handle adding a new brand
+    const handleAddNewBrand = async (newBrandName) => {
+        try {
+            const res = await fetch('/api/brands', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ brandName: newBrandName })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (showToast) showToast(`Brand "${newBrandName}" created!`, 'success');
+                // Update local list
+                setAvailableBrands(prev => [...prev, newBrandName].sort());
+            } else if (data.error === 'Brand already exists') {
+                // Ignore if exists, just select it
+            } else {
+                if (showToast) showToast(`Failed to create brand: ${data.error}`, 'error');
+            }
+        } catch (err) {
+            console.error("Error creating brand", err);
+            if (showToast) showToast('Error creating brand', 'error');
+        }
+    }
 
     useEffect(() => {
         if (product) {
@@ -298,7 +352,12 @@ export default function ProductEditDialog({
                             </div>
                             <div className="space-y-1 relative">
                                 <label className="text-xs font-semibold text-gray-500">Brand</label>
-                                <BrandCombobox brand={brand} setBrand={setBrand} />
+                                <BrandCombobox
+                                    brand={brand}
+                                    setBrand={setBrand}
+                                    availableBrands={availableBrands}
+                                    onAddNewBrand={handleAddNewBrand}
+                                />
                             </div>
                         </div>
                     </div>

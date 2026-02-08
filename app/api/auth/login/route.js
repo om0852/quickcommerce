@@ -15,7 +15,7 @@ export async function POST(request) {
             const token = await new SignJWT({ username })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
-                .setExpirationTime('24h')
+                .setExpirationTime('7d')
                 .sign(secret);
 
             const response = NextResponse.json(
@@ -23,13 +23,13 @@ export async function POST(request) {
                 { status: 200 }
             );
 
-            // Set cookie for 24 hours
+            // Set cookie for 7 days
             (await cookies()).set('auth_session', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
                 path: '/',
-                maxAge: 60 * 60 * 24, // 24 hours
+                maxAge: 60 * 60 * 24 * 7, // 7 days
             });
 
             return response;

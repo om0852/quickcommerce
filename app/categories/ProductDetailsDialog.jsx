@@ -91,7 +91,7 @@ function ProductDetailsDialog({
                             const data = selectedProduct[platform];
 
                             // Calculate discount if missing
-                            let displayDiscount = data.discountPercentage > 0 ? `${data.discountPercentage}% Off` : null;
+                            let displayDiscount = data.discountPercentage > 0 ? `${Math.round(data.discountPercentage)}% Off` : null;
                             if (!displayDiscount && data.originalPrice && data.currentPrice && data.originalPrice > data.currentPrice) {
                                 const calculatedDiscount = Math.round(((data.originalPrice - data.currentPrice) / data.originalPrice) * 100);
                                 if (calculatedDiscount > 0) {
