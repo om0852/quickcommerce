@@ -534,7 +534,7 @@ const ProductTable = React.memo(function ProductTable({
                     </Table>
                 </TableContainer>
                 {
-                    products.filter(p => !p.isHeader).length === 0 && ( /* Only show if no actual products, ignoring headers */
+                    !loading && products.filter(p => !p.isHeader).length === 0 && ( /* Only show if no actual products, ignoring headers */
                         <div className="px-6 py-12 text-center text-sm text-neutral-500">
                             No products found matching your filters.
                         </div>

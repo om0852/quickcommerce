@@ -25,7 +25,8 @@ export default function ExportCategoryDialog({
 
     // Dropdown States - defaulting to first option or specific values if needed
     const [selectedPlatform, setSelectedPlatform] = useState('all');
-    const [selectedCategory, setSelectedCategory] = useState(currentCategory || 'all');
+    // Default to currentCategory or first available option. Remove 'all' fallback.
+    const [selectedCategory, setSelectedCategory] = useState(currentCategory || categoryOptions[0]?.value || '');
     // Initialize with current pincode as array, or empty/first option
     const [selectedPincodes, setSelectedPincodes] = useState(currentPincode ? [currentPincode] : (pincodeOptions[0]?.value ? [pincodeOptions[0].value] : []));
     const [exportType, setExportType] = useState('latest');
@@ -33,7 +34,16 @@ export default function ExportCategoryDialog({
     if (!isOpen) return null;
 
     const handleAction = async (actionType) => {
-        // Validation for Email action
+        // Validation
+        if (selectedPincodes.length === 0) {
+            setError("Please select at least 1 pincode.");
+            return;
+        }
+        if (selectedPincodes.length > 5) {
+            setError("Maximum 5 pincodes allowed.");
+            return;
+        }
+
         if (actionType === 'email' && !email) {
             setError("Email address is required for sending email.");
             return;
@@ -128,8 +138,8 @@ export default function ExportCategoryDialog({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[200] backdrop-blur-[4px] transition-opacity duration-200">
-            <div className="bg-white rounded-xl w-[90%] max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[200] backdrop-blur-[4px] transition-opacity duration-200" onClick={onClose}>
+            <div className="bg-white rounded-xl w-[90%] max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
 
                 {/* Header */}
                 <div className="p-6 bg-white border-b border-neutral-100 flex items-start justify-between">
@@ -139,6 +149,12 @@ export default function ExportCategoryDialog({
                             Generate an Excel report
                         </p>
                     </div>
+                    <button
+                        onClick={onClose}
+                        className="p-1 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-full transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 <div className="p-6">
@@ -202,7 +218,7 @@ export default function ExportCategoryDialog({
                                         onChange={(e) => setSelectedCategory(e.target.value)}
                                         className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
                                     >
-                                        <option value="all">All</option>
+                                        {/* Remove All option as per request */}
                                         {categoryOptions.map(c => (
                                             <option key={c.value} value={c.value}>{c.label}</option>
                                         ))}
@@ -210,13 +226,26 @@ export default function ExportCategoryDialog({
                                 </div>
 
                                 <div>
-                                    <label className="block mb-1.5 text-sm font-medium text-neutral-600">Pincode</label>
+                                    <label className="block mb-1.5 text-sm font-medium text-neutral-600">
+                                        Pincode <span className="text-xs text-neutral-400 font-normal">(Max 5)</span>
+                                    </label>
                                     <MultiSelectDropdown
                                         value={selectedPincodes}
-                                        onChange={setSelectedPincodes}
+                                        onChange={(newValues) => {
+                                            if (newValues.length <= 5) {
+                                                setSelectedPincodes(newValues);
+                                            } else {
+                                                // Ideally show toast, but for now just block
+                                                // We can use the existing error state or a temporary toast if available in this scope?
+                                                // We don't have a toast function passed here except internal error? 
+                                                // Actually we can set error temporarily or just ignore.
+                                                // Let's just ignore the addition if > 5.
+                                            }
+                                        }}
                                         options={pincodeOptions}
                                         placeholder="Select Pincodes"
                                     />
+                                    {selectedPincodes.length > 5 && <p className="text-xs text-red-500 mt-1">Maximum 5 pincodes allowed.</p>}
                                 </div>
                             </div>
                         </div>

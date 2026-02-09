@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductGrouping from '@/models/ProductGrouping';
+import Brand from '@/models/Brand';
 
 export async function POST(request) {
     try {
@@ -17,7 +18,37 @@ export async function POST(request) {
         // We expect updates to have 'name', 'weight', 'brand' keys
         if (typeof updates.name !== 'undefined') allowedUpdates.primaryName = updates.name;
         if (typeof updates.weight !== 'undefined') allowedUpdates.primaryWeight = updates.weight;
-        if (typeof updates.brand !== 'undefined') allowedUpdates.brand = updates.brand;
+
+        if (typeof updates.brand !== 'undefined') {
+            allowedUpdates.brand = updates.brand;
+
+            // Sync brandId
+            try {
+                // Find existing brand (case-insensitive)
+                const brandDoc = await Brand.findOne({
+                    brandName: { $regex: new RegExp(`^${updates.brand}$`, 'i') }
+                });
+
+                if (brandDoc) {
+                    allowedUpdates.brandId = brandDoc.brandId;
+                } else {
+                    // Generate slug for new/unmatched brand
+                    // N/A or Slug? Let's use Slug to be consistent with seeding script if user types fully new brand
+                    // Or maybe 'N/A' if user clears it?
+                    if (!updates.brand || updates.brand.trim() === '') {
+                        allowedUpdates.brandId = 'N/A';
+                    } else {
+                        allowedUpdates.brandId = updates.brand.toLowerCase()
+                            .replace(/\s+/g, '-')
+                            .replace(/[^\w\-]+/g, '')
+                            .replace(/\-\-+/g, '-');
+                    }
+                }
+            } catch (err) {
+                console.error("Error syncing brandId:", err);
+                // Fallback: don't break the update, just maybe leave old ID or ignore
+            }
+        }
 
         // Check if there are valid updates
         if (Object.keys(allowedUpdates).length === 0) {
