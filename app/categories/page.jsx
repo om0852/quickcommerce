@@ -70,21 +70,22 @@ function CategoriesPageContent() {
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get('admin') === 'true';
 
-  const [category, setCategory] = useState(CATEGORY_OPTIONS[0]?.value || 'Fruits & Vegetables');
-  const [pincode, setPincode] = useState('201303');
+  const [category, setCategory] = useState(searchParams.get('category') || CATEGORY_OPTIONS[0]?.value || 'Fruits & Vegetables');
+  const [pincode, setPincode] = useState(searchParams.get('pincode') || '201303');
 
   // Load saved preferences on mount
   useEffect(() => {
     const savedCategory = localStorage.getItem('selectedCategory');
     const savedPincode = localStorage.getItem('selectedPincode');
 
-    if (savedCategory && CATEGORY_OPTIONS.some(opt => opt.value === savedCategory)) {
+    // Only load from local storage if URL param is NOT present
+    if (!searchParams.get('category') && savedCategory && CATEGORY_OPTIONS.some(opt => opt.value === savedCategory)) {
       setCategory(savedCategory);
     }
-    if (savedPincode && PINCODE_OPTIONS.some(opt => opt.value === savedPincode)) {
+    if (!searchParams.get('pincode') && savedPincode && PINCODE_OPTIONS.some(opt => opt.value === savedPincode)) {
       setPincode(savedPincode);
     }
-  }, [CATEGORY_OPTIONS, PINCODE_OPTIONS]); // Dependencies to ensure validation against options
+  }, [CATEGORY_OPTIONS, PINCODE_OPTIONS, searchParams]); // Dependencies to ensure validation against options
 
   // Save preferences on change
   useEffect(() => {
