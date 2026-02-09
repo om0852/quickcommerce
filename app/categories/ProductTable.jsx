@@ -464,7 +464,7 @@ const ProductTable = React.memo(function ProductTable({
                                                             )}
                                                         </div>
                                                         {product.brand && (
-                                                            <div className="text-xs text-neutral-500 mt-0.5">
+                                                            <div className="text-xs text-orange-600 font-medium mt-0.5">
                                                                 {product.brand}
                                                             </div>
                                                         )}

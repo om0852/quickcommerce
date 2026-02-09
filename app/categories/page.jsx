@@ -72,6 +72,10 @@ function CategoriesPageContent() {
 
   const [category, setCategory] = useState(searchParams.get('category') || CATEGORY_OPTIONS[0]?.value || 'Fruits & Vegetables');
   const [pincode, setPincode] = useState(searchParams.get('pincode') || '201303');
+  const [isPreferencesLoaded, setIsPreferencesLoaded] = useState(() => {
+    // If URL params are present, we don't need to wait for local storage
+    return !!searchParams.get('category');
+  });
 
   // Load saved preferences on mount
   useEffect(() => {
@@ -85,6 +89,7 @@ function CategoriesPageContent() {
     if (!searchParams.get('pincode') && savedPincode && PINCODE_OPTIONS.some(opt => opt.value === savedPincode)) {
       setPincode(savedPincode);
     }
+    setIsPreferencesLoaded(true);
   }, [CATEGORY_OPTIONS, PINCODE_OPTIONS, searchParams]); // Dependencies to ensure validation against options
 
   // Save preferences on change
@@ -303,6 +308,8 @@ function CategoriesPageContent() {
 
   useEffect(() => {
     const fetchSnapshots = async () => {
+      if (!isPreferencesLoaded) return;
+
       // Clear previous data while loading new config
       setLoading(true);
       setProducts([]);
@@ -357,7 +364,7 @@ function CategoriesPageContent() {
     };
 
     fetchSnapshots();
-  }, [category, pincode, isLiveMode]);
+  }, [category, pincode, isLiveMode, isPreferencesLoaded]);
 
   useEffect(() => {
     if (selectedProduct) {
