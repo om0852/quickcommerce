@@ -871,6 +871,85 @@ function CategoriesPageContent() {
     );
   };
 
+  // Calculate Link Counts
+  const linkPlatformCounts = useMemo(() => {
+    if (!categoriesData) return {};
+    const counts = {
+      all: 0,
+      jiomart: 0,
+      zepto: 0,
+      blinkit: 0,
+      dmart: 0,
+      flipkartMinutes: 0,
+      instamart: 0
+    };
+
+    Object.entries(categoriesData).forEach(([platform, items]) => {
+      const pKey = platform.toLowerCase();
+      let stateKey = pKey;
+      if (pKey === 'flipkart') stateKey = 'flipkartMinutes';
+
+      const relevantItems = items.filter(item => {
+        if (category && item.masterCategory !== category) return false;
+        return true;
+      });
+
+      if (counts[stateKey] !== undefined) {
+        counts[stateKey] += relevantItems.length;
+        counts.all += relevantItems.length;
+      }
+    });
+    return counts;
+  }, [category]); // Recalculate when category changes
+
+  // Calculate Brand Counts
+  const brandPlatformCounts = useMemo(() => {
+    const counts = {
+      all: 0,
+      jiomart: 0,
+      zepto: 0,
+      blinkit: 0,
+      dmart: 0,
+      flipkartMinutes: 0,
+      instamart: 0
+    };
+    const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
+    const brandMap = {};
+
+    products.forEach(p => {
+      const brandName = p.brand && p.brand.trim() !== '' ? p.brand : 'Other';
+      if (!brandMap[brandName]) {
+        brandMap[brandName] = {
+          jiomart: false,
+          zepto: false,
+          blinkit: false,
+          dmart: false,
+          flipkartMinutes: false,
+          instamart: false
+        };
+      }
+      platforms.forEach(plat => {
+        if (p[plat]) brandMap[brandName][plat] = true;
+      });
+    });
+
+    Object.values(brandMap).forEach(b => {
+      counts.all++;
+      platforms.forEach(plat => {
+        if (b[plat]) counts[plat]++;
+      });
+    });
+
+    return counts;
+  }, [products]);
+
+  // Determine which counts to show
+  const currentCounts = activeTab === 'links'
+    ? linkPlatformCounts
+    : activeTab === 'brands'
+      ? brandPlatformCounts
+      : platformCounts;
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
 
@@ -880,7 +959,7 @@ function CategoriesPageContent() {
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
-            <span className={`w - 2 h - 2 rounded - full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'} `}></span>
+            <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'} `}></span>
             <span className="font-medium text-neutral-600">
               {isLiveMode ? 'Live Mode' : 'Historical Snapshot'}
             </span>
@@ -1005,7 +1084,7 @@ function CategoriesPageContent() {
           <div className="w-full border-t border-gray-100 pt-3 flex items-end justify-between gap-4">
             <div className="flex-1 overflow-hidden">
               <label className="text-xs font-semibold text-gray-500 mb-2 block">
-                Platform Filter <span className="text-neutral-400 font-normal ml-1">({platformCounts[platformFilter] || 0})</span>
+                Platform Filter <span className="text-neutral-400 font-normal ml-1">({currentCounts[platformFilter] || 0})</span>
               </label>
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
                 {PLATFORM_OPTIONS.map(opt => (
@@ -1022,7 +1101,7 @@ function CategoriesPageContent() {
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     )}
                   >
-                    {opt.label} ({platformCounts[opt.value] || 0})
+                    {opt.label} ({currentCounts[opt.value] || 0})
                   </button>
                 ))}
               </div>
@@ -1102,9 +1181,14 @@ function CategoriesPageContent() {
             </div>
           )}
 
+
           {/* Links Tab */}
           {activeTab === 'links' && (
-            <LinksTab data={categoriesData} selectedCategory={category} />
+            <LinksTab
+              data={categoriesData}
+              selectedCategory={category}
+              platformFilter={platformFilter}
+            />
           )}
 
           {activeTab === 'analytics' && (
@@ -1125,7 +1209,11 @@ function CategoriesPageContent() {
           )}
 
           {activeTab === 'brands' && (
-            <BrandTab products={products} loading={loading} />
+            <BrandTab
+              products={products}
+              loading={loading}
+              platformFilter={platformFilter}
+            />
           )}
         </div>
 

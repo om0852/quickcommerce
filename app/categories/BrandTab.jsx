@@ -9,13 +9,14 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import TableFooter from '@mui/material/TableFooter';
 
 // Skeleton component
 const Skeleton = ({ className }) => (
     <div className={cn("animate-pulse bg-gray-200 rounded", className)} />
 );
 
-const BrandTab = ({ products, loading }) => {
+const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
     const [searchQuery, setSearchQuery] = useState('');
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
@@ -28,13 +29,13 @@ const BrandTab = ({ products, loading }) => {
         instamart: 'Instamart'
     };
 
-    // Aggregate brand data from products
-    const brandData = useMemo(() => {
+    const sortedBrands = useMemo(() => {
         const brandMap = {};
 
         products.forEach(product => {
             const brandName = product.brand && product.brand.trim() !== '' ? product.brand : 'Other';
 
+            // ... (keep mapping logic same)
             if (!brandMap[brandName]) {
                 brandMap[brandName] = {
                     name: brandName,
@@ -56,18 +57,25 @@ const BrandTab = ({ products, loading }) => {
             });
         });
 
-        return Object.values(brandMap).sort((a, b) => {
+        const brandList = Object.values(brandMap).sort((a, b) => {
             if (a.name === 'Other') return 1;
             if (b.name === 'Other') return -1;
             return b.total - a.total;
         });
-    }, [products]);
+
+        // Apply Platform Filter
+        if (platformFilter !== 'all') {
+            return brandList.filter(b => b[platformFilter] > 0);
+        }
+        return brandList;
+
+    }, [products, platformFilter]);
 
     const filteredBrands = useMemo(() => {
-        if (!searchQuery) return brandData;
+        if (!searchQuery) return sortedBrands;
         const query = searchQuery.toLowerCase();
-        return brandData.filter(b => b.name.toLowerCase().includes(query));
-    }, [brandData, searchQuery]);
+        return sortedBrands.filter(b => b.name.toLowerCase().includes(query));
+    }, [sortedBrands, searchQuery]);
 
     const totals = useMemo(() => {
         const result = { total: 0 };
@@ -97,32 +105,7 @@ const BrandTab = ({ products, loading }) => {
 
     return (
         <div className="flex flex-col gap-4 h-full">
-            {/* Controls */}
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                    <input
-                        type="text"
-                        placeholder="Search brands..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-10 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:bg-white transition-all"
-                        disabled={loading}
-                    />
-                    {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                            <X size={16} />
-                        </button>
-                    )}
-                </div>
-
-                <div className="ml-auto text-sm text-gray-500 font-medium">
-                    {loading ? <Skeleton className="h-4 w-24" /> : `${filteredBrands.length} brands found`}
-                </div>
-            </div>
+            {/* Controls removed - using main page filter now */}
 
             {/* Table */}
             <Paper
@@ -148,10 +131,28 @@ const BrandTab = ({ products, loading }) => {
                                         color: '#737373',
                                         backgroundColor: '#fafafa',
                                         borderBottom: '1px solid #e5e5e5',
-                                        padding: '12px 24px' // Adjusted padding
+                                        padding: '12px 24px'
                                     }}
                                 >
-                                    Brand
+                                    <div className="relative w-full">
+                                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search Brands..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full pl-8 pr-8 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 shadow-sm"
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                onClick={() => setSearchQuery('')}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </TableCell>
                                 {platforms.map(p => (
                                     <TableCell
@@ -254,7 +255,16 @@ const BrandTab = ({ products, loading }) => {
                                             <TableCell colSpan={8} align="center" sx={{ padding: '48px 24px', color: '#737373' }}>
                                                 <div className="flex flex-col items-center gap-2">
                                                     <Package size={32} className="text-gray-300" />
-                                                    <p>No brands found matching your criteria.</p>
+                                                    <p>
+                                                        {products.length === 0
+                                                            ? "No products data available."
+                                                            : "No brands found matching your criteria."}
+                                                    </p>
+                                                    {products.length > 0 && (
+                                                        <p className="text-xs text-gray-400">
+                                                            (Parsed {products.length} products, {platformFilter} filter active)
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -262,25 +272,26 @@ const BrandTab = ({ products, loading }) => {
                                 </>
                             )}
                         </TableBody>
-                        {!loading && filteredBrands.length > 0 && (
-                            // Sticky Footer for Totals
-                            <TableRow sx={{
-                                position: 'sticky',
-                                bottom: 0,
-                                backgroundColor: '#171717', // neutral-900
-                                zIndex: 10
-                            }}>
-                                <TableCell sx={{ color: 'white', fontWeight: 600, padding: '12px 24px' }}>Total</TableCell>
-                                {platforms.map(p => (
-                                    <TableCell key={p} align="center" sx={{ color: 'white', fontWeight: 600, padding: '12px 16px' }}>
-                                        {totals[p]}
+                        <TableFooter>
+                            {!loading && filteredBrands.length > 0 && (
+                                <TableRow sx={{
+                                    position: 'sticky',
+                                    bottom: 0,
+                                    backgroundColor: '#171717', // neutral-900
+                                    zIndex: 10
+                                }}>
+                                    <TableCell sx={{ color: 'white', fontWeight: 600, padding: '12px 24px' }}>Total</TableCell>
+                                    {platforms.map(p => (
+                                        <TableCell key={p} align="center" sx={{ color: 'white', fontWeight: 600, padding: '12px 16px' }}>
+                                            {totals[p]}
+                                        </TableCell>
+                                    ))}
+                                    <TableCell align="center" sx={{ color: 'white', fontWeight: 600, backgroundColor: '#262626', padding: '12px 16px' }}> {/* neutral-800 */}
+                                        {totals.total}
                                     </TableCell>
-                                ))}
-                                <TableCell align="center" sx={{ color: 'white', fontWeight: 600, backgroundColor: '#262626', padding: '12px 16px' }}> {/* neutral-800 */}
-                                    {totals.total}
-                                </TableCell>
-                            </TableRow>
-                        )}
+                                </TableRow>
+                            )}
+                        </TableFooter>
                     </Table>
                 </TableContainer>
             </Paper>

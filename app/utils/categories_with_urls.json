@@ -1117,56 +1117,56 @@
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Grooming&filterId=6822eeefed32000001e25b7c&filterName=Shaving+Foam+%26+Creams&offset=0&showAgeConsent=false&storeId=1404643&taxonomyType=Supermarket"
     },
     {
-      "officalCategory": "Pharma and Hygiene",
-      "officalSubCategory": "Feminine Hygiene",
+      "officialCategory": "Pharma and Hygiene",
+      "officialSubCategory": "Feminine Hygiene",
       "masterCategory": "Health & Wellness",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pharma+and+Hygiene&filterId=682058d4bbe7600001aae475&filterName=Feminine+Hygiene&taxonomyType=All+Listing"
     },
     {
-      "officalCategory": "Pharma and Hygiene",
-      "officalSubCategory": "Oral Care",
+      "officialCategory": "Pharma and Hygiene",
+      "officialSubCategory": "Oral Care",
       "masterCategory": "Health & Wellness",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pharma+and+Hygiene&filterId=682058d4bbe7600001aae478&filterName=Oral+Care&taxonomyType=All+Listing"
     },
     {
-      "officalCategory": "Pharma and Hygiene",
-      "officalSubCategory": "Oral Care",
+      "officialCategory": "Pharma and Hygiene",
+      "officialSubCategory": "Oral Care",
       "masterCategory": "Health & Wellness",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pharma+and+Hygiene&filterId=682058d4bbe7600001aae478&filterName=Oral+Care&taxonomyType=All+Listing"
     },
     {
-      "officalCategory": "Pharma and Hygiene",
-      "officalSubCategory": "Hand Wash & Sanitizers",
+      "officialCategory": "Pharma and Hygiene",
+      "officialSubCategory": "Hand Wash & Sanitizers",
       "masterCategory": "Health & Wellness",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pharma+and+Hygiene&filterId=682058d4bbe7600001aae477&filterName=Hand+Wash+%26+Sanitizers&taxonomyType=All+Listing"
     },
     {
-      "officalCategory": "Pharma and Hygiene",
-      "officalSubCategory": "Hand Wash & Sanitizers",
+      "officialCategory": "Pharma and Hygiene",
+      "officialSubCategory": "Hand Wash & Sanitizers",
       "masterCategory": "Health & Wellness",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pharma+and+Hygiene&filterId=682058d4bbe7600001aae477&filterName=Hand+Wash+%26+Sanitizers&taxonomyType=All+Listing"
     },
     {
-      "officalCategory": "Pharma and Hygiene",
-      "officalSubCategory": "Basic Pharma",
+      "officialCategory": "Pharma and Hygiene",
+      "officialSubCategory": "Basic Pharma",
       "masterCategory": "Health & Wellness",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pharma+and+Hygiene&filterId=682058d4bbe7600001aae474&filterName=Basic+Pharma&taxonomyType=All+Listing"
     },
     {
-      "officalCategory": "Pharma and Hygiene",
-      "officalSubCategory": "Vitamins & Digestives",
+      "officialCategory": "Pharma and Hygiene",
+      "officialSubCategory": "Vitamins & Digestives",
       "masterCategory": "Health & Wellness",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pharma+and+Hygiene&filterId=682058d4bbe7600001aae47a&filterName=Vitamins+%26+Digestives&taxonomyType=All+Listing"
     },
     {
-      "officalCategory": "Pharma and Hygiene",
-      "officalSubCategory": "Wound Care & Pain",
+      "officialCategory": "Pharma and Hygiene",
+      "officialSubCategory": "Wound Care & Pain",
       "masterCategory": "Health & Wellness",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pharma+and+Hygiene&filterId=682058d4bbe7600001aae47b&filterName=Wound+Care+%26+Pain&taxonomyType=All+Listing"
     },
     {
-      "officalCategory": "Pharma and Hygiene",
-      "officalSubCategory": "Hair Removal",
+      "officialCategory": "Pharma and Hygiene",
+      "officialSubCategory": "Hair Removal",
       "masterCategory": "Health & Wellness",
       "url": "https://www.swiggy.com/instamart/category-listing?categoryName=Pharma+and+Hygiene&filterId=682058d4bbe7600001aae476&filterName=Hair+Removal&taxonomyType=All+Listing"
     },
@@ -6419,8 +6419,8 @@
   ],
   "DMart": [
     {
-      "officalCategory": "Personal Care",
-      "officalSubCategory": "Health & Wellness",
+      "officialCategory": "Personal Care",
+      "officialSubCategory": "Health & Wellness",
       "masterCategory": "Health & Wellness",
       "url": "https://www.dmart.in/category/personal-care-beauty/health---wellness-aesc-healthandwellness"
     },
