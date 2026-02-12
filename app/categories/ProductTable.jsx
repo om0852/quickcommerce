@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { TrendingUp, TrendingDown, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Search, X, Pencil, Menu as MenuIcon, Check } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
@@ -191,21 +191,23 @@ const ProductTable = React.memo(function ProductTable({
                                         </div>
 
                                         {/* Hamburger Sort Menu */}
+                                        {/* Dropdown Trigger */}
                                         <button
                                             onClick={handleSortMenuClick}
                                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700 cursor-pointer"
                                             title="Filter & Sort"
                                         >
-                                            <MenuIcon size={16} />
+                                            <Filter size={16} />
                                         </button>
-                                        {/* Custom lightweight dropdown - no animations */}
+
+                                        {/* Dropdown Menu */}
                                         {isSortMenuOpen && (
                                             <>
                                                 <div
                                                     className="fixed inset-0 z-40"
                                                     onClick={handleSortMenuClose}
                                                 />
-                                                <div className="absolute top-full right-0 mt-1 z-50 bg-white rounded-xl shadow-lg border border-gray-200 min-w-[200px]">
+                                                <div className="absolute top-full right-0 mt-1 z-50 bg-white rounded-md shadow-lg border border-gray-200 min-w-[160px] py-1">
 
                                                     <div
                                                         onClick={() => {
@@ -213,105 +215,92 @@ const ProductTable = React.memo(function ProductTable({
                                                             if (showNewFirst) onShowNewFirstChange(false);
                                                             handleSortMenuClose();
                                                         }}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50 border-b border-gray-100"
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === null && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
                                                     >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex items-center gap-3">
-                                                                <RefreshCw size={16} className="text-blue-500" />
-                                                                <span className="text-sm font-medium text-gray-700">Default</span>
-                                                            </div>
-                                                            {sortConfig.key === null && !showNewFirst && <Check size={16} className="text-emerald-500" />}
-                                                        </div>
+                                                        Default
                                                     </div>
-                                                    <div className="px-3 py-2 border-b border-gray-100">
-                                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sort By</span>
-                                                    </div>
-                                                    <div
-                                                        onClick={() => handleNameSort('asc')}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
-                                                    >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex items-center gap-3">
-                                                                <TrendingUp size={16} className="text-emerald-500" />
-                                                                <span className="text-sm font-medium text-gray-700">Name (A to Z)</span>
-                                                            </div>
-                                                            {sortConfig.key === 'name' && sortConfig.direction === 'asc' && <Check size={16} className="text-emerald-500" />}
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        onClick={() => handleNameSort('desc')}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
-                                                    >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex items-center gap-3">
-                                                                <TrendingDown size={16} className="text-rose-500" />
-                                                                <span className="text-sm font-medium text-gray-700">Name (Z to A)</span>
-                                                            </div>
-                                                            {sortConfig.key === 'name' && sortConfig.direction === 'desc' && <Check size={16} className="text-emerald-500" />}
-                                                        </div>
-                                                    </div>
+
                                                     <div className="border-t border-gray-100 my-1" />
-                                                    <div
-                                                        onClick={() => handlePriceSort('asc')}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
-                                                    >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex items-center gap-3">
-                                                                <TrendingUp size={16} className="text-emerald-500" />
-                                                                <span className="text-sm font-medium text-gray-700">Price (Low to High)</span>
-                                                            </div>
-                                                            {sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && <Check size={16} className="text-emerald-500" />}
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        onClick={() => handlePriceSort('desc')}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
-                                                    >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex items-center gap-3">
-                                                                <TrendingDown size={16} className="text-rose-500" />
-                                                                <span className="text-sm font-medium text-gray-700">Price (High to Low)</span>
-                                                            </div>
-                                                            {sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && <Check size={16} className="text-emerald-500" />}
-                                                        </div>
-                                                    </div>
-                                                    <div className="border-t border-gray-100 my-1" />
-                                                    <div className="px-3 py-2 border-b border-gray-100">
-                                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Filters</span>
-                                                    </div>
+
                                                     <div
                                                         onClick={() => {
-                                                            onShowNewFirstChange(!showNewFirst);
-                                                            handleSortMenuClose();
-                                                        }}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
-                                                    >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="text-blue-500 text-xs font-bold">NEW</span>
-                                                                <span className="text-sm font-medium text-gray-700">Show New First</span>
-                                                            </div>
-                                                            {showNewFirst && <Check size={16} className="text-emerald-500" />}
-                                                        </div>
-                                                    </div>
-                                                    <div className="border-t border-gray-100 my-1" />
-                                                    <div
-                                                        onClick={() => {
-                                                            onSort(null);
+                                                            onSort('name', 'asc');
                                                             if (showNewFirst) onShowNewFirstChange(false);
                                                             handleSortMenuClose();
                                                         }}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            <RefreshCw size={16} className="text-gray-500" />
-                                                            <span className="text-sm font-medium text-gray-700">Reset All Filters</span>
-                                                        </div>
+                                                        Name (A to Z)
+                                                    </div>
+
+                                                    <div
+                                                        onClick={() => {
+                                                            onSort('name', 'desc');
+                                                            if (showNewFirst) onShowNewFirstChange(false);
+                                                            handleSortMenuClose();
+                                                        }}
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
+                                                    >
+                                                        Name (Z to A)
+                                                    </div>
+
+                                                    <div
+                                                        onClick={() => {
+                                                            onSort('averagePrice', 'asc');
+                                                            if (showNewFirst) onShowNewFirstChange(false);
+                                                            handleSortMenuClose();
+                                                        }}
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
+                                                    >
+                                                        Price (Low to High)
+                                                    </div>
+
+                                                    <div
+                                                        onClick={() => {
+                                                            onSort('averagePrice', 'desc');
+                                                            if (showNewFirst) onShowNewFirstChange(false);
+                                                            handleSortMenuClose();
+                                                        }}
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
+                                                    >
+                                                        Price (High to Low)
+                                                    </div>
+
+                                                    <div className="border-t border-gray-100 my-1" />
+
+                                                    <div
+                                                        onClick={() => {
+                                                            onShowNewFirstChange(true);
+                                                            onSort(null); // Clear manual sort
+                                                            handleSortMenuClose();
+                                                        }}
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
+                                                    >
+                                                        Newly Added
                                                     </div>
                                                 </div>
                                             </>
                                         )}
                                     </div>
+
                                 </TableCell>
 
                                 {/* Platform Headers */}

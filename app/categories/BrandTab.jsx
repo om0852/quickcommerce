@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Search, X, Package } from 'lucide-react';
+import { Search, X, Package, Menu as MenuIcon, RefreshCw, TrendingUp, TrendingDown, Check, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BrandProductsDialog from './BrandProductsDialog';
 import Paper from '@mui/material/Paper';
@@ -18,6 +18,8 @@ const Skeleton = ({ className }) => (
 
 const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
     const [searchQuery, setSearchQuery] = useState('');
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' }); // key: 'name' | 'total' | platform, direction: 'asc' | 'desc'
+    const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
     const platformLabels = {
@@ -60,7 +62,27 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
         const brandList = Object.values(brandMap).sort((a, b) => {
             if (a.name === 'Other') return 1;
             if (b.name === 'Other') return -1;
-            return b.total - a.total;
+
+            if (sortConfig.key === 'name') {
+                if (sortConfig.direction === 'asc') {
+                    return a.name.localeCompare(b.name);
+                } else {
+                    return b.name.localeCompare(a.name);
+                }
+            } else if (sortConfig.key) {
+                // Sort by specific key (total or platform)
+                const valA = a[sortConfig.key] || 0;
+                const valB = b[sortConfig.key] || 0;
+                // console.log(`Sorting ${sortConfig.key} (${sortConfig.direction}): ${a.name}(${valA}) vs ${b.name}(${valB})`);
+                if (sortConfig.direction === 'asc') {
+                    return valA - valB;
+                } else {
+                    return valB - valA;
+                }
+            } else {
+                // Default: Sort by total count desc
+                return b.total - a.total;
+            }
         });
 
         // Apply Platform Filter
@@ -69,7 +91,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
         }
         return brandList;
 
-    }, [products, platformFilter]);
+    }, [products, platformFilter, sortConfig]);
 
     const filteredBrands = useMemo(() => {
         if (!searchQuery) return sortedBrands;
@@ -103,6 +125,17 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
         setSelectedBrandInteraction(null);
     };
 
+    const handleSort = (key) => {
+        let direction = 'desc';
+        if (sortConfig.key === key && sortConfig.direction === 'desc') {
+            direction = 'asc';
+        } else if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            setSortConfig({ key: null, direction: 'desc' }); // Reset
+            return;
+        }
+        setSortConfig({ key, direction });
+    };
+
     return (
         <div className="flex flex-col gap-4 h-full">
             {/* Controls removed - using main page filter now */}
@@ -134,23 +167,106 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
                                         padding: '12px 24px'
                                     }}
                                 >
-                                    <div className="relative w-full">
-                                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                        <input
-                                            type="text"
-                                            placeholder="Search Brands..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-8 pr-8 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 shadow-sm"
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                        {searchQuery && (
-                                            <button
-                                                onClick={() => setSearchQuery('')}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                            >
-                                                <X size={12} />
-                                            </button>
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'flex-start',
+                                        width: '100%',
+                                        gap: '10px'
+                                    }}>
+                                        <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
+                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                                            <input
+                                                type="text"
+                                                placeholder="Search Brands..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-all font-medium normal-case placeholder:text-gray-400 text-neutral-700"
+                                            />
+                                            {searchQuery && (
+                                                <button
+                                                    onClick={() => setSearchQuery('')}
+                                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Hamburger Sort Menu */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsSortMenuOpen(true);
+                                            }}
+                                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700 cursor-pointer"
+                                            title="Filter & Sort"
+                                        >
+                                            <MenuIcon size={16} />
+                                        </button>
+
+                                        {/* Custom Dropdown */}
+                                        {isSortMenuOpen && (
+                                            <>
+                                                <div
+                                                    className="fixed inset-0 z-40"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setIsSortMenuOpen(false);
+                                                    }}
+                                                />
+                                                <div className="absolute top-full right-0 mt-1 z-50 bg-white rounded-xl shadow-lg border border-gray-200 min-w-[200px]" onClick={(e) => e.stopPropagation()}>
+                                                    <div
+                                                        onClick={() => {
+                                                            setSortConfig({ key: null, direction: 'desc' });
+                                                            setIsSortMenuOpen(false);
+                                                        }}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50 border-b border-gray-100"
+                                                    >
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex items-center gap-3">
+                                                                <RefreshCw size={16} className="text-blue-500" />
+                                                                <span className="text-sm font-medium text-gray-700">Default</span>
+                                                            </div>
+                                                            {sortConfig.key === null && <Check size={16} className="text-emerald-500" />}
+                                                        </div>
+                                                    </div>
+                                                    <div className="px-3 py-2 border-b border-gray-100">
+                                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sort By</span>
+                                                    </div>
+                                                    <div
+                                                        onClick={() => {
+                                                            setSortConfig({ key: 'name', direction: 'asc' });
+                                                            setIsSortMenuOpen(false);
+                                                        }}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                    >
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex items-center gap-3">
+                                                                <TrendingUp size={16} className="text-emerald-500" />
+                                                                <span className="text-sm font-medium text-gray-700">Name (A to Z)</span>
+                                                            </div>
+                                                            {sortConfig.key === 'name' && sortConfig.direction === 'asc' && <Check size={16} className="text-emerald-500" />}
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        onClick={() => {
+                                                            setSortConfig({ key: 'name', direction: 'desc' });
+                                                            setIsSortMenuOpen(false);
+                                                        }}
+                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                    >
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex items-center gap-3">
+                                                                <TrendingDown size={16} className="text-rose-500" />
+                                                                <span className="text-sm font-medium text-gray-700">Name (Z to A)</span>
+                                                            </div>
+                                                            {sortConfig.key === 'name' && sortConfig.direction === 'desc' && <Check size={16} className="text-emerald-500" />}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
                                         )}
                                     </div>
                                 </TableCell>
@@ -158,16 +274,28 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
                                     <TableCell
                                         key={p}
                                         align="center"
+                                        onClick={() => handleSort(p)}
                                         sx={{
                                             fontWeight: 'bold',
                                             color: '#737373',
                                             backgroundColor: '#fafafa',
                                             borderBottom: '1px solid #e5e5e5',
                                             padding: '12px 16px',
-                                            minWidth: 100
+                                            minWidth: 100,
+                                            cursor: 'pointer',
+                                            userSelect: 'none',
+                                            '&:hover': { backgroundColor: '#f5f5f5' }
                                         }}
                                     >
-                                        {platformLabels[p]}
+                                        <div className="flex items-center justify-center gap-1">
+                                            {platformLabels[p]}
+                                            {sortConfig.key === p ? (
+                                                sortConfig.direction === 'asc' ? <ChevronUp size={14} /> :
+                                                    <ChevronDown size={14} />
+                                            ) : (
+                                                <ChevronsUpDown size={14} className="text-neutral-300" />
+                                            )}
+                                        </div>
                                     </TableCell>
                                 ))}
                                 <TableCell
