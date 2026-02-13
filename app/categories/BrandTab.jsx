@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Search, X, Package, Menu as MenuIcon, RefreshCw, TrendingUp, TrendingDown, Check, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Search, X, Package, Menu as MenuIcon, RefreshCw, TrendingUp, TrendingDown, Check, ChevronUp, ChevronDown, ChevronsUpDown, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BrandProductsDialog from './BrandProductsDialog';
 import Paper from '@mui/material/Paper';
@@ -203,10 +203,10 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
                                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700 cursor-pointer"
                                             title="Filter & Sort"
                                         >
-                                            <MenuIcon size={16} />
+                                            <Filter size={16} />
                                         </button>
 
-                                        {/* Custom Dropdown */}
+                                        {/* Dropdown Menu */}
                                         {isSortMenuOpen && (
                                             <>
                                                 <div
@@ -216,54 +216,78 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
                                                         setIsSortMenuOpen(false);
                                                     }}
                                                 />
-                                                <div className="absolute top-full right-0 mt-1 z-50 bg-white rounded-xl shadow-lg border border-gray-200 min-w-[200px]" onClick={(e) => e.stopPropagation()}>
+                                                <div
+                                                    className="absolute top-full right-0 mt-1 z-50 bg-white rounded-md shadow-lg border border-gray-200 min-w-[160px] py-1"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+
                                                     <div
                                                         onClick={() => {
                                                             setSortConfig({ key: null, direction: 'desc' });
                                                             setIsSortMenuOpen(false);
                                                         }}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50 border-b border-gray-100"
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === null ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
                                                     >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex items-center gap-3">
-                                                                <RefreshCw size={16} className="text-blue-500" />
-                                                                <span className="text-sm font-medium text-gray-700">Default</span>
-                                                            </div>
-                                                            {sortConfig.key === null && <Check size={16} className="text-emerald-500" />}
-                                                        </div>
+                                                        Default (Total Count)
                                                     </div>
-                                                    <div className="px-3 py-2 border-b border-gray-100">
-                                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sort By</span>
-                                                    </div>
+
+                                                    <div className="border-t border-gray-100 my-1" />
+
                                                     <div
                                                         onClick={() => {
                                                             setSortConfig({ key: 'name', direction: 'asc' });
                                                             setIsSortMenuOpen(false);
                                                         }}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === 'name' && sortConfig.direction === 'asc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
                                                     >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex items-center gap-3">
-                                                                <TrendingUp size={16} className="text-emerald-500" />
-                                                                <span className="text-sm font-medium text-gray-700">Name (A to Z)</span>
-                                                            </div>
-                                                            {sortConfig.key === 'name' && sortConfig.direction === 'asc' && <Check size={16} className="text-emerald-500" />}
-                                                        </div>
+                                                        Name (A to Z)
                                                     </div>
+
                                                     <div
                                                         onClick={() => {
                                                             setSortConfig({ key: 'name', direction: 'desc' });
                                                             setIsSortMenuOpen(false);
                                                         }}
-                                                        className="px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === 'name' && sortConfig.direction === 'desc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
                                                     >
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex items-center gap-3">
-                                                                <TrendingDown size={16} className="text-rose-500" />
-                                                                <span className="text-sm font-medium text-gray-700">Name (Z to A)</span>
-                                                            </div>
-                                                            {sortConfig.key === 'name' && sortConfig.direction === 'desc' && <Check size={16} className="text-emerald-500" />}
-                                                        </div>
+                                                        Name (Z to A)
+                                                    </div>
+
+                                                    <div className="border-t border-gray-100 my-1" />
+
+                                                    <div
+                                                        onClick={() => {
+                                                            setSortConfig({ key: 'total', direction: 'desc' });
+                                                            setIsSortMenuOpen(false);
+                                                        }}
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === 'total' && sortConfig.direction === 'desc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
+                                                    >
+                                                        Total (High to Low)
+                                                    </div>
+
+                                                    <div
+                                                        onClick={() => {
+                                                            setSortConfig({ key: 'total', direction: 'asc' });
+                                                            setIsSortMenuOpen(false);
+                                                        }}
+                                                        className={cn(
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            sortConfig.key === 'total' && sortConfig.direction === 'asc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
+                                                        )}
+                                                    >
+                                                        Total (Low to High)
                                                     </div>
                                                 </div>
                                             </>
