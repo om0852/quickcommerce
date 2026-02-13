@@ -227,11 +227,12 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
                                                             setIsSortMenuOpen(false);
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === null ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Default (Total Count)
+                                                        <span>Default (Total Count)</span>
+                                                        {sortConfig.key === null && <Check size={14} className="text-neutral-900" />}
                                                     </div>
 
                                                     <div className="border-t border-gray-100 my-1" />
@@ -242,11 +243,12 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
                                                             setIsSortMenuOpen(false);
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === 'name' && sortConfig.direction === 'asc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Name (A to Z)
+                                                        <span>Name (A to Z)</span>
+                                                        {sortConfig.key === 'name' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
                                                     </div>
 
                                                     <div
@@ -255,11 +257,12 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
                                                             setIsSortMenuOpen(false);
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === 'name' && sortConfig.direction === 'desc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Name (Z to A)
+                                                        <span>Name (Z to A)</span>
+                                                        {sortConfig.key === 'name' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
                                                     </div>
 
                                                     <div className="border-t border-gray-100 my-1" />
@@ -270,11 +273,12 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
                                                             setIsSortMenuOpen(false);
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === 'total' && sortConfig.direction === 'desc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Total (High to Low)
+                                                        <span>Total (High to Low)</span>
+                                                        {sortConfig.key === 'total' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
                                                     </div>
 
                                                     <div
@@ -283,11 +287,12 @@ const BrandTab = ({ products, loading, platformFilter = 'all' }) => {
                                                             setIsSortMenuOpen(false);
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === 'total' && sortConfig.direction === 'asc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Total (Low to High)
+                                                        <span>Total (Low to High)</span>
+                                                        {sortConfig.key === 'total' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
                                                     </div>
                                                 </div>
                                             </>

@@ -216,11 +216,12 @@ const ProductTable = React.memo(function ProductTable({
                                                             handleSortMenuClose();
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === null && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Default
+                                                        <span>Default</span>
+                                                        {sortConfig.key === null && !showNewFirst && <Check size={14} className="text-neutral-900" />}
                                                     </div>
 
                                                     <div className="border-t border-gray-100 my-1" />
@@ -232,11 +233,12 @@ const ProductTable = React.memo(function ProductTable({
                                                             handleSortMenuClose();
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Name (A to Z)
+                                                        <span>Name (A to Z)</span>
+                                                        {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
                                                     </div>
 
                                                     <div
@@ -246,11 +248,12 @@ const ProductTable = React.memo(function ProductTable({
                                                             handleSortMenuClose();
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Name (Z to A)
+                                                        <span>Name (Z to A)</span>
+                                                        {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
                                                     </div>
 
                                                     <div
@@ -260,11 +263,12 @@ const ProductTable = React.memo(function ProductTable({
                                                             handleSortMenuClose();
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Price (Low to High)
+                                                        <span>Price (Low to High)</span>
+                                                        {sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
                                                     </div>
 
                                                     <div
@@ -274,11 +278,12 @@ const ProductTable = React.memo(function ProductTable({
                                                             handleSortMenuClose();
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Price (High to Low)
+                                                        <span>Price (High to Low)</span>
+                                                        {sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
                                                     </div>
 
                                                     <div className="border-t border-gray-100 my-1" />
@@ -290,11 +295,12 @@ const ProductTable = React.memo(function ProductTable({
                                                             handleSortMenuClose();
                                                         }}
                                                         className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs",
+                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
                                                             showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
                                                         )}
                                                     >
-                                                        Newly Added
+                                                        <span>Newly Added</span>
+                                                        {showNewFirst && <Check size={14} className="text-neutral-900" />}
                                                     </div>
                                                 </div>
                                             </>
