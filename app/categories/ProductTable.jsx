@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
