@@ -1087,23 +1087,33 @@ function CategoriesPageContent() {
                 Platform Filter <span className="text-neutral-400 font-normal ml-1">({currentCounts[platformFilter] || 0})</span>
               </label>
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                {PLATFORM_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => {
-                      setPlatformFilter(opt.value);
-                      setCurrentPage(1);
-                    }}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer",
-                      platformFilter === opt.value
-                        ? "bg-neutral-900 text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    )}
-                  >
-                    {opt.label} ({currentCounts[opt.value] || 0})
-                  </button>
-                ))}
+                {loading ? (
+                  // Skeleton Loader for Platform Filter
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={`platform-skeleton-${i}`}
+                      className="h-8 w-24 bg-gray-200 rounded-full animate-pulse flex-shrink-0"
+                    />
+                  ))
+                ) : (
+                  PLATFORM_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        setPlatformFilter(opt.value);
+                        setCurrentPage(1);
+                      }}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer",
+                        platformFilter === opt.value
+                          ? "bg-neutral-900 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      )}
+                    >
+                      {opt.label} ({currentCounts[opt.value] || 0})
+                    </button>
+                  ))
+                )}
               </div>
             </div>
 
