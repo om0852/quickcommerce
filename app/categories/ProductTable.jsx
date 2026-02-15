@@ -444,7 +444,9 @@ const ProductTable = React.memo(function ProductTable({
                                                     <div className="w-full min-w-0">
                                                         <div className="text-sm font-medium text-neutral-900 whitespace-normal break-words" title={product.name}>
                                                             {product.name}
-                                                            {product.weight && <span className="text-neutral-500 font-normal"> - ({product.weight})</span>}
+                                                            {((product.weight && product.weight !== 'N/A') || product.quantity) && (
+                                                                <span className="text-neutral-500 font-normal"> - ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})</span>
+                                                            )}
                                                             {isAdmin && (
                                                                 <button
                                                                     onClick={(e) => {

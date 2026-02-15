@@ -183,8 +183,8 @@ function ProductDetailsDialog({
 
                                             <div className="flex justify-between items-center">
                                                 <span className="text-neutral-500">Weight:</span>
-                                                <span className={`text-neutral-700 font-medium text-xs ${!data.productWeight ? 'italic text-neutral-400' : ''}`}>
-                                                    {data.productWeight || 'N/A'}
+                                                <span className={`text-neutral-700 font-medium text-xs ${!data.productWeight && !data.quantity ? 'italic text-neutral-400' : ''}`}>
+                                                    {(data.productWeight && data.productWeight !== 'N/A') ? data.productWeight : (data.quantity || 'N/A')}
                                                 </span>
                                             </div>
 
