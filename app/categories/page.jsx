@@ -1084,7 +1084,7 @@ function CategoriesPageContent() {
           <div className="w-full border-t border-gray-100 pt-3 flex items-end justify-between gap-4">
             <div className="flex-1 overflow-hidden">
               <label className="text-xs font-semibold text-gray-500 mb-2 block">
-                Platform Filter <span className="text-neutral-400 font-normal ml-1">({currentCounts[platformFilter] || 0})</span>
+                Platform Filter <span className="text-neutral-400 font-normal ml-1">({loading && <Loader2 size={10} className="animate-spin inline-block mr-1" />}{currentCounts[platformFilter] || 0})</span>
               </label>
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
                 {PLATFORM_OPTIONS.map(opt => (
