@@ -10,6 +10,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableFooter from '@mui/material/TableFooter';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 // Skeleton component
 const Skeleton = ({ className }) => (
@@ -19,7 +21,16 @@ const Skeleton = ({ className }) => (
 const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshotDate }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' }); // key: 'name' | 'total' | platform, direction: 'asc' | 'desc'
-    const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+    const [sortMenuAnchor, setSortMenuAnchor] = useState(null);
+    const isSortMenuOpen = Boolean(sortMenuAnchor);
+
+    const handleSortMenuClick = (event) => {
+        setSortMenuAnchor(event.currentTarget);
+    };
+
+    const handleSortMenuClose = () => {
+        setSortMenuAnchor(null);
+    };
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
     const platformLabels = {
@@ -196,10 +207,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
 
                                         {/* Hamburger Sort Menu */}
                                         <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setIsSortMenuOpen(true);
-                                            }}
+                                            onClick={handleSortMenuClick}
                                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700 cursor-pointer"
                                             title="Filter & Sort"
                                         >
@@ -207,96 +215,145 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                         </button>
 
                                         {/* Dropdown Menu */}
-                                        {isSortMenuOpen && (
-                                            <>
-                                                <div
-                                                    className="fixed inset-0 z-40"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setIsSortMenuOpen(false);
-                                                    }}
-                                                />
-                                                <div
-                                                    className="absolute top-full right-0 mt-1 z-50 bg-white rounded-md shadow-lg border border-gray-200 min-w-[160px] py-1"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
+                                        <Menu
+                                            anchorEl={sortMenuAnchor}
+                                            open={isSortMenuOpen}
+                                            onClose={handleSortMenuClose}
+                                            anchorOrigin={{
+                                                vertical: 'bottom',
+                                                horizontal: 'right',
+                                            }}
+                                            transformOrigin={{
+                                                vertical: 'top',
+                                                horizontal: 'right',
+                                            }}
+                                            PaperProps={{
+                                                sx: {
+                                                    mt: 1,
+                                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                                    border: '1px solid #e5e7eb',
+                                                    minWidth: '160px',
+                                                    borderRadius: '0.375rem',
+                                                }
+                                            }}
+                                            MenuListProps={{
+                                                sx: { py: 0.5 }
+                                            }}
+                                        >
+                                            <MenuItem
+                                                onClick={() => {
+                                                    setSortConfig({ key: null, direction: 'desc' });
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === null ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === null ? 700 : 500,
+                                                    color: sortConfig.key === null ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Default (Total Count)</span>
+                                                {sortConfig.key === null && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
 
-                                                    <div
-                                                        onClick={() => {
-                                                            setSortConfig({ key: null, direction: 'desc' });
-                                                            setIsSortMenuOpen(false);
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === null ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Default (Total Count)</span>
-                                                        {sortConfig.key === null && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
-                                                    <div className="border-t border-gray-100 my-1" />
+                                            <MenuItem
+                                                onClick={() => {
+                                                    setSortConfig({ key: 'name', direction: 'asc' });
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Name (A to Z)</span>
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
 
-                                                    <div
-                                                        onClick={() => {
-                                                            setSortConfig({ key: 'name', direction: 'asc' });
-                                                            setIsSortMenuOpen(false);
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === 'name' && sortConfig.direction === 'asc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Name (A to Z)</span>
-                                                        {sortConfig.key === 'name' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
+                                            <MenuItem
+                                                onClick={() => {
+                                                    setSortConfig({ key: 'name', direction: 'desc' });
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Name (Z to A)</span>
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
 
-                                                    <div
-                                                        onClick={() => {
-                                                            setSortConfig({ key: 'name', direction: 'desc' });
-                                                            setIsSortMenuOpen(false);
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === 'name' && sortConfig.direction === 'desc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Name (Z to A)</span>
-                                                        {sortConfig.key === 'name' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
-                                                    <div className="border-t border-gray-100 my-1" />
+                                            <MenuItem
+                                                onClick={() => {
+                                                    setSortConfig({ key: 'total', direction: 'desc' });
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'total' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'total' && sortConfig.direction === 'desc' ? 700 : 500,
+                                                    color: sortConfig.key === 'total' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Total (High to Low)</span>
+                                                {sortConfig.key === 'total' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
 
-                                                    <div
-                                                        onClick={() => {
-                                                            setSortConfig({ key: 'total', direction: 'desc' });
-                                                            setIsSortMenuOpen(false);
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === 'total' && sortConfig.direction === 'desc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Total (High to Low)</span>
-                                                        {sortConfig.key === 'total' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
-
-                                                    <div
-                                                        onClick={() => {
-                                                            setSortConfig({ key: 'total', direction: 'asc' });
-                                                            setIsSortMenuOpen(false);
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === 'total' && sortConfig.direction === 'asc' ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Total (Low to High)</span>
-                                                        {sortConfig.key === 'total' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )}
+                                            <MenuItem
+                                                onClick={() => {
+                                                    setSortConfig({ key: 'total', direction: 'asc' });
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'total' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'total' && sortConfig.direction === 'asc' ? 700 : 500,
+                                                    color: sortConfig.key === 'total' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Total (Low to High)</span>
+                                                {sortConfig.key === 'total' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+                                        </Menu>
                                     </div>
                                 </TableCell>
                                 {platforms.map(p => (
