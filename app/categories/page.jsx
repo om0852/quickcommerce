@@ -1219,6 +1219,8 @@ function CategoriesPageContent() {
               products={products}
               loading={loading}
               platformFilter={platformFilter}
+              pincode={pincode}
+              snapshotDate={snapshotDate}
             />
           )}
         </div>

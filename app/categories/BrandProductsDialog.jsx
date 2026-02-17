@@ -9,7 +9,9 @@ const BrandProductsDialog = ({
     brandName,
     platform,
     allProducts,
-    onRefresh
+    onRefresh,
+    pincode,
+    snapshotDate
 }) => {
     if (!isOpen) return null;
 
@@ -48,7 +50,7 @@ const BrandProductsDialog = ({
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
                     <div>
                         <h3 className="text-xl font-bold text-gray-900">
-                            {brandName === 'Other' ? 'Unbranded / Other' : brandName}
+                            {brandName === 'Other' ? 'Unbranded / Other' : brandName} {pincode && `(${pincode})`} {snapshotDate && snapshotDate}
                         </h3>
                         <p className="text-sm text-gray-500">
                             {platform === 'total' ? 'All products' : `Products available on ${platform}`}

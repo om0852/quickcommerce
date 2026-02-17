@@ -201,110 +201,173 @@ const ProductTable = React.memo(function ProductTable({
                                         </button>
 
                                         {/* Dropdown Menu */}
-                                        {isSortMenuOpen && (
-                                            <>
-                                                <div
-                                                    className="fixed inset-0 z-40"
-                                                    onClick={handleSortMenuClose}
-                                                />
-                                                <div className="absolute top-full right-0 mt-1 z-50 bg-white rounded-md shadow-lg border border-gray-200 min-w-[160px] py-1">
+                                        <Menu
+                                            anchorEl={sortMenuAnchor}
+                                            open={isSortMenuOpen}
+                                            onClose={handleSortMenuClose}
+                                            anchorOrigin={{
+                                                vertical: 'bottom',
+                                                horizontal: 'right',
+                                            }}
+                                            transformOrigin={{
+                                                vertical: 'top',
+                                                horizontal: 'right',
+                                            }}
+                                            PaperProps={{
+                                                sx: {
+                                                    mt: 1,
+                                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                                    border: '1px solid #e5e7eb',
+                                                    minWidth: '160px',
+                                                    borderRadius: '0.375rem',
+                                                }
+                                            }}
+                                            MenuListProps={{
+                                                sx: { py: 0.5 }
+                                            }}
+                                        >
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onSort(null);
+                                                    if (showNewFirst) onShowNewFirstChange(false);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === null && !showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === null && !showNewFirst ? 700 : 500,
+                                                    color: sortConfig.key === null && !showNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Default</span>
+                                                {sortConfig.key === null && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
 
-                                                    <div
-                                                        onClick={() => {
-                                                            onSort(null);
-                                                            if (showNewFirst) onShowNewFirstChange(false);
-                                                            handleSortMenuClose();
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === null && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Default</span>
-                                                        {sortConfig.key === null && !showNewFirst && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
-                                                    <div className="border-t border-gray-100 my-1" />
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onSort('name', 'asc');
+                                                    if (showNewFirst) onShowNewFirstChange(false);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Name (A to Z)</span>
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
 
-                                                    <div
-                                                        onClick={() => {
-                                                            onSort('name', 'asc');
-                                                            if (showNewFirst) onShowNewFirstChange(false);
-                                                            handleSortMenuClose();
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Name (A to Z)</span>
-                                                        {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onSort('name', 'desc');
+                                                    if (showNewFirst) onShowNewFirstChange(false);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Name (Z to A)</span>
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
 
-                                                    <div
-                                                        onClick={() => {
-                                                            onSort('name', 'desc');
-                                                            if (showNewFirst) onShowNewFirstChange(false);
-                                                            handleSortMenuClose();
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Name (Z to A)</span>
-                                                        {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onSort('averagePrice', 'asc');
+                                                    if (showNewFirst) onShowNewFirstChange(false);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst ? 700 : 500,
+                                                    color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Price (Low to High)</span>
+                                                {sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
 
-                                                    <div
-                                                        onClick={() => {
-                                                            onSort('averagePrice', 'asc');
-                                                            if (showNewFirst) onShowNewFirstChange(false);
-                                                            handleSortMenuClose();
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Price (Low to High)</span>
-                                                        {sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onSort('averagePrice', 'desc');
+                                                    if (showNewFirst) onShowNewFirstChange(false);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst ? 700 : 500,
+                                                    color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Price (High to Low)</span>
+                                                {sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
 
-                                                    <div
-                                                        onClick={() => {
-                                                            onSort('averagePrice', 'desc');
-                                                            if (showNewFirst) onShowNewFirstChange(false);
-                                                            handleSortMenuClose();
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Price (High to Low)</span>
-                                                        {sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
-                                                    <div className="border-t border-gray-100 my-1" />
-
-                                                    <div
-                                                        onClick={() => {
-                                                            onShowNewFirstChange(true);
-                                                            onSort(null); // Clear manual sort
-                                                            handleSortMenuClose();
-                                                        }}
-                                                        className={cn(
-                                                            "px-3 py-2 cursor-pointer hover:bg-gray-50 text-xs flex items-center justify-between",
-                                                            showNewFirst ? "font-bold text-neutral-900 bg-gray-50" : "font-medium text-gray-600"
-                                                        )}
-                                                    >
-                                                        <span>Newly Added</span>
-                                                        {showNewFirst && <Check size={14} className="text-neutral-900" />}
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )}
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onShowNewFirstChange(true);
+                                                    onSort(null); // Clear manual sort
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: showNewFirst ? 700 : 500,
+                                                    color: showNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Newly Added</span>
+                                                {showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+                                        </Menu>
                                     </div>
 
                                 </TableCell>
