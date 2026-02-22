@@ -100,7 +100,8 @@ export async function GET(request) {
     const snapshotMap = {};
     allSnapshots.forEach(snap => {
       // Key includes pincode to avoid collisions if product IDs are not unique across pincodes
-      snapshotMap[`${snap.platform}:${snap.productId}:${snap.pincode}`] = snap;
+      // Normalize platform to lowercase to avoid casing mismatches between groups and snapshots
+      snapshotMap[`${snap.platform.toLowerCase()}:${snap.productId}:${snap.pincode}`] = snap;
     });
 
     const finalProducts = [];
@@ -136,10 +137,14 @@ export async function GET(request) {
 
         // 1. Collect all matching snapshots for this group AND this pincode
         group.products.forEach(p => {
-          const snap = snapshotMap[`${p.platform}:${p.productId}:${currentPincode}`];
+          // Normalize platform to lowercase for case-insensitive lookup
+          const platformKey = p.platform.toLowerCase();
+          const snap = snapshotMap[`${platformKey}:${p.productId}:${currentPincode}`];
           if (snap) {
-            if (platformMatches[p.platform]) {
-              platformMatches[p.platform].push(snap);
+            // Find the correct key in platformMatches (case-insensitive)
+            const matchKey = Object.keys(platformMatches).find(k => k.toLowerCase() === platformKey);
+            if (matchKey) {
+              platformMatches[matchKey].push(snap);
               hasData = true;
               usedSnapshotIds.add(snap._id.toString());
             }
