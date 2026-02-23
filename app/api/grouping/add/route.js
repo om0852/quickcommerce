@@ -21,7 +21,7 @@ export async function POST(request) {
         // We sort by scrapedAt desc to get the latest version of this product.
         const product = await ProductSnapshot.findOne({
             pincode,
-            platform,
+            platform: { $regex: `^${platform}$`, $options: 'i' },
             productId
         }).sort({ scrapedAt: -1 });
 
