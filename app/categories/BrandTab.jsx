@@ -18,7 +18,7 @@ const Skeleton = ({ className }) => (
     <div className={cn("animate-pulse bg-gray-200 rounded", className)} />
 );
 
-const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshotDate }) => {
+const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshotDate, isAdmin = false }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' }); // key: 'name' | 'total' | platform, direction: 'asc' | 'desc'
     const [sortMenuAnchor, setSortMenuAnchor] = useState(null);
@@ -521,6 +521,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                     onRefresh={() => { /* Handle refresh if needed */ }}
                     pincode={pincode}
                     snapshotDate={snapshotDate}
+                    isAdmin={isAdmin}
                 />
             )}
         </div>

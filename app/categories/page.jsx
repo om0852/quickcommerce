@@ -1221,6 +1221,7 @@ function CategoriesPageContent() {
               platformFilter={platformFilter}
               pincode={pincode}
               snapshotDate={snapshotDate}
+              isAdmin={isAdmin}
             />
           )}
         </div>

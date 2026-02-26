@@ -11,7 +11,8 @@ const BrandProductsDialog = ({
     allProducts,
     onRefresh,
     pincode,
-    snapshotDate
+    snapshotDate,
+    isAdmin = false
 }) => {
     if (!isOpen) return null;
 
@@ -82,7 +83,7 @@ const BrandProductsDialog = ({
                         onRefresh={onRefresh}
                         showNewFirst={showNewFirst}
                         onShowNewFirstChange={setShowNewFirst}
-                        isAdmin={true} // Allow edits if verified
+                        isAdmin={isAdmin} // Use actual admin status from props
                     />
                 </div>
             </div>
