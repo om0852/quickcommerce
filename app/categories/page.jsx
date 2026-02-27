@@ -497,6 +497,25 @@ function CategoriesPageContent() {
       // ... inside useMemo for sortedProducts ...
 
       const sortFunction = (a, b) => {
+        if (sortConfig.key === 'groupCount') {
+          const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+          const countA = platforms.filter(p => a[p]).length;
+          const countB = platforms.filter(p => b[p]).length;
+          if (countA !== countB) return sortConfig.direction === 'asc' ? countA - countB : countB - countA;
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          return nameA.localeCompare(nameB);
+        }
+
+        if (sortConfig.key === 'brand') {
+          const brandA = a.brand || '';
+          const brandB = b.brand || '';
+          if (brandA !== brandB) return sortConfig.direction === 'asc' ? brandA.localeCompare(brandB) : brandB.localeCompare(brandA);
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          return nameA.localeCompare(nameB);
+        }
+
         if (sortConfig.key === 'name') {
           const nameA = a.name || '';
           const nameB = b.name || '';
@@ -683,6 +702,25 @@ function CategoriesPageContent() {
 
         if (sortConfig.direction === 'asc') return priceA - priceB;
         return priceB - priceA;
+      }
+
+      if (sortConfig.key === 'groupCount') {
+        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+        const countA = platforms.filter(p => a[p]).length;
+        const countB = platforms.filter(p => b[p]).length;
+        if (countA !== countB) return sortConfig.direction === 'asc' ? countA - countB : countB - countA;
+        const nameA = a.name || '';
+        const nameB = b.name || '';
+        return nameA.localeCompare(nameB);
+      }
+
+      if (sortConfig.key === 'brand') {
+        const brandA = a.brand || '';
+        const brandB = b.brand || '';
+        if (brandA !== brandB) return sortConfig.direction === 'asc' ? brandA.localeCompare(brandB) : brandB.localeCompare(brandA);
+        const nameA = a.name || '';
+        const nameB = b.name || '';
+        return nameA.localeCompare(nameB);
       }
 
       if (sortConfig.key === 'name') {

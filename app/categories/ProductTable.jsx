@@ -245,8 +245,79 @@ const ProductTable = React.memo(function ProductTable({
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
-                                                <span>Default</span>
+                                                <span>Group With Highest Product</span>
                                                 {sortConfig.key === null && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onSort('groupCount', 'asc');
+                                                    if (showNewFirst) onShowNewFirstChange(false);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst ? 700 : 500,
+                                                    color: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Group With Lowest Product</span>
+                                                {sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onSort('brand', 'asc');
+                                                    if (showNewFirst) onShowNewFirstChange(false);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Brand Name (A to Z)</span>
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onSort('brand', 'desc');
+                                                    if (showNewFirst) onShowNewFirstChange(false);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                }}
+                                            >
+                                                <span>Brand Name (Z to A)</span>
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -270,7 +341,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
-                                                <span>Name (A to Z)</span>
+                                                <span>Product Name (A to Z)</span>
                                                 {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
@@ -293,7 +364,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
-                                                <span>Name (Z to A)</span>
+                                                <span>Product Name (Z to A)</span>
                                                 {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
