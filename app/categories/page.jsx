@@ -119,7 +119,7 @@ function CategoriesPageContent() {
   const [snapshotTime, setSnapshotTime] = useState('');
   const [availableSnapshots, setAvailableSnapshots] = useState([]);
   const [isLiveMode, setIsLiveMode] = useState(true);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const ITEMS_PER_PAGE = 50;
