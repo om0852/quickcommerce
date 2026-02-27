@@ -124,6 +124,7 @@ function CategoriesPageContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const ITEMS_PER_PAGE = 50;
   const lastActivePageRef = useRef(1);
+  const abortControllerRef = useRef(null);
 
 
 
@@ -215,6 +216,14 @@ function CategoriesPageContent() {
   }, [products]);
 
   const fetchCategoryData = async (customTimestamp = null) => {
+    // Abort previous request if it exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    // Create new AbortController
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
     setProducts([]);
     setError(null);
@@ -230,7 +239,10 @@ function CategoriesPageContent() {
         url += `&timestamp=${encodeURIComponent(timeToFetch)}`;
       }
 
-      const response = await fetch(url, { cache: 'no-store' });
+      const response = await fetch(url, {
+        cache: 'no-store',
+        signal: controller.signal
+      });
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || 'Failed to fetch category data');
@@ -242,10 +254,17 @@ function CategoriesPageContent() {
       }
 
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('Fetch aborted');
+        return; // Early return to avoid setting loading state
+      }
       setError(err.message);
       setProducts([]);
     } finally {
-      setLoading(false);
+      // Only set loading to false if this was the latest request
+      if (abortControllerRef.current === controller) {
+        setLoading(false);
+      }
     }
   };
 
@@ -307,6 +326,8 @@ function CategoriesPageContent() {
   }, [selectedProduct]);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchSnapshots = async () => {
       if (!isPreferencesLoaded) return;
 
@@ -317,7 +338,9 @@ function CategoriesPageContent() {
 
       try {
         const pincodeParam = pincode;
-        const res = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincodeParam)}`);
+        const res = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincodeParam)}`, {
+          signal: controller.signal
+        });
         const data = await res.json();
 
         if (data.snapshots && data.snapshots.length > 0) {
@@ -357,6 +380,10 @@ function CategoriesPageContent() {
           setLoading(false);
         }
       } catch (err) {
+        if (err.name === 'AbortError') {
+          console.log('Snapshot fetch aborted');
+          return;
+        }
         console.error("Error fetching snapshots:", err);
         setAvailableSnapshots([]);
         setLoading(false);
@@ -364,6 +391,10 @@ function CategoriesPageContent() {
     };
 
     fetchSnapshots();
+
+    return () => {
+      controller.abort();
+    };
   }, [category, pincode, isLiveMode, isPreferencesLoaded]);
 
   useEffect(() => {
@@ -1086,16 +1117,6 @@ function CategoriesPageContent() {
                   minimal
                 />
               </div>
-
-              {!isLiveMode && (
-                <button
-                  onClick={() => setIsLiveMode(true)}
-                  className="mt-6 p-2 text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors cursor-pointer"
-                  title="Return to Live Mode"
-                >
-                  <RefreshCw size={18} />
-                </button>
-              )}
             </div>
 
             {/* Right: Actions */}
