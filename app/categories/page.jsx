@@ -1037,6 +1037,7 @@ function CategoriesPageContent() {
                   value={category}
                   onChange={(val) => {
                     setCategory(val);
+                    setSortConfig({ key: 'name', direction: 'asc' });
                     setSearchQuery('');
                   }}
                   options={CATEGORY_OPTIONS}
@@ -1048,6 +1049,7 @@ function CategoriesPageContent() {
                   value={pincode}
                   onChange={(val) => {
                     setPincode(val);
+                    setSortConfig({ key: 'name', direction: 'asc' });
                   }}
                   options={PINCODE_OPTIONS}
                 />
@@ -1060,6 +1062,7 @@ function CategoriesPageContent() {
                   value={snapshotDate}
                   onChange={(newDate) => {
                     setSnapshotDate(newDate);
+                    setSortConfig({ key: 'name', direction: 'asc' });
                     setIsLiveMode(false);
 
                     // Auto-select the latest time for this date
