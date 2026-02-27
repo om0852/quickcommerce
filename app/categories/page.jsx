@@ -1037,7 +1037,6 @@ function CategoriesPageContent() {
                   value={category}
                   onChange={(val) => {
                     setCategory(val);
-                    setSortConfig({ key: null, direction: 'asc' });
                     setSearchQuery('');
                   }}
                   options={CATEGORY_OPTIONS}
