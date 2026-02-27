@@ -18,7 +18,6 @@ export async function GET(request) {
     if (category) {
       filter.$or = [
         { category: category },
-        { officialCategory: category }
       ];
     }
 
