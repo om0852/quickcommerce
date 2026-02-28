@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Search, X, Package, Menu as MenuIcon, RefreshCw, TrendingUp, TrendingDown, Check, ChevronUp, ChevronDown, ChevronsUpDown, Filter } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Search, X, Package, Menu as MenuIcon, RefreshCw, TrendingUp, TrendingDown, Check, ChevronUp, ChevronDown, ChevronsUpDown, Filter, Plus, Edit2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BrandProductsDialog from './BrandProductsDialog';
 import Paper from '@mui/material/Paper';
@@ -23,6 +23,118 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' }); // key: 'name' | 'total' | platform, direction: 'asc' | 'desc'
     const [sortMenuAnchor, setSortMenuAnchor] = useState(null);
     const isSortMenuOpen = Boolean(sortMenuAnchor);
+
+    const [apiBrands, setApiBrands] = useState([]);
+    const [isFetchingBrands, setIsFetchingBrands] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (isAdmin) {
+            fetchBrands();
+        }
+    }, [isAdmin]);
+
+    const fetchBrands = async () => {
+        setIsFetchingBrands(true);
+        try {
+            const res = await fetch('/api/brands?all=true');
+            const data = await res.json();
+            if (data.success) setApiBrands(data.brands);
+        } catch (err) {
+            console.error("Failed to fetch brands from API", err);
+        } finally {
+            setIsFetchingBrands(false);
+        }
+    };
+
+    const handleAddBrand = async () => {
+        const brandName = window.prompt("Enter new brand name:");
+        if (!brandName || !brandName.trim()) return;
+
+        setIsSubmitting(true);
+        try {
+            const res = await fetch('/api/brands', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ brandName: brandName.trim() })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("Brand added successfully!");
+                fetchBrands();
+            } else {
+                alert(data.error || "Failed to add brand");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error adding brand");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleEditBrand = async (brand) => {
+        // apiBrand check (we need the _id to update/delete)
+        const matchedApiBrand = apiBrands.find(b => b.brandName === brand.name);
+        if (!matchedApiBrand) {
+            alert("This brand is derived from products and not in the database yet. Adding it first...");
+            // Optionally, create it on the fly, but let's prompt them to create it manually or automatically create it.
+            return;
+        }
+
+        const newName = window.prompt(`Rename brand "${brand.name}" to:`, brand.name);
+        if (!newName || !newName.trim() || newName.trim() === brand.name) return;
+
+        setIsSubmitting(true);
+        try {
+            const res = await fetch(`/api/brands/${matchedApiBrand._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newBrandName: newName.trim() })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("Brand renamed successfully! Product snapshots will update in the background. Please refresh data.");
+                fetchBrands();
+            } else {
+                alert(data.error || "Failed to rename brand");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error renaming brand");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteBrand = async (brand) => {
+        const matchedApiBrand = apiBrands.find(b => b.brandName === brand.name);
+        if (!matchedApiBrand) {
+            alert("This brand is not in the database.");
+            return;
+        }
+
+        if (!window.confirm(`Are you sure you want to delete the brand "${brand.name}"? This will remove it from all products and groups.`)) return;
+
+        setIsSubmitting(true);
+        try {
+            const res = await fetch(`/api/brands/${matchedApiBrand._id}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("Brand deleted successfully!");
+                fetchBrands();
+            } else {
+                alert(data.error || "Failed to delete brand");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error deleting brand");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const handleSortMenuClick = (event) => {
         setSortMenuAnchor(event.currentTarget);
@@ -69,6 +181,24 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                 }
             });
         });
+
+        // Merge apiBrands if isAdmin
+        if (isAdmin) {
+            apiBrands.forEach(apiBrand => {
+                if (!brandMap[apiBrand.brandName]) {
+                    brandMap[apiBrand.brandName] = {
+                        name: apiBrand.brandName,
+                        total: 0,
+                        jiomart: 0,
+                        zepto: 0,
+                        blinkit: 0,
+                        dmart: 0,
+                        flipkartMinutes: 0,
+                        instamart: 0
+                    };
+                }
+            });
+        }
 
         const brandList = Object.values(brandMap).sort((a, b) => {
             if (a.name === 'Other') return 1;
@@ -213,6 +343,17 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                         >
                                             <Filter size={16} />
                                         </button>
+
+                                        {isAdmin && (
+                                            <button
+                                                onClick={handleAddBrand}
+                                                disabled={isSubmitting}
+                                                className="ml-2 flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                                title="Add New Brand"
+                                            >
+                                                <Plus size={14} /> Add Brand
+                                            </button>
+                                        )}
 
                                         {/* Dropdown Menu */}
                                         <Menu
@@ -397,6 +538,21 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                 >
                                     Total
                                 </TableCell>
+                                {isAdmin && (
+                                    <TableCell
+                                        align="center"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            color: '#171717',
+                                            backgroundColor: '#f5f5f5',
+                                            borderBottom: '1px solid #e5e5e5',
+                                            padding: '12px 16px',
+                                            minWidth: 80
+                                        }}
+                                    >
+                                        Actions
+                                    </TableCell>
+                                )}
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -462,6 +618,28 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                             >
                                                 {brand.total}
                                             </TableCell>
+                                            {isAdmin && (
+                                                <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}>
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleEditBrand(brand); }}
+                                                            className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer"
+                                                            title="Rename Brand"
+                                                            disabled={isSubmitting}
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleDeleteBrand(brand); }}
+                                                            className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
+                                                            title="Delete Brand"
+                                                            disabled={isSubmitting}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </TableCell>
+                                            )}
                                         </TableRow>
                                     ))}
                                     {filteredBrands.length === 0 && (
@@ -503,6 +681,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                     <TableCell align="center" sx={{ color: 'white', fontWeight: 600, backgroundColor: '#262626', padding: '12px 16px' }}> {/* neutral-800 */}
                                         {totals.total}
                                     </TableCell>
+                                    {isAdmin && <TableCell sx={{ backgroundColor: '#262626' }}></TableCell>}
                                 </TableRow>
                             )}
                         </TableFooter>

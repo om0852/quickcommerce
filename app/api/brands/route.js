@@ -2,11 +2,15 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Brand from '@/models/Brand';
 
-// GET: Fetch all enabled brands
-export async function GET() {
+// GET: Fetch brands
+export async function GET(request) {
     try {
         await connectToDatabase();
-        const brands = await Brand.find({ enabled: true }).sort({ brandName: 1 });
+        const { searchParams } = new URL(request.url);
+        const fetchAll = searchParams.get('all') === 'true';
+
+        const query = fetchAll ? {} : { enabled: true };
+        const brands = await Brand.find(query).sort({ brandName: 1 });
         return NextResponse.json({ success: true, brands });
     } catch (error) {
         console.error('Error fetching brands:', error);
