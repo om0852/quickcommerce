@@ -201,6 +201,14 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
         }
 
         const brandList = Object.values(brandMap).sort((a, b) => {
+            const aEmpty = a.total === 0;
+            const bEmpty = b.total === 0;
+
+            // Push empty brands to the very bottom
+            if (aEmpty && !bEmpty) return 1;
+            if (!aEmpty && bEmpty) return -1;
+
+            // 'Other' goes to the bottom of the non-empty list
             if (a.name === 'Other') return 1;
             if (b.name === 'Other') return -1;
 
@@ -228,11 +236,11 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
 
         // Apply Platform Filter
         if (platformFilter !== 'all') {
-            return brandList.filter(b => b[platformFilter] > 0);
+            return brandList.filter(b => b[platformFilter] > 0 || (isAdmin && b.total === 0));
         }
         return brandList;
 
-    }, [products, platformFilter, sortConfig]);
+    }, [products, platformFilter, sortConfig, apiBrands, isAdmin]);
 
     const filteredBrands = useMemo(() => {
         if (!searchQuery) return sortedBrands;
