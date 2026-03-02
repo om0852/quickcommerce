@@ -158,7 +158,8 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
         const brandMap = {};
 
         products.forEach(product => {
-            const brandName = product.brand && product.brand.trim() !== '' ? product.brand : 'Other';
+            const rawBrand = product.brand ? String(product.brand).trim() : '';
+            const brandName = rawBrand !== '' ? rawBrand : 'Other';
 
             // ... (keep mapping logic same)
             if (!brandMap[brandName]) {
@@ -245,7 +246,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
     const filteredBrands = useMemo(() => {
         if (!searchQuery) return sortedBrands;
         const query = searchQuery.toLowerCase();
-        return sortedBrands.filter(b => b.name.toLowerCase().includes(query));
+        return sortedBrands.filter(b => b.name && String(b.name).toLowerCase().includes(query));
     }, [sortedBrands, searchQuery]);
 
     const totals = useMemo(() => {
