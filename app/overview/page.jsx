@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Loader2, Package, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 
 import CustomDropdown from '@/components/CustomDropdown';
 import categoriesData from '../utils/categories_with_urls.json';
@@ -28,6 +28,73 @@ const PLATFORMS = [
     { id: 'flipkartMinutes', label: 'Flipkart Minutes' },
 ];
 
+// --- Skeleton Components ---
+function SkeletonCell() {
+    return (
+        <td className="border-b border-gray-100 px-6 py-4 text-center">
+            <div className="h-7 bg-gray-200 animate-pulse rounded-full w-16 mx-auto" />
+        </td>
+    );
+}
+
+function SkeletonRow({ index }) {
+    return (
+        <tr className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            {/* Pincode cell */}
+            <td className="sticky left-0 z-10 border-r border-gray-200 px-6 py-4 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                <div className="h-4 bg-gray-200 animate-pulse rounded w-32 mb-1.5" />
+                <div className="h-3 bg-gray-100 animate-pulse rounded w-16" />
+            </td>
+            {PLATFORMS.map(p => <SkeletonCell key={p.id} />)}
+        </tr>
+    );
+}
+
+function SkeletonTable() {
+    return (
+        <table className="w-full text-left border-collapse">
+            <thead>
+                <tr>
+                    <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[200px]">
+                        Pincode / Region
+                    </th>
+                    {PLATFORMS.map(p => (
+                        <th key={p.id} className="sticky top-0 z-10 bg-neutral-50 border-b border-gray-200 px-6 py-4 font-bold text-neutral-600 tracking-wider text-sm text-center min-w-[140px]">
+                            {p.label}
+                        </th>
+                    ))}
+                </tr>
+            </thead>
+            <tbody>
+                {PINCODE_OPTIONS.map((_, idx) => (
+                    <SkeletonRow key={idx} index={idx} />
+                ))}
+            </tbody>
+        </table>
+    );
+}
+
+function SkeletonControls() {
+    return (
+        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+                {/* Category skeleton */}
+                <div className="w-64">
+                    <div className="h-3 bg-gray-200 animate-pulse rounded w-16 mb-2" />
+                    <div className="h-9 bg-gray-200 animate-pulse rounded-lg w-full" />
+                </div>
+                {/* Date skeleton */}
+                <div className="w-40">
+                    <div className="h-3 bg-gray-200 animate-pulse rounded w-8 mb-2" />
+                    <div className="h-9 bg-gray-200 animate-pulse rounded-lg w-full" />
+                </div>
+            </div>
+            <div className="h-9 w-9 bg-gray-200 animate-pulse rounded-md" />
+        </div>
+    );
+}
+
+// --- Main Content ---
 function OverviewContent() {
     const searchParams = useSearchParams();
 
@@ -55,11 +122,19 @@ function OverviewContent() {
     const [isLiveMode, setIsLiveMode] = useState(true);
 
     const [matrixData, setMatrixData] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // Track whether the first full load (dates + data) has completed
+    const [datesReady, setDatesReady] = useState(false);
+    const [dataReady, setDataReady] = useState(false);
+
+    // Everything is ready only when both dates and matrix data have been fetched at least once
+    const isInitialized = datesReady && dataReady;
 
     // 1. Fetch Available Dates for Category
     useEffect(() => {
+        setDatesReady(false); // reset on category change
         const fetchDates = async () => {
             try {
                 const response = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}`);
@@ -67,7 +142,7 @@ function OverviewContent() {
                 if (data.success && data.snapshots && data.snapshots.length > 0) {
                     setAvailableSnapshots(data.snapshots);
 
-                    // Auto-select latest date instead of Live Mode
+                    // Auto-select latest date
                     const sortedSnapshots = [...data.snapshots].sort((a, b) => new Date(b) - new Date(a));
                     const latestTs = sortedSnapshots[0];
                     const latestDateString = new Date(latestTs).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -87,6 +162,8 @@ function OverviewContent() {
                 setSnapshotDate('');
                 setSnapshotTime('');
                 setIsLiveMode(true);
+            } finally {
+                setDatesReady(true);
             }
         };
         fetchDates();
@@ -116,22 +193,21 @@ function OverviewContent() {
             if (!res.ok) throw new Error(data.error || 'Failed to fetch matrix data');
 
             setMatrixData(data.data || []);
-
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
+            setDataReady(true);
         }
     };
 
     useEffect(() => {
+        // Don't fetch matrix until dates are ready (so we use the correct snapshotTime)
+        if (!datesReady) return;
         fetchOverviewData();
-    }, [category, snapshotTime, isLiveMode]);
+    }, [category, snapshotTime, isLiveMode, datesReady]);
 
-    // Format Matrix for UI rendering
-    // matrixData looks like [{ pincode: '201303', platform: 'zepto', count: 154 }, ...]
     const getCellData = (pin, plat) => {
-        // Compare case insensitive just in case
         const found = matrixData.find(d =>
             d.pincode === pin &&
             d.platform?.toLowerCase() === plat.toLowerCase()
@@ -146,7 +222,7 @@ function OverviewContent() {
                 <div className="flex items-center gap-4">
                     <h1 className="text-xl font-bold tracking-tight text-neutral-900">System Overview</h1>
                     <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
-                        <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'} `}></span>
+                        <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'}`} />
                         <span className="font-medium text-neutral-600">
                             {isLiveMode ? 'Live Mode' : 'Historical Snapshot'}
                         </span>
@@ -157,56 +233,62 @@ function OverviewContent() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-6 gap-6">
 
-                {/* Controls */}
-                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="w-64 relative z-[100]">
-                            <label className="text-xs font-semibold text-gray-500 mb-1 block">Category</label>
-                            <CustomDropdown
-                                value={category}
-                                onChange={(val) => {
-                                    setCategory(val);
-                                    setSnapshotTime('');
-                                    setSnapshotDate('');
-                                    setIsLiveMode(true);
-                                }}
-                                options={CATEGORY_OPTIONS}
-                            />
+                {/* Controls — show skeleton until dates are ready */}
+                {!datesReady ? (
+                    <SkeletonControls />
+                ) : (
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-64 relative z-[100]">
+                                <label className="text-xs font-semibold text-gray-500 mb-1 block">Category</label>
+                                <CustomDropdown
+                                    value={category}
+                                    onChange={(val) => {
+                                        setCategory(val);
+                                        setSnapshotTime('');
+                                        setSnapshotDate('');
+                                        setIsLiveMode(true);
+                                        setDatesReady(false);
+                                        setDataReady(false);
+                                    }}
+                                    options={CATEGORY_OPTIONS}
+                                />
+                            </div>
+
+                            <div className="w-40 relative z-[90]">
+                                <label className="text-xs font-semibold text-gray-500 mb-1 block">Date</label>
+                                <CustomDropdown
+                                    value={snapshotDate}
+                                    onChange={(newDate) => {
+                                        setSnapshotDate(newDate);
+                                        setIsLiveMode(false);
+
+                                        const timesForDate = availableSnapshots.filter(ts => {
+                                            const d = new Date(ts);
+                                            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) === newDate;
+                                        });
+
+                                        if (timesForDate.length > 0) {
+                                            timesForDate.sort((a, b) => new Date(b) - new Date(a));
+                                            setSnapshotTime(timesForDate[0]);
+                                        }
+                                    }}
+                                    options={uniqueDates.map(d => ({ value: d, label: d }))}
+                                    placeholder="Latest Active"
+                                    minimal
+                                />
+                            </div>
                         </div>
 
-                        <div className="w-40 relative z-[90]">
-                            <label className="text-xs font-semibold text-gray-500 mb-1 block">Date</label>
-                            <CustomDropdown
-                                value={snapshotDate}
-                                onChange={(newDate) => {
-                                    setSnapshotDate(newDate);
-                                    setIsLiveMode(false);
-
-                                    const timesForDate = availableSnapshots.filter(ts => {
-                                        const d = new Date(ts);
-                                        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) === newDate;
-                                    });
-
-                                    if (timesForDate.length > 0) {
-                                        timesForDate.sort((a, b) => new Date(b) - new Date(a));
-                                        setSnapshotTime(timesForDate[0]);
-                                    }
-                                }}
-                                options={uniqueDates.map(d => ({ value: d, label: d }))}
-                                placeholder="Latest Active"
-                                minimal
-                            />
-                        </div>
+                        <button
+                            onClick={fetchOverviewData}
+                            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all cursor-pointer bg-white border border-gray-200"
+                            title="Refresh Data"
+                        >
+                            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+                        </button>
                     </div>
-
-                    <button
-                        onClick={fetchOverviewData}
-                        className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all cursor-pointer bg-white border border-gray-200"
-                        title="Refresh Data"
-                    >
-                        <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-                    </button>
-                </div>
+                )}
 
                 {/* Matrix Table */}
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
@@ -217,29 +299,25 @@ function OverviewContent() {
                     )}
 
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr>
-                                    <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[200px]">
-                                        Pincode / Region
-                                    </th>
-                                    {PLATFORMS.map(p => (
-                                        <th key={p.id} className="sticky top-0 z-10 bg-neutral-50 border-b border-gray-200 px-6 py-4 font-bold text-neutral-600 tracking-wider text-sm text-center min-w-[140px]">
-                                            {p.label}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading && matrixData.length === 0 ? (
+                        {/* Show full skeleton table until both dates and data are ready */}
+                        {!isInitialized ? (
+                            <SkeletonTable />
+                        ) : (
+                            <table className="w-full text-left border-collapse">
+                                <thead>
                                     <tr>
-                                        <td colSpan={PLATFORMS.length + 1} className="px-6 py-12 text-center text-neutral-400">
-                                            <Loader2 size={32} className="animate-spin mx-auto mb-4 opacity-50" />
-                                            <p>Analyzing cross-platform availability...</p>
-                                        </td>
+                                        <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[200px]">
+                                            Pincode / Region
+                                        </th>
+                                        {PLATFORMS.map(p => (
+                                            <th key={p.id} className="sticky top-0 z-10 bg-neutral-50 border-b border-gray-200 px-6 py-4 font-bold text-neutral-600 tracking-wider text-sm text-center min-w-[140px]">
+                                                {p.label}
+                                            </th>
+                                        ))}
                                     </tr>
-                                ) : (
-                                    PINCODE_OPTIONS.map((pinOption, idx) => (
+                                </thead>
+                                <tbody>
+                                    {PINCODE_OPTIONS.map((pinOption, idx) => (
                                         <tr key={pinOption.value} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-50'}>
                                             <td className="sticky left-0 z-10 border-r border-gray-200 px-6 py-4 font-semibold text-neutral-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] bg-inherit">
                                                 {pinOption.label}
@@ -253,7 +331,7 @@ function OverviewContent() {
                                                 return (
                                                     <td key={plat.id} className="border-b border-gray-100 px-6 py-4 text-center">
                                                         {loading ? (
-                                                            <div className="h-6 bg-gray-200 animate-pulse rounded w-16 mx-auto"></div>
+                                                            <div className="h-7 bg-gray-200 animate-pulse rounded-full w-16 mx-auto" />
                                                         ) : hasData ? (
                                                             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 font-bold rounded-full text-sm border border-green-200">
                                                                 <span>Yes</span>
@@ -268,10 +346,10 @@ function OverviewContent() {
                                                 );
                                             })}
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </div>
 
@@ -282,7 +360,21 @@ function OverviewContent() {
 
 export default function OverviewPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center p-8"><Loader2 className="animate-spin text-neutral-400" size={32} /></div>}>
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+                <div className="flex-none bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+                    <div className="h-6 bg-gray-200 animate-pulse rounded w-40" />
+                </div>
+                <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-6 gap-6">
+                    <SkeletonControls />
+                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <SkeletonTable />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }>
             <OverviewContent />
         </Suspense>
     );
