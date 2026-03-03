@@ -3,9 +3,9 @@
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    const { startCronScheduler } = await import('./lib/scheduler');
-    
+    // const { startCronScheduler } = await import('./lib/scheduler');
+
     console.log('🚀 Initializing cron scheduler from instrumentation...');
-    startCronScheduler();
+    // startCronScheduler();
   }
 }
