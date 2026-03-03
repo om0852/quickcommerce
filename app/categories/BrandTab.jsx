@@ -368,21 +368,22 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
         setSortConfig({ key, direction });
     };
 
-    return (
-        <div className="flex flex-col gap-4 h-full">
-            {/* Controls removed - using main page filter now */}
-
-            {/* Table */}
+    // Extracted Momoized Table to prevent re-renders when Dialog state changes
+    const MemoizedBrandsTable = React.memo(({
+        searchQuery, setSearchQuery, sortConfig, setSortConfig, handleSortMenuClick, handleSortMenuClose, sortMenuAnchor, isSortMenuOpen,
+        isAdmin, openBrandDialog, filteredBrands, totals, platforms, platformLabels, loading, handleSort, handleInteraction,
+        products, platformFilter // For empty state
+    }) => {
+        return (
             <Paper
                 sx={{
                     width: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    // maxWidth: 'calc(100vw - 2rem)', // Same constraint as ProductTable
                     flex: 1,
-                    borderRadius: '0.75rem', // rounded-xl
-                    border: '1px solid #e5e5e5', // border-neutral-200
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
+                    borderRadius: '0.75rem',
+                    border: '1px solid #e5e5e5',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                     overflow: 'hidden'
                 }}
             >
@@ -436,7 +437,6 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                                 </button>
                                             )}
                                         </div>
-                                        {/* Hamburger Sort Menu */}
                                         <button
                                             onClick={handleSortMenuClick}
                                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700 cursor-pointer"
@@ -445,55 +445,48 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                             <Filter size={16} />
                                         </button>
 
-                                        {/* Dropdown Menu */}
                                         <Menu
                                             anchorEl={sortMenuAnchor}
                                             open={isSortMenuOpen}
                                             onClose={handleSortMenuClose}
-                                            anchorOrigin={{
-                                                vertical: 'bottom',
-                                                horizontal: 'right',
-                                            }}
-                                            transformOrigin={{
-                                                vertical: 'top',
-                                                horizontal: 'right',
-                                            }}
                                             PaperProps={{
+                                                elevation: 0,
                                                 sx: {
-                                                    mt: 1,
-                                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                                                    border: '1px solid #e5e7eb',
-                                                    minWidth: '160px',
-                                                    borderRadius: '0.375rem',
-                                                }
+                                                    overflow: 'visible',
+                                                    filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.1))',
+                                                    mt: 1.5,
+                                                    borderRadius: '12px',
+                                                    minWidth: '180px',
+                                                    border: '1px solid #e5e5e5',
+                                                    padding: '4px 0',
+                                                    '& .MuiAvatar-root': {
+                                                        width: 32,
+                                                        height: 32,
+                                                        ml: -0.5,
+                                                        mr: 1,
+                                                    },
+                                                    '&::before': {
+                                                        content: '""',
+                                                        display: 'block',
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        right: 14,
+                                                        width: 10,
+                                                        height: 10,
+                                                        bgcolor: 'background.paper',
+                                                        transform: 'translateY(-50%) rotate(45deg)',
+                                                        zIndex: 0,
+                                                        borderTop: '1px solid #e5e5e5',
+                                                        borderLeft: '1px solid #e5e5e5',
+                                                    },
+                                                },
                                             }}
-                                            MenuListProps={{
-                                                sx: { py: 0.5 }
-                                            }}
+                                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                                         >
-                                            <MenuItem
-                                                onClick={() => {
-                                                    setSortConfig({ key: null, direction: 'desc' });
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === null ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === null ? 700 : 500,
-                                                    color: sortConfig.key === null ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
-                                                }}
-                                            >
-                                                <span>Default (Total Count)</span>
-                                                {sortConfig.key === null && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+                                            <div className="px-3 pb-2 pt-1 mb-1 border-b border-gray-100">
+                                                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sort Brands By</span>
+                                            </div>
 
                                             <MenuItem
                                                 onClick={() => {
@@ -600,33 +593,41 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                             padding: '12px 16px',
                                             minWidth: 100,
                                             cursor: 'pointer',
-                                            userSelect: 'none',
-                                            '&:hover': { backgroundColor: '#f5f5f5' }
+                                            '&:hover': { backgroundColor: '#f0f0f0' },
+                                            userSelect: 'none'
                                         }}
                                     >
-                                        <div className="flex items-center justify-center gap-1">
+                                        <div className="flex items-center justify-center gap-1.5">
                                             {platformLabels[p]}
-                                            {sortConfig.key === p ? (
-                                                sortConfig.direction === 'asc' ? <ChevronUp size={14} /> :
-                                                    <ChevronDown size={14} />
-                                            ) : (
-                                                <ChevronsUpDown size={14} className="text-neutral-300" />
-                                            )}
+                                            <div className="flex flex-col opacity-30">
+                                                <ChevronUp size={12} className={sortConfig.key === p && sortConfig.direction === 'asc' ? 'text-black opacity-100' : ''} />
+                                                <ChevronDown size={12} className={sortConfig.key === p && sortConfig.direction === 'desc' ? 'text-black opacity-100 -mt-1' : ''} />
+                                            </div>
                                         </div>
                                     </TableCell>
                                 ))}
                                 <TableCell
                                     align="center"
+                                    onClick={() => handleSort('total')}
                                     sx={{
                                         fontWeight: 'bold',
                                         color: '#171717', // darker for total
                                         backgroundColor: '#f5f5f5', // slightly darker bg for total col header
                                         borderBottom: '1px solid #e5e5e5',
                                         padding: '12px 16px',
-                                        minWidth: 80
+                                        minWidth: 80,
+                                        cursor: 'pointer',
+                                        '&:hover': { backgroundColor: '#e5e5e5' },
+                                        userSelect: 'none'
                                     }}
                                 >
-                                    Total
+                                    <div className="flex items-center justify-center gap-1.5">
+                                        Total
+                                        <div className="flex flex-col opacity-30">
+                                            <ChevronUp size={12} className={sortConfig.key === 'total' && sortConfig.direction === 'asc' ? 'text-black opacity-100' : ''} />
+                                            <ChevronDown size={12} className={sortConfig.key === 'total' && sortConfig.direction === 'desc' ? 'text-black opacity-100 -mt-1' : ''} />
+                                        </div>
+                                    </div>
                                 </TableCell>
                                 {isAdmin && (
                                     <TableCell
@@ -655,29 +656,40 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                             <TableCell key={p} align="center" sx={{ padding: '12px 16px' }}><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
                                         ))}
                                         <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}><Skeleton className="h-4 w-10 mx-auto" /></TableCell>
+                                        {isAdmin && <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}><Skeleton className="h-4 w-10 mx-auto" /></TableCell>}
                                     </TableRow>
                                 ))
                             ) : (
                                 <>
-                                    {filteredBrands.map((brand) => (
+                                    {filteredBrands.map((brand, index) => (
                                         <TableRow
                                             key={brand.name}
                                             hover
                                             sx={{
-                                                '&:hover': { backgroundColor: '#fafafa' },
-                                                backgroundColor: brand.name === 'Other' ? '#fffbeb' : 'inherit' // amber-50 for Other
+                                                backgroundColor: brand.total === 0 ? '#fafafa' : index % 2 === 0 ? '#ffffff' : '#fafafa',
+                                                opacity: brand.total === 0 ? 0.6 : 1,
+                                                '&:last-child td, &:last-child th': { border: 0 },
+                                                transition: 'background-color 0.2s ease',
                                             }}
                                         >
                                             <TableCell
+                                                component="th"
+                                                scope="row"
+                                                onClick={() => brand.total > 0 && handleInteraction(brand.name, null)}
                                                 sx={{
                                                     padding: '12px 24px',
-                                                    color: brand.name === 'Other' ? '#b45309' : '#171717', // amber-700 or neutral-900
-                                                    fontStyle: brand.name === 'Other' ? 'italic' : 'normal',
-                                                    fontWeight: 500
+                                                    fontWeight: brand.total === 0 ? 400 : 600,
+                                                    color: '#171717',
+                                                    cursor: brand.total > 0 ? 'pointer' : 'default',
+                                                    '&:hover': brand.total > 0 ? { color: '#2563eb' } : {} // hover blue-600 if active
                                                 }}
                                             >
-                                                {brand.name}
+                                                <div className="flex items-center gap-2">
+                                                    <span>{brand.name}</span>
+                                                    {brand.total === 0 && <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded ml-2">Empty</span>}
+                                                </div>
                                             </TableCell>
+
                                             {platforms.map(p => (
                                                 <TableCell
                                                     key={p}
@@ -685,18 +697,18 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                                     onClick={() => brand[p] > 0 && handleInteraction(brand.name, p)}
                                                     sx={{
                                                         padding: '12px 16px',
+                                                        color: brand[p] > 0 ? '#4b5563' : '#d4d4d8', // gray-600 or gray-300
+                                                        fontWeight: brand[p] > 0 ? 500 : 400,
                                                         cursor: brand[p] > 0 ? 'pointer' : 'default',
-                                                        color: brand[p] > 0 ? '#2563eb' : '#d4d4d4', // blue-600 or gray-300
-                                                        fontWeight: brand[p] > 0 ? 500 : 'normal',
-                                                        '&:hover': brand[p] > 0 ? { backgroundColor: '#f3f4f6' } : {} // gray-100
+                                                        '&:hover': brand[p] > 0 ? { backgroundColor: '#f4f4f5', color: '#171717' } : {} // hover darker
                                                     }}
                                                 >
-                                                    {brand[p] > 0 ? brand[p] : '—'}
+                                                    {brand[p] > 0 ? brand[p] : '-'}
                                                 </TableCell>
                                             ))}
                                             <TableCell
                                                 align="center"
-                                                onClick={() => handleInteraction(brand.name, 'total')}
+                                                onClick={() => brand.total > 0 && handleInteraction(brand.name, null)}
                                                 sx={{
                                                     padding: '12px 16px',
                                                     cursor: 'pointer',
@@ -732,7 +744,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                     ))}
                                     {filteredBrands.length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={8} align="center" sx={{ padding: '48px 24px', color: '#737373' }}>
+                                            <TableCell colSpan={isAdmin ? 9 : 8} align="center" sx={{ padding: '48px 24px', color: '#737373' }}>
                                                 <div className="flex flex-col items-center gap-2">
                                                     <Package size={32} className="text-gray-300" />
                                                     <p>
@@ -757,40 +769,74 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                 <TableRow sx={{
                                     position: 'sticky',
                                     bottom: 0,
-                                    backgroundColor: '#171717', // neutral-900
-                                    zIndex: 10
+                                    zIndex: 1, // ensure it sits over regular rows
+                                    backgroundColor: '#171717', // neutral-900 (dark mode looking footer)
+                                    boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
                                 }}>
-                                    <TableCell sx={{ color: 'white', fontWeight: 600, padding: '12px 24px' }}>Total</TableCell>
+                                    <TableCell sx={{ padding: '16px 24px', fontWeight: 'bold', color: '#ffffff', borderBottom: 'none' }}>
+                                        Overall Totals ({filteredBrands.filter(b => b.total > 0).length} valid brands)
+                                    </TableCell>
                                     {platforms.map(p => (
-                                        <TableCell key={p} align="center" sx={{ color: 'white', fontWeight: 600, padding: '12px 16px' }}>
+                                        <TableCell key={p} align="center" sx={{ padding: '16px 16px', fontWeight: 'bold', color: '#ffffff', borderBottom: 'none' }}>
                                             {totals[p]}
                                         </TableCell>
                                     ))}
-                                    <TableCell align="center" sx={{ color: 'white', fontWeight: 600, backgroundColor: '#262626', padding: '12px 16px' }}> {/* neutral-800 */}
+                                    <TableCell align="center" sx={{ padding: '16px 16px', fontWeight: 900, color: '#ffffff', borderBottom: 'none', backgroundColor: '#000000' }}>
                                         {totals.total}
                                     </TableCell>
-                                    {isAdmin && <TableCell sx={{ backgroundColor: '#262626' }}></TableCell>}
+                                    {isAdmin && <TableCell sx={{ borderBottom: 'none', backgroundColor: '#000000' }}></TableCell>}
                                 </TableRow>
                             )}
                         </TableFooter>
                     </Table>
                 </TableContainer>
             </Paper>
+        );
+    });
+
+    return (
+        <div className="flex flex-col gap-4 h-full">
+            {/* Controls removed - using main page filter now */}
+
+            {/* Table */}
+            <MemoizedBrandsTable
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                sortConfig={sortConfig}
+                setSortConfig={setSortConfig}
+                handleSortMenuClick={handleSortMenuClick}
+                handleSortMenuClose={handleSortMenuClose}
+                sortMenuAnchor={sortMenuAnchor}
+                isSortMenuOpen={isSortMenuOpen}
+                isAdmin={isAdmin}
+                openBrandDialog={openBrandDialog}
+                filteredBrands={filteredBrands}
+                totals={totals}
+                platforms={platforms}
+                platformLabels={platformLabels}
+                loading={loading}
+                handleSort={handleSort}
+                handleInteraction={handleInteraction}
+                products={products}
+                platformFilter={platformFilter}
+            />
 
             {/* Brand Products Dialog */}
-            {selectedBrandInteraction && (
-                <BrandProductsDialog
-                    isOpen={!!selectedBrandInteraction}
-                    onClose={handleCloseDialog}
-                    brandName={selectedBrandInteraction.brandName}
-                    platform={selectedBrandInteraction.platform}
-                    allProducts={products}
-                    onRefresh={() => { /* Handle refresh if needed */ }}
-                    pincode={pincode}
-                    snapshotDate={snapshotDate}
-                    isAdmin={isAdmin}
-                />
-            )}
+            {
+                selectedBrandInteraction && (
+                    <BrandProductsDialog
+                        isOpen={!!selectedBrandInteraction}
+                        onClose={handleCloseDialog}
+                        brandName={selectedBrandInteraction.brandName}
+                        platform={selectedBrandInteraction.platform}
+                        allProducts={products}
+                        onRefresh={() => { /* Handle refresh if needed */ }}
+                        pincode={pincode}
+                        snapshotDate={snapshotDate}
+                        isAdmin={isAdmin}
+                    />
+                )
+            }
             {/* Custom Brand Dialog */}
             <CustomBrandDialog
                 isOpen={brandDialog.isOpen}
@@ -799,7 +845,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                 onClose={closeBrandDialog}
                 onSubmit={handleBrandSubmit}
             />
-        </div>
+        </div >
     );
 };
 

@@ -76,11 +76,18 @@ export async function POST(request) {
         scrapedAt: { $lt: scrapedAt }
       }).sort({ scrapedAt: -1 });
 
-      const ranking = i + 1; // Assuming dataset is ordered by rank
+      const ranking = item.rank !== undefined ? Number(item.rank) : (item.ranking !== undefined ? Number(item.ranking) : i + 1);
 
       const priceChange = previousSnapshot ? (item.currentPrice || 0) - previousSnapshot.currentPrice : 0;
       const discountChange = previousSnapshot ? (item.discountPercentage || 0) - previousSnapshot.discountPercentage : 0;
       const rankingChange = previousSnapshot ? ranking - previousSnapshot.ranking : 0;
+      if (image) {
+        if (platform === 'dmart') {
+          image = image.replace(/(\/images\/products\/)[a-zA-Z0-9]\/[a-zA-Z0-9]\/[a-zA-Z0-9]\//i, '$1');
+        } else if (platform === 'flipkartminutes') {
+          image = image.replace(/{@height}/g, '400');
+        }
+      }
 
       const newSnapshot = new ProductSnapshot({
         category,
@@ -89,7 +96,7 @@ export async function POST(request) {
         scrapedAt,
         productId,
         productName: item.productName || item.name,
-        productImage: item.productImage || item.image,
+        productImage: image,
         productWeight: item.productWeight || item.weight,
         rating: item.rating,
         currentPrice: item.currentPrice || 0,

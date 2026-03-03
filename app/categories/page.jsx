@@ -1318,7 +1318,19 @@ function CategoriesPageContent() {
               >
                 <ArrowRight size={18} className="rotate-180" />
               </button>
-              <span className="text-sm font-semibold">Page {currentPage} / {Math.ceil(sortedProducts.length / ITEMS_PER_PAGE)}</span>
+              <div className="flex items-center gap-1.5 text-sm font-semibold">
+                <span>Page</span>
+                <select
+                  value={currentPage}
+                  onChange={(e) => setCurrentPage(Number(e.target.value))}
+                  className="bg-transparent appearance-none rounded px-1 min-w-[30px] text-center focus:outline-none focus:ring-1 focus:ring-neutral-300 cursor-pointer hover:bg-gray-100 transition-colors"
+                >
+                  {Array.from({ length: Math.ceil(sortedProducts.length / ITEMS_PER_PAGE) || 1 }, (_, i) => i + 1).map(pageNum => (
+                    <option key={pageNum} value={pageNum}>{pageNum}</option>
+                  ))}
+                </select>
+                <span>/ {Math.ceil(sortedProducts.length / ITEMS_PER_PAGE) || 1}</span>
+              </div>
               <button
                 disabled={currentPage >= Math.ceil(sortedProducts.length / ITEMS_PER_PAGE)}
                 onClick={() => setCurrentPage(c => c + 1)}

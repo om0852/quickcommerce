@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, BarChart3, Bell, LogOut } from 'lucide-react';
+import { Search, BarChart3, Bell, LogOut, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Sidebar() {
@@ -22,6 +22,7 @@ export default function Sidebar() {
   };
 
   const navItems = [
+    { href: '/overview', label: 'Overview', icon: LayoutDashboard },
     { href: '/', label: 'Search', icon: Search },
     { href: '/categories', label: 'Categories', icon: BarChart3 },
     { href: '/alerts', label: 'Alerts', icon: Bell }
