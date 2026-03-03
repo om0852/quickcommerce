@@ -64,11 +64,29 @@ function OverviewContent() {
             try {
                 const response = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}`);
                 const data = await response.json();
-                if (data.success && data.snapshots) {
+                if (data.success && data.snapshots && data.snapshots.length > 0) {
                     setAvailableSnapshots(data.snapshots);
+
+                    // Auto-select latest date instead of Live Mode
+                    const sortedSnapshots = [...data.snapshots].sort((a, b) => new Date(b) - new Date(a));
+                    const latestTs = sortedSnapshots[0];
+                    const latestDateString = new Date(latestTs).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                    setSnapshotDate(latestDateString);
+                    setSnapshotTime(latestTs);
+                    setIsLiveMode(false);
+                } else {
+                    setAvailableSnapshots([]);
+                    setSnapshotDate('');
+                    setSnapshotTime('');
+                    setIsLiveMode(true);
                 }
             } catch (err) {
                 console.error("Failed to fetch snapshot dates:", err);
+                setAvailableSnapshots([]);
+                setSnapshotDate('');
+                setSnapshotTime('');
+                setIsLiveMode(true);
             }
         };
         fetchDates();
