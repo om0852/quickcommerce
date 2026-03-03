@@ -289,7 +289,13 @@ export default function ProductEditDialog({
 
             // Success
             if (showToast) showToast('Product updated successfully', 'success'); // Trigger Toast
-            onUpdate(); // Trigger refresh
+            onUpdate({
+                groupingId: product.groupingId,
+                name,
+                weight,
+                brand,
+                modifiedPlatforms
+            });
             onClose();
 
         } catch (err) {

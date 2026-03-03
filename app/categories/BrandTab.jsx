@@ -18,6 +18,117 @@ const Skeleton = ({ className }) => (
     <div className={cn("animate-pulse bg-gray-200 rounded", className)} />
 );
 
+const CustomBrandDialog = ({ isOpen, mode, brand, onClose, onSubmit }) => {
+    const [inputValue, setInputValue] = useState('');
+    const [error, setError] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setInputValue(mode === 'edit' && brand ? brand.name : '');
+            setError(null);
+            setIsSubmitting(false);
+        }
+    }, [isOpen, mode, brand]);
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async () => {
+        const name = inputValue.trim();
+        if (mode !== 'delete' && !name) {
+            setError("Brand name cannot be empty.");
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError(null);
+        try {
+            await onSubmit(mode, name, brand);
+            onClose();
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "An error occurred.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={!isSubmitting ? onClose : undefined} />
+            <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 bg-neutral-50/50">
+                    <h3 className="text-lg font-bold text-neutral-900">
+                        {mode === 'add' ? 'Add New Brand' : mode === 'edit' ? 'Rename Brand' : 'Delete Brand'}
+                    </h3>
+                    <button onClick={onClose} disabled={isSubmitting} className="text-neutral-400 hover:text-neutral-600 transition-colors p-1 rounded-full cursor-pointer hover:bg-neutral-100 disabled:opacity-50">
+                        <X size={20} />
+                    </button>
+                </div>
+                <div className="p-5">
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
+                            {error}
+                        </div>
+                    )}
+
+                    {mode === 'delete' ? (
+                        <p className="text-sm text-neutral-600 mb-6 leading-relaxed">
+                            Are you sure you want to completely delete the brand <span className="font-bold text-neutral-900">"{brand?.name}"</span>?
+                            This action will remove it from all products and groups, and cannot be undone.
+                        </p>
+                    ) : (
+                        <div className="mb-6">
+                            <label className="block text-sm font-semibold text-neutral-700 mb-2">
+                                Brand Name
+                            </label>
+                            <input
+                                type="text"
+                                autoFocus
+                                disabled={isSubmitting}
+                                value={inputValue}
+                                onChange={e => { setInputValue(e.target.value); setError(null); }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSubmit();
+                                }}
+                                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                                placeholder="e.g. Amul"
+                            />
+                        </div>
+                    )}
+
+                    <div className="flex justify-end gap-3 font-medium">
+                        <button
+                            onClick={onClose}
+                            disabled={isSubmitting}
+                            className="px-4 py-2 text-sm text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting || (mode !== 'delete' && !inputValue.trim())}
+                            className={`px-4 py-2 text-sm text-white rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2
+                                ${mode === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-neutral-900 hover:bg-black'}
+                            `}
+                        >
+                            {isSubmitting ? (
+                                <>Submitting...</>
+                            ) : mode === 'delete' ? (
+                                <>Delete Brand</>
+                            ) : mode === 'add' ? (
+                                <>Add Brand</>
+                            ) : (
+                                <>Save Changes</>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshotDate, isAdmin = false }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' }); // key: 'name' | 'total' | platform, direction: 'asc' | 'desc'
@@ -26,7 +137,6 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
 
     const [apiBrands, setApiBrands] = useState([]);
     const [isFetchingBrands, setIsFetchingBrands] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (isAdmin) {
@@ -47,92 +157,64 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
         }
     };
 
-    const handleAddBrand = async () => {
-        const brandName = window.prompt("Enter new brand name:");
-        if (!brandName || !brandName.trim()) return;
+    const [brandDialog, setBrandDialog] = useState({
+        isOpen: false,
+        mode: 'add', // 'add', 'edit', 'delete'
+        brand: null // the brand object if edit/delete
+    });
 
-        setIsSubmitting(true);
-        try {
+    const openBrandDialog = (mode, brand = null) => {
+        setBrandDialog({ isOpen: true, mode, brand });
+    };
+
+    const closeBrandDialog = () => {
+        setBrandDialog(prev => ({ ...prev, isOpen: false }));
+    };
+
+    const handleBrandSubmit = async (mode, name, brand) => {
+        if (mode === 'add') {
             const res = await fetch('/api/brands', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ brandName: brandName.trim() })
+                body: JSON.stringify({ brandName: name })
             });
             const data = await res.json();
             if (data.success) {
-                alert("Brand added successfully!");
                 fetchBrands();
             } else {
-                alert(data.error || "Failed to add brand");
+                throw new Error(data.error || "Failed to add brand");
             }
-        } catch (err) {
-            console.error(err);
-            alert("Error adding brand");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleEditBrand = async (brand) => {
-        // apiBrand check (we need the _id to update/delete)
-        const matchedApiBrand = apiBrands.find(b => b.brandName === brand.name);
-        if (!matchedApiBrand) {
-            alert("This brand is derived from products and not in the database yet. Adding it first...");
-            // Optionally, create it on the fly, but let's prompt them to create it manually or automatically create it.
-            return;
-        }
-
-        const newName = window.prompt(`Rename brand "${brand.name}" to:`, brand.name);
-        if (!newName || !newName.trim() || newName.trim() === brand.name) return;
-
-        setIsSubmitting(true);
-        try {
+        } else if (mode === 'edit') {
+            const matchedApiBrand = apiBrands.find(b => b.brandName === brand.name);
+            if (!matchedApiBrand) {
+                throw new Error("This brand is derived from products and not in the database yet. Create it first.");
+            }
+            if (name === brand.name) return; // no change
             const res = await fetch(`/api/brands/${matchedApiBrand._id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ newBrandName: newName.trim() })
+                body: JSON.stringify({ newBrandName: name })
             });
             const data = await res.json();
             if (data.success) {
-                alert("Brand renamed successfully! Product snapshots will update in the background. Please refresh data.");
                 fetchBrands();
             } else {
-                alert(data.error || "Failed to rename brand");
+                throw new Error(data.error || "Failed to rename brand");
             }
-        } catch (err) {
-            console.error(err);
-            alert("Error renaming brand");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleDeleteBrand = async (brand) => {
-        const matchedApiBrand = apiBrands.find(b => b.brandName === brand.name);
-        if (!matchedApiBrand) {
-            alert("This brand is not in the database.");
-            return;
-        }
-
-        if (!window.confirm(`Are you sure you want to delete the brand "${brand.name}"? This will remove it from all products and groups.`)) return;
-
-        setIsSubmitting(true);
-        try {
+        } else if (mode === 'delete') {
+            const matchedApiBrand = apiBrands.find(b => b.brandName === brand.name);
+            if (!matchedApiBrand) {
+                throw new Error("This brand is not in the database.");
+            }
             const res = await fetch(`/api/brands/${matchedApiBrand._id}`, {
                 method: 'DELETE'
             });
             const data = await res.json();
             if (data.success) {
-                alert("Brand deleted successfully!");
                 fetchBrands();
             } else {
-                alert(data.error || "Failed to delete brand");
+                throw new Error(data.error || "Failed to delete brand");
             }
-        } catch (err) {
-            console.error(err);
-            alert("Error deleting brand");
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -344,6 +426,16 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                             )}
                                         </div>
 
+                                        <div className="flex gap-2 shrink-0">
+                                            {isAdmin && (
+                                                <button
+                                                    onClick={() => openBrandDialog('add')}
+                                                    className="bg-neutral-900 hover:bg-neutral-800 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                                >
+                                                    <Plus size={16} /> Add Brand
+                                                </button>
+                                            )}
+                                        </div>
                                         {/* Hamburger Sort Menu */}
                                         <button
                                             onClick={handleSortMenuClick}
@@ -352,17 +444,6 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                         >
                                             <Filter size={16} />
                                         </button>
-
-                                        {isAdmin && (
-                                            <button
-                                                onClick={handleAddBrand}
-                                                disabled={isSubmitting}
-                                                className="ml-2 flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                                                title="Add New Brand"
-                                            >
-                                                <Plus size={14} /> Add Brand
-                                            </button>
-                                        )}
 
                                         {/* Dropdown Menu */}
                                         <Menu
@@ -631,18 +712,16 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                                                 <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}>
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button
-                                                            onClick={(e) => { e.stopPropagation(); handleEditBrand(brand); }}
+                                                            onClick={(e) => { e.stopPropagation(); openBrandDialog('edit', brand); }}
                                                             className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer"
                                                             title="Rename Brand"
-                                                            disabled={isSubmitting}
                                                         >
                                                             <Edit2 size={16} />
                                                         </button>
                                                         <button
-                                                            onClick={(e) => { e.stopPropagation(); handleDeleteBrand(brand); }}
+                                                            onClick={(e) => { e.stopPropagation(); openBrandDialog('delete', brand); }}
                                                             className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
                                                             title="Delete Brand"
-                                                            disabled={isSubmitting}
                                                         >
                                                             <Trash2 size={16} />
                                                         </button>
@@ -712,6 +791,14 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                     isAdmin={isAdmin}
                 />
             )}
+            {/* Custom Brand Dialog */}
+            <CustomBrandDialog
+                isOpen={brandDialog.isOpen}
+                mode={brandDialog.mode}
+                brand={brandDialog.brand}
+                onClose={closeBrandDialog}
+                onSubmit={handleBrandSubmit}
+            />
         </div>
     );
 };

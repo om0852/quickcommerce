@@ -314,19 +314,22 @@ export default function ExportCategoryDialog({
                         </div>
                     </div>
 
-                    {success && (
-                        <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-md text-sm flex items-center gap-2 border border-green-100">
-                            <CheckCircle size={16} />
-                            {success}
-                        </div>
-                    )}
+                    {/* Floating Notifications */}
+                    <div className="fixed top-10 right-10 z-[250] flex flex-col gap-3">
+                        {success && (
+                            <div className="p-3 bg-green-50 text-green-700 rounded-lg shadow-lg text-sm flex items-center gap-2 border border-green-200 animate-in fade-in slide-in-from-top-2">
+                                <CheckCircle size={16} />
+                                {success}
+                            </div>
+                        )}
 
-                    {error && (
-                        <div className="mt-6 p-3 bg-red-50 text-red-700 rounded-md text-sm flex items-center gap-2 border border-red-100">
-                            <AlertCircle size={16} />
-                            {error}
-                        </div>
-                    )}
+                        {error && (
+                            <div className="p-3 bg-red-50 text-red-700 rounded-lg shadow-lg text-sm flex items-center gap-2 border border-red-200 animate-in fade-in slide-in-from-top-2">
+                                <AlertCircle size={16} />
+                                {error}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

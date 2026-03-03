@@ -74,10 +74,11 @@ const ProductTable = React.memo(function ProductTable({
     platformCounts,
     totalPlatformCounts, // NEW Prop
     pincode,
-    onRefresh, // NEW Prop
+    onRefresh,
     showNewFirst,
     onShowNewFirstChange,
-    isAdmin // Passed from parent
+    isAdmin = false, // Passed from parent
+    onLocalUpdate
 }) {
     const [manageGroup, setManageGroup] = useState(null); // Group currently being managed
     const [editProduct, setEditProduct] = useState(null); // Product currently being edited
@@ -112,6 +113,20 @@ const ProductTable = React.memo(function ProductTable({
         onSort('name', direction);
         handleSortMenuClose();
     };
+
+    const newlyAddedCount = useMemo(() => {
+        if (!products) return 0;
+        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+        let count = 0;
+        products.forEach(p => {
+            if (!p.isHeader) {
+                if (platforms.some(plat => p[plat]?.new === true)) {
+                    count++;
+                }
+            }
+        });
+        return count;
+    }, [products]);
 
     const handlePriceSort = (direction) => {
         onSort('averagePrice', direction);
@@ -368,52 +383,6 @@ const ProductTable = React.memo(function ProductTable({
                                                 {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
-                                            <MenuItem
-                                                onClick={() => {
-                                                    onSort('averagePrice', 'asc');
-                                                    if (showNewFirst) onShowNewFirstChange(false);
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst ? 700 : 500,
-                                                    color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
-                                                }}
-                                            >
-                                                <span>Price (Low to High)</span>
-                                                {sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    onSort('averagePrice', 'desc');
-                                                    if (showNewFirst) onShowNewFirstChange(false);
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst ? 700 : 500,
-                                                    color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
-                                                }}
-                                            >
-                                                <span>Price (High to Low)</span>
-                                                {sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
                                             <MenuItem
@@ -435,7 +404,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
-                                                <span>Newly Added</span>
+                                                <span>Newly Added {newlyAddedCount > 0 && `(${newlyAddedCount})`}</span>
                                                 {showNewFirst && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
                                         </Menu>
@@ -468,9 +437,7 @@ const ProductTable = React.memo(function ProductTable({
                                             {sortConfig.key === platform ? (
                                                 sortConfig.direction === 'asc' ? <ChevronUp size={14} /> :
                                                     sortConfig.direction === 'desc' ? <ChevronDown size={14} /> :
-                                                        sortConfig.direction === 'price_asc' ? <div className="flex items-center text-emerald-600"><span className="text-[10px] mr-0.5">₹</span><ChevronUp size={14} /></div> :
-                                                            sortConfig.direction === 'price_desc' ? <div className="flex items-center text-emerald-600"><span className="text-[10px] mr-0.5">₹</span><ChevronDown size={14} /></div> :
-                                                                <ChevronsUpDown size={14} className="text-neutral-300" />
+                                                        <ChevronsUpDown size={14} className="text-neutral-300" />
                                             ) : (
                                                 <ChevronsUpDown size={14} className="text-neutral-300" />
                                             )}
@@ -707,8 +674,12 @@ const ProductTable = React.memo(function ProductTable({
                         isOpen={!!editProduct}
                         onClose={() => setEditProduct(null)}
                         product={editProduct}
-                        onUpdate={() => {
-                            if (onRefresh) onRefresh();
+                        onUpdate={(updatedData) => {
+                            if (updatedData && onLocalUpdate) {
+                                onLocalUpdate(updatedData);
+                            } else if (onRefresh) {
+                                onRefresh();
+                            }
                             setEditProduct(null);
                         }}
                         showToast={showToast}
@@ -720,7 +691,7 @@ const ProductTable = React.memo(function ProductTable({
                 open={toastState.open}
                 autoHideDuration={4000}
                 onClose={handleCloseToast}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
             >
                 <Alert onClose={handleCloseToast} severity={toastState.severity} sx={{ width: '100%' }}>
                     {toastState.message}

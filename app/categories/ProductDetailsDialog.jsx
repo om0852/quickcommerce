@@ -13,7 +13,8 @@ function ProductDetailsDialog({
     stockData,
     selectedProduct,
     isAdmin = false,
-    onRefresh // NEW Prop
+    onRefresh, // NEW Prop
+    onLocalUpdate // NEW Prop
 }) {
     if (!isOpen || !selectedProduct) return null;
 
@@ -255,7 +256,7 @@ function ProductDetailsDialog({
 
             {/* Toast Notification */}
             {toast && (
-                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-neutral-900 text-white px-4 py-2.5 rounded-lg shadow-xl text-sm font-medium z-[150] animate-in fade-in slide-in-from-bottom-2 flex items-center gap-2">
+                <div className="fixed top-10 right-10 bg-neutral-900 text-white px-4 py-2.5 rounded-lg shadow-xl text-sm font-medium z-[150] animate-in fade-in slide-in-from-top-2 flex items-center gap-2">
                     <Check size={16} className="text-green-400" />
                     {toast}
                 </div>
@@ -267,8 +268,13 @@ function ProductDetailsDialog({
                         isOpen={isEditOpen}
                         onClose={() => setIsEditOpen(false)}
                         product={selectedProduct}
-                        onUpdate={() => {
-                            if (onRefresh) onRefresh();
+                        onUpdate={(updatedData) => {
+                            if (updatedData && onLocalUpdate) {
+                                onLocalUpdate(updatedData);
+                                showToast('Product updated locally', 'success');
+                            } else if (onRefresh) {
+                                onRefresh();
+                            }
                             setIsEditOpen(false);
                         }}
                     />

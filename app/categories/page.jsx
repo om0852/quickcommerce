@@ -268,6 +268,24 @@ function CategoriesPageContent() {
     }
   };
 
+  const handleLocalProductUpdate = (updatedData) => {
+    // updatedData = { groupingId, name, weight, brand, modifiedPlatforms: [{ platform, ... }] }
+    setProducts((prev) => prev.map(p => {
+      if (p.groupingId === updatedData.groupingId) {
+        const newProduct = { ...p, name: updatedData.name, weight: updatedData.weight, brand: updatedData.brand };
+        if (updatedData.modifiedPlatforms) {
+          updatedData.modifiedPlatforms.forEach(mp => {
+            if (newProduct[mp.platform]) {
+              newProduct[mp.platform] = { ...newProduct[mp.platform], ...mp };
+            }
+          });
+        }
+        return newProduct;
+      }
+      return p;
+    }));
+  };
+
   const fetchHistoryData = async () => {
     if (!selectedProduct) return;
 
@@ -866,11 +884,9 @@ function CategoriesPageContent() {
       if (direction) {
         newDirection = direction;
       } else if (currentConfig.key === key) {
-        // Cycle: asc (Rank) -> desc (Rank) -> price_asc (Price) -> price_desc (Price) -> Reset
+        // Cycle: asc (Rank) -> desc (Rank) -> Reset
         if (currentConfig.direction === 'asc') newDirection = 'desc';
-        else if (currentConfig.direction === 'desc') newDirection = 'price_asc';
-        else if (currentConfig.direction === 'price_asc') newDirection = 'price_desc';
-        else if (currentConfig.direction === 'price_desc') return { key: null, direction: null };
+        else if (currentConfig.direction === 'desc') return { key: null, direction: null };
       }
       return { key, direction: newDirection };
     });
@@ -1244,6 +1260,7 @@ function CategoriesPageContent() {
                 showNewFirst={showNewFirst}
                 onShowNewFirstChange={setShowNewFirst}
                 isAdmin={isAdmin}
+                onLocalUpdate={handleLocalProductUpdate}
               />
             </div>
           )}
@@ -1329,6 +1346,7 @@ function CategoriesPageContent() {
         selectedProduct={selectedProduct}
         isAdmin={isAdmin}
         onRefresh={fetchCategoryData}
+        onLocalUpdate={handleLocalProductUpdate}
       />
 
 
