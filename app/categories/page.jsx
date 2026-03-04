@@ -5,13 +5,13 @@ import { useSearchParams } from 'next/navigation';
 
 import { Switch } from '@/components/ui/switch';
 import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight, Loader2 } from 'lucide-react';
+import { Snackbar, Alert } from '@mui/material'; // NEW Import
 import AnalyticsTab from './AnalyticsTab';
 import StockAnalysisTab from './StockAnalysisTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
 import CustomDropdown from '@/components/CustomDropdown';
 import ProductDetailsDialog from './ProductDetailsDialog';
 import ProductTable from './ProductTable';
-import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import LinksTab from './LinksTab';
 import BrandTab from './BrandTab';
 import { cn } from '@/lib/utils';
@@ -100,6 +100,27 @@ function CategoriesPageContent() {
   useEffect(() => {
     localStorage.setItem('selectedPincode', pincode);
   }, [pincode]);
+
+  // Global Toast State
+  const [toastState, setToastState] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  const handleCloseToast = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setToastState(prev => ({ ...prev, open: false }));
+  };
+
+  const showToast = (message, severity = 'success') => {
+    setToastState({
+      open: true,
+      message,
+      severity
+    });
+  };
+
   const [platformFilter, setPlatformFilter] = useState('all');
   const [showMissing, setShowMissing] = useState(false);
   const [showNewFirst, setShowNewFirst] = useState(false);
@@ -736,23 +757,6 @@ function CategoriesPageContent() {
       }
 
       // Handle Price Sorting (Low to High / High to Low)
-      // The key coming from onSort might be 'name' with direction, OR 'price_asc'/'price_desc' if passed as key directly?
-      // Wait, in ProductTable I passed `onSort('name', direction)`. 
-      // For price, I should probably pass `onSort('averagePrice', 'asc')` or use the custom keys passed from menu.
-      // Let's check ProductTable call: `handleNameSort` passed 'name' and dir.
-      // I added `onClick={() => handleNameSort('price_asc')}` -> wait, handleNameSort calls `onSort('name', direction)`.
-      // I should update ProductTable to call `onSort('averagePrice', 'asc')` instead OR modify logic here.
-      // ACTUALLY, I stuck the price sort calls into `handleNameSort` in the previous step? 
-      // Checking previous step: `onClick={() => handleNameSort('price_asc')}`
-      // This means it calls `onSort('name', 'price_asc')`. This is awkward.
-      // I should FIX ProductTable to call a generic handler or specific handlers.
-
-      // Assuming I fix ProductTable in next step or use this logic:
-      if (sortConfig.key === 'name' && (sortConfig.direction === 'price_asc' || sortConfig.direction === 'price_desc')) {
-        // This is a bit hacky but works without changing ProductTable right now. 
-        // Better to use a clean key 'averagePrice'.
-      }
-
       // Let's stick to a clean implementation. I will use 'averagePrice' as key.
       if (sortConfig.key === 'averagePrice') {
         const priceA = getAveragePrice(a);
@@ -1079,7 +1083,7 @@ function CategoriesPageContent() {
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
-            <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'} `}></span>
+            <span className={`w - 2 h - 2 rounded - full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'} `}></span>
             <span className="font-medium text-neutral-600">
               {isLiveMode ? 'Live Mode' : 'Historical Snapshot'}
             </span>
@@ -1397,6 +1401,7 @@ function CategoriesPageContent() {
         isAdmin={isAdmin}
         onRefresh={fetchCategoryData}
         onLocalUpdate={handleLocalProductUpdate}
+        showToast={showToast}
       />
 
 
@@ -1412,6 +1417,18 @@ function CategoriesPageContent() {
         categoryOptions={CATEGORY_OPTIONS}
       />
 
+      {/* Global Snackbar */}
+      <Snackbar
+        open={toastState.open}
+        autoHideDuration={4000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        sx={{ zIndex: 9999 }} // Ensure it appears above dialogs
+      >
+        <Alert onClose={handleCloseToast} severity={toastState.severity} sx={{ width: '100%' }}>
+          {toastState.message}
+        </Alert>
+      </Snackbar>
 
     </div >
   );
