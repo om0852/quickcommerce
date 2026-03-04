@@ -120,6 +120,7 @@ function CategoriesPageContent() {
   const [availableSnapshots, setAvailableSnapshots] = useState([]);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+  const [baseSortConfig, setBaseSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const ITEMS_PER_PAGE = 50;
@@ -879,18 +880,26 @@ function CategoriesPageContent() {
 
 
   const requestSort = React.useCallback((key, direction = null) => {
+    const isPlatformSort = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(key);
+
+    if (!isPlatformSort) {
+      // This is a menu sort
+      const newConfig = { key, direction };
+      setBaseSortConfig(newConfig);
+      setSortConfig(newConfig);
+      return;
+    }
+
     setSortConfig(currentConfig => {
       let newDirection = 'asc';
-      if (direction) {
-        newDirection = direction;
-      } else if (currentConfig.key === key) {
+      if (currentConfig.key === key) {
         // Cycle: asc (Rank) -> desc (Rank) -> Reset
         if (currentConfig.direction === 'asc') newDirection = 'desc';
-        else if (currentConfig.direction === 'desc') return { key: null, direction: null };
+        else if (currentConfig.direction === 'desc') return baseSortConfig;
       }
       return { key, direction: newDirection };
     });
-  }, []);
+  }, [baseSortConfig]);
 
   const handleProductClick = React.useCallback((product) => {
     setSelectedProduct(product);
