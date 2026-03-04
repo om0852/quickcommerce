@@ -558,9 +558,22 @@ function CategoriesPageContent() {
         }
 
         if (sortConfig.key === 'brand') {
-          const brandA = a.brand || '';
-          const brandB = b.brand || '';
-          if (brandA !== brandB) return sortConfig.direction === 'asc' ? brandA.localeCompare(brandB) : brandB.localeCompare(brandA);
+          const brandA = (a.brand || '').trim();
+          const brandB = (b.brand || '').trim();
+
+          if (!brandA && !brandB) {
+            const nameA = a.name || '';
+            const nameB = b.name || '';
+            return nameA.localeCompare(nameB);
+          }
+          if (!brandA) return 1;
+          if (!brandB) return -1;
+
+          if (brandA.toLowerCase() !== brandB.toLowerCase()) {
+            return sortConfig.direction === 'asc'
+              ? brandA.localeCompare(brandB)
+              : brandB.localeCompare(brandA);
+          }
           const nameA = a.name || '';
           const nameB = b.name || '';
           return nameA.localeCompare(nameB);
@@ -765,9 +778,22 @@ function CategoriesPageContent() {
       }
 
       if (sortConfig.key === 'brand') {
-        const brandA = a.brand || '';
-        const brandB = b.brand || '';
-        if (brandA !== brandB) return sortConfig.direction === 'asc' ? brandA.localeCompare(brandB) : brandB.localeCompare(brandA);
+        const brandA = (a.brand || '').trim();
+        const brandB = (b.brand || '').trim();
+
+        if (!brandA && !brandB) {
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          return nameA.localeCompare(nameB);
+        }
+        if (!brandA) return 1;
+        if (!brandB) return -1;
+
+        if (brandA.toLowerCase() !== brandB.toLowerCase()) {
+          return sortConfig.direction === 'asc'
+            ? brandA.localeCompare(brandB)
+            : brandB.localeCompare(brandA);
+        }
         const nameA = a.name || '';
         const nameB = b.name || '';
         return nameA.localeCompare(nameB);
@@ -1327,17 +1353,20 @@ function CategoriesPageContent() {
               >
                 <ArrowRight size={18} className="rotate-180" />
               </button>
-              <div className="flex items-center gap-1.5 text-sm font-semibold">
+              <div className="flex items-center gap-1.5 text-sm font-semibold relative">
                 <span>Page</span>
-                <select
-                  value={currentPage}
-                  onChange={(e) => setCurrentPage(Number(e.target.value))}
-                  className="bg-transparent appearance-none rounded px-1 min-w-[30px] text-center focus:outline-none focus:ring-1 focus:ring-neutral-300 cursor-pointer hover:bg-gray-100 transition-colors"
-                >
-                  {Array.from({ length: Math.ceil(sortedProducts.length / ITEMS_PER_PAGE) || 1 }, (_, i) => i + 1).map(pageNum => (
-                    <option key={pageNum} value={pageNum}>{pageNum}</option>
-                  ))}
-                </select>
+                <div className="relative flex items-center">
+                  <select
+                    value={currentPage}
+                    onChange={(e) => setCurrentPage(Number(e.target.value))}
+                    className="bg-transparent appearance-none rounded pl-2 pr-6 py-1 min-w-[50px] text-center focus:outline-none focus:ring-1 focus:ring-neutral-300 cursor-pointer hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
+                  >
+                    {Array.from({ length: Math.ceil(sortedProducts.length / ITEMS_PER_PAGE) || 1 }, (_, i) => i + 1).map(pageNum => (
+                      <option key={pageNum} value={pageNum}>{pageNum}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-1.5 pointer-events-none text-gray-500" />
+                </div>
                 <span>/ {Math.ceil(sortedProducts.length / ITEMS_PER_PAGE) || 1}</span>
               </div>
               <button
