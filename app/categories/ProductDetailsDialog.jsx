@@ -14,7 +14,8 @@ function ProductDetailsDialog({
     selectedProduct,
     isAdmin = false,
     onRefresh, // NEW Prop
-    onLocalUpdate // NEW Prop
+    onLocalUpdate, // NEW Prop
+    showToast // FIX: Added missing prop
 }) {
     if (!isOpen || !selectedProduct) return null;
 

@@ -1150,7 +1150,7 @@ function CategoriesPageContent() {
                     // Auto-select the latest time for this date
                     const timesForDate = availableSnapshots.filter(ts => {
                       const d = new Date(ts);
-                      return d.toLocaleDateString('en-CA') === newDate;
+                      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) === newDate;
                     });
 
                     if (timesForDate.length > 0) {

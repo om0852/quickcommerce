@@ -25,7 +25,7 @@ export async function POST(request) {
         const success = await ungroupProduct(groupingId, platform, productId);
 
         if (!success) {
-            return NextResponse.json({ error: 'Failed to ungroup (product not found in group)' }, { status: 404 });
+            console.warn(`[Remove Group] Product ${productId} on ${platform} was not found in group ${groupingId}. Proceeding to create a new group anyway to heal data.`);
         }
 
         // 2. CHECK REMOVED: User wants it to ALWAYS pop out as a new group, even if it's a duplicate.
@@ -54,9 +54,11 @@ export async function POST(request) {
 
         await newGroup.save();
 
-        // 4. Update Snapshot with NEW groupingId
-        productSnapshot.groupingId = newGroupId;
-        await productSnapshot.save();
+        // 4. Update Snapshots with NEW groupingId across all pincodes
+        await ProductSnapshot.updateMany(
+            { platform, productId },
+            { $set: { groupingId: newGroupId } }
+        );
 
         return NextResponse.json({ success: true, newGroupId, message: 'Product moved to new group' });
 
