@@ -23,7 +23,7 @@ export default function Sidebar() {
 
   const navItems = [
     { href: '/overview', label: 'Overview', icon: LayoutDashboard },
-    { href: '/', label: 'Search', icon: Search },
+    { href: '/search', label: 'Search', icon: Search },
     { href: '/categories', label: 'Categories', icon: BarChart3 },
     { href: '/alerts', label: 'Alerts', icon: Bell }
   ];

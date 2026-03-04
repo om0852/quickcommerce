@@ -129,6 +129,433 @@ const CustomBrandDialog = ({ isOpen, mode, brand, onClose, onSubmit }) => {
     );
 };
 
+// Extracted Momoized Table to prevent re-renders when Dialog state changes
+const MemoizedBrandsTable = React.memo(({
+    searchQuery, setSearchQuery, sortConfig, setSortConfig, handleSortMenuClick, handleSortMenuClose, sortMenuAnchor, isSortMenuOpen,
+    isAdmin, openBrandDialog, filteredBrands, totals, platforms, platformLabels, loading, handleSort, handleInteraction,
+    products, platformFilter // For empty state
+}) => {
+    return (
+        <Paper
+            sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                borderRadius: '0.75rem',
+                border: '1px solid #e5e5e5',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                overflow: 'hidden'
+            }}
+        >
+            <TableContainer sx={{ flex: 1 }}>
+                <Table stickyHeader aria-label="brand table" size="small">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell
+                                sx={{
+                                    fontWeight: 'bold',
+                                    color: '#737373',
+                                    backgroundColor: '#fafafa',
+                                    borderBottom: '1px solid #e5e5e5',
+                                    padding: '12px 24px'
+                                }}
+                            >
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-start',
+                                    width: '100%',
+                                    gap: '10px'
+                                }}>
+                                    <div className="relative flex-1 min-w-[250px] md:min-w-[70px]" onClick={(e) => e.stopPropagation()}>
+                                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search Brands..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-all font-medium normal-case placeholder:text-gray-400 text-neutral-700"
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                onClick={() => setSearchQuery('')}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="flex gap-2 shrink-0">
+                                        {isAdmin && (
+                                            <button
+                                                onClick={() => openBrandDialog('add')}
+                                                className="bg-neutral-900 hover:bg-neutral-800 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                            >
+                                                <Plus size={16} /> Add Brand
+                                            </button>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={handleSortMenuClick}
+                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700 cursor-pointer"
+                                        title="Filter & Sort"
+                                    >
+                                        <Filter size={16} />
+                                    </button>
+
+                                    <Menu
+                                        anchorEl={sortMenuAnchor}
+                                        open={isSortMenuOpen}
+                                        onClose={handleSortMenuClose}
+                                        PaperProps={{
+                                            elevation: 0,
+                                            sx: {
+                                                overflow: 'visible',
+                                                filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.1))',
+                                                mt: 1.5,
+                                                borderRadius: '12px',
+                                                minWidth: '180px',
+                                                border: '1px solid #e5e5e5',
+                                                padding: '4px 0',
+                                                '& .MuiAvatar-root': {
+                                                    width: 32,
+                                                    height: 32,
+                                                    ml: -0.5,
+                                                    mr: 1,
+                                                },
+                                                '&::before': {
+                                                    content: '""',
+                                                    display: 'block',
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    right: 14,
+                                                    width: 10,
+                                                    height: 10,
+                                                    bgcolor: 'background.paper',
+                                                    transform: 'translateY(-50%) rotate(45deg)',
+                                                    zIndex: 0,
+                                                    borderTop: '1px solid #e5e5e5',
+                                                    borderLeft: '1px solid #e5e5e5',
+                                                },
+                                            },
+                                        }}
+                                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                                    >
+                                        <div className="px-3 pb-2 pt-1 mb-1 border-b border-gray-100">
+                                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sort Brands By</span>
+                                        </div>
+
+                                        <MenuItem
+                                            onClick={() => {
+                                                setSortConfig({ key: 'name', direction: 'asc' });
+                                                handleSortMenuClose();
+                                            }}
+                                            sx={{
+                                                px: 1.5,
+                                                py: 1,
+                                                fontSize: '0.75rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
+                                                fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' ? 700 : 500,
+                                                color: sortConfig.key === 'name' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
+                                                '&:hover': { backgroundColor: '#f9fafb' }
+                                            }}
+                                        >
+                                            <span>Name (A to Z)</span>
+                                            {sortConfig.key === 'name' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
+                                        </MenuItem>
+
+                                        <MenuItem
+                                            onClick={() => {
+                                                setSortConfig({ key: 'name', direction: 'desc' });
+                                                handleSortMenuClose();
+                                            }}
+                                            sx={{
+                                                px: 1.5,
+                                                py: 1,
+                                                fontSize: '0.75rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
+                                                fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' ? 700 : 500,
+                                                color: sortConfig.key === 'name' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
+                                                '&:hover': { backgroundColor: '#f9fafb' }
+                                            }}
+                                        >
+                                            <span>Name (Z to A)</span>
+                                            {sortConfig.key === 'name' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
+                                        </MenuItem>
+
+                                        <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                        <MenuItem
+                                            onClick={() => {
+                                                setSortConfig({ key: 'total', direction: 'desc' });
+                                                handleSortMenuClose();
+                                            }}
+                                            sx={{
+                                                px: 1.5,
+                                                py: 1,
+                                                fontSize: '0.75rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                backgroundColor: sortConfig.key === 'total' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
+                                                fontWeight: sortConfig.key === 'total' && sortConfig.direction === 'desc' ? 700 : 500,
+                                                color: sortConfig.key === 'total' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
+                                                '&:hover': { backgroundColor: '#f9fafb' }
+                                            }}
+                                        >
+                                            <span>Total (High to Low)</span>
+                                            {sortConfig.key === 'total' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
+                                        </MenuItem>
+
+                                        <MenuItem
+                                            onClick={() => {
+                                                setSortConfig({ key: 'total', direction: 'asc' });
+                                                handleSortMenuClose();
+                                            }}
+                                            sx={{
+                                                px: 1.5,
+                                                py: 1,
+                                                fontSize: '0.75rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                backgroundColor: sortConfig.key === 'total' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
+                                                fontWeight: sortConfig.key === 'total' && sortConfig.direction === 'asc' ? 700 : 500,
+                                                color: sortConfig.key === 'total' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
+                                                '&:hover': { backgroundColor: '#f9fafb' }
+                                            }}
+                                        >
+                                            <span>Total (Low to High)</span>
+                                            {sortConfig.key === 'total' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
+                                        </MenuItem>
+                                    </Menu>
+                                </div>
+                            </TableCell>
+                            {platforms.map(p => (
+                                <TableCell
+                                    key={p}
+                                    align="center"
+                                    onClick={() => handleSort(p)}
+                                    sx={{
+                                        fontWeight: 'bold',
+                                        color: '#737373',
+                                        backgroundColor: '#fafafa',
+                                        borderBottom: '1px solid #e5e5e5',
+                                        padding: '12px 16px',
+                                        minWidth: 100,
+                                        cursor: 'pointer',
+                                        '&:hover': { backgroundColor: '#f0f0f0' },
+                                        userSelect: 'none'
+                                    }}
+                                >
+                                    <div className="flex items-center justify-center gap-1.5">
+                                        {platformLabels[p]}
+                                        <div className="flex flex-col opacity-30">
+                                            <ChevronUp size={12} className={sortConfig.key === p && sortConfig.direction === 'asc' ? 'text-black opacity-100' : ''} />
+                                            <ChevronDown size={12} className={sortConfig.key === p && sortConfig.direction === 'desc' ? 'text-black opacity-100 -mt-1' : ''} />
+                                        </div>
+                                    </div>
+                                </TableCell>
+                            ))}
+                            <TableCell
+                                align="center"
+                                onClick={() => handleSort('total')}
+                                sx={{
+                                    fontWeight: 'bold',
+                                    color: '#171717', // darker for total
+                                    backgroundColor: '#f5f5f5', // slightly darker bg for total col header
+                                    borderBottom: '1px solid #e5e5e5',
+                                    padding: '12px 16px',
+                                    minWidth: 80,
+                                    cursor: 'pointer',
+                                    '&:hover': { backgroundColor: '#e5e5e5' },
+                                    userSelect: 'none'
+                                }}
+                            >
+                                <div className="flex items-center justify-center gap-1.5">
+                                    Total
+                                    <div className="flex flex-col opacity-30">
+                                        <ChevronUp size={12} className={sortConfig.key === 'total' && sortConfig.direction === 'asc' ? 'text-black opacity-100' : ''} />
+                                        <ChevronDown size={12} className={sortConfig.key === 'total' && sortConfig.direction === 'desc' ? 'text-black opacity-100 -mt-1' : ''} />
+                                    </div>
+                                </div>
+                            </TableCell>
+                            {isAdmin && (
+                                <TableCell
+                                    align="center"
+                                    sx={{
+                                        fontWeight: 'bold',
+                                        color: '#171717',
+                                        backgroundColor: '#f5f5f5',
+                                        borderBottom: '1px solid #e5e5e5',
+                                        padding: '12px 16px',
+                                        minWidth: 80
+                                    }}
+                                >
+                                    Actions
+                                </TableCell>
+                            )}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {loading ? (
+                            // Skeleton Rows
+                            Array.from({ length: 10 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell sx={{ padding: '12px 24px' }}><Skeleton className="h-4 w-32" /></TableCell>
+                                    {platforms.map(p => (
+                                        <TableCell key={p} align="center" sx={{ padding: '12px 16px' }}><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                                    ))}
+                                    <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}><Skeleton className="h-4 w-10 mx-auto" /></TableCell>
+                                    {isAdmin && <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}><Skeleton className="h-4 w-10 mx-auto" /></TableCell>}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <>
+                                {filteredBrands.map((brand, index) => (
+                                    <TableRow
+                                        key={brand.name}
+                                        hover
+                                        sx={{
+                                            backgroundColor: brand.total === 0 ? '#fafafa' : index % 2 === 0 ? '#ffffff' : '#fafafa',
+                                            opacity: brand.total === 0 ? 0.6 : 1,
+                                            '&:last-child td, &:last-child th': { border: 0 },
+                                            transition: 'background-color 0.2s ease',
+                                        }}
+                                    >
+                                        <TableCell
+                                            component="th"
+                                            scope="row"
+                                            onClick={() => brand.total > 0 && handleInteraction(brand.name, null)}
+                                            sx={{
+                                                padding: '12px 24px',
+                                                fontWeight: brand.total === 0 ? 400 : 600,
+                                                color: '#171717',
+                                                cursor: brand.total > 0 ? 'pointer' : 'default',
+                                                '&:hover': brand.total > 0 ? { color: '#2563eb' } : {} // hover blue-600 if active
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span>{brand.name}</span>
+                                                {brand.total === 0 && <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded ml-2">Empty</span>}
+                                            </div>
+                                        </TableCell>
+
+                                        {platforms.map(p => (
+                                            <TableCell
+                                                key={p}
+                                                align="center"
+                                                onClick={() => brand[p] > 0 && handleInteraction(brand.name, p)}
+                                                sx={{
+                                                    padding: '12px 16px',
+                                                    color: brand[p] > 0 ? '#4b5563' : '#d4d4d8', // gray-600 or gray-300
+                                                    fontWeight: brand[p] > 0 ? 500 : 400,
+                                                    cursor: brand[p] > 0 ? 'pointer' : 'default',
+                                                    '&:hover': brand[p] > 0 ? { backgroundColor: '#f4f4f5', color: '#171717' } : {} // hover darker
+                                                }}
+                                            >
+                                                {brand[p] > 0 ? brand[p] : '-'}
+                                            </TableCell>
+                                        ))}
+                                        <TableCell
+                                            align="center"
+                                            onClick={() => brand.total > 0 && handleInteraction(brand.name, null)}
+                                            sx={{
+                                                padding: '12px 16px',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                color: '#171717',
+                                                backgroundColor: '#fafafa',
+                                                '&:hover': { backgroundColor: '#e5e5e5' } // gray-200
+                                            }}
+                                        >
+                                            {brand.total}
+                                        </TableCell>
+                                        {isAdmin && (
+                                            <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}>
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); openBrandDialog('edit', brand); }}
+                                                        className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer"
+                                                        title="Rename Brand"
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); openBrandDialog('delete', brand); }}
+                                                        className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
+                                                        title="Delete Brand"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </TableCell>
+                                        )}
+                                    </TableRow>
+                                ))}
+                                {filteredBrands.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={isAdmin ? 9 : 8} align="center" sx={{ padding: '48px 24px', color: '#737373' }}>
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Package size={32} className="text-gray-300" />
+                                                <p>
+                                                    {products.length === 0
+                                                        ? "No products data available."
+                                                        : "No brands found matching your criteria."}
+                                                </p>
+                                                {products.length > 0 && (
+                                                    <p className="text-xs text-gray-400">
+                                                        (Parsed {products.length} products, {platformFilter} filter active)
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </>
+                        )}
+                    </TableBody>
+                    <TableFooter>
+                        {!loading && filteredBrands.length > 0 && (
+                            <TableRow sx={{
+                                position: 'sticky',
+                                bottom: 0,
+                                zIndex: 1, // ensure it sits over regular rows
+                                backgroundColor: '#171717', // neutral-900 (dark mode looking footer)
+                                boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+                            }}>
+                                <TableCell sx={{ padding: '16px 24px', fontWeight: 'bold', color: '#ffffff', borderBottom: 'none' }}>
+                                    Overall Totals ({filteredBrands.filter(b => b.total > 0).length} valid brands)
+                                </TableCell>
+                                {platforms.map(p => (
+                                    <TableCell key={p} align="center" sx={{ padding: '16px 16px', fontWeight: 'bold', color: '#ffffff', borderBottom: 'none' }}>
+                                        {totals[p]}
+                                    </TableCell>
+                                ))}
+                                <TableCell align="center" sx={{ padding: '16px 16px', fontWeight: 900, color: '#ffffff', borderBottom: 'none', backgroundColor: '#000000' }}>
+                                    {totals.total}
+                                </TableCell>
+                                {isAdmin && <TableCell sx={{ borderBottom: 'none', backgroundColor: '#000000' }}></TableCell>}
+                            </TableRow>
+                        )}
+                    </TableFooter>
+                </Table>
+            </TableContainer>
+        </Paper>
+    );
+});
+
+
 const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshotDate, isAdmin = false }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' }); // key: 'name' | 'total' | platform, direction: 'asc' | 'desc'
@@ -368,431 +795,6 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
         setSortConfig({ key, direction });
     };
 
-    // Extracted Momoized Table to prevent re-renders when Dialog state changes
-    const MemoizedBrandsTable = React.memo(({
-        searchQuery, setSearchQuery, sortConfig, setSortConfig, handleSortMenuClick, handleSortMenuClose, sortMenuAnchor, isSortMenuOpen,
-        isAdmin, openBrandDialog, filteredBrands, totals, platforms, platformLabels, loading, handleSort, handleInteraction,
-        products, platformFilter // For empty state
-    }) => {
-        return (
-            <Paper
-                sx={{
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 1,
-                    borderRadius: '0.75rem',
-                    border: '1px solid #e5e5e5',
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                    overflow: 'hidden'
-                }}
-            >
-                <TableContainer sx={{ flex: 1 }}>
-                    <Table stickyHeader aria-label="brand table" size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell
-                                    sx={{
-                                        fontWeight: 'bold',
-                                        color: '#737373',
-                                        backgroundColor: '#fafafa',
-                                        borderBottom: '1px solid #e5e5e5',
-                                        padding: '12px 24px'
-                                    }}
-                                >
-                                    <div style={{
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'flex-start',
-                                        width: '100%',
-                                        gap: '10px'
-                                    }}>
-                                        <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
-                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
-                                            <input
-                                                type="text"
-                                                placeholder="Search Brands..."
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-all font-medium normal-case placeholder:text-gray-400 text-neutral-700"
-                                            />
-                                            {searchQuery && (
-                                                <button
-                                                    onClick={() => setSearchQuery('')}
-                                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100"
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        <div className="flex gap-2 shrink-0">
-                                            {isAdmin && (
-                                                <button
-                                                    onClick={() => openBrandDialog('add')}
-                                                    className="bg-neutral-900 hover:bg-neutral-800 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
-                                                >
-                                                    <Plus size={16} /> Add Brand
-                                                </button>
-                                            )}
-                                        </div>
-                                        <button
-                                            onClick={handleSortMenuClick}
-                                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700 cursor-pointer"
-                                            title="Filter & Sort"
-                                        >
-                                            <Filter size={16} />
-                                        </button>
-
-                                        <Menu
-                                            anchorEl={sortMenuAnchor}
-                                            open={isSortMenuOpen}
-                                            onClose={handleSortMenuClose}
-                                            PaperProps={{
-                                                elevation: 0,
-                                                sx: {
-                                                    overflow: 'visible',
-                                                    filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.1))',
-                                                    mt: 1.5,
-                                                    borderRadius: '12px',
-                                                    minWidth: '180px',
-                                                    border: '1px solid #e5e5e5',
-                                                    padding: '4px 0',
-                                                    '& .MuiAvatar-root': {
-                                                        width: 32,
-                                                        height: 32,
-                                                        ml: -0.5,
-                                                        mr: 1,
-                                                    },
-                                                    '&::before': {
-                                                        content: '""',
-                                                        display: 'block',
-                                                        position: 'absolute',
-                                                        top: 0,
-                                                        right: 14,
-                                                        width: 10,
-                                                        height: 10,
-                                                        bgcolor: 'background.paper',
-                                                        transform: 'translateY(-50%) rotate(45deg)',
-                                                        zIndex: 0,
-                                                        borderTop: '1px solid #e5e5e5',
-                                                        borderLeft: '1px solid #e5e5e5',
-                                                    },
-                                                },
-                                            }}
-                                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                                        >
-                                            <div className="px-3 pb-2 pt-1 mb-1 border-b border-gray-100">
-                                                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sort Brands By</span>
-                                            </div>
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    setSortConfig({ key: 'name', direction: 'asc' });
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' ? 700 : 500,
-                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
-                                                }}
-                                            >
-                                                <span>Name (A to Z)</span>
-                                                {sortConfig.key === 'name' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    setSortConfig({ key: 'name', direction: 'desc' });
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' ? 700 : 500,
-                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
-                                                }}
-                                            >
-                                                <span>Name (Z to A)</span>
-                                                {sortConfig.key === 'name' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    setSortConfig({ key: 'total', direction: 'desc' });
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'total' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'total' && sortConfig.direction === 'desc' ? 700 : 500,
-                                                    color: sortConfig.key === 'total' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
-                                                }}
-                                            >
-                                                <span>Total (High to Low)</span>
-                                                {sortConfig.key === 'total' && sortConfig.direction === 'desc' && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    setSortConfig({ key: 'total', direction: 'asc' });
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'total' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'total' && sortConfig.direction === 'asc' ? 700 : 500,
-                                                    color: sortConfig.key === 'total' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
-                                                }}
-                                            >
-                                                <span>Total (Low to High)</span>
-                                                {sortConfig.key === 'total' && sortConfig.direction === 'asc' && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-                                        </Menu>
-                                    </div>
-                                </TableCell>
-                                {platforms.map(p => (
-                                    <TableCell
-                                        key={p}
-                                        align="center"
-                                        onClick={() => handleSort(p)}
-                                        sx={{
-                                            fontWeight: 'bold',
-                                            color: '#737373',
-                                            backgroundColor: '#fafafa',
-                                            borderBottom: '1px solid #e5e5e5',
-                                            padding: '12px 16px',
-                                            minWidth: 100,
-                                            cursor: 'pointer',
-                                            '&:hover': { backgroundColor: '#f0f0f0' },
-                                            userSelect: 'none'
-                                        }}
-                                    >
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            {platformLabels[p]}
-                                            <div className="flex flex-col opacity-30">
-                                                <ChevronUp size={12} className={sortConfig.key === p && sortConfig.direction === 'asc' ? 'text-black opacity-100' : ''} />
-                                                <ChevronDown size={12} className={sortConfig.key === p && sortConfig.direction === 'desc' ? 'text-black opacity-100 -mt-1' : ''} />
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                ))}
-                                <TableCell
-                                    align="center"
-                                    onClick={() => handleSort('total')}
-                                    sx={{
-                                        fontWeight: 'bold',
-                                        color: '#171717', // darker for total
-                                        backgroundColor: '#f5f5f5', // slightly darker bg for total col header
-                                        borderBottom: '1px solid #e5e5e5',
-                                        padding: '12px 16px',
-                                        minWidth: 80,
-                                        cursor: 'pointer',
-                                        '&:hover': { backgroundColor: '#e5e5e5' },
-                                        userSelect: 'none'
-                                    }}
-                                >
-                                    <div className="flex items-center justify-center gap-1.5">
-                                        Total
-                                        <div className="flex flex-col opacity-30">
-                                            <ChevronUp size={12} className={sortConfig.key === 'total' && sortConfig.direction === 'asc' ? 'text-black opacity-100' : ''} />
-                                            <ChevronDown size={12} className={sortConfig.key === 'total' && sortConfig.direction === 'desc' ? 'text-black opacity-100 -mt-1' : ''} />
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                {isAdmin && (
-                                    <TableCell
-                                        align="center"
-                                        sx={{
-                                            fontWeight: 'bold',
-                                            color: '#171717',
-                                            backgroundColor: '#f5f5f5',
-                                            borderBottom: '1px solid #e5e5e5',
-                                            padding: '12px 16px',
-                                            minWidth: 80
-                                        }}
-                                    >
-                                        Actions
-                                    </TableCell>
-                                )}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {loading ? (
-                                // Skeleton Rows
-                                Array.from({ length: 10 }).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell sx={{ padding: '12px 24px' }}><Skeleton className="h-4 w-32" /></TableCell>
-                                        {platforms.map(p => (
-                                            <TableCell key={p} align="center" sx={{ padding: '12px 16px' }}><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                                        ))}
-                                        <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}><Skeleton className="h-4 w-10 mx-auto" /></TableCell>
-                                        {isAdmin && <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}><Skeleton className="h-4 w-10 mx-auto" /></TableCell>}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <>
-                                    {filteredBrands.map((brand, index) => (
-                                        <TableRow
-                                            key={brand.name}
-                                            hover
-                                            sx={{
-                                                backgroundColor: brand.total === 0 ? '#fafafa' : index % 2 === 0 ? '#ffffff' : '#fafafa',
-                                                opacity: brand.total === 0 ? 0.6 : 1,
-                                                '&:last-child td, &:last-child th': { border: 0 },
-                                                transition: 'background-color 0.2s ease',
-                                            }}
-                                        >
-                                            <TableCell
-                                                component="th"
-                                                scope="row"
-                                                onClick={() => brand.total > 0 && handleInteraction(brand.name, null)}
-                                                sx={{
-                                                    padding: '12px 24px',
-                                                    fontWeight: brand.total === 0 ? 400 : 600,
-                                                    color: '#171717',
-                                                    cursor: brand.total > 0 ? 'pointer' : 'default',
-                                                    '&:hover': brand.total > 0 ? { color: '#2563eb' } : {} // hover blue-600 if active
-                                                }}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <span>{brand.name}</span>
-                                                    {brand.total === 0 && <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded ml-2">Empty</span>}
-                                                </div>
-                                            </TableCell>
-
-                                            {platforms.map(p => (
-                                                <TableCell
-                                                    key={p}
-                                                    align="center"
-                                                    onClick={() => brand[p] > 0 && handleInteraction(brand.name, p)}
-                                                    sx={{
-                                                        padding: '12px 16px',
-                                                        color: brand[p] > 0 ? '#4b5563' : '#d4d4d8', // gray-600 or gray-300
-                                                        fontWeight: brand[p] > 0 ? 500 : 400,
-                                                        cursor: brand[p] > 0 ? 'pointer' : 'default',
-                                                        '&:hover': brand[p] > 0 ? { backgroundColor: '#f4f4f5', color: '#171717' } : {} // hover darker
-                                                    }}
-                                                >
-                                                    {brand[p] > 0 ? brand[p] : '-'}
-                                                </TableCell>
-                                            ))}
-                                            <TableCell
-                                                align="center"
-                                                onClick={() => brand.total > 0 && handleInteraction(brand.name, null)}
-                                                sx={{
-                                                    padding: '12px 16px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: 'bold',
-                                                    color: '#171717',
-                                                    backgroundColor: '#fafafa',
-                                                    '&:hover': { backgroundColor: '#e5e5e5' } // gray-200
-                                                }}
-                                            >
-                                                {brand.total}
-                                            </TableCell>
-                                            {isAdmin && (
-                                                <TableCell align="center" sx={{ padding: '12px 16px', backgroundColor: '#fafafa' }}>
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); openBrandDialog('edit', brand); }}
-                                                            className="text-gray-400 hover:text-blue-600 transition-colors cursor-pointer"
-                                                            title="Rename Brand"
-                                                        >
-                                                            <Edit2 size={16} />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); openBrandDialog('delete', brand); }}
-                                                            className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
-                                                            title="Delete Brand"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </TableCell>
-                                            )}
-                                        </TableRow>
-                                    ))}
-                                    {filteredBrands.length === 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={isAdmin ? 9 : 8} align="center" sx={{ padding: '48px 24px', color: '#737373' }}>
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <Package size={32} className="text-gray-300" />
-                                                    <p>
-                                                        {products.length === 0
-                                                            ? "No products data available."
-                                                            : "No brands found matching your criteria."}
-                                                    </p>
-                                                    {products.length > 0 && (
-                                                        <p className="text-xs text-gray-400">
-                                                            (Parsed {products.length} products, {platformFilter} filter active)
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </>
-                            )}
-                        </TableBody>
-                        <TableFooter>
-                            {!loading && filteredBrands.length > 0 && (
-                                <TableRow sx={{
-                                    position: 'sticky',
-                                    bottom: 0,
-                                    zIndex: 1, // ensure it sits over regular rows
-                                    backgroundColor: '#171717', // neutral-900 (dark mode looking footer)
-                                    boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
-                                }}>
-                                    <TableCell sx={{ padding: '16px 24px', fontWeight: 'bold', color: '#ffffff', borderBottom: 'none' }}>
-                                        Overall Totals ({filteredBrands.filter(b => b.total > 0).length} valid brands)
-                                    </TableCell>
-                                    {platforms.map(p => (
-                                        <TableCell key={p} align="center" sx={{ padding: '16px 16px', fontWeight: 'bold', color: '#ffffff', borderBottom: 'none' }}>
-                                            {totals[p]}
-                                        </TableCell>
-                                    ))}
-                                    <TableCell align="center" sx={{ padding: '16px 16px', fontWeight: 900, color: '#ffffff', borderBottom: 'none', backgroundColor: '#000000' }}>
-                                        {totals.total}
-                                    </TableCell>
-                                    {isAdmin && <TableCell sx={{ borderBottom: 'none', backgroundColor: '#000000' }}></TableCell>}
-                                </TableRow>
-                            )}
-                        </TableFooter>
-                    </Table>
-                </TableContainer>
-            </Paper>
-        );
-    });
 
     return (
         <div className="flex flex-col gap-4 h-full">

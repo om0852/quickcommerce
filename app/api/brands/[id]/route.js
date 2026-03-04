@@ -8,7 +8,7 @@ import ProductGrouping from '@/models/ProductGrouping';
 export async function PUT(request, { params }) {
     try {
         await connectToDatabase();
-        const { id } = params; // This is the mongodb _id of the Brand document
+        const { id } = await params; // This is the mongodb _id of the Brand document
         const { newBrandName } = await request.json();
 
         if (!newBrandName || typeof newBrandName !== 'string' || !newBrandName.trim()) {
@@ -62,7 +62,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
     try {
         await connectToDatabase();
-        const { id } = params;
+        const { id } = await params;
 
         const existingBrand = await Brand.findById(id);
         if (!existingBrand) {
