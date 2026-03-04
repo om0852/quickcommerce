@@ -20,12 +20,12 @@ const PINCODE_OPTIONS = [
 ];
 
 const PLATFORMS = [
+    { id: 'jiomart', label: 'JioMart' },
     { id: 'zepto', label: 'Zepto' },
     { id: 'blinkit', label: 'Blinkit' },
-    { id: 'instamart', label: 'Swiggy Instamart' },
-    { id: 'jiomart', label: 'JioMart' },
     { id: 'dmart', label: 'DMart' },
     { id: 'flipkartMinutes', label: 'Flipkart Minutes' },
+    { id: 'instamart', label: 'Swiggy Instamart' },
 ];
 
 // --- Skeleton Components ---
