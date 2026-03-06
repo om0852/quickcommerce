@@ -495,7 +495,10 @@ const ProductTable = React.memo(function ProductTable({
                                     </TableRow>
                                 ))
                             ) : (
-                                products.map((product, index) => {
+                                products.filter((product, index, self) => {
+                                    if (product.isHeader) return true;
+                                    return self.findIndex(p => p.groupingId === product.groupingId && !p.isHeader) === index;
+                                }).map((product, index) => {
                                     // Check if it's a header row
                                     if (product.isHeader) {
                                         return null;

@@ -123,6 +123,7 @@ function CategoriesPageContent() {
 
   const [platformFilter, setPlatformFilter] = useState('all');
   const [showMissing, setShowMissing] = useState(false);
+  const [useFilterToggle, setUseFilterToggle] = useState(false);
   const [showNewFirst, setShowNewFirst] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
@@ -523,22 +524,77 @@ function CategoriesPageContent() {
     let result = searchedProducts;
 
     // Platform Filter
-    if (platformFilter === 'all') {
-      return result;
+    if (platformFilter !== 'all') {
+      if (showMissing) {
+        result = result.filter(product => {
+          const missingInSelected = !product[platformFilter];
+          const presentInOthers = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart']
+            .filter(p => p !== platformFilter)
+            .some(p => product[p]);
+          return missingInSelected && presentInOthers;
+        });
+      } else {
+        result = result.filter(product => product[platformFilter]);
+      }
     }
 
-    if (showMissing) {
-      return result.filter(product => {
-        const missingInSelected = !product[platformFilter];
-        const presentInOthers = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart']
-          .filter(p => p !== platformFilter)
-          .some(p => product[p]);
-        return missingInSelected && presentInOthers;
+    if (useFilterToggle) {
+      const nameGroups = {};
+      result.forEach(p => {
+        const n = (p.name || '').trim().toLowerCase();
+        if (!nameGroups[n]) nameGroups[n] = [];
+        nameGroups[n].push(p);
       });
+
+      const deduplicatedResult = [];
+      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+
+      Object.values(nameGroups).forEach(group => {
+        if (group.length === 1) {
+          deduplicatedResult.push(group[0]);
+          return;
+        }
+
+        const multiPlatformProducts = group.filter(p => {
+          let activeCount = 0;
+          platforms.forEach(plat => {
+            if (p[plat]) activeCount++;
+          });
+          return activeCount > 1;
+        });
+
+        if (multiPlatformProducts.length > 0) {
+          deduplicatedResult.push(...multiPlatformProducts);
+        } else {
+          const getGroupMinRank = (p) => {
+            let min = Infinity;
+            platforms.forEach(key => {
+              if (p[key] && p[key].ranking !== undefined && p[key].ranking !== null) {
+                const num = Number(p[key].ranking);
+                if (!isNaN(num) && num < min) min = num;
+              }
+            });
+            return min;
+          };
+
+          let bestP = group[0];
+          let bestRank = getGroupMinRank(group[0]);
+
+          for (let i = 1; i < group.length; i++) {
+            const currentRank = getGroupMinRank(group[i]);
+            if (currentRank < bestRank) {
+              bestRank = currentRank;
+              bestP = group[i];
+            }
+          }
+          deduplicatedResult.push(bestP);
+        }
+      });
+      result = deduplicatedResult;
     }
 
-    return result.filter(product => product[platformFilter]);
-  }, [searchedProducts, platformFilter, showMissing]);
+    return result;
+  }, [searchedProducts, platformFilter, showMissing, useFilterToggle]);
 
   const sortedProducts = useMemo(() => {
     // If no grouping (no headers), just filter and sort normally
@@ -1229,18 +1285,27 @@ function CategoriesPageContent() {
               </div>
             </div>
 
-            <div className={cn(
-              "flex items-center gap-3 px-3 py-1.5 mb-0.5 transition-opacity duration-200",
-              platformFilter === 'all' ? "opacity-50 blur-[0.5px] pointer-events-none grayscale" : ""
-            )}>
-              <span className="text-sm font-medium text-gray-700">Show Missing</span>
-              <Switch
-                checked={showMissing}
-                onCheckedChange={setShowMissing}
-                disabled={platformFilter === 'all'}
-              />
-            </div>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 px-3 py-1.5 mb-0.5">
+                <span className="text-sm font-medium text-gray-700">Filter</span>
+                <Switch
+                  checked={useFilterToggle}
+                  onCheckedChange={setUseFilterToggle}
+                />
+              </div>
 
+              <div className={cn(
+                "flex items-center gap-3 px-3 py-1.5 mb-0.5 transition-opacity duration-200",
+                platformFilter === 'all' ? "opacity-50 blur-[0.5px] pointer-events-none grayscale" : ""
+              )}>
+                <span className="text-sm font-medium text-gray-700">Show Missing</span>
+                <Switch
+                  checked={showMissing}
+                  onCheckedChange={setShowMissing}
+                  disabled={platformFilter === 'all'}
+                />
+              </div>
+            </div>
 
           </div>
         </div>
