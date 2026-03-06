@@ -11,13 +11,13 @@ export async function GET(request) {
     await dbConnect();
 
     // 1. Build a dynamic filter
-    // 1. Build a dynamic filter
     const filter = {};
-    if (pincode) filter.pincode = pincode; // Pincode is mandatory constraint if provided
+    if (pincode) filter.pincode = pincode;
 
     if (category) {
       filter.$or = [
         { category: category },
+        { officialCategory: category }
       ];
     }
 

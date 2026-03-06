@@ -9,71 +9,72 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const pincode = searchParams.get('pincode');
-
-    // 1. Get the requested Time Travel timestamp
     const requestedTimestamp = searchParams.get('timestamp');
 
     if (!category || !pincode) {
-      return NextResponse.json({
-        error: 'Category and pincode are required'
-      }, { status: 400 });
+      return NextResponse.json({ error: 'Category and pincode are required' }, { status: 400 });
     }
 
     await dbConnect();
 
-    await dbConnect();
-
-    // Parse Pincodes (comma separated)
     const pincodeList = pincode.split(',').filter(p => p.trim() !== '');
 
+    // ============================================================
+    // STEP 1: Fetch all groups for this category (category-level)
+    // ============================================================
+    const groups = await ProductGrouping.find({ category }).lean();
+    console.log(groups.length);
+    // Fetch all brands for lookup
+    const allBrands = await Brand.find({}).lean();
+    const brandMap = {};
+    allBrands.forEach(b => { brandMap[b.brandId] = b.brandName; });
+    console.log('[category-data] Loaded', Object.keys(brandMap).length, 'brands');
+
+    // Collect ALL product IDs present across all groups, keyed by platform
+    // Structure: { platform -> Set<productId> }
+    const platformProductIds = {};
+    for (const group of groups) {
+      for (const p of group.products) {
+        if (!platformProductIds[p.platform]) platformProductIds[p.platform] = new Set();
+        platformProductIds[p.platform].add(p.productId);
+      }
+    }
+
     let allMergedProducts = [];
-    let aggregatedCounts = {
-      zepto: 0,
-      blinkit: 0,
-      jiomart: 0,
-      dmart: 0,
-      flipkartMinutes: 0,
-      instamart: 0
-    };
+    let aggregatedCounts = { zepto: 0, blinkit: 0, jiomart: 0, dmart: 0, flipkartMinutes: 0, instamart: 0 };
     let lastUpdatedTimestamp = null;
     let anyDataFound = false;
 
-    // Maps to store context for the second pass
-    const targetScrapedAtMap = new Map();
-    const allSnapshots = [];
-
-    // Iterate over each pincode strictly in order
+    // ============================================================
+    // STEP 2: For each requested pincode, determine the timestamp
+    //         and fetch snapshots for the products in those groups
+    // ============================================================
     for (const currentPincode of pincodeList) {
       let targetScrapedAt;
 
-      // --- Step A: Determine Timestamp for this Pincode ---
       if (requestedTimestamp) {
-        // TIME TRAVEL MODE
+        // TIME TRAVEL MODE: use exact timestamp
         const searchDate = new Date(requestedTimestamp);
         const exactBatch = await ProductSnapshot.findOne({
           pincode: currentPincode,
           scrapedAt: searchDate,
-          $or: [{ category: category }]
-        }).select('scrapedAt');
+          $or: [{ category: category }, { officialCategory: category }]
+        }).select('scrapedAt').lean();
 
         if (exactBatch) {
           targetScrapedAt = exactBatch.scrapedAt;
         } else {
-          continue;
+          continue; // No data for this pincode at this timestamp
         }
       } else {
-        // LIVE MODE: Find latest for THIS pincode
+        // LIVE MODE: find the most recent scrape for this pincode
         const latestSnapshot = await ProductSnapshot.findOne({
           pincode: currentPincode,
-          $or: [
-            { category: category },
-            { officialCategory: category }
-          ]
-        }).sort({ scrapedAt: -1 });
+          $or: [{ category: category }, { officialCategory: category }]
+        }).sort({ scrapedAt: -1 }).select('scrapedAt').lean();
 
         if (latestSnapshot) {
           targetScrapedAt = latestSnapshot.scrapedAt;
-          // Update global lastUpdated
           if (!lastUpdatedTimestamp || targetScrapedAt > lastUpdatedTimestamp) {
             lastUpdatedTimestamp = targetScrapedAt;
           }
@@ -83,73 +84,58 @@ export async function GET(request) {
       }
 
       anyDataFound = true;
-      targetScrapedAtMap.set(currentPincode, targetScrapedAt);
 
-      // --- Step B: Fetch Data for this Pincode ---
-      // Fetch Snapshots
+      // ============================================================
+      // STEP 3: Fetch snapshots for this pincode + scrapedAt
+      //         for the specific product IDs that exist in groups
+      //         (no category filter — we look up by productId directly)
+      // ============================================================
+      const allGroupProductIds = [];
+      for (const ids of Object.values(platformProductIds)) {
+        for (const id of ids) allGroupProductIds.push(id);
+      }
+
       const snapshots = await ProductSnapshot.find({
         pincode: currentPincode,
         scrapedAt: targetScrapedAt,
-        $or: [{ category: category }]
+        productId: { $in: allGroupProductIds }
+      }).lean();
+
+      console.log(`[category-data] Pincode ${currentPincode}: fetched ${snapshots.length} snapshots for ${allGroupProductIds.length} group product IDs`);
+
+      // Build snapshot lookup: platform:productId -> snapshot
+      const snapshotMap = {};
+      snapshots.forEach(snap => {
+        const key = `${snap.platform.toLowerCase()}:${snap.productId}`;
+        // Keep best ranking if multiple exist
+        if (!snapshotMap[key] || (snap.ranking && snap.ranking < (snapshotMap[key].ranking || Infinity))) {
+          snapshotMap[key] = snap;
+        }
       });
 
-      allSnapshots.push(...snapshots);
-    } // End of initial pincode loop
-
-    // Create a single snapshot map for efficient lookup across all fetched snapshots
-    const snapshotMap = {};
-    allSnapshots.forEach(snap => {
-      // Key includes pincode to avoid collisions if product IDs are not unique across pincodes
-      // Normalize platform to lowercase to avoid casing mismatches between groups and snapshots
-      snapshotMap[`${snap.platform.toLowerCase()}:${snap.productId}:${snap.pincode}`] = snap;
-    });
-
-    const finalProducts = [];
-    const usedSnapshotIds = new Set();
-
-    // Fetch Groups (Common across pincodes usually, but we fetch to map)
-    const groups = await ProductGrouping.find({ category: category });
-
-    // Fetch all brands and create a lookup map (brandId -> brandName)
-    const allBrands = await Brand.find({});
-    const brandMap = {};
-    allBrands.forEach(b => {
-      brandMap[b.brandId] = b.brandName;
-    });
-    console.log('[category-data] Loaded', Object.keys(brandMap).length, 'brands');
-
-    // Iterate over each selected pincode to maintain order and separation for merging
-    for (const currentPincode of pincodeList) {
-      const targetScrapedAt = targetScrapedAtMap.get(currentPincode);
-      if (!targetScrapedAt) {
-        continue;
-      }
-
+      // ============================================================
+      // STEP 4: Build the product list for this pincode
+      //         by joining groups with their snapshots
+      // ============================================================
       const currentPincodeItems = [];
 
-      groups.forEach(group => {
-        // Temp storage for all matches in this group, separated by platform
+      for (const group of groups) {
         const platformMatches = {
           zepto: [], blinkit: [], jiomart: [], dmart: [], flipkartMinutes: [], instamart: []
         };
-
         let hasData = false;
 
-        // 1. Collect all matching snapshots for this group AND this pincode
-        group.products.forEach(p => {
-          // Normalize platform to lowercase for case-insensitive lookup
+        for (const p of group.products) {
           const platformKey = p.platform.toLowerCase();
-          const snap = snapshotMap[`${platformKey}:${p.productId}:${currentPincode}`];
+          const snap = snapshotMap[`${platformKey}:${p.productId}`];
           if (snap) {
-            // Find the correct key in platformMatches (case-insensitive)
             const matchKey = Object.keys(platformMatches).find(k => k.toLowerCase() === platformKey);
             if (matchKey) {
               platformMatches[matchKey].push(snap);
               hasData = true;
-              usedSnapshotIds.add(snap._id.toString());
             }
           }
-        });
+        }
 
         if (hasData) {
           const productObj = {
@@ -168,11 +154,9 @@ export async function GET(request) {
             isHeader: false
           };
 
-          // 2. Process matches per platform
           Object.keys(platformMatches).forEach(platform => {
             const matches = platformMatches[platform];
             if (matches.length > 0) {
-              // B. Select "Best" Snapshot to display
               const bestSnap = matches.sort((a, b) => {
                 const rA = a.ranking && !isNaN(a.ranking) ? a.ranking : Infinity;
                 const rB = b.ranking && !isNaN(b.ranking) ? b.ranking : Infinity;
@@ -180,7 +164,6 @@ export async function GET(request) {
                 return Number(a.currentPrice || 0) - Number(b.currentPrice || 0);
               })[0];
 
-              // C. Populate Object
               productObj[platform] = {
                 productId: bestSnap.productId,
                 productName: bestSnap.productName,
@@ -188,7 +171,6 @@ export async function GET(request) {
                 productWeight: bestSnap.productWeight,
                 rating: bestSnap.rating,
                 currentPrice: bestSnap.currentPrice,
-                // averagePrice removed as per user request
                 originalPrice: bestSnap.originalPrice,
                 discountPercentage: bestSnap.discountPercentage,
                 ranking: bestSnap.ranking,
@@ -216,9 +198,9 @@ export async function GET(request) {
 
           currentPincodeItems.push(productObj);
         }
-      });
+      }
 
-      // Sort items by Best Rank (Ascending) before adding to list
+      // Sort by best rank
       currentPincodeItems.sort((a, b) => {
         const getMinRank = (p) => {
           let min = Infinity;
@@ -234,7 +216,6 @@ export async function GET(request) {
       });
 
       if (currentPincodeItems.length > 0) {
-        // Let's simply show "Pincode: XXXXXX" for now.
         let regionName = `Region: ${currentPincode}`;
         if (currentPincode === '201303') regionName = "Delhi NCR — 201303";
         if (currentPincode === '400706') regionName = "Navi Mumbai — 400706";
@@ -247,27 +228,18 @@ export async function GET(request) {
         if (currentPincode === '401101') regionName = "Mumbai — 401101";
         if (currentPincode === '401202') regionName = "Mumbai — 401202";
 
-        allMergedProducts.push({
-          isHeader: true,
-          title: regionName,
-          pincode: currentPincode
-        });
+        allMergedProducts.push({ isHeader: true, title: regionName, pincode: currentPincode });
         allMergedProducts.push(...currentPincodeItems);
       }
-    } // End Loop
+    }
 
     if (!anyDataFound && !requestedTimestamp) {
-      // Fallback for empty state logic if needed, or similar to previous "No data"
       return NextResponse.json({
-        success: true,
-        category,
-        pincode,
-        products: [],
-        lastUpdated: null,
+        success: true, category, pincode, products: [], lastUpdated: null,
         message: 'No data available for these pincodes'
       });
     }
-
+    console.log(allMergedProducts.length)
     return NextResponse.json({
       success: true,
       category,
@@ -286,9 +258,6 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Category data error:', error);
-    return NextResponse.json({
-      error: 'Failed to fetch category data',
-      message: error.message
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch category data', message: error.message }, { status: 500 });
   }
 }
