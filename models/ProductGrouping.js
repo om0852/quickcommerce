@@ -29,9 +29,20 @@ const ProductGroupingSchema = new mongoose.Schema({
         index: true
     },
 
+    officialCategory: {
+        type: String,
+        index: true
+    },
+
+    officialSubCategory: {
+        type: String,
+        index: true
+    },
+
     // Metadata (snapshot from the first/primary product for easy display)
     primaryName: String,
     primaryImage: String,
+    groupImage: { type: String, default: null },
     primaryWeight: String,
 
     // To track manual overrides

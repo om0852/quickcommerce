@@ -1,1 +1,24 @@
-import mongoose from 'mongoose';\r\n\r\nconst OverviewCacheSchema = new mongoose.Schema({\r\n    pincode: { \r\n        type: String, \r\n        required: true,\r\n        unique: true, \r\n        index: true \r\n    },\r\n    data: { \r\n        type: mongoose.Schema.Types.Mixed,\r\n        required: true \r\n    },\r\n    lastUpdated: { \r\n        type: Date, \r\n        default: Date.now \r\n    }\r\n}, {\r\n    timestamps: true\r\n});\r\n\r\nconst OverviewCache = mongoose.models.OverviewCache || mongoose.model('OverviewCache', OverviewCacheSchema);\r\n\r\nexport default OverviewCache;\r\n
+import mongoose from 'mongoose';
+
+const OverviewCacheSchema = new mongoose.Schema({
+    pincode: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true
+    },
+    data: {
+        type: mongoose.Schema.Types.Mixed, // Stores the array of aggregated category/platform/count objects
+        required: true
+    },
+    lastUpdated: {
+        type: Date,
+        default: Date.now
+    }
+}, {
+    timestamps: true
+});
+
+const OverviewCache = mongoose.models.OverviewCache || mongoose.model('OverviewCache', OverviewCacheSchema);
+
+export default OverviewCache;
