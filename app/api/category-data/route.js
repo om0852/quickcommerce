@@ -142,6 +142,7 @@ export async function GET(request) {
             groupingId: group.groupingId,
             name: group.primaryName,
             image: group.primaryImage,
+            groupImage: null,
             weight: group.primaryWeight,
             brand: brandMap[group.brandId] || group.brand || '',
             brandId: group.brandId || '',
@@ -195,6 +196,22 @@ export async function GET(request) {
               aggregatedCounts[platform]++;
             }
           });
+
+          // Compute groupImage based on platform priority for Fruits & Vegetables
+          if (category === 'Fruits & Vegetables') {
+            const priority = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
+            for (const plat of priority) {
+              if (productObj[plat] && productObj[plat].productImage && productObj[plat].productImage !== 'N/A') {
+                productObj.groupImage = productObj[plat].productImage;
+                break;
+              }
+            }
+          }
+          
+          // Fallback if priority didn't yield an image or not Fruits & Veg
+          if (!productObj.groupImage || productObj.groupImage === 'N/A') {
+            productObj.groupImage = productObj.image || '';
+          }
 
           currentPincodeItems.push(productObj);
         }

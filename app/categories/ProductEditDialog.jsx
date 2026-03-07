@@ -143,6 +143,7 @@ export default function ProductEditDialog({
     const [name, setName] = useState('');
     const [weight, setWeight] = useState('');
     const [brand, setBrand] = useState('');
+    const [groupImage, setGroupImage] = useState('');
 
     // Access available brands from API
     const [availableBrands, setAvailableBrands] = useState([]);
@@ -202,6 +203,7 @@ export default function ProductEditDialog({
             setName(product.name || '');
             setWeight(product.weight || '');
             setBrand(product.brand || '');
+            setGroupImage(product.groupImage || '');
 
             // Platform Init
             const initialData = [];
@@ -246,13 +248,12 @@ export default function ProductEditDialog({
         setError(null);
 
         try {
-            // 1. Update Group Details
             const groupUpdatePromise = fetch('/api/grouping/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     groupingId: product.groupingId,
-                    updates: { name, weight, brand }
+                    updates: { name, weight, brand, groupImage }
                 })
             });
 
@@ -294,6 +295,7 @@ export default function ProductEditDialog({
                 name,
                 weight,
                 brand,
+                groupImage,
                 modifiedPlatforms
             });
             onClose();
@@ -364,6 +366,25 @@ export default function ProductEditDialog({
                                     availableBrands={availableBrands}
                                     onAddNewBrand={handleAddNewBrand}
                                 />
+                            </div>
+                            <div className="space-y-1 col-span-1 md:col-span-2">
+                                <label className="text-xs font-semibold text-gray-500">Group Image URL (Optional Override)</label>
+                                <div className="flex gap-3">
+                                    <div className="flex-1">
+                                        <input
+                                            type="text"
+                                            value={groupImage}
+                                            onChange={(e) => setGroupImage(e.target.value)}
+                                            placeholder="https://..."
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-colors"
+                                        />
+                                    </div>
+                                    {groupImage && (
+                                        <div className="w-10 h-10 border border-gray-200 rounded-md overflow-hidden bg-white shadow-sm flex-none">
+                                            <img src={groupImage} alt="Group Preview" className="w-full h-full object-contain" />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

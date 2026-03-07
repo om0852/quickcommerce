@@ -123,7 +123,7 @@ function CategoriesPageContent() {
 
   const [platformFilter, setPlatformFilter] = useState('all');
   const [showMissing, setShowMissing] = useState(false);
-  const [useFilterToggle, setUseFilterToggle] = useState(false);
+  const [useFilterToggle, setUseFilterToggle] = useState(true);
   const [showNewFirst, setShowNewFirst] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
@@ -165,17 +165,87 @@ function CategoriesPageContent() {
   const searchedProducts = useMemo(() => {
     if (!searchQuery) return products;
 
+    const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
     const tokens = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
     return products.filter(p => {
       const nameLower = (p.name || '').toLowerCase();
-      return tokens.every(token => nameLower.includes(token));
+      if (tokens.every(token => nameLower.includes(token))) return true;
+
+      // Also search by productId on any platform
+      const query = searchQuery.toLowerCase();
+      return platforms.some(plat => {
+        const pid = (p[plat]?.productId || '').toLowerCase();
+        return pid && pid.includes(query);
+      });
     });
   }, [products, searchQuery]);
 
-  // Calculate platform counts from searched products
+  // Apply deduplication filter second (Hide Similar Name)
+  const deduplicatedProducts = useMemo(() => {
+    let result = searchedProducts;
+
+    if (useFilterToggle) {
+      const nameGroups = {};
+      result.forEach(p => {
+        const n = (p.name || '').trim().toLowerCase();
+        if (!nameGroups[n]) nameGroups[n] = [];
+        nameGroups[n].push(p);
+      });
+
+      const deduplicatedResult = [];
+      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+
+      Object.values(nameGroups).forEach(group => {
+        if (group.length === 1) {
+          deduplicatedResult.push(group[0]);
+          return;
+        }
+
+        const multiPlatformProducts = group.filter(p => {
+          let activeCount = 0;
+          platforms.forEach(plat => {
+            if (p[plat]) activeCount++;
+          });
+          return activeCount > 1;
+        });
+
+        if (multiPlatformProducts.length > 0) {
+          deduplicatedResult.push(...multiPlatformProducts);
+        } else {
+          const getGroupMinRank = (p) => {
+            let min = Infinity;
+            platforms.forEach(key => {
+              if (p[key] && p[key].ranking !== undefined && p[key].ranking !== null) {
+                const num = Number(p[key].ranking);
+                if (!isNaN(num) && num < min) min = num;
+              }
+            });
+            return min;
+          };
+
+          let bestP = group[0];
+          let bestRank = getGroupMinRank(group[0]);
+
+          for (let i = 1; i < group.length; i++) {
+            const currentRank = getGroupMinRank(group[i]);
+            if (currentRank < bestRank) {
+              bestRank = currentRank;
+              bestP = group[i];
+            }
+          }
+          deduplicatedResult.push(bestP);
+        }
+      });
+      result = deduplicatedResult;
+    }
+
+    return result;
+  }, [searchedProducts, useFilterToggle]);
+
+  // Calculate platform counts from deduplicated products
   const platformCounts = useMemo(() => {
     const counts = {
-      all: searchedProducts.length,
+      all: deduplicatedProducts.length,
       jiomart: 0,
       zepto: 0,
       blinkit: 0,
@@ -186,7 +256,7 @@ function CategoriesPageContent() {
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
 
-    searchedProducts.forEach(product => {
+    deduplicatedProducts.forEach(product => {
       // Check if product exists on ANY platform (to filter out complete ghosts, though unlikely)
       const existsSomewhere = platforms.some(p => product[p]);
 
@@ -212,7 +282,7 @@ function CategoriesPageContent() {
     });
 
     return counts;
-  }, [searchedProducts, showMissing]);
+  }, [deduplicatedProducts, showMissing]);
 
   // Calculate TOTAL platform counts (unfiltered by search) to distinguish "Not Found" vs "Unserviceable"
   const totalPlatformCounts = useMemo(() => {
@@ -521,7 +591,7 @@ function CategoriesPageContent() {
 
 
   const filteredProducts = useMemo(() => {
-    let result = searchedProducts;
+    let result = deduplicatedProducts;
 
     // Platform Filter
     if (platformFilter !== 'all') {
@@ -538,63 +608,8 @@ function CategoriesPageContent() {
       }
     }
 
-    if (useFilterToggle) {
-      const nameGroups = {};
-      result.forEach(p => {
-        const n = (p.name || '').trim().toLowerCase();
-        if (!nameGroups[n]) nameGroups[n] = [];
-        nameGroups[n].push(p);
-      });
-
-      const deduplicatedResult = [];
-      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-
-      Object.values(nameGroups).forEach(group => {
-        if (group.length === 1) {
-          deduplicatedResult.push(group[0]);
-          return;
-        }
-
-        const multiPlatformProducts = group.filter(p => {
-          let activeCount = 0;
-          platforms.forEach(plat => {
-            if (p[plat]) activeCount++;
-          });
-          return activeCount > 1;
-        });
-
-        if (multiPlatformProducts.length > 0) {
-          deduplicatedResult.push(...multiPlatformProducts);
-        } else {
-          const getGroupMinRank = (p) => {
-            let min = Infinity;
-            platforms.forEach(key => {
-              if (p[key] && p[key].ranking !== undefined && p[key].ranking !== null) {
-                const num = Number(p[key].ranking);
-                if (!isNaN(num) && num < min) min = num;
-              }
-            });
-            return min;
-          };
-
-          let bestP = group[0];
-          let bestRank = getGroupMinRank(group[0]);
-
-          for (let i = 1; i < group.length; i++) {
-            const currentRank = getGroupMinRank(group[i]);
-            if (currentRank < bestRank) {
-              bestRank = currentRank;
-              bestP = group[i];
-            }
-          }
-          deduplicatedResult.push(bestP);
-        }
-      });
-      result = deduplicatedResult;
-    }
-
     return result;
-  }, [searchedProducts, platformFilter, showMissing, useFilterToggle]);
+  }, [deduplicatedProducts, platformFilter, showMissing]);
 
   const sortedProducts = useMemo(() => {
     // If no grouping (no headers), just filter and sort normally
@@ -1330,7 +1345,7 @@ function CategoriesPageContent() {
 
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 px-3 py-1.5 mb-0.5">
-                <span className="text-sm font-medium text-gray-700">Filter</span>
+                <span className="text-sm font-medium text-gray-700">Hide Similar Name</span>
                 <Switch
                   checked={useFilterToggle}
                   onCheckedChange={setUseFilterToggle}
@@ -1463,7 +1478,10 @@ function CategoriesPageContent() {
 
       <ProductDetailsDialog
         isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
+        onClose={() => {
+          setIsDetailsOpen(false);
+          setSelectedProduct(null);
+        }}
         category={category}
         pincode={pincode}
         platformFilter={platformFilter}
@@ -1471,6 +1489,7 @@ function CategoriesPageContent() {
         historyLoading={historyLoading}
         stockData={stockData}
         selectedProduct={selectedProduct}
+        products={products}
         isAdmin={isAdmin}
         onRefresh={fetchCategoryData}
         onLocalUpdate={handleLocalProductUpdate}

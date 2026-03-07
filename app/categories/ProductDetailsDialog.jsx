@@ -12,10 +12,11 @@ function ProductDetailsDialog({
     historyLoading,
     stockData,
     selectedProduct,
+    products = [], // NEW Prop
     isAdmin = false,
-    onRefresh, // NEW Prop
-    onLocalUpdate, // NEW Prop
-    showToast // FIX: Added missing prop
+    onRefresh, 
+    onLocalUpdate, 
+    showToast 
 }) {
     if (!isOpen || !selectedProduct) return null;
 
@@ -49,17 +50,34 @@ function ProductDetailsDialog({
             <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold text-neutral-900">{selectedProduct.name}</h2>
-                            <button
-                                onClick={() => setIsEditOpen(true)}
-                                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200 rounded-full transition-colors cursor-pointer"
-                                title="Edit Product Details"
-                            >
-                                <Pencil size={16} />
-                            </button>
+                <div className="flex items-start justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
+                    <div className="flex gap-4 items-center">
+                        {/* Group Image Display */}
+                        {(selectedProduct.groupImage || selectedProduct.image) ? (
+                            <div className="w-14 h-14 bg-white border border-gray-200 rounded flex-none p-1 flex items-center justify-center overflow-hidden shrink-0">
+                                <img
+                                    src={selectedProduct.groupImage || selectedProduct.image}
+                                    alt="Group"
+                                    className="w-full h-full object-contain mix-blend-multiply"
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                />
+                            </div>
+                        ) : (
+                            <div className="w-14 h-14 bg-gray-100 border border-gray-200 rounded flex-none p-1 shrink-0 flex items-center justify-center text-[10px] text-gray-400">
+                                No Img
+                            </div>
+                        )}
+                        <div>
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-xl font-bold text-neutral-900">{selectedProduct.name}</h2>
+                                <button
+                                    onClick={() => setIsEditOpen(true)}
+                                    className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200 rounded-full transition-colors cursor-pointer"
+                                    title="Edit Product Details"
+                                >
+                                    <Pencil size={16} />
+                                </button>
+                            </div>
                         </div>
                         <div className="flex flex-col gap-1 mt-1">
                             <div className="flex gap-2 text-xs text-neutral-500">
@@ -219,6 +237,13 @@ function ProductDetailsDialog({
                                                     {data.ranking || 'N/A'}
                                                 </span>
                                             </div>
+
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-neutral-500">Brand:</span>
+                                                <span className={`text-neutral-700 font-medium text-xs ${!selectedProduct.brand ? 'italic text-neutral-400' : ''}`} title={selectedProduct.brand}>
+                                                    {selectedProduct.brand || 'N/A'}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -241,8 +266,57 @@ function ProductDetailsDialog({
                                             </div>
                                             <div className="flex gap-2">
                                                 <span className="text-neutral-400 font-medium min-w-[70px]">Subcategory:</span>
-                                                <span className="text-neutral-500 truncate flex-1" title={data.officialSubCategory}>
-                                                    {data.officialSubCategory || <span className="italic text-neutral-300">--</span>}
+                                                <span className="text-neutral-500 flex-1 break-words" title={(() => {
+                                                    if (!products || products.length === 0) return data.officialSubCategory || '';
+                                                    
+                                                    // Remove suffixes like __fresh-vegetables or -a
+                                                    const baseId = data.productId.split('__')[0].replace(/-[a-z]$/i, '');
+                                                    
+                                                    // Find all products on THIS platform that share the base ID
+                                                    const matchingCategories = new Set();
+                                                    
+                                                    products.forEach(p => {
+                                                        if (p[platform] && p[platform].productId) {
+                                                            const iterBaseId = p[platform].productId.split('__')[0].replace(/-[a-z]$/i, '');
+                                                            if (iterBaseId === baseId && p[platform].officialSubCategory) {
+                                                                matchingCategories.add(p[platform].officialSubCategory);
+                                                            }
+                                                        }
+                                                    });
+                                                    
+                                                    // If no array matching, fallback to its own
+                                                    if (matchingCategories.size === 0 && data.officialSubCategory) {
+                                                        matchingCategories.add(data.officialSubCategory);
+                                                    }
+                                                    
+                                                    return Array.from(matchingCategories).join(', ');
+                                                })()}>
+                                                    {(() => {
+                                                    if (!products || products.length === 0) return data.officialSubCategory || <span className="italic text-neutral-300">--</span>;
+                                                    
+                                                    // Remove suffixes like __fresh-vegetables or -a
+                                                    const baseId = data.productId.split('__')[0].replace(/-[a-z]$/i, '');
+                                                    
+                                                    // Find all products on THIS platform that share the base ID
+                                                    const matchingCategories = new Set();
+                                                    
+                                                    products.forEach(p => {
+                                                        if (p[platform] && p[platform].productId) {
+                                                            const iterBaseId = p[platform].productId.split('__')[0].replace(/-[a-z]$/i, '');
+                                                            if (iterBaseId === baseId && p[platform].officialSubCategory) {
+                                                                matchingCategories.add(p[platform].officialSubCategory);
+                                                            }
+                                                        }
+                                                    });
+                                                    
+                                                    // If no array matching, fallback to its own
+                                                    if (matchingCategories.size === 0 && data.officialSubCategory) {
+                                                        matchingCategories.add(data.officialSubCategory);
+                                                    }
+                                                    
+                                                    const result = Array.from(matchingCategories).join(', ');
+                                                    return result || <span className="italic text-neutral-300">--</span>;
+                                                })()}
                                                 </span>
                                             </div>
                                         </div>
