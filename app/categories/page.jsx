@@ -1345,7 +1345,7 @@ function CategoriesPageContent() {
 
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 px-3 py-1.5 mb-0.5">
-                <span className="text-sm font-medium text-gray-700">Hide Similar Name</span>
+                <span className="text-sm font-medium text-gray-700">Hide Similar</span>
                 <Switch
                   checked={useFilterToggle}
                   onCheckedChange={setUseFilterToggle}
