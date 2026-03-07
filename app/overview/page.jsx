@@ -65,6 +65,12 @@ function SkeletonTable() {
                     <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-full">
                         Pincodes / Regions
                     </th>
+                    {PLATFORMS.map(p => (
+                        <th key={p.id} className="sticky top-0 z-10 bg-neutral-100 border-b border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm text-center min-w-[140px]">
+                            {p.label}
+                        </th>
+                    ))}
+                    <th className="sticky top-0 right-0 z-20 bg-neutral-100 border-b border-gray-200 px-6 py-4 w-12"></th>
                 </tr>
             </thead>
             <tbody>
@@ -120,6 +126,14 @@ function OverviewContent() {
         }
     };
 
+    useEffect(() => {
+        // Pre-fetch all overview data once on component mount
+        PINCODE_OPTIONS.forEach(pinOption => {
+            fetchOverviewDataForPincode(pinOption.value);
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const handleToggleExpand = (pincodeStr) => {
         if (expandedPincode === pincodeStr) {
             setExpandedPincode(null);
@@ -138,6 +152,20 @@ function OverviewContent() {
             d.platform?.toLowerCase() === plat.toLowerCase()
         );
         return found || null;
+    };
+
+    const getTotalCountForPlatform = (pincodeStr, platformId) => {
+        const dataForPin = matrixDataByPincode[pincodeStr] || [];
+        return dataForPin
+            .filter(d => d.platform?.toLowerCase() === platformId.toLowerCase())
+            .reduce((sum, current) => sum + (current.count || 0), 0);
+    };
+
+    const getTotalBrandsForPlatform = (pincodeStr, platformId) => {
+        const dataForPin = matrixDataByPincode[pincodeStr] || [];
+        return dataForPin
+            .filter(d => d.platform?.toLowerCase() === platformId.toLowerCase())
+            .reduce((sum, current) => sum + (current.brandCount || 0), 0);
     };
 
     const handleGlobalRefresh = () => {
@@ -182,9 +210,15 @@ function OverviewContent() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr>
-                                    <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-full">
+                                    <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[250px]">
                                         Pincodes / Regions
                                     </th>
+                                    {PLATFORMS.map(p => (
+                                        <th key={p.id} className="sticky top-0 z-10 bg-neutral-100 border-b border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm text-center min-w-[140px]">
+                                            {p.label}
+                                        </th>
+                                    ))}
+                                    <th className="sticky top-0 right-0 z-20 bg-neutral-100 border-b border-gray-200 px-6 py-4 w-12"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -199,21 +233,53 @@ function OverviewContent() {
                                                 className={`cursor-pointer transition-colors ${isExpanded ? 'bg-blue-50/50' : (idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100')}`}
                                                 onClick={() => handleToggleExpand(pinOption.value)}
                                             >
-                                                <td className="sticky left-0 z-10 border-b border-gray-200 px-6 py-4 font-semibold text-neutral-800 bg-inherit flex items-center justify-between">
+                                                <td className="sticky left-0 z-10 border-b border-gray-200 px-6 py-4 font-semibold text-neutral-800 bg-inherit border-r">
                                                     <div>
                                                         <div className="text-base">{pinOption.label}</div>
                                                         <div className="text-xs text-neutral-400 font-mono mt-0.5">{pinOption.value}</div>
                                                     </div>
-                                                    <div className="text-gray-400">
-                                                        {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                                                    </div>
+                                                </td>
+
+                                                {PLATFORMS.map(plat => {
+                                                    const isAvailable = isPincodeAvailableForPlatform(pinOption.value, plat.id);
+                                                    const totalCount = getTotalCountForPlatform(pinOption.value, plat.id);
+                                                    const totalBrands = getTotalBrandsForPlatform(pinOption.value, plat.id);
+                                                    const hasData = totalCount > 0;
+
+                                                    return (
+                                                        <td key={plat.id} className="border-b border-gray-200 px-6 py-4 text-center align-middle">
+                                                            {isLoadingThisPincode ? (
+                                                                <Loader2 className="animate-spin text-gray-400 mx-auto" size={20} />
+                                                            ) : hasData ? (
+                                                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-800 font-bold rounded-md border border-green-200">
+                                                                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                                                    <div className="flex flex-col text-left justify-center">
+                                                                        <span className="text-[10px] leading-[1.15] text-green-700">P: {totalCount}</span>
+                                                                        {totalBrands > 0 && <span className="text-[9px] leading-[1.15] text-green-600/80 font-semibold">B: {totalBrands}</span>}
+                                                                    </div>
+                                                                </div>
+                                                            ) : isAvailable ? (
+                                                                <div className="inline-flex items-center px-2.5 py-0.5 bg-yellow-50 text-yellow-700 font-bold rounded-full text-xs border border-yellow-200 shadow-sm">
+                                                                    Not Scraped
+                                                                </div>
+                                                            ) : (
+                                                                <div className="inline-flex items-center px-2.5 py-0.5 bg-red-50 text-red-600 font-bold rounded-full text-xs border border-red-200 shadow-sm">
+                                                                    U/S
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                })}
+
+                                                <td className="border-b border-gray-200 px-6 py-4 text-gray-400 text-right">
+                                                    {isExpanded ? <ChevronUp size={20} className="ml-auto" /> : <ChevronDown className="ml-auto" size={20} />}
                                                 </td>
                                             </tr>
 
                                             {/* Expanded Content: Category x Platform Matrix */}
                                             {isExpanded && (
                                                 <tr>
-                                                    <td className="p-0 border-b border-gray-200 bg-gray-50">
+                                                    <td colSpan={PLATFORMS.length + 2} className="p-0 border-b border-gray-200 bg-gray-50">
                                                         {isLoadingThisPincode ? (
                                                             <div className="p-8 flex justify-center items-center">
                                                                 <Loader2 className="animate-spin text-gray-400" size={32} />
@@ -244,6 +310,7 @@ function OverviewContent() {
                                                                                     const isAvailable = isPincodeAvailableForPlatform(pinOption.value, plat.id);
                                                                                     const cellData = getCellData(pinOption.value, cat, plat.id);
                                                                                     const count = cellData ? cellData.count : 0;
+                                                                                    const brandCount = cellData ? (cellData.brandCount || 0) : 0;
                                                                                     const hasData = count > 0;
 
                                                                                     let dateStr = '';
@@ -256,13 +323,15 @@ function OverviewContent() {
                                                                                         <td key={plat.id} className="border-b border-gray-100 px-6 py-3 text-center align-top">
                                                                                             <div className="flex flex-col items-center justify-center min-h-[48px]">
                                                                                                 {hasData ? (
-                                                                                                    <>
-                                                                                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-green-50 text-green-700 font-bold rounded-full text-xs border border-green-200 mb-1.5">
-                                                                                                            <span>Yes</span>
-                                                                                                            <span className="opacity-70 text-[10px] font-semibold">({count})</span>
+                                                                                                    <div className="flex flex-col items-center gap-1">
+                                                                                                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-800 font-bold rounded-md border border-green-200 min-w-[70px] justify-center">
+                                                                                                            <div className="flex flex-col text-center justify-center">
+                                                                                                                <span className="text-[10px] leading-[1.15] text-green-700">P: {count}</span>
+                                                                                                                {brandCount > 0 && <span className="text-[9px] leading-[1.15] text-green-600/80 font-semibold">B: {brandCount}</span>}
+                                                                                                            </div>
                                                                                                         </div>
-                                                                                                        <span className="text-[10px] text-gray-500 font-medium whitespace-nowrap bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">{dateStr}</span>
-                                                                                                    </>
+                                                                                                        <span className="text-[9px] text-gray-500 font-medium whitespace-nowrap bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">{dateStr}</span>
+                                                                                                    </div>
                                                                                                 ) : isAvailable ? (
                                                                                                     <div className="inline-flex items-center px-2.5 py-0.5 bg-yellow-50 text-yellow-700 font-bold rounded-full text-xs border border-yellow-200 shadow-sm">
                                                                                                         Not Scraped
