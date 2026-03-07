@@ -4,31 +4,61 @@ import ProductSnapshot from '@/models/ProductSnapshot';
 import categoriesData from '@/app/utils/categories_with_urls.json';
 
 // Helper to map raw category names to the Frontend's masterCategory
-function getMasterCategory(platform, rawCategory) {
-    if (!rawCategory) return "Other";
-    const rawLower = rawCategory.toLowerCase();
+function getMasterCategory(platform, officialCategory, category) {
+    if (!officialCategory && !category) return "Other";
+    
+    const officialLower = officialCategory ? officialCategory.toLowerCase() : "";
+    const catLower = category ? category.toLowerCase() : "";
+    const rawCategory = category || officialCategory; // preference for category as fallback
+    
+    const allItems = Object.values(categoriesData).flat();
+    
+    // 1. Direct Master Category Match: 
+    // If the database gave us a category string that is ALREADY exactly one of our allowed master categories, trust it immediately.
+    const exactMasterCat = allItems.find(item => item.masterCategory?.toLowerCase() === catLower);
+    if (exactMasterCat) return exactMasterCat.masterCategory;
+
+    const exactMasterOff = allItems.find(item => item.masterCategory?.toLowerCase() === officialLower);
+    if (exactMasterOff) return exactMasterOff.masterCategory;
+
     const platKey = Object.keys(categoriesData).find(k => k.toLowerCase() === platform.toLowerCase());
 
-    // First try platform specific
+    // 2. First try platform specific
     if (platKey && categoriesData[platKey]) {
-        const match = categoriesData[platKey].find(item =>
-            item.officialCategory?.toLowerCase() === rawLower ||
-            item.category?.toLowerCase() === rawLower
-        );
+        const match = categoriesData[platKey].find(item => {
+            const itemOff = item.officialCategory?.toLowerCase();
+            const itemCat = item.category?.toLowerCase();
+            
+            // Many JSON items lack 'category' and only have 'officialCategory'. 
+            // If the DB category matches the JSON officialCategory (like Blinkit)
+            if (catLower && itemOff === catLower) return true;
+            if (officialLower && itemOff === officialLower && !itemCat) return true;
+            if (catLower && itemCat === catLower) return true;
+            if (officialLower && itemCat === officialLower) return true;
+            
+            return false;
+        });
         if (match && match.masterCategory) return match.masterCategory;
     }
 
-    // Fallback: search across all platforms
-    const allItems = Object.values(categoriesData).flat();
-    const fallbackMatch = allItems.find(item =>
-        item.officialCategory?.toLowerCase() === rawLower ||
-        item.category?.toLowerCase() === rawLower
-    );
+    // 3. Fallback: search across all platforms
+    const fallbackMatch = allItems.find(item => {
+        const itemOff = item.officialCategory?.toLowerCase();
+        const itemCat = item.category?.toLowerCase();
+        
+        if (catLower && itemOff === catLower) return true;
+        if (officialLower && itemOff === officialLower && !itemCat) return true;
+        if (catLower && itemCat === catLower) return true;
+        if (officialLower && itemCat === officialLower) return true;
+        
+        return false;
+    });
     if (fallbackMatch && fallbackMatch.masterCategory) return fallbackMatch.masterCategory;
 
-    // Hardcoded fuzzy fallbacks for common mismatches not in JSON
-    if (rawLower.includes('fruit') && rawLower.includes('veg')) return 'Fruits & Vegetables';
-    if (rawLower.includes('masala') && rawLower.includes('dry')) return 'Masala, Dry Fruits & More';
+    // 4. Hardcoded fuzzy fallbacks for common mismatches not in JSON
+    const combinedStr = `${officialLower} ${catLower}`;
+    if (combinedStr.includes('fruit') && combinedStr.includes('veg')) return 'Fruits & Vegetables';
+    if (combinedStr.includes('masala') && combinedStr.includes('dry')) return 'Masala, Dry Fruits & More';
 
     return rawCategory; // fallback to whatever it is natively
 }
@@ -61,7 +91,8 @@ export async function GET(request) {
             {
                 $group: {
                     _id: {
-                        category: { $ifNull: ["$officialCategory", "$category"] },
+                        officialCategory: "$officialCategory",
+                        category: "$category",
                         platform: { $toLower: "$platform" },
                         scrapedAt: "$scrapedAt"
                     },
@@ -74,6 +105,7 @@ export async function GET(request) {
             {
                 $group: {
                     _id: {
+                        officialCategory: "$_id.officialCategory",
                         category: "$_id.category",
                         platform: "$_id.platform"
                     },
@@ -85,6 +117,7 @@ export async function GET(request) {
             {
                 $project: {
                     _id: 0,
+                    officialCategory: "$_id.officialCategory",
                     category: "$_id.category",
                     platform: "$_id.platform",
                     count: 1,
@@ -100,7 +133,7 @@ export async function GET(request) {
         const maxDatePerCategory = {};
 
         rawResults.forEach(r => {
-            const masterCat = getMasterCategory(r.platform, r.category);
+            const masterCat = getMasterCategory(r.platform, r.officialCategory, r.category);
             const key = `${masterCat}_${r.platform}_${r.latestScrapedAt}`;
 
             // Track the absolute highest scrape date across ALL platforms for this master category
