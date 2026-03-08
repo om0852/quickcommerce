@@ -180,62 +180,95 @@ function CategoriesPageContent() {
     });
   }, [products, searchQuery]);
 
-  // Apply deduplication filter second (Hide Similar Name)
+  // Apply deduplication filter (Hide Similar — by base productId, same logic as ProductDetailsDialog)
   const deduplicatedProducts = useMemo(() => {
     let result = searchedProducts;
 
     if (useFilterToggle) {
-      const nameGroups = {};
-      result.forEach(p => {
-        const n = (p.name || '').trim().toLowerCase();
-        if (!nameGroups[n]) nameGroups[n] = [];
-        nameGroups[n].push(p);
-      });
-
-      const deduplicatedResult = [];
       const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
 
-      Object.values(nameGroups).forEach(group => {
+      // Strip __category-suffix and trailing -a/b to get the canonical base ID
+      const getBaseId = (productId) =>
+        productId.split('__')[0].replace(/-[a-z]$/i, '');
+
+      const n = result.length;
+
+      // Union-Find to cluster products sharing the same (platform, baseId)
+      const parent = Array.from({ length: n }, (_, i) => i);
+      const find = (i) => {
+        while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; }
+        return i;
+      };
+      const union = (i, j) => {
+        const pi = find(i), pj = find(j);
+        if (pi !== pj) parent[pi] = pj;
+      };
+
+      // Map "platform:baseId" -> first index seen; union when same base ID found
+      const baseIdMap = {};
+      result.forEach((p, i) => {
+        // DEBUG: log productIds for products whose name includes 'amla'
+        if ((p.name || '').toLowerCase().includes('amla')) {
+          const ids = {};
+          platforms.forEach(plat => { if (p[plat]?.productId) ids[plat] = { raw: p[plat].productId, base: getBaseId(p[plat].productId) }; });
+          console.log('[HideSimilar DEBUG]', p.name, ids);
+        }
+        platforms.forEach(plat => {
+          const pid = p[plat]?.productId;
+          if (pid) {
+            const key = `${plat}:${getBaseId(pid)}`;
+            if (baseIdMap[key] !== undefined) {
+              union(i, baseIdMap[key]);
+            } else {
+              baseIdMap[key] = i;
+            }
+          }
+        });
+      });
+
+      // Group by Union-Find root
+      const groups = {};
+      result.forEach((p, i) => {
+        const root = find(i);
+        if (!groups[root]) groups[root] = [];
+        groups[root].push(p);
+      });
+
+      const getPlatformCount = (p) => platforms.filter(plat => p[plat]).length;
+      const getMinRank = (p) => {
+        let min = Infinity;
+        platforms.forEach(key => {
+          if (p[key]?.ranking !== undefined && p[key]?.ranking !== null) {
+            const num = Number(p[key].ranking);
+            if (!isNaN(num) && num < min) min = num;
+          }
+        });
+        return min;
+      };
+
+      const deduplicatedResult = [];
+      Object.values(groups).forEach(group => {
         if (group.length === 1) {
           deduplicatedResult.push(group[0]);
           return;
         }
 
-        const multiPlatformProducts = group.filter(p => {
-          let activeCount = 0;
-          platforms.forEach(plat => {
-            if (p[plat]) activeCount++;
-          });
-          return activeCount > 1;
-        });
-
-        if (multiPlatformProducts.length > 0) {
-          deduplicatedResult.push(...multiPlatformProducts);
+        // Prefer rows present on more than 1 platform (they're "richer")
+        const multiPlatform = group.filter(p => getPlatformCount(p) > 1);
+        if (multiPlatform.length > 0) {
+          deduplicatedResult.push(...multiPlatform);
         } else {
-          const getGroupMinRank = (p) => {
-            let min = Infinity;
-            platforms.forEach(key => {
-              if (p[key] && p[key].ranking !== undefined && p[key].ranking !== null) {
-                const num = Number(p[key].ranking);
-                if (!isNaN(num) && num < min) min = num;
-              }
-            });
-            return min;
-          };
-
+          // All single-platform: keep only the one with the lowest rank
           let bestP = group[0];
-          let bestRank = getGroupMinRank(group[0]);
-
+          let bestRank = getMinRank(group[0]);
           for (let i = 1; i < group.length; i++) {
-            const currentRank = getGroupMinRank(group[i]);
-            if (currentRank < bestRank) {
-              bestRank = currentRank;
-              bestP = group[i];
-            }
+            const r = getMinRank(group[i]);
+            if (r < bestRank) { bestRank = r; bestP = group[i]; }
           }
           deduplicatedResult.push(bestP);
         }
       });
+
       result = deduplicatedResult;
     }
 
