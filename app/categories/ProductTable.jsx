@@ -65,6 +65,7 @@ import ProductEditDialog from './ProductEditDialog'; // NEW Import
 
 const ProductTable = React.memo(function ProductTable({
     products,
+    allFilteredProducts,
     sortConfig,
     onSort,
     onProductClick,
@@ -73,6 +74,7 @@ const ProductTable = React.memo(function ProductTable({
     onSearchChange,
     platformCounts,
     totalPlatformCounts, // NEW Prop
+    platformFilter,
     pincode,
     onRefresh,
     showNewFirst,
@@ -115,10 +117,13 @@ const ProductTable = React.memo(function ProductTable({
     };
 
     const newlyAddedCount = useMemo(() => {
-        if (!products) return 0;
-        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+        const productsToCount = allFilteredProducts || products;
+        if (!productsToCount) return 0;
+        const platforms = platformFilter && platformFilter !== 'all' 
+            ? [platformFilter] 
+            : ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
         let count = 0;
-        products.forEach(p => {
+        productsToCount.forEach(p => {
             if (!p.isHeader) {
                 if (platforms.some(plat => p[plat]?.new === true)) {
                     count++;
@@ -126,7 +131,7 @@ const ProductTable = React.memo(function ProductTable({
             }
         });
         return count;
-    }, [products]);
+    }, [allFilteredProducts, products, platformFilter]);
 
     const handlePriceSort = (direction) => {
         onSort('averagePrice', direction);

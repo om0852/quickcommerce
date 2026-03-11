@@ -166,17 +166,33 @@ function ProductDetailsDialog({
                                         {/* info section */}
                                         <div className="flex-1 space-y-2 text-sm">
                                             <div className="mb-2">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text break-all" title="Product ID">
-                                                        PID: {data.productId}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => handleCopy(data.productId)}
-                                                        className="text-neutral-400 hover:text-neutral-600 transition-colors p-0.5 rounded cursor-pointer"
-                                                        title="Copy PID"
-                                                    >
-                                                        {copiedId === data.productId ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
-                                                    </button>
+                                                <div className="flex flex-col gap-1 mb-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text break-all" title="Product ID">
+                                                            PID: {data.productId.split('__')[0].replace(/-[a-z]$/i, '')}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => handleCopy(data.productId.split('__')[0].replace(/-[a-z]$/i, ''))}
+                                                            className="text-neutral-400 hover:text-neutral-600 transition-colors p-0.5 rounded cursor-pointer"
+                                                            title="Copy PID"
+                                                        >
+                                                            {copiedId === data.productId.split('__')[0].replace(/-[a-z]$/i, '') ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+                                                        </button>
+                                                    </div>
+                                                    {isAdmin && (
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-mono px-1.5 py-0.5 rounded select-all cursor-text break-all" title="Admin ID (Full Data ID)">
+                                                                AID: {data.productId}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => handleCopy(data.productId)}
+                                                                className="text-neutral-400 hover:text-neutral-600 transition-colors p-0.5 rounded cursor-pointer"
+                                                                title="Copy AID"
+                                                            >
+                                                                {copiedId === data.productId ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <span className="font-medium text-neutral-900 text-sm block line-clamp-2 h-10 mb-1" title={data.productName || data.name}>
                                                     {data.productName || data.name}
@@ -266,8 +282,14 @@ function ProductDetailsDialog({
                                             </div>
                                             <div className="flex gap-2">
                                                 <span className="text-neutral-400 font-medium min-w-[70px]">Subcategory:</span>
-                                                <span className="text-neutral-500 flex-1 break-words" title={(() => {
-                                                    if (!products || products.length === 0) return data.officialSubCategory || '';
+                                                <span className="text-neutral-700 flex-1 break-words" title={data.officialSubCategory}>
+                                                    {data.officialSubCategory || <span className="italic text-neutral-300">--</span>}
+                                                </span>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <span className="text-neutral-400 font-medium min-w-[70px] leading-tight mt-0.5">Other<br />Subcategories:</span>
+                                                <span className="text-neutral-500 flex-1 break-words text-[11px] leading-snug" title={(() => {
+                                                    if (!products || products.length === 0) return '';
                                                     
                                                     // Remove suffixes like __fresh-vegetables or -a
                                                     const baseId = data.productId.split('__')[0].replace(/-[a-z]$/i, '');
@@ -278,21 +300,16 @@ function ProductDetailsDialog({
                                                     products.forEach(p => {
                                                         if (p[platform] && p[platform].productId) {
                                                             const iterBaseId = p[platform].productId.split('__')[0].replace(/-[a-z]$/i, '');
-                                                            if (iterBaseId === baseId && p[platform].officialSubCategory) {
+                                                            if (iterBaseId === baseId && p[platform].officialSubCategory && p[platform].officialSubCategory !== data.officialSubCategory) {
                                                                 matchingCategories.add(p[platform].officialSubCategory);
                                                             }
                                                         }
                                                     });
-                                                    
-                                                    // If no array matching, fallback to its own
-                                                    if (matchingCategories.size === 0 && data.officialSubCategory) {
-                                                        matchingCategories.add(data.officialSubCategory);
-                                                    }
                                                     
                                                     return Array.from(matchingCategories).join(', ');
                                                 })()}>
                                                     {(() => {
-                                                    if (!products || products.length === 0) return data.officialSubCategory || <span className="italic text-neutral-300">--</span>;
+                                                    if (!products || products.length === 0) return <span className="italic text-neutral-300">--</span>;
                                                     
                                                     // Remove suffixes like __fresh-vegetables or -a
                                                     const baseId = data.productId.split('__')[0].replace(/-[a-z]$/i, '');
@@ -303,16 +320,11 @@ function ProductDetailsDialog({
                                                     products.forEach(p => {
                                                         if (p[platform] && p[platform].productId) {
                                                             const iterBaseId = p[platform].productId.split('__')[0].replace(/-[a-z]$/i, '');
-                                                            if (iterBaseId === baseId && p[platform].officialSubCategory) {
+                                                            if (iterBaseId === baseId && p[platform].officialSubCategory && p[platform].officialSubCategory !== data.officialSubCategory) {
                                                                 matchingCategories.add(p[platform].officialSubCategory);
                                                             }
                                                         }
                                                     });
-                                                    
-                                                    // If no array matching, fallback to its own
-                                                    if (matchingCategories.size === 0 && data.officialSubCategory) {
-                                                        matchingCategories.add(data.officialSubCategory);
-                                                    }
                                                     
                                                     const result = Array.from(matchingCategories).join(', ');
                                                     return result || <span className="italic text-neutral-300">--</span>;

@@ -273,7 +273,38 @@ export default function GroupManagementDialog({
                                     className="w-full px-3 py-2.5 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
                                     placeholder="Enter Product ID..."
                                     value={addProductState.productId}
-                                    onChange={e => setAddProductState(prev => ({ ...prev, productId: e.target.value }))}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        setAddProductState(prev => {
+                                            const nextState = { ...prev, productId: val };
+                                            
+                                            // Auto-detect platform logic
+                                            const guessPlatformFromId = (id) => {
+                                                if (!id) return null;
+                                                const ZeptoRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}__/i;
+                                                const JioMartRegex = /^[0-9]+_P__/i;
+                                                const FlipkartRegex = /^[A-Z0-9]{16}__/i;
+                                                const InstamartRegex = /^[A-Z0-9]{10}__/i;
+                                                const DMartRegex = /^[0-9]{7}__/i;
+                                                const BlinkitRegex = /^[0-9]{6}__/i;
+
+                                                if (ZeptoRegex.test(id)) return 'zepto';
+                                                if (JioMartRegex.test(id)) return 'jiomart';
+                                                if (FlipkartRegex.test(id)) return 'flipkartMinutes';
+                                                if (InstamartRegex.test(id)) return 'instamart';
+                                                if (DMartRegex.test(id)) return 'dmart';
+                                                if (BlinkitRegex.test(id)) return 'blinkit';
+                                                return null;
+                                            };
+                                            
+                                            const guessedPlatform = guessPlatformFromId(val);
+                                            if (guessedPlatform) {
+                                                nextState.platform = guessedPlatform;
+                                            }
+                                            
+                                            return nextState;
+                                        });
+                                    }}
                                 />
                             </div>
                             <div className="sm:col-span-2 lg:col-span-3">

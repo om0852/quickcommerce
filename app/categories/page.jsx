@@ -4,8 +4,8 @@ import { useSearchParams } from 'next/navigation';
 
 
 import { Switch } from '@/components/ui/switch';
-import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight, Loader2 } from 'lucide-react';
-import { Snackbar, Alert } from '@mui/material'; // NEW Import
+import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight, Loader2, Info } from 'lucide-react';
+import { Snackbar, Alert, Tooltip as MuiTooltip } from '@mui/material'; // NEW Import
 import AnalyticsTab from './AnalyticsTab';
 import StockAnalysisTab from './StockAnalysisTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
@@ -1378,7 +1378,12 @@ function CategoriesPageContent() {
 
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 px-3 py-1.5 mb-0.5">
-                <span className="text-sm font-medium text-gray-700">Hide Similar</span>
+                <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                  Hide Similar
+                  <MuiTooltip title="Groups duplicate products across platforms. This feature hides the same product which is present in other subcategories." arrow placement="top">
+                    <Info size={14} className="text-gray-400 hover:text-gray-600 transition-colors cursor-help outline-none" />
+                  </MuiTooltip>
+                </span>
                 <Switch
                   checked={useFilterToggle}
                   onCheckedChange={setUseFilterToggle}
@@ -1389,7 +1394,12 @@ function CategoriesPageContent() {
                 "flex items-center gap-3 px-3 py-1.5 mb-0.5 transition-opacity duration-200",
                 platformFilter === 'all' ? "opacity-50 blur-[0.5px] pointer-events-none grayscale" : ""
               )}>
-                <span className="text-sm font-medium text-gray-700">Show Missing</span>
+                <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                  Show Missing
+                  <MuiTooltip title="Shows products that are missing from the selected platform but available on others." arrow placement="top">
+                    <Info size={14} className="text-gray-400 hover:text-gray-600 transition-colors cursor-help outline-none" />
+                  </MuiTooltip>
+                </span>
                 <Switch
                   checked={showMissing}
                   onCheckedChange={setShowMissing}
@@ -1429,6 +1439,7 @@ function CategoriesPageContent() {
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex-1">
               <ProductTable
                 products={paginatedProducts}
+                allFilteredProducts={sortedProducts}
                 sortConfig={sortConfig}
                 onSort={requestSort}
                 loading={loading}
@@ -1452,6 +1463,7 @@ function CategoriesPageContent() {
                 }}
                 platformCounts={platformCounts}
                 totalPlatformCounts={totalPlatformCounts}
+                platformFilter={platformFilter}
                 pincode={pincode}
                 onRefresh={fetchCategoryData}
                 showNewFirst={showNewFirst}
