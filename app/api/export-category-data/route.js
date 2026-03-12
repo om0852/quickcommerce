@@ -230,7 +230,9 @@ async function processExportInBackground(body) {
                             pincode: pin,
                             category: cat,
                             productName: productRow.name,
-                            productWeight: productRow.weight || 'N/A'
+                            productWeight: productRow.weight || 'N/A',
+                            // Store productRow reference for hide-similar computation (removed before Excel write)
+                            _productRowRef: productRow
                         };
 
                         // Fill Platform Columns
@@ -248,7 +250,10 @@ async function processExportInBackground(body) {
                                 excelRow[`${p}_rank`] = pData.ranking || '-';
                                 excelRow[`${p}_combo`] = pData.combo || '-';
                                 excelRow[`${p}_quantity`] = pData.quantity || '-';
-                                excelRow[`${p}_deliveryTime`] = pData.deliveryTime || '-';
+                                excelRow[`${p}_deliveryTime`] = pData.deliveryTime
+                                    ? (pData.deliveryTime.match(/^\d+\s*mins?/i)?.[0] || pData.deliveryTime)
+                                    : '-';
+                                excelRow[`${p}_isNew`] = pData.new === true ? 'New' : 'Old';
 
                                 // Change fields
                                 excelRow[`${p}_priceChange`] = pData.priceChange;
@@ -302,14 +307,106 @@ async function processExportInBackground(body) {
                                 excelRow[`${p}_rankingChange`] = '-';
                                 excelRow[`${p}_officialCategory`] = '-';
                                 excelRow[`${p}_officialSubCategory`] = '-';
+                                excelRow[`${p}_isNew`] = '-';
                             }
                         });
 
                         allProcessedRows.push(excelRow);
                     }
                 } // End Group Loop
+
+                // --- Compute Hide Similar Status for this pincode+category block ---
+                // Mirrors the UI's Union-Find deduplication ("Hide Similar" toggle)
+                const blockRows = allProcessedRows.filter(r => r.pincode === pin && r.category === cat);
+                const blockPlatforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+
+                const getBaseId = (productId) =>
+                    productId.split('__')[0].replace(/-[a-z]$/i, '');
+
+                const nBlock = blockRows.length;
+                const parent = Array.from({ length: nBlock }, (_, i) => i);
+                const find = (i) => {
+                    while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; }
+                    return i;
+                };
+                const union = (i, j) => {
+                    const pi = find(i), pj = find(j);
+                    if (pi !== pj) parent[pi] = pj;
+                };
+
+                const baseIdMap = {};
+                blockRows.forEach((row, i) => {
+                    const pr = row._productRowRef;
+                    if (!pr) return;
+                    blockPlatforms.forEach(plat => {
+                        const pid = pr[plat]?.productId;
+                        if (pid) {
+                            const key = `${plat}:${getBaseId(pid)}`;
+                            if (baseIdMap[key] !== undefined) {
+                                union(i, baseIdMap[key]);
+                            } else {
+                                baseIdMap[key] = i;
+                            }
+                        }
+                    });
+                });
+
+                // Group indices by Union-Find root
+                const ufGroups = {};
+                blockRows.forEach((_, i) => {
+                    const root = find(i);
+                    if (!ufGroups[root]) ufGroups[root] = [];
+                    ufGroups[root].push(i);
+                });
+
+                const getPlatformCount = (pr) => blockPlatforms.filter(p => pr[p]).length;
+                const getMinRank = (pr) => {
+                    let min = Infinity;
+                    blockPlatforms.forEach(key => {
+                        if (pr[key]?.ranking !== undefined && pr[key]?.ranking !== null) {
+                            const num = Number(pr[key].ranking);
+                            if (!isNaN(num) && num < min) min = num;
+                        }
+                    });
+                    return min;
+                };
+
+                // Determine which indices are "Present" (kept) vs "Hide" (filtered out)
+                const presentIndices = new Set();
+                Object.values(ufGroups).forEach(group => {
+                    if (group.length === 1) {
+                        presentIndices.add(group[0]);
+                        return;
+                    }
+                    const multiPlatform = group.filter(i => {
+                        const pr = blockRows[i]._productRowRef;
+                        return pr && getPlatformCount(pr) > 1;
+                    });
+                    if (multiPlatform.length > 0) {
+                        multiPlatform.forEach(i => presentIndices.add(i));
+                    } else {
+                        // All single-platform: keep only lowest-rank one
+                        let bestIdx = group[0];
+                        let bestRank = getMinRank(blockRows[group[0]]._productRowRef || {});
+                        for (let k = 1; k < group.length; k++) {
+                            const pr = blockRows[group[k]]._productRowRef || {};
+                            const r = getMinRank(pr);
+                            if (r < bestRank) { bestRank = r; bestIdx = group[k]; }
+                        }
+                        presentIndices.add(bestIdx);
+                    }
+                });
+
+                // Annotate each row
+                blockRows.forEach((row, i) => {
+                    row.hideSimilarStatus = presentIndices.has(i) ? 'Present' : 'Hide';
+                });
+
             } // End Pincode Loop
         } // End Category Loop
+
+        // Remove temporary _productRowRef before writing to Excel
+        allProcessedRows.forEach(row => { delete row._productRowRef; });
 
         if (allProcessedRows.length === 0) {
             console.warn('⚠️ Background Export: No data found for the selected filters');
@@ -379,6 +476,7 @@ async function processExportInBackground(body) {
             { header: 'Category', key: 'category', width: 15 },
             { header: 'Product Name', key: 'productName', width: 30 },
             { header: 'Weight', key: 'productWeight', width: 10 },
+            { header: 'Hide Similar Status', key: 'hideSimilarStatus', width: 20 },
         ];
 
         // Add Dynamic Columns for each Platform
@@ -396,6 +494,7 @@ async function processExportInBackground(body) {
                 { header: `${pName} Delivery`, key: `${platform}_deliveryTime`, width: 15 },
                 { header: `${pName} Quantity`, key: `${platform}_quantity`, width: 12 },
                 { header: `${pName} Combo`, key: `${platform}_combo`, width: 12 },
+                { header: `${pName} Is New`, key: `${platform}_isNew`, width: 10 },
                 { header: `${pName} Link`, key: `${platform}_link`, width: 15 },
 
                 // Official Category Columns
@@ -418,6 +517,16 @@ async function processExportInBackground(body) {
         // Populate Rows
         allProcessedRows.forEach(row => {
             const excelRow = worksheet.addRow(row);
+
+            // Hide Similar Status column styling
+            const hideCell = excelRow.getCell('hideSimilarStatus');
+            if (hideCell.value === 'Hide') {
+                hideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } }; // Light Red
+                hideCell.font = { color: { argb: 'FF991B1B' }, bold: true }; // Dark Red
+            } else if (hideCell.value === 'Present') {
+                hideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } }; // Light Green
+                hideCell.font = { color: { argb: 'FF166534' }, bold: true }; // Dark Green
+            }
 
             // Conditional Formatting
             allPlatforms.forEach(platform => {
@@ -443,6 +552,13 @@ async function processExportInBackground(body) {
                     stockCell.font = { color: { argb: 'FF166534' } };
                 } else if (stockCell.value === 'Out of Stock') {
                     stockCell.font = { color: { argb: 'FFDC2626' } };
+                }
+
+                // Is New column styling
+                const isNewCell = excelRow.getCell(`${platform}_isNew`);
+                if (isNewCell.value === 'New') {
+                    isNewCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }; // Light Blue
+                    isNewCell.font = { color: { argb: 'FF1E40AF' }, bold: true }; // Dark Blue
                 }
 
                 // Format link cells as hyperlinks
