@@ -236,7 +236,9 @@ function ProductDetailsDialog({
                                             <div className="flex justify-between items-center">
                                                 <span className="text-neutral-500">Delivery:</span>
                                                 <span className={`text-neutral-700 font-medium text-xs ${!data.deliveryTime ? 'italic text-neutral-400' : ''}`}>
-                                                    {data.deliveryTime || 'N/A'}
+                                                    {data.deliveryTime
+                                                        ? (data.deliveryTime.match(/^\d+\s*mins?/i)?.[0] || data.deliveryTime)
+                                                        : 'N/A'}
                                                 </span>
                                             </div>
 

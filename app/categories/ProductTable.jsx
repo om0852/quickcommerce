@@ -146,6 +146,28 @@ const ProductTable = React.memo(function ProductTable({
         });
     };
 
+    const formatProductName = (name) => {
+        if (!name) return '';
+        if (name.includes(' - ')) {
+            const [firstPart, ...rest] = name.split(' - ');
+            return (
+                <>
+                    <span className="font-extrabold text-neutral-900">{firstPart}</span>
+                    {" - "}{rest.join(' - ')}
+                </>
+            );
+        } else if (name.includes(' -')) {
+            const [firstPart, ...rest] = name.split(' -');
+            return (
+                <>
+                    <span className="font-extrabold text-neutral-900">{firstPart}</span>
+                    {" -"}{rest.join(' -')}
+                </>
+            );
+        }
+        return name;
+    };
+
     return (
         <>
             <Paper
@@ -552,7 +574,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     </div>
                                                     <div className="w-full min-w-0">
                                                         <div className="text-sm font-medium text-neutral-900 whitespace-normal break-words" title={product.name}>
-                                                            {product.name}
+                                                            {formatProductName(product.name)}
                                                             {((product.weight && product.weight !== 'N/A') || product.quantity) && (
                                                                 <span className="text-neutral-500 font-normal"> - ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})</span>
                                                             )}

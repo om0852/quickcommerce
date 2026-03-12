@@ -166,6 +166,28 @@ export default function GroupManagementDialog({
         }
     };
 
+    const formatProductName = (name) => {
+        if (!name) return '';
+        if (name.includes(' - ')) {
+            const [firstPart, ...rest] = name.split(' - ');
+            return (
+                <>
+                    <span className="font-extrabold text-neutral-900">{firstPart}</span>
+                    {" - "}{rest.join(' - ')}
+                </>
+            );
+        } else if (name.includes(' -')) {
+            const [firstPart, ...rest] = name.split(' -');
+            return (
+                <>
+                    <span className="font-extrabold text-neutral-900">{firstPart}</span>
+                    {" -"}{rest.join(' -')}
+                </>
+            );
+        }
+        return name;
+    };
+
     // Flatten the products for list view
     // The `productsInGroup` prop passed from parent should be the `product` object from the table.
     // It has keys like 'zepto', 'blinkit', etc.
@@ -233,7 +255,7 @@ export default function GroupManagementDialog({
                                         </div>
                                         <div className="space-y-2">
                                             <p className="text-sm font-semibold text-neutral-900 line-clamp-2">
-                                                {item.productName || item.name}
+                                                {formatProductName(item.productName || item.name)}
                                             </p>
                                             <div className="p-2 bg-neutral-50 rounded border border-neutral-200">
                                                 <p className="text-[10px] text-neutral-500 font-medium">Product ID</p>
