@@ -8,6 +8,7 @@ import ExcelJS from 'exceljs';
 import _ from 'lodash';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { mergeProductsAcrossPlatforms } from '@/lib/productMatching';
 import categoryData from '@/app/utils/categories_with_urls.json';
 
@@ -202,17 +203,19 @@ async function processExportInBackground(body) {
                                 originalPrice: snap.originalPrice,
                                 discountPercentage: snap.discountPercentage,
                                 isOutOfStock: snap.isOutOfStock,
-                                productUrl: snap.productUrl,
+                                // Robust link handling: search for any field that might contain the URL
+                                productUrl: snap.productUrl || snap.url || snap.link || snap.productLink || '',
                                 isAd: snap.isAd,
                                 rating: snap.rating,
                                 ranking: snap.ranking,
                                 deliveryTime: snap.deliveryTime,
-                                quantity: snap.quantity,
+                                // Capture quantity and weight for fallback
+                                quantity: snap.quantity || '',
+                                productWeight: snap.productWeight || snap.weight || '',
                                 combo: snap.combo,
                                 priceChange: snap.priceChange || 0,
                                 discountChange: snap.discountChange || 0,
                                 rankingChange: snap.rankingChange || 0,
-                                productWeight: snap.productWeight,
                                 categoryUrl: snap.categoryUrl,
                                 officialCategory: snap.officialCategory,
                                 officialSubCategory: snap.officialSubCategory
@@ -249,7 +252,16 @@ async function processExportInBackground(body) {
                                 excelRow[`${p}_rating`] = pData.rating || '-';
                                 excelRow[`${p}_rank`] = pData.ranking || '-';
                                 excelRow[`${p}_combo`] = pData.combo || '-';
-                                excelRow[`${p}_quantity`] = pData.quantity || '-';
+
+                                // Quantity fallback logic: Use quantity if present, otherwise use productWeight
+                                const displayQuantity = (pData.quantity && pData.quantity !== '')
+                                    ? pData.quantity
+                                    : (pData.productWeight && pData.productWeight !== '' && pData.productWeight !== 'N/A')
+                                        ? pData.productWeight
+                                        : '-';
+
+                                excelRow[`${p}_quantity`] = displayQuantity;
+
                                 excelRow[`${p}_deliveryTime`] = pData.deliveryTime
                                     ? (pData.deliveryTime.match(/^\d+\s*mins?/i)?.[0] || pData.deliveryTime)
                                     : '-';
@@ -464,9 +476,21 @@ async function processExportInBackground(body) {
             console.error('❌ Failed to dump debug data:', err);
         }
 
-        // Generate Excel
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Comparison Data');
+        // Generate Excel using Streaming to avoid Out of Memory (OOM) on 100k+ rows
+        const tempFilePath = path.join(os.tmpdir(), `export_${Date.now()}_${Math.random().toString(36).substring(7)}.xlsx`);
+        console.log(`🚀 Streaming Excel to temporary file: ${tempFilePath}`);
+
+        const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+            filename: tempFilePath,
+            useStyles: true,
+            useSharedStrings: true
+        });
+
+        const worksheet = workbook.addWorksheet('Comparison Data', {
+            views: [
+                { state: 'frozen', xSplit: 0, ySplit: 1 }
+            ]
+        });
 
         // Define Base Columns
         const columns = [
@@ -482,7 +506,7 @@ async function processExportInBackground(body) {
         // Add Dynamic Columns for each Platform
         allPlatforms.forEach(platform => {
             const pName = platform.charAt(0).toUpperCase() + platform.slice(1);
-            columns.push(
+            const pCols = [
                 { header: `${pName} Avail`, key: `${platform}_available`, width: 10 },
                 { header: `${pName} Price`, key: `${platform}_price`, width: 12, style: { numFmt: '₹#,##0.00' } },
                 { header: `${pName} Org Price`, key: `${platform}_originalPrice`, width: 12, style: { numFmt: '₹#,##0.00' } },
@@ -493,14 +517,20 @@ async function processExportInBackground(body) {
                 { header: `${pName} Rating`, key: `${platform}_rating`, width: 8 },
                 { header: `${pName} Delivery`, key: `${platform}_deliveryTime`, width: 15 },
                 { header: `${pName} Quantity`, key: `${platform}_quantity`, width: 12 },
-                { header: `${pName} Combo`, key: `${platform}_combo`, width: 12 },
-                { header: `${pName} Is New`, key: `${platform}_isNew`, width: 10 },
-                { header: `${pName} Link`, key: `${platform}_link`, width: 15 },
+                { header: `${pName} Combo`, key: `${platform}_combo`, width: 12 }
+            ];
 
-                // Official Category Columns
+            if (platform !== 'jiomart') {
+                pCols.push({ header: `${pName} Is New`, key: `${platform}_isNew`, width: 10 });
+            }
+
+            pCols.push(
+                { header: `${pName} Link`, key: `${platform}_link`, width: 15 },
                 { header: `${pName} Official Cat`, key: `${platform}_officialCategory`, width: 20 },
                 { header: `${pName} Official Sub-cat`, key: `${platform}_officialSubCategory`, width: 20 }
             );
+
+            columns.push(...pCols);
         });
 
         worksheet.columns = columns;
@@ -555,10 +585,12 @@ async function processExportInBackground(body) {
                 }
 
                 // Is New column styling
-                const isNewCell = excelRow.getCell(`${platform}_isNew`);
-                if (isNewCell.value === 'New') {
-                    isNewCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }; // Light Blue
-                    isNewCell.font = { color: { argb: 'FF1E40AF' }, bold: true }; // Dark Blue
+                if (platform !== 'jiomart') {
+                    const isNewCell = excelRow.getCell(`${platform}_isNew`);
+                    if (isNewCell && isNewCell.value === 'New') {
+                        isNewCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }; // Light Blue
+                        isNewCell.font = { color: { argb: 'FF1E40AF' }, bold: true }; // Dark Blue
+                    }
                 }
 
                 // Format link cells as hyperlinks
@@ -574,15 +606,30 @@ async function processExportInBackground(body) {
                     };
                 }
             });
+
+            // Commit row to free memory immediately
+            excelRow.commit();
         });
 
-        // Using the latest date found across all rows for the filename/email subject might be ambiguous but we'll use "Latest"
+        // Using the latest date found across all rows for the filename/email subject
         const latestDate = new Date(); // Current export time
 
-        // Freeze Header
-        worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+        // Commit worksheet and workbook to finish writing the file
+        worksheet.commit();
+        await workbook.commit();
 
-        const buffer = await workbook.xlsx.writeBuffer();
+        console.log(`✅ Excel writing completed. Reading back into buffer for response/email...`);
+
+        // Read the temp Excel file into a buffer
+        const buffer = await fs.promises.readFile(tempFilePath);
+
+        // Clean up temp file
+        try {
+            await fs.promises.unlink(tempFilePath);
+            console.log(`✅ Cleaned up temporary file: ${tempFilePath}`);
+        } catch (cleanupErr) {
+            console.error(`⚠️ Failed to clean up temporary file: ${tempFilePath}`, cleanupErr);
+        }
 
         // Send Email
         const transporter = nodemailer.createTransport({
