@@ -1552,6 +1552,7 @@ function CategoriesPageContent() {
         availablePlatforms={PLATFORM_OPTIONS}
         pincodeOptions={PINCODE_OPTIONS}
         categoryOptions={CATEGORY_OPTIONS}
+        latestSnapshotTime={snapshotTime}
       />
 
       {/* Global Snackbar */}

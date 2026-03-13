@@ -13,7 +13,8 @@ export default function ExportCategoryDialog({
     availableProducts = [],
     availablePlatforms = [],
     pincodeOptions = [],
-    categoryOptions = []
+    categoryOptions = [],
+    latestSnapshotTime = null
 }) {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -181,17 +182,19 @@ export default function ExportCategoryDialog({
 
                         {/* Grid for Dropdowns */}
                         <div className="grid gap-4">
-                            {/* Export Type */}
+                        {/* Export Type */}
                             <div>
                                 <label className="block mb-1.5 text-sm font-medium text-neutral-600">Export Type</label>
-                                <select
-                                    value={exportType}
-                                    onChange={(e) => setExportType(e.target.value)}
-                                    className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
-                                >
-                                    <option value="latest">Latest Snapshot Only</option>
-                                    <option value="unique">Unique Products (Last 7 Days)</option>
-                                </select>
+                                <div className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-neutral-50 text-neutral-700 flex items-center justify-between">
+                                    <span className="font-medium">Latest Snapshot</span>
+                                    {latestSnapshotTime && (
+                                        <span className="text-xs text-neutral-400 ml-2">
+                                            {new Date(latestSnapshotTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            {' · '}
+                                            {new Date(latestSnapshotTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Platform */}
