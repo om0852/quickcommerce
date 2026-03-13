@@ -622,10 +622,12 @@ function CategoriesPageContent() {
     }
   }, [lastUpdated]);
 
-  // Keyboard shortcut for reload (Alt + R)
+  // Keyboard shortcut for reload (Alt+R on Windows / Option+R on Mac)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.altKey && e.key.toLowerCase() === 'r') {
+      // Use e.code (physical key) instead of e.key (character) so it works on
+      // Mac where Option+R produces '®' instead of 'r'
+      if (e.altKey && e.code === 'KeyR') {
         e.preventDefault();
         document.getElementById('reload-button')?.click();
       }
