@@ -315,7 +315,15 @@ export default function ProductEditDialog({
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-4xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div 
+                className="relative w-full max-w-4xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !loading) {
+                        e.preventDefault();
+                        handleSave();
+                    }
+                }}
+            >
                 {/* Header */}
                 <div className="flex-none px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                     <div>
@@ -563,10 +571,10 @@ export default function ProductEditDialog({
                 </div>
 
                 {/* Footer */}
-                <div className="flex-none px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 z-10">
+                <div className="flex-none px-6 py-5 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 z-10">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+                        className="px-8 py-3 text-base font-semibold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer border border-gray-200"
                         disabled={loading}
                     >
                         Cancel
@@ -574,9 +582,9 @@ export default function ProductEditDialog({
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="flex items-center gap-2 px-6 py-2 text-sm font-bold text-white bg-neutral-900 hover:bg-black rounded-lg transition-colors disabled:opacity-70 shadow-md transform active:scale-95 duration-200 cursor-pointer"
+                        className="flex items-center gap-3 px-12 py-3 text-base font-bold text-white bg-neutral-900 hover:bg-black rounded-xl transition-colors disabled:opacity-70 shadow-lg transform active:scale-95 duration-200 cursor-pointer"
                     >
-                        {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                        {loading ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
                         Save All Changes
                     </button>
                 </div>

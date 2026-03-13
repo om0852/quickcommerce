@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2 } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
@@ -80,10 +80,20 @@ const ProductTable = React.memo(function ProductTable({
     showNewFirst,
     onShowNewFirstChange,
     isAdmin = false, // Passed from parent
-    onLocalUpdate
+    onLocalUpdate,
+    isBulkEditMode = false,
+    selectedGroupIds = [],
+    onSelectionChange,
+    bulkBrands = [],
 }) {
-    const [manageGroup, setManageGroup] = useState(null); // Group currently being managed
-    const [editProduct, setEditProduct] = useState(null); // Product currently being edited
+    const [manageGroup, setManageGroup] = useState(null);
+    const [editProduct, setEditProduct] = useState(null);
+    const [copiedId, setCopiedId] = useState(null);
+    const [editingProductId, setEditingProductId] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    const [savingProductId, setSavingProductId] = useState(null);
+    const [selectedBrand, setSelectedBrand] = useState('');
+    const [bulkUpdating, setBulkUpdating] = useState(false);
 
     // TOAST STATE
     const [toastState, setToastState] = useState({
@@ -138,12 +148,87 @@ const ProductTable = React.memo(function ProductTable({
         handleSortMenuClose();
     };
 
+    const handleInlineSave = async (groupingId) => {
+        if (!editValue.trim() || savingProductId === groupingId) return;
+        
+        setSavingProductId(groupingId);
+        try {
+            const res = await fetch('/api/grouping/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupingId,
+                    updates: { name: editValue.trim() }
+                })
+            });
+
+            if (res.ok) {
+                if (onLocalUpdate) {
+                    onLocalUpdate({ groupingId, name: editValue.trim() });
+                }
+                setToastState({ open: true, message: 'Name updated successfully', severity: 'success' });
+            } else {
+                setToastState({ open: true, message: 'Failed to update name', severity: 'error' });
+            }
+        } catch (error) {
+            console.error('Error updating name:', error);
+            setToastState({ open: true, message: 'Error updating name', severity: 'error' });
+        } finally {
+            setSavingProductId(null);
+            setEditingProductId(null);
+        }
+    };
+
     const showToast = (message, severity = 'success') => {
         setToastState({
             open: true,
             message,
             severity
         });
+    };
+
+    const handleBulkBrandUpdate = async () => {
+        if (!selectedBrand || selectedGroupIds.length === 0 || bulkUpdating) return;
+
+        const brand = bulkBrands.find(b => b._id === selectedBrand);
+        if (!brand) return;
+
+        setBulkUpdating(true);
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const groupingId of selectedGroupIds) {
+            try {
+                const res = await fetch('/api/grouping/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupingId,
+                        updates: { brand: brand.brandName, brandId: brand._id }
+                    })
+                });
+                if (res.ok) {
+                    successCount++;
+                    if (onLocalUpdate) {
+                        onLocalUpdate({ groupingId, brand: brand.brandName, brandId: brand._id });
+                    }
+                } else {
+                    failCount++;
+                }
+            } catch {
+                failCount++;
+            }
+        }
+
+        setBulkUpdating(false);
+        setSelectedBrand('');
+        if (onSelectionChange) onSelectionChange([]);
+        showToast(
+            failCount === 0
+                ? `Brand updated for ${successCount} group(s)`
+                : `Updated ${successCount}, failed ${failCount}`,
+            failCount === 0 ? 'success' : 'warning'
+        );
     };
 
     const formatProductName = (name) => {
@@ -182,10 +267,68 @@ const ProductTable = React.memo(function ProductTable({
                     position: 'relative' // Ensure relative positioning for overlay
                 }}
             >
+                {/* Bulk Action Bar */}
+                {isBulkEditMode && selectedGroupIds.length > 0 && (
+                    <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-50 border-b border-blue-200">
+                        <span className="text-sm font-medium text-blue-700">{selectedGroupIds.length} group(s) selected</span>
+                        <div className="flex items-center gap-2 ml-auto">
+                            <select
+                                value={selectedBrand}
+                                onChange={(e) => setSelectedBrand(e.target.value)}
+                                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:border-blue-400"
+                                disabled={bulkUpdating}
+                            >
+                                <option value="">Select Brand to Apply...</option>
+                                {(Array.isArray(bulkBrands) ? bulkBrands : []).map(b => (
+                                    <option key={b._id} value={b._id}>{b.brandName}</option>
+                                ))}
+                            </select>
+                            <button
+                                onClick={handleBulkBrandUpdate}
+                                disabled={!selectedBrand || bulkUpdating}
+                                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 transition-colors"
+                            >
+                                {bulkUpdating ? <Loader2 size={14} className="animate-spin" /> : null}
+                                {bulkUpdating ? 'Updating...' : 'Update Brand'}
+                            </button>
+                            <button
+                                onClick={() => onSelectionChange && onSelectionChange([])}
+                                className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+                )}
                 <TableContainer>
                     <Table stickyHeader aria-label="sticky table" size="small">
                         <TableHead>
                             <TableRow>
+                                {/* Bulk Checkbox Header */}
+                                {isBulkEditMode && (
+                                    <TableCell
+                                        padding="checkbox"
+                                        sx={{
+                                            backgroundColor: '#fafafa',
+                                            borderBottom: '1px solid #e5e5e5',
+                                            position: 'sticky',
+                                            left: 0,
+                                            zIndex: 31,
+                                            width: 44,
+                                            minWidth: 44,
+                                        }}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 cursor-pointer"
+                                            checked={products.filter(p => !p.isHeader).length > 0 && products.filter(p => !p.isHeader).every(p => selectedGroupIds.includes(p.groupingId))}
+                                            onChange={(e) => {
+                                                const ids = products.filter(p => !p.isHeader).map(p => p.groupingId);
+                                                if (onSelectionChange) onSelectionChange(e.target.checked ? ids : []);
+                                            }}
+                                        />
+                                    </TableCell>
+                                )}
                                 {/* Product Header - Sticky Left */}
                                 <TableCell
                                     sx={{
@@ -537,14 +680,60 @@ const ProductTable = React.memo(function ProductTable({
                                             role="checkbox"
                                             tabIndex={-1}
                                             key={product.name + index}
-                                            onClick={() => {
+                                            onClick={(e) => {
                                                 const selection = window.getSelection();
-                                                if (selection.toString().length === 0) {
+                                                if (selection.toString().length > 0) return;
+
+                                                // If we're clicking inside the input, don't trigger row click
+                                                if (e.target.tagName.toLowerCase() === 'input') return;
+
+                                                // Debounce single click to allow double click to happen first
+                                                if (window.clickTimer) {
+                                                    clearTimeout(window.clickTimer);
+                                                    window.clickTimer = null;
+                                                }
+                                                window.clickTimer = setTimeout(() => {
                                                     onProductClick(product);
+                                                }, 250); // 250ms delay to wait for potential double click
+                                            }}
+                                            onDoubleClick={(e) => {
+                                                if (window.clickTimer) {
+                                                    clearTimeout(window.clickTimer);
+                                                    window.clickTimer = null;
                                                 }
                                             }}
                                             sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#fafafa' } }}
                                         >
+                                            {/* Bulk Checkbox Cell */}
+                                            {isBulkEditMode && (
+                                                <TableCell
+                                                    padding="checkbox"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    sx={{
+                                                        position: 'sticky',
+                                                        left: 0,
+                                                        zIndex: 19,
+                                                        backgroundColor: selectedGroupIds.includes(product.groupingId) ? '#eff6ff' : 'white',
+                                                        borderBottom: '1px solid #e5e5e5',
+                                                        width: 44,
+                                                        minWidth: 44,
+                                                    }}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-4 h-4 cursor-pointer"
+                                                        checked={selectedGroupIds.includes(product.groupingId)}
+                                                        onChange={(e) => {
+                                                            if (!onSelectionChange) return;
+                                                            if (e.target.checked) {
+                                                                onSelectionChange([...selectedGroupIds, product.groupingId]);
+                                                            } else {
+                                                                onSelectionChange(selectedGroupIds.filter(id => id !== product.groupingId));
+                                                            }
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                            )}
                                             {/* Product Cell - Sticky Left */}
                                             <TableCell
                                                 component="th"
@@ -573,21 +762,69 @@ const ProductTable = React.memo(function ProductTable({
                                                         <ProductImage product={product} />
                                                     </div>
                                                     <div className="w-full min-w-0">
-                                                        <div className="text-sm font-medium text-neutral-900 whitespace-normal break-words" title={product.name}>
-                                                            {formatProductName(product.name)}
-                                                            {((product.weight && product.weight !== 'N/A') || product.quantity) && (
-                                                                <span className="text-neutral-500 font-normal"> - ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})</span>
-                                                            )}
+                                                        <div className="text-sm font-medium text-neutral-900 whitespace-normal break-words flex items-center gap-1.5" title={product.name}>
+                                                            <span 
+                                                                className="flex-1 min-w-0 cursor-pointer" 
+                                                                onDoubleClick={() => {
+                                                                    if (isAdmin) {
+                                                                        setEditingProductId(product.groupingId);
+                                                                        setEditValue(product.name);
+                                                                    }
+                                                                }}
+                                                                title={isAdmin ? "Double click to edit" : product.name}
+                                                            >
+                                                                {editingProductId === product.groupingId ? (
+                                                                    <div className="flex flex-col gap-1 w-full">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <input
+                                                                                type="text"
+                                                                                autoFocus
+                                                                                value={editValue}
+                                                                                onChange={(e) => setEditValue(e.target.value)}
+                                                                                onKeyDown={(e) => {
+                                                                                    if (e.key === 'Enter') {
+                                                                                        e.preventDefault();
+                                                                                        handleInlineSave(product.groupingId);
+                                                                                    } else if (e.key === 'Escape') {
+                                                                                        setEditingProductId(null);
+                                                                                    }
+                                                                                }}
+                                                                                onBlur={() => setEditingProductId(null)}
+                                                                                disabled={savingProductId === product.groupingId}
+                                                                                className="w-full px-2 py-1 text-sm border border-black/20 rounded focus:outline-none focus:border-black"
+                                                                                title="Edit Product Name"
+                                                                            />
+                                                                            {savingProductId === product.groupingId && (
+                                                                                <Loader2 size={12} className="animate-spin text-neutral-400" />
+                                                                            )}
+                                                                        </div>
+                                                                        {((product.weight && product.weight !== 'N/A') || product.quantity) && (
+                                                                            <span className="text-neutral-500 font-normal text-[11px]">
+                                                                                + Weight/Qty suffix: ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        {formatProductName(product.name)}
+                                                                        {((product.weight && product.weight !== 'N/A') || product.quantity) && (
+                                                                            <span className="text-neutral-500 font-normal"> - ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})</span>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </span>
                                                             {isAdmin && (
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        setEditProduct(product);
+                                                                        navigator.clipboard.writeText(product.name);
+                                                                        setCopiedId(product.groupingId);
+                                                                        setTimeout(() => setCopiedId(null), 3000);
                                                                     }}
-                                                                    className="ml-2 p-1 text-neutral-400 hover:text-neutral-900 rounded-full hover:bg-neutral-100 transition-colors inline-block align-middle"
-                                                                    title="Edit Values"
+                                                                    className={`p-1 rounded-md transition-colors flex-shrink-0 ${copiedId === product.groupingId ? 'text-green-600 bg-green-50' : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100'}`}
+                                                                    title={copiedId === product.groupingId ? "Copied!" : "Copy Group Name"}
                                                                 >
-                                                                    <Pencil size={12} />
+                                                                    {copiedId === product.groupingId ? <Check size={12} /> : <Copy size={12} />}
                                                                 </button>
                                                             )}
                                                         </div>
@@ -597,15 +834,27 @@ const ProductTable = React.memo(function ProductTable({
                                                             </div>
                                                         )}
                                                         {isAdmin && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setManageGroup(product);
-                                                                }}
-                                                                className="mt-1 text-[10px] font-bold text-neutral-500 hover:text-neutral-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded border border-gray-200 transition-colors"
-                                                            >
-                                                                Manage Group
-                                                            </button>
+                                                            <div className="mt-1 flex flex-col gap-1">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setEditProduct(product);
+                                                                    }}
+                                                                    className="w-full text-[10px] font-bold text-neutral-500 hover:text-neutral-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded border border-gray-200 transition-colors text-center"
+                                                                    title="Edit Values"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setManageGroup(product);
+                                                                    }}
+                                                                    className="w-full text-[10px] font-bold text-neutral-500 hover:text-neutral-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded border border-gray-200 transition-colors"
+                                                                >
+                                                                    Manage Group
+                                                                </button>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </div>

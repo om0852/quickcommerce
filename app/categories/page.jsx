@@ -126,6 +126,9 @@ function CategoriesPageContent() {
   const [useFilterToggle, setUseFilterToggle] = useState(true);
   const [showNewFirst, setShowNewFirst] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
+  const [isBulkEditMode, setIsBulkEditMode] = useState(false);
+  const [selectedGroupIds, setSelectedGroupIds] = useState([]);
+  const [bulkBrands, setBulkBrands] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [historyData, setHistoryData] = useState([]);
@@ -395,10 +398,16 @@ function CategoriesPageContent() {
   };
 
   const handleLocalProductUpdate = (updatedData) => {
-    // updatedData = { groupingId, name, weight, brand, modifiedPlatforms: [{ platform, ... }] }
+    // updatedData = { groupingId, name?, weight?, brand?, brandId?, modifiedPlatforms?: [...] }
     setProducts((prev) => prev.map(p => {
       if (p.groupingId === updatedData.groupingId) {
-        const newProduct = { ...p, name: updatedData.name, weight: updatedData.weight, brand: updatedData.brand };
+        // Only merge fields that are actually present in updatedData (not undefined)
+        const updates = {};
+        if (updatedData.name !== undefined) updates.name = updatedData.name;
+        if (updatedData.weight !== undefined) updates.weight = updatedData.weight;
+        if (updatedData.brand !== undefined) updates.brand = updatedData.brand;
+        if (updatedData.brandId !== undefined) updates.brandId = updatedData.brandId;
+        const newProduct = { ...p, ...updates };
         if (updatedData.modifiedPlatforms) {
           updatedData.modifiedPlatforms.forEach(mp => {
             if (newProduct[mp.platform]) {
@@ -612,6 +621,19 @@ function CategoriesPageContent() {
       setSnapshotTime(lastUpdated);
     }
   }, [lastUpdated]);
+
+  // Keyboard shortcut for reload (Alt + R)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        document.getElementById('reload-button')?.click();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const uniqueDates = useMemo(() => {
     const dates = availableSnapshots.map(ts => {
@@ -1353,9 +1375,10 @@ function CategoriesPageContent() {
             {/* Right: Actions */}
             <div className="flex items-center gap-3">
               <button
+                id="reload-button"
                 onClick={() => fetchCategoryData()}
                 className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all cursor-pointer"
-                title="Refresh Data"
+                title="Refresh Data (Alt + R)"
               >
                 <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
               </button>
@@ -1441,7 +1464,7 @@ function CategoriesPageContent() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex-none">
+        <div className="flex-none flex items-center gap-3">
           <div className="inline-flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
             {['products', 'analytics', 'stock', 'links', 'brands'].map((tab) => (
               <button
@@ -1458,6 +1481,32 @@ function CategoriesPageContent() {
               </button>
             ))}
           </div>
+          {isAdmin && activeTab === 'products' && (
+            <button
+              onClick={async () => {
+                if (!isBulkEditMode && bulkBrands.length === 0) {
+                  // Fetch brands when entering bulk edit mode
+                  try {
+                    const res = await fetch('/api/brands');
+                    if (res.ok) {
+                      const data = await res.json();
+                      setBulkBrands(Array.isArray(data) ? data : (data.brands || []));
+                    }
+                  } catch (e) { console.error('Failed to fetch brands', e); }
+                }
+                setIsBulkEditMode(prev => !prev);
+                setSelectedGroupIds([]);
+              }}
+              className={cn(
+                "px-4 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer border",
+                isBulkEditMode
+                  ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                  : "bg-white text-neutral-700 border-gray-200 shadow-sm hover:bg-gray-50"
+              )}
+            >
+              {isBulkEditMode ? 'Cancel Bulk Edit' : 'Edit Bulk'}
+            </button>
+          )}
         </div>
 
         {/* Content Area */}
@@ -1499,6 +1548,10 @@ function CategoriesPageContent() {
                 onShowNewFirstChange={setShowNewFirst}
                 isAdmin={isAdmin}
                 onLocalUpdate={handleLocalProductUpdate}
+                isBulkEditMode={isBulkEditMode}
+                selectedGroupIds={selectedGroupIds}
+                onSelectionChange={setSelectedGroupIds}
+                bulkBrands={bulkBrands}
               />
             </div>
           )}
