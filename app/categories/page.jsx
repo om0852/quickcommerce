@@ -664,6 +664,9 @@ function CategoriesPageContent() {
       };
 
       const hasNewFlag = (product) => {
+        if (platformFilter !== 'all') {
+          return product[platformFilter]?.new === true;
+        }
         const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
         return platforms.some(p => product[p]?.new === true);
       };
@@ -705,6 +708,12 @@ function CategoriesPageContent() {
         }
 
         if (sortConfig.key === 'name') {
+          if (platformFilter !== 'all' || showNewFirst) {
+            const aIsNew = hasNewFlag(a);
+            const bIsNew = hasNewFlag(b);
+            if (aIsNew && !bIsNew) return -1;
+            if (!aIsNew && bIsNew) return 1;
+          }
           const nameA = a.name || '';
           const nameB = b.name || '';
           if (sortConfig.direction === 'asc') return nameA.localeCompare(nameB);
@@ -745,6 +754,11 @@ function CategoriesPageContent() {
             const bIsNew = hasNewFlag(b);
             if (aIsNew && !bIsNew) return -1;
             if (!aIsNew && bIsNew) return 1;
+
+            const nameA = a.name || '';
+            const nameB = b.name || '';
+            if (nameA !== nameB) return nameA.localeCompare(nameB);
+            return 0;
           }
           const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
           const countA = platforms.filter(p => a[p]).length;
@@ -824,6 +838,9 @@ function CategoriesPageContent() {
     };
 
     const hasNewFlag = (product) => {
+      if (platformFilter !== 'all') {
+        return product[platformFilter]?.new === true;
+      }
       const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
       return platforms.some(p => product[p]?.new === true);
     };
@@ -908,6 +925,13 @@ function CategoriesPageContent() {
       }
 
       if (sortConfig.key === 'name') {
+        if (platformFilter !== 'all' || showNewFirst) {
+          const aIsNew = hasNewFlag(a);
+          const bIsNew = hasNewFlag(b);
+          if (aIsNew && !bIsNew) return -1;
+          if (!aIsNew && bIsNew) return 1;
+        }
+
         const nameA = a.name || '';
         const nameB = b.name || '';
         if (sortConfig.direction === 'asc') return nameA.localeCompare(nameB);
@@ -965,6 +989,11 @@ function CategoriesPageContent() {
           const bIsNew = hasNewFlag(b);
           if (aIsNew && !bIsNew) return -1;
           if (!aIsNew && bIsNew) return 1;
+
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          if (nameA !== nameB) return nameA.localeCompare(nameB);
+          return 0;
         }
         const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
         const countA = platforms.filter(p => a[p]).length;
