@@ -401,7 +401,8 @@ function CategoriesPageContent() {
   const handleLocalProductUpdate = (updatedData) => {
     // updatedData = { groupingId, name?, weight?, brand?, brandId?, modifiedPlatforms?: [...] }
     setProducts((prev) => prev.map(p => {
-      if (p.groupingId === updatedData.groupingId) {
+      // If the row matches the updated group (either as the main row or its duplicate)
+      if (p.groupingId === updatedData.groupingId || p.parentGroupId === updatedData.groupingId) {
         // Only merge fields that are actually present in updatedData (not undefined)
         const updates = {};
         if (updatedData.name !== undefined) updates.name = updatedData.name;

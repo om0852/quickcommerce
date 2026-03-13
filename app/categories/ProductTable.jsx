@@ -819,17 +819,17 @@ const ProductTable = React.memo(function ProductTable({
                                                                                 onKeyDown={(e) => {
                                                                                     if (e.key === 'Enter') {
                                                                                         e.preventDefault();
-                                                                                        handleInlineSave(product.groupingId);
+                                                                                        handleInlineSave(product.parentGroupId || product.groupingId);
                                                                                     } else if (e.key === 'Escape') {
                                                                                         setEditingProductId(null);
                                                                                     }
                                                                                 }}
                                                                                 onBlur={() => setEditingProductId(null)}
-                                                                                disabled={savingProductId === product.groupingId}
+                                                                                disabled={savingProductId === (product.parentGroupId || product.groupingId)}
                                                                                 className="w-full px-2 py-1 text-sm border border-black/20 rounded focus:outline-none focus:border-black"
                                                                                 title="Edit Product Name"
                                                                             />
-                                                                            {savingProductId === product.groupingId && (
+                                                                            {savingProductId === (product.parentGroupId || product.groupingId) && (
                                                                                 <Loader2 size={12} className="animate-spin text-neutral-400" />
                                                                             )}
                                                                         </div>
@@ -841,10 +841,14 @@ const ProductTable = React.memo(function ProductTable({
                                                                     </div>
                                                                 ) : (
                                                                     <>
-                                                                        {formatProductName(product.name)}
-                                                                        {((product.weight && product.weight !== 'N/A') || product.quantity) && (
-                                                                            <span className="text-neutral-500 font-normal"> - ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})</span>
-                                                                        )}
+                                                                        <div className="flex flex-col">
+                                                                            <div className="flex items-center gap-2">
+                                                                                {formatProductName(product.name)}
+                                                                                {((product.weight && product.weight !== 'N/A') || product.quantity) && (
+                                                                                    <span className="text-neutral-500 font-normal"> - ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
                                                                     </>
                                                                 )}
                                                             </span>

@@ -124,6 +124,7 @@ export async function GET(request) {
           zepto: [], blinkit: [], jiomart: [], dmart: [], flipkartMinutes: [], instamart: []
         };
         let hasData = false;
+        let maxVariants = 0;
 
         for (const p of group.products) {
           const platformKey = p.platform.toLowerCase();
@@ -133,87 +134,100 @@ export async function GET(request) {
             if (matchKey) {
               platformMatches[matchKey].push(snap);
               hasData = true;
+              if (platformMatches[matchKey].length > maxVariants) {
+                maxVariants = platformMatches[matchKey].length;
+              }
             }
           }
         }
 
         if (hasData) {
-          const productObj = {
-            groupingId: group.groupingId,
-            name: group.primaryName,
-            image: group.primaryImage,
-            groupImage: null,
-            weight: group.primaryWeight,
-            brand: brandMap[group.brandId] || group.brand || '',
-            brandId: group.brandId || '',
-            zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
-            officialCategory: group.category,
-            officialSubCategory: null,
-            scrapedAt: targetScrapedAt,
-            isGrouped: true,
-            pincode: currentPincode,
-            isHeader: false
-          };
-
+          // Sort variants within each platform to ensure deterministic output
           Object.keys(platformMatches).forEach(platform => {
-            const matches = platformMatches[platform];
-            if (matches.length > 0) {
-              const bestSnap = matches.sort((a, b) => {
-                const rA = a.ranking && !isNaN(a.ranking) ? a.ranking : Infinity;
-                const rB = b.ranking && !isNaN(b.ranking) ? b.ranking : Infinity;
-                if (rA !== rB) return rA - rB;
-                return Number(a.currentPrice || 0) - Number(b.currentPrice || 0);
-              })[0];
-
-              productObj[platform] = {
-                productId: bestSnap.productId,
-                productName: bestSnap.productName,
-                productImage: bestSnap.productImage,
-                productWeight: bestSnap.productWeight,
-                rating: bestSnap.rating,
-                currentPrice: bestSnap.currentPrice,
-                originalPrice: bestSnap.originalPrice,
-                discountPercentage: bestSnap.discountPercentage,
-                ranking: bestSnap.ranking,
-                isOutOfStock: bestSnap.isOutOfStock,
-                productUrl: bestSnap.productUrl,
-                quantity: bestSnap.quantity,
-                deliveryTime: bestSnap.deliveryTime,
-                isAd: bestSnap.isAd,
-                officialCategory: bestSnap.officialCategory,
-                officialSubCategory: bestSnap.officialSubCategory,
-                subCategory: bestSnap.subCategory,
-                combo: bestSnap.combo,
-                new: bestSnap.new,
-                scrapedAt: bestSnap.scrapedAt,
-                snapshotId: bestSnap._id.toString()
-              };
-
-              if (!productObj.name) productObj.name = bestSnap.productName;
-              if (!productObj.image) productObj.image = bestSnap.productImage;
-              if (!productObj.officialSubCategory) productObj.officialSubCategory = bestSnap.officialSubCategory;
-
-              aggregatedCounts[platform]++;
-            }
+            platformMatches[platform].sort((a, b) => {
+              const rA = a.ranking && !isNaN(a.ranking) ? a.ranking : Infinity;
+              const rB = b.ranking && !isNaN(b.ranking) ? b.ranking : Infinity;
+              if (rA !== rB) return rA - rB;
+              return Number(a.currentPrice || 0) - Number(b.currentPrice || 0);
+            });
           });
 
-          // Compute groupImage based on platform priority for Fruits & Vegetables
-          if (category === 'Fruits & Vegetables') {
-            const priority = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
-            for (const plat of priority) {
-              if (productObj[plat] && productObj[plat].productImage && productObj[plat].productImage !== 'N/A') {
-                productObj.groupImage = productObj[plat].productImage;
-                break;
+          // Create multiple rows if a platform has more than one product in this group
+          for (let i = 0; i < maxVariants; i++) {
+            const productObj = {
+              groupingId: i === 0 ? group.groupingId : `${group.groupingId}_dup_${i}`,
+              parentGroupId: group.groupingId,
+              isDuplicate: i > 0,
+              name: group.primaryName,
+              image: group.primaryImage,
+              groupImage: null,
+              weight: group.primaryWeight,
+              brand: brandMap[group.brandId] || group.brand || '',
+              brandId: group.brandId || '',
+              zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
+              officialCategory: group.category,
+              officialSubCategory: null,
+              scrapedAt: targetScrapedAt,
+              isGrouped: true,
+              pincode: currentPincode,
+              isHeader: false
+            };
+
+            let rowHasData = false;
+            Object.keys(platformMatches).forEach(platform => {
+              const snap = platformMatches[platform][i];
+              if (snap) {
+                productObj[platform] = {
+                  productId: snap.productId,
+                  productName: snap.productName,
+                  productImage: snap.productImage,
+                  productWeight: snap.productWeight,
+                  rating: snap.rating,
+                  currentPrice: snap.currentPrice,
+                  originalPrice: snap.originalPrice,
+                  discountPercentage: snap.discountPercentage,
+                  ranking: snap.ranking,
+                  isOutOfStock: snap.isOutOfStock,
+                  productUrl: snap.productUrl,
+                  quantity: snap.quantity,
+                  deliveryTime: snap.deliveryTime,
+                  isAd: snap.isAd,
+                  officialCategory: snap.officialCategory,
+                  officialSubCategory: snap.officialSubCategory,
+                  subCategory: snap.subCategory,
+                  combo: snap.combo,
+                  new: snap.new,
+                  scrapedAt: snap.scrapedAt,
+                  snapshotId: snap._id.toString()
+                };
+
+                if (!productObj.name) productObj.name = snap.productName;
+                if (!productObj.image) productObj.image = snap.productImage;
+                if (!productObj.officialSubCategory) productObj.officialSubCategory = snap.officialSubCategory;
+
+                aggregatedCounts[platform]++;
+                rowHasData = true;
               }
+            });
+
+            if (rowHasData) {
+              // Compute groupImage
+              if (category === 'Fruits & Vegetables') {
+                const priority = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
+                for (const plat of priority) {
+                  if (productObj[plat] && productObj[plat].productImage && productObj[plat].productImage !== 'N/A') {
+                    productObj.groupImage = productObj[plat].productImage;
+                    break;
+                  }
+                }
+              }
+              if (!productObj.groupImage || productObj.groupImage === 'N/A') {
+                productObj.groupImage = productObj.image || '';
+              }
+
+              currentPincodeItems.push(productObj);
             }
           }
-          
-          // Fallback if priority didn't yield an image or not Fruits & Veg
-          if (!productObj.groupImage || productObj.groupImage === 'N/A') {
-            productObj.groupImage = productObj.image || '';
-          }
-
-          currentPincodeItems.push(productObj);
         }
       }
 
