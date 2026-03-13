@@ -125,6 +125,7 @@ function CategoriesPageContent() {
   const [showMissing, setShowMissing] = useState(false);
   const [useFilterToggle, setUseFilterToggle] = useState(true);
   const [showNewFirst, setShowNewFirst] = useState(false);
+  const [showNonHyphenOnly, setShowNonHyphenOnly] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [isBulkEditMode, setIsBulkEditMode] = useState(false);
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
@@ -665,8 +666,17 @@ function CategoriesPageContent() {
       }
     }
 
+    // Non-Hyphen Filter (Strict) - Regex catches standard and unicode hyphens/dashes
+    if (showNonHyphenOnly) {
+      const hyphenRegex = /[-\u2010-\u2015\u2212]/;
+      result = result.filter(product => {
+        const name = product.name || '';
+        return !hyphenRegex.test(name);
+      });
+    }
+
     return result;
-  }, [deduplicatedProducts, platformFilter, showMissing]);
+  }, [deduplicatedProducts, platformFilter, showMissing, showNonHyphenOnly]);
 
   const sortedProducts = useMemo(() => {
     // If no grouping (no headers), just filter and sort normally
@@ -697,8 +707,14 @@ function CategoriesPageContent() {
 
 
       // ... inside useMemo for sortedProducts ...
-
       const sortFunction = (a, b) => {
+        if (showNonHyphenOnly || showNewFirst) {
+          const aIsNew = hasNewFlag(a);
+          const bIsNew = hasNewFlag(b);
+          if (aIsNew && !bIsNew) return -1;
+          if (!aIsNew && bIsNew) return 1;
+        }
+
         if (sortConfig.key === 'groupCount') {
           const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
           const countA = platforms.filter(p => a[p]).length;
@@ -1024,6 +1040,14 @@ function CategoriesPageContent() {
         const countB = platforms.filter(p => b[p]).length;
         if (countA !== countB) return countB - countA;
 
+        // Prioritize New When showNonHyphenOnly is active (for grouped items)
+        if (showNonHyphenOnly) {
+          const aIsNew = hasNewFlag(a);
+          const bIsNew = hasNewFlag(b);
+          if (aIsNew && !bIsNew) return -1;
+          if (!aIsNew && bIsNew) return 1;
+        }
+
         // Sort by Name alphabetically if counts are equal
         const nameA = a.name || '';
         const nameB = b.name || '';
@@ -1058,7 +1082,7 @@ function CategoriesPageContent() {
 
     return flatList;
 
-  }, [filteredProducts, sortConfig, showNewFirst]);
+  }, [filteredProducts, sortConfig, showNewFirst, showNonHyphenOnly]);
 
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -1548,6 +1572,8 @@ function CategoriesPageContent() {
                 onRefresh={fetchCategoryData}
                 showNewFirst={showNewFirst}
                 onShowNewFirstChange={setShowNewFirst}
+                showNonHyphenOnly={showNonHyphenOnly}
+                onShowNonHyphenOnlyChange={setShowNonHyphenOnly}
                 isAdmin={isAdmin}
                 onLocalUpdate={handleLocalProductUpdate}
                 isBulkEditMode={isBulkEditMode}

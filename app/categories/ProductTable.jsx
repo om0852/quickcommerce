@@ -79,6 +79,8 @@ const ProductTable = React.memo(function ProductTable({
     onRefresh,
     showNewFirst,
     onShowNewFirstChange,
+    showNonHyphenOnly = false,
+    onShowNonHyphenOnlyChange,
     isAdmin = false, // Passed from parent
     onLocalUpdate,
     isBulkEditMode = false,
@@ -415,6 +417,7 @@ const ProductTable = React.memo(function ProductTable({
                                                 onClick={() => {
                                                     onSort(null);
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
                                                 sx={{
@@ -424,20 +427,21 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === null && !showNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === null && !showNewFirst ? 700 : 500,
-                                                    color: sortConfig.key === null && !showNewFirst ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === null && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === null && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === null && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
                                                 <span>Group With Highest Product</span>
-                                                {sortConfig.key === null && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === null && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <MenuItem
                                                 onClick={() => {
                                                     onSort('groupCount', 'asc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
                                                 sx={{
@@ -447,14 +451,14 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst ? 700 : 500,
-                                                    color: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
                                                 <span>Group With Lowest Product</span>
-                                                {sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -463,6 +467,7 @@ const ProductTable = React.memo(function ProductTable({
                                                 onClick={() => {
                                                     onSort('brand', 'asc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
                                                 sx={{
@@ -472,20 +477,21 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst ? 700 : 500,
-                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
                                                 <span>Brand Name (A to Z)</span>
-                                                {sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <MenuItem
                                                 onClick={() => {
                                                     onSort('brand', 'desc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
                                                 sx={{
@@ -495,14 +501,14 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst ? 700 : 500,
-                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
                                                 <span>Brand Name (Z to A)</span>
-                                                {sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -511,6 +517,7 @@ const ProductTable = React.memo(function ProductTable({
                                                 onClick={() => {
                                                     onSort('name', 'asc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
                                                 sx={{
@@ -520,20 +527,21 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst ? 700 : 500,
-                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
                                                 <span>Product Name (A to Z)</span>
-                                                {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <MenuItem
                                                 onClick={() => {
                                                     onSort('name', 'desc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
                                                 sx={{
@@ -543,14 +551,14 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst ? 700 : 500,
-                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' }
                                                 }}
                                             >
                                                 <span>Product Name (Z to A)</span>
-                                                {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -558,6 +566,7 @@ const ProductTable = React.memo(function ProductTable({
                                             <MenuItem
                                                 onClick={() => {
                                                     onShowNewFirstChange(true);
+                                                    if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
                                                     onSort(null); // Clear manual sort
                                                     handleSortMenuClose();
                                                 }}
@@ -577,6 +586,32 @@ const ProductTable = React.memo(function ProductTable({
                                                 <span>Newly Added {newlyAddedCount > 0 && `(${newlyAddedCount})`}</span>
                                                 {showNewFirst && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
+
+                                            {isAdmin && (
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(true);
+                                                        onShowNewFirstChange(false);
+                                                        onSort(null); // Clear manual sort
+                                                        handleSortMenuClose();
+                                                    }}
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        fontSize: '0.75rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        backgroundColor: showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                        fontWeight: showNonHyphenOnly ? 700 : 500,
+                                                        color: showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' }
+                                                    }}
+                                                >
+                                                    <span>Non Hyphen ( - )</span>
+                                                    {showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                </MenuItem>
+                                            )}
                                         </Menu>
                                     </div>
 
