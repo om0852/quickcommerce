@@ -170,17 +170,34 @@ function CategoriesPageContent() {
     if (!searchQuery) return products;
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
-    const tokens = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
-    return products.filter(p => {
-      const nameLower = (p.name || '').toLowerCase();
-      if (tokens.every(token => nameLower.includes(token))) return true;
+    const query = searchQuery.toLowerCase().trim();
+    const tokens = query.split(/\s+/).filter(t => t.length > 0);
+    
+    // Detect search intent
+    // Alphabetic: Only letters, spaces, and common name symbols (no digits)
+    const isAlphabetic = /^[a-z\s\(\)\[\]\.,\&]+$/i.test(query);
+    // ID-like: Only digits, underscores, hyphens (no letters)
+    const isNumericOrId = /^[0-9\-_]+$/.test(query);
 
-      // Also search by productId on any platform
-      const query = searchQuery.toLowerCase();
-      return platforms.some(plat => {
+    return products.filter(p => {
+      // 1. Name Match (by tokens)
+      const nameLower = (p.name || '').toLowerCase();
+      const nameMatch = tokens.every(token => nameLower.includes(token));
+
+      // 2. ID Match (by strict query)
+      const gId = (p.groupingId || '').toLowerCase();
+      const pgId = (p.parentGroupId || '').toLowerCase();
+      const idMatch = gId.includes(query) || pgId.includes(query) || platforms.some(plat => {
         const pid = (p[plat]?.productId || '').toLowerCase();
         return pid && pid.includes(query);
       });
+
+      // Apply filtering logic based on intent
+      if (isAlphabetic && !isNumericOrId) return nameMatch;
+      if (isNumericOrId && !isAlphabetic) return idMatch;
+      
+      // Mixed or fallback: Match either
+      return nameMatch || idMatch;
     });
   }, [products, searchQuery]);
 
@@ -1103,6 +1120,7 @@ function CategoriesPageContent() {
     }
 
     setSortConfig(currentConfig => {
+      if (direction) return { key, direction };
       let newDirection = 'asc';
       if (currentConfig.key === key) {
         // Cycle: asc (Rank) -> desc (Rank) -> Reset
@@ -1308,7 +1326,7 @@ function CategoriesPageContent() {
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
-            <span className={`w - 2 h - 2 rounded - full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'} `}></span>
+            <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'}`}></span>
             <span className="font-medium text-neutral-600">
               {isLiveMode ? 'Live Mode' : 'Historical Snapshot'}
             </span>
@@ -1333,16 +1351,16 @@ function CategoriesPageContent() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-6 gap-4">
+      <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-3 md:p-4 gap-3">
 
         {/* Controls */}
-        <div className="flex-none flex flex-col gap-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="flex-none flex flex-col gap-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
 
           {/* Top Row: Selectors and Actions */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Left: Selectors */}
-            <div className="flex items-center gap-4">
-              <div className="w-64 relative z-[100]">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4">
+              <div className="w-full sm:w-64 relative z-[100]">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Category</label>
                 <CustomDropdown
                   value={category}
@@ -1354,7 +1372,7 @@ function CategoriesPageContent() {
                   options={CATEGORY_OPTIONS}
                 />
               </div>
-              <div className="w-64 relative z-[90]">
+              <div className="w-full sm:w-64 relative z-[90]">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Region</label>
                 <CustomDropdown
                   value={pincode}
@@ -1367,14 +1385,17 @@ function CategoriesPageContent() {
               </div>
 
               {/* Snapshot Selectors */}
-              <div className="w-40 relative z-[80] mr-4">
+              <div className="w-full sm:w-40 relative z-[80] mr-0 sm:mr-4">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Date</label>
                 <CustomDropdown
                   value={snapshotDate}
                   onChange={(newDate) => {
                     setSnapshotDate(newDate);
                     setSortConfig({ key: 'name', direction: 'asc' });
-                    setIsLiveMode(false);
+                    
+                    // If it's the latest date, we consider it live mode
+                    const isLatestDate = newDate === uniqueDates[0];
+                    setIsLiveMode(isLatestDate);
 
                     // Auto-select the latest time for this date
                     const timesForDate = availableSnapshots.filter(ts => {
@@ -1383,9 +1404,6 @@ function CategoriesPageContent() {
                     });
 
                     if (timesForDate.length > 0) {
-                      // Assuming availableSnapshots is sorted desc (latest first) or we sort it
-                      // The backend usually sends them sorted? 
-                      // Let's sort to be safe: latest first
                       timesForDate.sort((a, b) => new Date(b) - new Date(a));
                       const latestTime = timesForDate[0];
                       setSnapshotTime(latestTime);
@@ -1400,7 +1418,7 @@ function CategoriesPageContent() {
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-end gap-3 self-end lg:self-auto">
               <button
                 id="reload-button"
                 onClick={() => fetchCategoryData()}
@@ -1423,7 +1441,7 @@ function CategoriesPageContent() {
           </div>
 
           {/* Bottom Row: Platform Filter */}
-          <div className="w-full border-t border-gray-100 pt-3 flex items-end justify-between gap-4">
+          <div className="w-full border-t border-gray-100 pt-2 flex items-end justify-between gap-3">
             <div className="flex-1 overflow-hidden">
               <label className="text-xs font-semibold text-gray-500 mb-2 block">
                 Platform Filter <span className="text-neutral-400 font-normal ml-1">({loading ? <Loader2 size={10} className="animate-spin inline-block" /> : currentCounts[platformFilter] || 0})</span>
@@ -1455,8 +1473,8 @@ function CategoriesPageContent() {
               </div>
             </div>
 
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 px-3 py-1.5 mb-0.5">
+            <div className="flex flex-wrap items-center gap-3 lg:gap-5 justify-end">
+              <div className="flex items-center gap-2 px-2 py-1 mb-0.5">
                 <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
                   Hide Similar
                   <MuiTooltip title="Groups duplicate products across platforms. This feature hides the same product which is present in other subcategories." arrow placement="top">
@@ -1470,7 +1488,7 @@ function CategoriesPageContent() {
               </div>
 
               <div className={cn(
-                "flex items-center gap-3 px-3 py-1.5 mb-0.5 transition-opacity duration-200",
+                "flex items-center gap-3 px-2 py-1 mb-0.5 transition-opacity duration-200",
                 platformFilter === 'all' ? "opacity-50 blur-[0.5px] pointer-events-none grayscale" : ""
               )}>
                 <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">

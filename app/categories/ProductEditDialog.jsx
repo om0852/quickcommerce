@@ -7,8 +7,10 @@ import { Switch } from '@/components/ui/switch'; // Assuming you have a Switch c
 function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand }) { // Added availableBrands, onAddNewBrand
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState(brand || '');
+    const [selectedIndex, setSelectedIndex] = useState(-1);
     const inputRef = useRef(null);
     const dropdownRef = useRef(null);
+    const itemRefs = useRef([]);
 
     // Sync search with brand when brand changes externally
     useEffect(() => {
@@ -24,6 +26,36 @@ function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand }) { //
             b.toLowerCase().includes(search.toLowerCase())
         ).slice(0, 50); // Limit to 50 results
     }, [search, availableBrands]);
+
+    const showAddOption = useMemo(() => {
+        return search && !filteredBrands.some(b => b.toLowerCase() === search.toLowerCase());
+    }, [search, filteredBrands]);
+
+    const navigationOptions = useMemo(() => {
+        const options = [];
+        if (showAddOption) {
+            options.push({ type: 'add', value: search });
+        }
+        filteredBrands.forEach(b => {
+            options.push({ type: 'brand', value: b });
+        });
+        return options;
+    }, [showAddOption, filteredBrands, search]);
+
+    // Reset selected index when search or open state changes
+    useEffect(() => {
+        setSelectedIndex(-1);
+    }, [search, isOpen]);
+
+    // Scroll highlighted item into view
+    useEffect(() => {
+        if (selectedIndex >= 0 && itemRefs.current[selectedIndex]) {
+            itemRefs.current[selectedIndex].scrollIntoView({
+                block: 'nearest',
+                behavior: 'instant'
+            });
+        }
+    }, [selectedIndex]);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -64,6 +96,29 @@ function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand }) { //
         setIsOpen(true);
     };
 
+    const handleKeyDown = (e) => {
+        if (!isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+            setIsOpen(true);
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setSelectedIndex(prev => (prev < navigationOptions.length - 1 ? prev + 1 : 0));
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setSelectedIndex(prev => (prev > 0 ? prev - 1 : navigationOptions.length - 1));
+        } else if (e.key === 'Enter') {
+            if (selectedIndex >= 0 && selectedIndex < navigationOptions.length) {
+                e.preventDefault();
+                handleSelect(navigationOptions[selectedIndex].value);
+            }
+        } else if (e.key === 'Escape') {
+            setIsOpen(false);
+            inputRef.current?.blur();
+        }
+    };
+
     return (
         <div className="relative">
             <div className="relative">
@@ -74,6 +129,7 @@ function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand }) { //
                     value={search}
                     onChange={handleInputChange}
                     onFocus={handleInputFocus}
+                    onKeyDown={handleKeyDown}
                     className="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-colors"
                     placeholder="Search or add brand..."
                 />
@@ -91,37 +147,37 @@ function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand }) { //
                     ref={dropdownRef}
                     className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                 >
-                    {filteredBrands.length === 0 ? (
+                    {navigationOptions.length === 0 ? (
                         <div className="px-3 py-2 text-sm text-gray-500">
                             No brands found.
-                            {search && (
-                                <button
-                                    onClick={() => handleSelect(search)}
-                                    className="block w-full mt-2 text-left text-blue-600 hover:text-blue-800 font-medium"
-                                >
-                                    + Add "{search}" as new brand
-                                </button>
-                            )}
                         </div>
                     ) : (
                         <>
-                            {search && !filteredBrands.some(b => b.toLowerCase() === search.toLowerCase()) && (
-                                <button
-                                    onClick={() => handleSelect(search)}
-                                    className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 font-medium border-b border-gray-100"
-                                >
-                                    + Add "{search}" as new brand
-                                </button>
-                            )}
-                            {filteredBrands.map((b, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => handleSelect(b)}
-                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${brand === b ? 'bg-gray-100 font-semibold' : ''}`}
-                                >
-                                    {b}
-                                </button>
-                            ))}
+                            {navigationOptions.map((option, idx) => {
+                                const isHighlighted = idx === selectedIndex;
+                                if (option.type === 'add') {
+                                    return (
+                                        <button
+                                            key="add-new"
+                                            ref={el => itemRefs.current[idx] = el}
+                                            onClick={() => handleSelect(option.value)}
+                                            className={`w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 font-medium border-b border-gray-100 transition-colors ${isHighlighted ? 'bg-blue-50' : ''}`}
+                                        >
+                                            + Add "{option.value}" as new brand
+                                        </button>
+                                    );
+                                }
+                                return (
+                                    <button
+                                        key={idx}
+                                        ref={el => itemRefs.current[idx] = el}
+                                        onClick={() => handleSelect(option.value)}
+                                        className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${brand === option.value ? 'bg-gray-50 font-semibold' : ''} ${isHighlighted ? 'bg-gray-100' : ''}`}
+                                    >
+                                        {option.value}
+                                    </button>
+                                );
+                            })}
                         </>
                     )}
                 </div>
