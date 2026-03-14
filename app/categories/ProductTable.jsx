@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
@@ -125,6 +125,26 @@ const ProductTable = React.memo(function ProductTable({
 
     const handleNameSort = (direction) => {
         onSort('name', direction);
+        handleSortMenuClose();
+    };
+
+    // Rank Submenu State
+    const [rankSubMenuAnchor, setRankSubMenuAnchor] = useState(null);
+    const [rankSortDirection, setRankSortDirection] = useState('asc');
+    const isRankSubMenuOpen = Boolean(rankSubMenuAnchor);
+
+    const handleRankSubMenuOpen = (event, direction) => {
+        setRankSubMenuAnchor(event.currentTarget);
+        setRankSortDirection(direction);
+    };
+
+    const handleRankSubMenuClose = () => {
+        setRankSubMenuAnchor(null);
+    };
+
+    const handlePlatformRankSort = (platform) => {
+        onSort(platform, rankSortDirection);
+        handleRankSubMenuClose();
         handleSortMenuClose();
     };
 
@@ -430,7 +450,8 @@ const ProductTable = React.memo(function ProductTable({
                                                     backgroundColor: sortConfig.key === null && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
                                                     fontWeight: sortConfig.key === null && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
                                                     color: sortConfig.key === null && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Group With Highest Product</span>
@@ -454,7 +475,8 @@ const ProductTable = React.memo(function ProductTable({
                                                     backgroundColor: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
                                                     fontWeight: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
                                                     color: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Group With Lowest Product</span>
@@ -480,7 +502,8 @@ const ProductTable = React.memo(function ProductTable({
                                                     backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
                                                     fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
                                                     color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Brand Name (A to Z)</span>
@@ -504,7 +527,8 @@ const ProductTable = React.memo(function ProductTable({
                                                     backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
                                                     fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
                                                     color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Brand Name (Z to A)</span>
@@ -530,7 +554,8 @@ const ProductTable = React.memo(function ProductTable({
                                                     backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
                                                     fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
                                                     color: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Product Name (A to Z)</span>
@@ -554,12 +579,115 @@ const ProductTable = React.memo(function ProductTable({
                                                     backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
                                                     fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
                                                     color: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Product Name (Z to A)</span>
                                                 {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
+
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                            <MenuItem
+                                                onMouseEnter={(e) => handleRankSubMenuOpen(e, 'asc')}
+                                                onClick={(e) => handleRankSubMenuOpen(e, 'asc')}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
+                                                    color: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <TrendingUp size={14} className="text-emerald-600" />
+                                                    <span>Rank: Low to High</span>
+                                                </div>
+                                                <ChevronRight size={14} className="text-gray-400" />
+                                            </MenuItem>
+
+                                            <MenuItem
+                                                onMouseEnter={(e) => handleRankSubMenuOpen(e, 'desc')}
+                                                onClick={(e) => handleRankSubMenuOpen(e, 'desc')}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
+                                                    color: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <TrendingDown size={14} className="text-rose-600" />
+                                                    <span>Rank: High to Low</span>
+                                                </div>
+                                                <ChevronRight size={14} className="text-gray-400" />
+                                            </MenuItem>
+
+                                            {/* Submenu for Platform Selection */}
+                                            <Menu
+                                                anchorEl={rankSubMenuAnchor}
+                                                open={isRankSubMenuOpen}
+                                                onClose={handleRankSubMenuClose}
+                                                anchorOrigin={{
+                                                    vertical: 'top',
+                                                    horizontal: 'right',
+                                                }}
+                                                transformOrigin={{
+                                                    vertical: 'top',
+                                                    horizontal: 'left',
+                                                }}
+                                                PaperProps={{
+                                                    onMouseLeave: handleRankSubMenuClose,
+                                                    sx: {
+                                                        ml: 0.5,
+                                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                                        border: '1px solid #e5e7eb',
+                                                        minWidth: '140px',
+                                                        borderRadius: '0.375rem',
+                                                    }
+                                                }}
+                                            >
+                                                {['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'].map((plat) => (
+                                                    <MenuItem
+                                                        key={plat}
+                                                        onClick={() => {
+                                                            handlePlatformRankSort(plat);
+                                                            if (showNewFirst) onShowNewFirstChange(false);
+                                                            if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
+                                                        }}
+                                                        sx={{
+                                                            px: 1.5,
+                                                            py: 1,
+                                                            fontSize: '0.75rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'space-between',
+                                                            backgroundColor: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                            fontWeight: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
+                                                            color: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                            '&:hover': { backgroundColor: '#f9fafb' },
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        <span className="capitalize">{plat === 'flipkartMinutes' ? 'Flipkart' : plat}</span>
+                                                        {sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                    </MenuItem>
+                                                ))}
+                                            </Menu>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
@@ -580,7 +708,8 @@ const ProductTable = React.memo(function ProductTable({
                                                     backgroundColor: showNewFirst ? '#f9fafb' : 'transparent',
                                                     fontWeight: showNewFirst ? 700 : 500,
                                                     color: showNewFirst ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' }
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Newly Added {newlyAddedCount > 0 && `(${newlyAddedCount})`}</span>
@@ -605,7 +734,8 @@ const ProductTable = React.memo(function ProductTable({
                                                         backgroundColor: showNonHyphenOnly ? '#f9fafb' : 'transparent',
                                                         fontWeight: showNonHyphenOnly ? 700 : 500,
                                                         color: showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                        '&:hover': { backgroundColor: '#f9fafb' }
+                                                        '&:hover': { backgroundColor: '#f9fafb' },
+                                                        cursor: 'pointer'
                                                     }}
                                                 >
                                                     <span>Non Hyphen ( - )</span>

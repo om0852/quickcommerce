@@ -1110,6 +1110,7 @@ function CategoriesPageContent() {
     }
 
     setSortConfig(currentConfig => {
+      if (direction) return { key, direction };
       let newDirection = 'asc';
       if (currentConfig.key === key) {
         // Cycle: asc (Rank) -> desc (Rank) -> Reset
