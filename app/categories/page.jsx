@@ -170,24 +170,34 @@ function CategoriesPageContent() {
     if (!searchQuery) return products;
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
-    const tokens = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
     const query = searchQuery.toLowerCase().trim();
+    const tokens = query.split(/\s+/).filter(t => t.length > 0);
+    
+    // Detect search intent
+    // Alphabetic: Only letters, spaces, and common name symbols (no digits)
+    const isAlphabetic = /^[a-z\s\(\)\[\]\.,\&]+$/i.test(query);
+    // ID-like: Only digits, underscores, hyphens (no letters)
+    const isNumericOrId = /^[0-9\-_]+$/.test(query);
 
     return products.filter(p => {
-      // 1. Match by name tokens
+      // 1. Name Match (by tokens)
       const nameLower = (p.name || '').toLowerCase();
-      if (tokens.every(token => nameLower.includes(token))) return true;
+      const nameMatch = tokens.every(token => nameLower.includes(token));
 
-      // 2. Match by groupId/groupingId or parentGroupId
+      // 2. ID Match (by strict query)
       const gId = (p.groupingId || '').toLowerCase();
       const pgId = (p.parentGroupId || '').toLowerCase();
-      if (gId === query || pgId === query || gId.includes(query) || pgId.includes(query)) return true;
-
-      // 3. Match by productId on any platform
-      return platforms.some(plat => {
+      const idMatch = gId.includes(query) || pgId.includes(query) || platforms.some(plat => {
         const pid = (p[plat]?.productId || '').toLowerCase();
         return pid && pid.includes(query);
       });
+
+      // Apply filtering logic based on intent
+      if (isAlphabetic && !isNumericOrId) return nameMatch;
+      if (isNumericOrId && !isAlphabetic) return idMatch;
+      
+      // Mixed or fallback: Match either
+      return nameMatch || idMatch;
     });
   }, [products, searchQuery]);
 
@@ -1316,7 +1326,7 @@ function CategoriesPageContent() {
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
-            <span className={`w - 2 h - 2 rounded - full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'} `}></span>
+            <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'}`}></span>
             <span className="font-medium text-neutral-600">
               {isLiveMode ? 'Live Mode' : 'Historical Snapshot'}
             </span>
@@ -1382,7 +1392,10 @@ function CategoriesPageContent() {
                   onChange={(newDate) => {
                     setSnapshotDate(newDate);
                     setSortConfig({ key: 'name', direction: 'asc' });
-                    setIsLiveMode(false);
+                    
+                    // If it's the latest date, we consider it live mode
+                    const isLatestDate = newDate === uniqueDates[0];
+                    setIsLiveMode(isLatestDate);
 
                     // Auto-select the latest time for this date
                     const timesForDate = availableSnapshots.filter(ts => {
@@ -1391,9 +1404,6 @@ function CategoriesPageContent() {
                     });
 
                     if (timesForDate.length > 0) {
-                      // Assuming availableSnapshots is sorted desc (latest first) or we sort it
-                      // The backend usually sends them sorted? 
-                      // Let's sort to be safe: latest first
                       timesForDate.sort((a, b) => new Date(b) - new Date(a));
                       const latestTime = timesForDate[0];
                       setSnapshotTime(latestTime);

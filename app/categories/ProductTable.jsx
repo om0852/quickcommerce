@@ -151,8 +151,8 @@ const ProductTable = React.memo(function ProductTable({
     const newlyAddedCount = useMemo(() => {
         const productsToCount = allFilteredProducts || products;
         if (!productsToCount) return 0;
-        const platforms = platformFilter && platformFilter !== 'all' 
-            ? [platformFilter] 
+        const platforms = platformFilter && platformFilter !== 'all'
+            ? [platformFilter]
             : ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
         let count = 0;
         productsToCount.forEach(p => {
@@ -172,7 +172,7 @@ const ProductTable = React.memo(function ProductTable({
 
     const handleInlineSave = async (groupingId) => {
         if (!editValue.trim() || savingProductId === groupingId) return;
-        
+
         setSavingProductId(groupingId);
         try {
             const res = await fetch('/api/grouping/update', {
@@ -256,7 +256,7 @@ const ProductTable = React.memo(function ProductTable({
     const formatProductName = (name) => {
         if (!name) return '';
         const delimiter = name.includes(' - ') ? ' - ' : (name.includes(' -') ? ' -' : null);
-        
+
         if (delimiter) {
             const parts = name.split(delimiter);
             const firstPart = parts[0].trim();
@@ -354,7 +354,7 @@ const ProductTable = React.memo(function ProductTable({
                                         color: '#737373', // text-neutral-500
                                         backgroundColor: '#fafafa', // bg-neutral-50
                                         position: 'sticky',
-                                        left: 0,
+                                        left: isBulkEditMode ? 44 : 0,
                                         zIndex: 30, // Lowered from 60 to be below dropdowns (z-50)
                                         minWidth: { xs: 120, sm: 150, md: 200, lg: 220 },
                                         width: { xs: 120, sm: 150, md: 200, lg: 220 },
@@ -362,18 +362,11 @@ const ProductTable = React.memo(function ProductTable({
                                         borderBottom: '1px solid #e5e5e5',
                                         borderRight: '1px solid #e5e5e5',
                                         boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
-                                        padding: '6px 12px'
+                                        padding: '8px 16px'
                                     }}
                                 >
-                                    <div style={{
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'flex-start',
-                                        width: '100%',
-                                        gap: { xs: '4px', sm: '10px' }
-                                    }}>
-                                        <span className="hidden sm:inline">SKUs</span>
+                                    <div className="flex flex-row items-center justify-start w-full gap-3">
+                                        <span className="hidden sm:inline-block w-10 text-neutral-500 font-bold">SKUs</span>
                                         <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
                                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
                                             <input
@@ -586,7 +579,6 @@ const ProductTable = React.memo(function ProductTable({
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
                                             <MenuItem
-                                                onMouseEnter={(e) => handleRankSubMenuOpen(e, 'asc')}
                                                 onClick={(e) => handleRankSubMenuOpen(e, 'asc')}
                                                 sx={{
                                                     px: 1.5,
@@ -610,7 +602,6 @@ const ProductTable = React.memo(function ProductTable({
                                             </MenuItem>
 
                                             <MenuItem
-                                                onMouseEnter={(e) => handleRankSubMenuOpen(e, 'desc')}
                                                 onClick={(e) => handleRankSubMenuOpen(e, 'desc')}
                                                 sx={{
                                                     px: 1.5,
@@ -647,7 +638,6 @@ const ProductTable = React.memo(function ProductTable({
                                                     horizontal: 'left',
                                                 }}
                                                 PaperProps={{
-                                                    onMouseLeave: handleRankSubMenuClose,
                                                     sx: {
                                                         ml: 0.5,
                                                         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
@@ -787,12 +777,12 @@ const ProductTable = React.memo(function ProductTable({
                                         <TableCell
                                             sx={{
                                                 position: 'sticky',
-                                                left: 0,
+                                                left: isBulkEditMode ? 44 : 0,
                                                 backgroundColor: 'white',
                                                 zIndex: 20,
-                                                minWidth: { xs: 150, md: 250 },
-                                                width: { xs: 150, md: 250 },
-                                                maxWidth: { xs: 150, md: 250 },
+                                                minWidth: { xs: 150, md: 220 },
+                                                width: { xs: 150, md: 220 },
+                                                maxWidth: { xs: 150, md: 220 },
                                                 borderBottom: '1px solid #e5e5e5',
                                                 borderRight: '1px solid #e5e5e5',
                                                 padding: '16px 32px',
@@ -902,7 +892,7 @@ const ProductTable = React.memo(function ProductTable({
                                                 scope="row"
                                                 sx={{
                                                     position: 'sticky',
-                                                    left: 0,
+                                                    left: isBulkEditMode ? 44 : 0,
                                                     backgroundColor: 'white',
                                                     zIndex: 20,
                                                     minWidth: { xs: 150, md: 200, lg: 220 },
@@ -919,14 +909,14 @@ const ProductTable = React.memo(function ProductTable({
                                                     }
                                                 }}
                                             >
-                                                <div className="grid grid-cols-[auto_1fr] gap-3">
-                                                    <div className="h-10 w-10 flex-shrink-0 rounded-lg border border-neutral-200 p-0.5 bg-white">
+                                                <div className="flex flex-row items-start gap-3">
+                                                    <div className="h-10 w-10 flex-shrink-0 rounded-lg border border-neutral-200 p-0.5 bg-white overflow-hidden self-start">
                                                         <ProductImage product={product} />
                                                     </div>
                                                     <div className="w-full min-w-0">
                                                         <div className="text-[13px] font-medium text-neutral-900 whitespace-normal break-words flex items-center gap-1.5" title={product.name}>
-                                                            <span 
-                                                                className="flex-1 min-w-0 cursor-pointer" 
+                                                            <span
+                                                                className="flex-1 min-w-0 cursor-pointer"
                                                                 onDoubleClick={() => {
                                                                     if (isAdmin) {
                                                                         setEditingProductId(product.groupingId);
@@ -936,35 +926,38 @@ const ProductTable = React.memo(function ProductTable({
                                                                 title={isAdmin ? "Double click to edit" : product.name}
                                                             >
                                                                 {editingProductId === product.groupingId ? (
-                                                                    <div className="flex flex-col gap-1 w-full">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <input
-                                                                                type="text"
-                                                                                autoFocus
-                                                                                value={editValue}
-                                                                                onChange={(e) => setEditValue(e.target.value)}
-                                                                                onKeyDown={(e) => {
-                                                                                    if (e.key === 'Enter') {
-                                                                                        e.preventDefault();
-                                                                                        handleInlineSave(product.parentGroupId || product.groupingId);
-                                                                                    } else if (e.key === 'Escape') {
-                                                                                        setEditingProductId(null);
-                                                                                    }
-                                                                                }}
-                                                                                onBlur={() => setEditingProductId(null)}
-                                                                                disabled={savingProductId === (product.parentGroupId || product.groupingId)}
-                                                                                className="w-full px-2 py-1 text-sm border border-black/20 rounded focus:outline-none focus:border-black"
-                                                                                title="Edit Product Name"
-                                                                            />
-                                                                            {savingProductId === (product.parentGroupId || product.groupingId) && (
-                                                                                <Loader2 size={12} className="animate-spin text-neutral-400" />
+                                                                    <div className="relative w-full h-8">
+                                                                        <div className="absolute left-0 top-0 z-[100] flex flex-col gap-1.5 p-2 bg-white border border-black/20 rounded-lg shadow-2xl min-w-[450px]">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    autoFocus
+                                                                                    onFocus={(e) => e.target.select()}
+                                                                                    value={editValue}
+                                                                                    onChange={(e) => setEditValue(e.target.value)}
+                                                                                    onKeyDown={(e) => {
+                                                                                        if (e.key === 'Enter') {
+                                                                                            e.preventDefault();
+                                                                                            handleInlineSave(product.parentGroupId || product.groupingId);
+                                                                                        } else if (e.key === 'Escape') {
+                                                                                            setEditingProductId(null);
+                                                                                        }
+                                                                                    }}
+                                                                                    onBlur={() => setEditingProductId(null)}
+                                                                                    disabled={savingProductId === (product.parentGroupId || product.groupingId)}
+                                                                                    className="flex-1 px-3 py-1.5 text-sm border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black"
+                                                                                    title="Edit Product Name"
+                                                                                />
+                                                                                {savingProductId === (product.parentGroupId || product.groupingId) && (
+                                                                                    <Loader2 size={14} className="animate-spin text-neutral-400" />
+                                                                                )}
+                                                                            </div>
+                                                                            {((product.weight && product.weight !== 'N/A') || product.quantity) && (
+                                                                                <span className="text-neutral-500 font-normal text-[11px] px-1">
+                                                                                    + Weight/Qty suffix: ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})
+                                                                                </span>
                                                                             )}
                                                                         </div>
-                                                                        {((product.weight && product.weight !== 'N/A') || product.quantity) && (
-                                                                            <span className="text-neutral-500 font-normal text-[11px]">
-                                                                                + Weight/Qty suffix: ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})
-                                                                            </span>
-                                                                        )}
                                                                     </div>
                                                                 ) : (
                                                                     <div className="block leading-tight break-words">
@@ -972,7 +965,7 @@ const ProductTable = React.memo(function ProductTable({
                                                                         {(() => {
                                                                             const suffix = (product.weight && product.weight !== 'N/A') ? product.weight : product.quantity;
                                                                             if (!suffix) return null;
-                                                                            
+
                                                                             // Check if suffix is already mentioned in product name to avoid redundancy
                                                                             const nameLower = product.name.toLowerCase();
                                                                             const suffixLower = suffix.toString().toLowerCase();
@@ -1004,13 +997,13 @@ const ProductTable = React.memo(function ProductTable({
                                                             </div>
                                                         )}
                                                         {isAdmin && (
-                                                            <div className="mt-1 flex flex-col gap-1">
+                                                            <div className="mt-2 flex flex-row items-center gap-2">
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         setEditProduct(product);
                                                                     }}
-                                                                    className="w-full text-[10px] font-bold text-neutral-500 hover:text-neutral-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded border border-gray-200 transition-colors text-center"
+                                                                    className="flex-1 text-[10px] font-bold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded border border-neutral-200 transition-colors text-center whitespace-nowrap"
                                                                     title="Edit Values"
                                                                 >
                                                                     Edit
@@ -1020,9 +1013,9 @@ const ProductTable = React.memo(function ProductTable({
                                                                         e.stopPropagation();
                                                                         setManageGroup(product);
                                                                     }}
-                                                                    className="w-full text-[10px] font-bold text-neutral-500 hover:text-neutral-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded border border-gray-200 transition-colors"
+                                                                    className="flex-1 text-[10px] font-bold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded border border-neutral-200 transition-colors text-center whitespace-nowrap"
                                                                 >
-                                                                    Manage Group
+                                                                    Group
                                                                 </button>
                                                             </div>
                                                         )}
