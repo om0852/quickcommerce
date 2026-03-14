@@ -171,12 +171,19 @@ function CategoriesPageContent() {
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
     const tokens = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+    const query = searchQuery.toLowerCase().trim();
+
     return products.filter(p => {
+      // 1. Match by name tokens
       const nameLower = (p.name || '').toLowerCase();
       if (tokens.every(token => nameLower.includes(token))) return true;
 
-      // Also search by productId on any platform
-      const query = searchQuery.toLowerCase();
+      // 2. Match by groupId/groupingId or parentGroupId
+      const gId = (p.groupingId || '').toLowerCase();
+      const pgId = (p.parentGroupId || '').toLowerCase();
+      if (gId === query || pgId === query || gId.includes(query) || pgId.includes(query)) return true;
+
+      // 3. Match by productId on any platform
       return platforms.some(plat => {
         const pid = (p[plat]?.productId || '').toLowerCase();
         return pid && pid.includes(query);

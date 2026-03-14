@@ -362,7 +362,7 @@ const ProductTable = React.memo(function ProductTable({
                                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
                                             <input
                                                 type="text"
-                                                placeholder="Search..."
+                                                placeholder="Search by name, ID or Group ID..."
                                                 value={searchQuery}
                                                 onChange={(e) => onSearchChange(e.target.value)}
                                                 className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-all font-medium normal-case placeholder:text-gray-400 text-neutral-700"

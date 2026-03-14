@@ -31,8 +31,31 @@ const BrandProductsDialog = ({
             relevant = relevant.filter(p => p[platform]);
         }
 
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase().trim();
+            const tokens = query.split(/\s+/).filter(t => t.length > 0);
+            const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
+
+            relevant = relevant.filter(p => {
+                // 1. Match by name tokens
+                const nameLower = (p.name || '').toLowerCase();
+                if (tokens.every(token => nameLower.includes(token))) return true;
+
+                // 2. Match by groupId/groupingId or parentGroupId
+                const gId = (p.groupingId || '').toLowerCase();
+                const pgId = (p.parentGroupId || '').toLowerCase();
+                if (gId === query || pgId === query || gId.includes(query) || pgId.includes(query)) return true;
+
+                // 3. Match by productId on any platform
+                return platforms.some(plat => {
+                    const pid = (p[plat]?.productId || '').toLowerCase();
+                    return pid && pid.includes(query);
+                });
+            });
+        }
+
         return relevant;
-    }, [allProducts, brandName, platform]);
+    }, [allProducts, brandName, platform, searchQuery]);
 
     const handleSort = (key, direction) => {
         setSortConfig({ key, direction });
