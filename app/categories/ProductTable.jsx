@@ -255,24 +255,20 @@ const ProductTable = React.memo(function ProductTable({
 
     const formatProductName = (name) => {
         if (!name) return '';
-        if (name.includes(' - ')) {
-            const [firstPart, ...rest] = name.split(' - ');
+        const delimiter = name.includes(' - ') ? ' - ' : (name.includes(' -') ? ' -' : null);
+        
+        if (delimiter) {
+            const parts = name.split(delimiter);
+            const firstPart = parts[0].trim();
+            const rest = parts.slice(1).join(delimiter).trim();
             return (
                 <>
                     <span className="font-extrabold text-neutral-900">{firstPart}</span>
-                    {" - "}{rest.join(' - ')}
-                </>
-            );
-        } else if (name.includes(' -')) {
-            const [firstPart, ...rest] = name.split(' -');
-            return (
-                <>
-                    <span className="font-extrabold text-neutral-900">{firstPart}</span>
-                    {" -"}{rest.join(' -')}
+                    {rest && <span className="text-neutral-600 font-medium"> - {rest}</span>}
                 </>
             );
         }
-        return name;
+        return <span className="font-extrabold text-neutral-900">{name}</span>;
     };
 
     return (
@@ -360,13 +356,13 @@ const ProductTable = React.memo(function ProductTable({
                                         position: 'sticky',
                                         left: 0,
                                         zIndex: 30, // Lowered from 60 to be below dropdowns (z-50)
-                                        minWidth: { xs: 150, md: 250 },
-                                        width: { xs: 150, md: 250 },
-                                        maxWidth: { xs: 150, md: 250 },
+                                        minWidth: { xs: 120, sm: 150, md: 200, lg: 220 },
+                                        width: { xs: 120, sm: 150, md: 200, lg: 220 },
+                                        maxWidth: { xs: 120, sm: 150, md: 200, lg: 220 },
                                         borderBottom: '1px solid #e5e5e5',
                                         borderRight: '1px solid #e5e5e5',
                                         boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
-                                        padding: '8px 16px'
+                                        padding: '6px 12px'
                                     }}
                                 >
                                     <div style={{
@@ -375,10 +371,10 @@ const ProductTable = React.memo(function ProductTable({
                                         alignItems: 'center',
                                         justifyContent: 'flex-start',
                                         width: '100%',
-                                        gap: '10px'
+                                        gap: { xs: '4px', sm: '10px' }
                                     }}>
-                                        <span>SKUs</span>
-                                        <div className="relative flex-1 max-w-[full]" onClick={(e) => e.stopPropagation()}>
+                                        <span className="hidden sm:inline">SKUs</span>
+                                        <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
                                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
                                             <input
                                                 type="text"
@@ -760,9 +756,10 @@ const ProductTable = React.memo(function ProductTable({
                                             cursor: 'pointer',
                                             userSelect: 'none',
                                             userSelect: 'none',
-                                            minWidth: 110,
-                                            width: 110,
-                                            maxWidth: 110,
+                                            minWidth: 100,
+                                            width: 100,
+                                            maxWidth: 100,
+                                            padding: '8px 12px',
                                             borderBottom: '1px solid #e5e5e5',
                                             '&:hover': { backgroundColor: '#f5f5f5' }
                                         }}
@@ -818,7 +815,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     width: 110,
                                                     maxWidth: 110,
                                                     borderBottom: '1px solid #e5e5e5',
-                                                    padding: '16px 32px',
+                                                    padding: '8px 12px',
                                                 }}
                                             >
                                                 <div className="space-y-2">
@@ -908,13 +905,13 @@ const ProductTable = React.memo(function ProductTable({
                                                     left: 0,
                                                     backgroundColor: 'white',
                                                     zIndex: 20,
-                                                    minWidth: { xs: 150, md: 250 },
-                                                    width: { xs: 150, md: 250 },
-                                                    maxWidth: { xs: 150, md: 250 },
+                                                    minWidth: { xs: 150, md: 200, lg: 220 },
+                                                    width: { xs: 150, md: 200, lg: 220 },
+                                                    maxWidth: { xs: 150, md: 200, lg: 220 },
                                                     borderBottom: '1px solid #e5e5e5',
                                                     borderRight: '1px solid #e5e5e5',
                                                     boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
-                                                    padding: '16px 32px',
+                                                    padding: '8px 16px',
                                                     transition: 'background-color 0.2s',
                                                     verticalAlign: 'top',
                                                     '.MuiTableRow-root:hover &': {
@@ -922,12 +919,12 @@ const ProductTable = React.memo(function ProductTable({
                                                     }
                                                 }}
                                             >
-                                                <div className="grid grid-cols-[auto_1fr] gap-4">
-                                                    <div className="h-12 w-12 flex-shrink-0 rounded-lg border border-neutral-200 p-1 bg-white">
+                                                <div className="grid grid-cols-[auto_1fr] gap-3">
+                                                    <div className="h-10 w-10 flex-shrink-0 rounded-lg border border-neutral-200 p-0.5 bg-white">
                                                         <ProductImage product={product} />
                                                     </div>
                                                     <div className="w-full min-w-0">
-                                                        <div className="text-sm font-medium text-neutral-900 whitespace-normal break-words flex items-center gap-1.5" title={product.name}>
+                                                        <div className="text-[13px] font-medium text-neutral-900 whitespace-normal break-words flex items-center gap-1.5" title={product.name}>
                                                             <span 
                                                                 className="flex-1 min-w-0 cursor-pointer" 
                                                                 onDoubleClick={() => {
@@ -970,16 +967,20 @@ const ProductTable = React.memo(function ProductTable({
                                                                         )}
                                                                     </div>
                                                                 ) : (
-                                                                    <>
-                                                                        <div className="flex flex-col">
-                                                                            <div className="flex items-center gap-2">
-                                                                                {formatProductName(product.name)}
-                                                                                {((product.weight && product.weight !== 'N/A') || product.quantity) && (
-                                                                                    <span className="text-neutral-500 font-normal"> - ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})</span>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </>
+                                                                    <div className="block leading-tight break-words">
+                                                                        {formatProductName(product.name)}
+                                                                        {(() => {
+                                                                            const suffix = (product.weight && product.weight !== 'N/A') ? product.weight : product.quantity;
+                                                                            if (!suffix) return null;
+                                                                            
+                                                                            // Check if suffix is already mentioned in product name to avoid redundancy
+                                                                            const nameLower = product.name.toLowerCase();
+                                                                            const suffixLower = suffix.toString().toLowerCase();
+                                                                            if (nameLower.includes(suffixLower)) return null;
+
+                                                                            return <span className="text-neutral-400 font-normal ml-1">({suffix})</span>;
+                                                                        })()}
+                                                                    </div>
                                                                 )}
                                                             </span>
                                                             {isAdmin && (
@@ -1036,11 +1037,10 @@ const ProductTable = React.memo(function ProductTable({
                                                     <TableCell
                                                         key={p}
                                                         sx={{
-                                                            minWidth: 110,
-                                                            width: 110,
-                                                            maxWidth: 110,
-                                                            borderBottom: '1px solid #e5e5e5',
-                                                            padding: '16px 32px',
+                                                            minWidth: 100,
+                                                            width: 100,
+                                                            maxWidth: 100,
+                                                            padding: '8px 12px',
                                                             verticalAlign: 'top'
                                                         }}
                                                     >
