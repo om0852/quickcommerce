@@ -3,11 +3,11 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   try {
-    const { email, message } = await req.json();
+    const { email, contactNumber, message } = await req.json();
 
-    if (!email || !message) {
+    if (!email || !contactNumber || !message) {
       return NextResponse.json(
-        { error: 'Email and message are required' }, 
+        { error: 'Email, contact number, and message are required' }, 
         { status: 400 }
       );
     }
@@ -33,9 +33,10 @@ export async function POST(req) {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
+      cc: process.env.EMAIL_CC || '',
       replyTo: email,
       subject: 'New User Feedback - QuickCommerce',
-      text: `You have received new feedback.\n\nFrom: ${email}\n\nMessage:\n${message}`,
+      text: `You have received new feedback.\n\nFrom: ${email}${contactNumber ? `\nContact Number: ${contactNumber}` : ''}\n\nMessage:\n${message}`,
     };
 
     // Send the email

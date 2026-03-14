@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { MessageSquare, Send, CheckCircle, AlertCircle, Loader2, X } from "lucide-react";
+import { MessageSquare, Send, CheckCircle, AlertCircle, Loader2, X, Phone, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function FeedbackModal({ isOpen, onClose }) {
-  const [formData, setFormData] = useState({ email: "", message: "" });
+  const [formData, setFormData] = useState({ email: "", contactNumber: "", message: "" });
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -28,7 +28,7 @@ export default function FeedbackModal({ isOpen, onClose }) {
       }
 
       setStatus("success");
-      setFormData({ email: "", message: "" });
+      setFormData({ email: "", contactNumber: "", message: "" });
       setTimeout(() => {
         setStatus("idle");
         onClose();
@@ -44,7 +44,7 @@ export default function FeedbackModal({ isOpen, onClose }) {
     if (status === "loading") return;
     setStatus("idle");
     setErrorMsg("");
-    setFormData({ email: "", message: "" });
+    setFormData({ email: "", contactNumber: "", message: "" });
     onClose();
   };
 
@@ -84,22 +84,43 @@ export default function FeedbackModal({ isOpen, onClose }) {
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
             <label className="block mb-1.5 text-sm font-semibold text-neutral-900">
-              Your Email
+              Your Email *
             </label>
-            <input
-              type="email"
-              required
-              className="w-full h-[42px] px-4 rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors placeholder:text-neutral-400"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="user@email.com"
-              disabled={status === "loading"}
-            />
+            <div className="relative">
+              <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <input
+                type="email"
+                required
+                className="w-full h-[42px] pl-10 pr-4 rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors placeholder:text-neutral-400"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="user@email.com"
+                disabled={status === "loading"}
+              />
+            </div>
           </div>
 
           <div>
             <label className="block mb-1.5 text-sm font-semibold text-neutral-900">
-              Message
+              Contact Number *
+            </label>
+            <div className="relative">
+              <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <input
+                type="tel"
+                required
+                className="w-full h-[42px] pl-10 pr-4 rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors placeholder:text-neutral-400"
+                value={formData.contactNumber}
+                onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                placeholder="+91 9876543210"
+                disabled={status === "loading"}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block mb-1.5 text-sm font-semibold text-neutral-900">
+              Message * <span className="text-neutral-400 font-normal text-xs">( Note: )</span>
             </label>
             <textarea
               required
