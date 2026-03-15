@@ -33,7 +33,7 @@ export async function POST(req) {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
-      cc: process.env.EMAIL_CC || '',
+      cc: 'malav2202@gmail.com',
       replyTo: email,
       subject: 'New User Feedback - QuickCommerce',
       text: `You have received new feedback.\n\nFrom: ${email}${contactNumber ? `\nContact Number: ${contactNumber}` : ''}\n\nMessage:\n${message}`,

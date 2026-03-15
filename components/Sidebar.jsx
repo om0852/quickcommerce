@@ -92,7 +92,7 @@ export default function Sidebar({ isOpen, onClose }) {
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-neutral-400 hover:bg-neutral-800 hover:text-white transition-all duration-200 text-left"
           >
             <MessageSquare size={20} />
-            <span>Feedback</span>
+            <span>Review & Feedback</span>
           </button>
         </nav>
 

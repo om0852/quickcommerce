@@ -59,7 +59,7 @@ export default function FeedbackModal({ isOpen, onClose }) {
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-xl w-full max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-xl w-full max-w-[600px] shadow-2xl animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -74,7 +74,7 @@ export default function FeedbackModal({ isOpen, onClose }) {
           </div>
           <button
             onClick={handleClose}
-            className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -82,6 +82,9 @@ export default function FeedbackModal({ isOpen, onClose }) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <p className="text-xs text-neutral-500 leading-relaxed">
+            Need help? Reach out to Malav — Call/WhatsApp: <span className="text-neutral-700 font-medium">+91-9665047289</span> or Email: <span className="text-neutral-700 font-medium">malav@creatosaurus.io</span> or fill the form, we will get back to you.
+          </p>
           <div>
             <label className="block mb-1.5 text-sm font-semibold text-neutral-900">
               Your Email *
@@ -120,7 +123,12 @@ export default function FeedbackModal({ isOpen, onClose }) {
 
           <div>
             <label className="block mb-1.5 text-sm font-semibold text-neutral-900">
-              Message * <span className="text-neutral-400 font-normal text-xs">( Note: )</span>
+              Message * <span className="text-neutral-400 font-normal text-xs">
+                ( Help us understand the issue better. <br/>
+                1. For product merging/demerging, include Pincode, Category, Scrape Date, PIDs, and Product Names.<br/>
+                2. For bugs or feature requests, please attach a screen recording or screenshot with voice/text annotation, examples or references.<br/>
+                3. Describe your issue with as much detail as possible. )
+              </span>
             </label>
             <textarea
               required
@@ -154,7 +162,7 @@ export default function FeedbackModal({ isOpen, onClose }) {
               "w-full h-[42px] px-6 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md",
               status === "loading"
                 ? "bg-neutral-400 text-white cursor-not-allowed"
-                : "bg-neutral-900 text-white hover:bg-black"
+                : "bg-neutral-900 text-white hover:bg-black cursor-pointer"
             )}
           >
             {status === "loading" ? (
