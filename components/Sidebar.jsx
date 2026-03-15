@@ -1,12 +1,17 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, BarChart3, Bell, LogOut, LayoutDashboard } from 'lucide-react';
+import { Search, BarChart3, Bell, LogOut, LayoutDashboard, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import FeedbackModal from './FeedbackModal';
 import { SidebarCloseIcon } from './SidebarIcons';
 
 export default function Sidebar({ isOpen, onClose }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -38,13 +43,20 @@ export default function Sidebar({ isOpen, onClose }) {
         onClick={onClose}
       />
 
-      <aside className={cn(
-        "fixed top-0 left-0 h-screen w-64 bg-neutral-900 text-white flex flex-col border-r border-neutral-800 z-[160] transition-transform duration-300 ease-in-out",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <aside
+        className={cn(
+          "fixed top-0 left-0 h-screen w-64 bg-neutral-900 text-white flex flex-col border-r border-neutral-800 z-[160] transition-transform duration-300 ease-in-out xl:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* HEADER */}
         <div className="px-6 py-[18px] border-b border-neutral-800 flex items-center justify-between">
-          <h1 className="text-xl font-bold tracking-tight">QuickCommerce</h1>
-          <button 
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">QuickCommerce</h1>
+            <p className="text-sm text-neutral-400">Category Tracker</p>
+          </div>
+
+          <button
             onClick={onClose}
             className="xl:hidden p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
             aria-label="Close Sidebar"
@@ -53,16 +65,18 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
 
+        {/* NAVIGATION */}
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => {
-                  if (window.innerWidth < 1280) onClose();
+                  if (window.innerWidth < 1280 && onClose) onClose();
                 }}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
@@ -76,9 +90,21 @@ export default function Sidebar({ isOpen, onClose }) {
               </Link>
             );
           })}
+
+          {/* Feedback Button */}
+          <button
+            onClick={() => {
+              if (window.innerWidth < 1280 && onClose) onClose();
+              setFeedbackOpen(true);
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-neutral-400 hover:bg-neutral-800 hover:text-white transition-all duration-200 text-left"
+          >
+            <MessageSquare size={20} />
+            <span>Review & Feedback</span>
+          </button>
         </nav>
 
-        {/* --- LOGOUT BUTTON --- */}
+        {/* LOGOUT */}
         <div className="px-4 pb-2">
           <button
             onClick={handleLogout}
@@ -89,13 +115,19 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* --- FOOTER --- */}
+        {/* FOOTER */}
         <div className="p-6 border-t border-neutral-800">
           <p className="text-center text-xs text-neutral-500">
             © 2025 QuickCommerce
           </p>
         </div>
       </aside>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+      />
     </>
   );
-}
+}
