@@ -822,13 +822,13 @@ const ProductTable = React.memo(function ProductTable({
                                     <TableCell
                                         key={platform}
                                         onClick={() => onSort(platform)}
+                                        align="center"
                                         sx={{
                                             fontWeight: 'bold',
                                             textTransform: 'uppercase',
                                             color: '#737373',
                                             backgroundColor: '#fafafa',
                                             cursor: 'pointer',
-                                            userSelect: 'none',
                                             userSelect: 'none',
                                             minWidth: 100,
                                             width: 100,
@@ -838,7 +838,7 @@ const ProductTable = React.memo(function ProductTable({
                                             '&:hover': { backgroundColor: '#f5f5f5' }
                                         }}
                                     >
-                                        <div className="flex items-center gap-1">
+                                        <div className="flex items-center justify-center gap-1">
                                             {platform === 'flipkartMinutes' ? 'Flipkart' : platform}
                                             {sortConfig.key === platform ? (
                                                 sortConfig.direction === 'asc' ? <ChevronUp size={14} /> :
@@ -884,6 +884,7 @@ const ProductTable = React.memo(function ProductTable({
                                         {['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'].map(p => (
                                             <TableCell
                                                 key={p}
+                                                align="center"
                                                 sx={{
                                                     minWidth: 110,
                                                     width: 110,
@@ -892,7 +893,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     padding: '8px 12px',
                                                 }}
                                             >
-                                                <div className="space-y-2">
+                                                <div className="space-y-2 flex flex-col items-center">
                                                     <div className="h-4 bg-neutral-200 rounded animate-pulse w-12" />
                                                     <div className="h-3 bg-neutral-100 rounded animate-pulse w-16" />
                                                 </div>
@@ -1129,6 +1130,7 @@ const ProductTable = React.memo(function ProductTable({
                                                 return (
                                                     <TableCell
                                                         key={p}
+                                                        align="center"
                                                         sx={{
                                                             minWidth: 100,
                                                             width: 100,
@@ -1138,8 +1140,8 @@ const ProductTable = React.memo(function ProductTable({
                                                         }}
                                                     >
                                                         {data ? (
-                                                            <div>
-                                                                <div className="flex items-center gap-2">
+                                                            <div className="flex flex-col items-center">
+                                                                <div className="flex items-center justify-center gap-2">
                                                                     <div className="text-sm font-semibold text-neutral-900">
                                                                         ₹{Number(data.currentPrice).toFixed(0)}
                                                                     </div>
@@ -1151,14 +1153,14 @@ const ProductTable = React.memo(function ProductTable({
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                    {data.new && (
-                                                                        <span className="text-[10px] font-bold text-blue-600">NEW</span>
-                                                                    )}
+                                                                {data.new && (
+                                                                    <span className="text-[10px] font-bold text-blue-600">NEW</span>
+                                                                )}
                                                                 {data.hasBaseIdConflict && (
                                                                     <div className="mt-1">
-                                                                        <img 
-                                                                            src="https://img.icons8.com/?size=100&id=4009&format=png&color=FA5252" 
-                                                                            alt="Conflict" 
+                                                                        <img
+                                                                            src="https://img.icons8.com/?size=100&id=4009&format=png&color=FA5252"
+                                                                            alt="Conflict"
                                                                             className="w-5 h-5"
                                                                             title="Different Base IDs detected in group"
                                                                         />

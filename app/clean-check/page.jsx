@@ -73,28 +73,28 @@ export default function CleanCheckPage() {
     return (
         <div className="min-h-screen bg-[#fafafa] font-sans text-neutral-900 flex flex-col">
             {/* Header */}
-            <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shadow-sm z-20 min-h-[64px]">
-                <div className="flex items-center gap-4">
+            <div className="flex-none bg-white border-b border-gray-200 px-2.5 sm:px-4 py-2 flex items-center justify-between shadow-sm z-20 min-h-[56px]">
+                <div className="flex items-center gap-2.5">
                     {!isSidebarOpen && (
                         <button 
                             onClick={toggleSidebar}
-                            className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in"
+                            className="p-1.5 -ml-1 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in"
                         >
-                            <SidebarOpenIcon size={24} />
+                            <SidebarOpenIcon size={20} />
                         </button>
                     )}
-                    <h1 className="text-xl font-bold tracking-tight text-neutral-900">Clean Check</h1>
+                    <h1 className="text-lg font-bold tracking-tight text-neutral-900">Clean Check</h1>
                 </div>
-                <div className="hidden md:flex items-center gap-2 text-sm bg-rose-50 text-rose-600 rounded-lg px-3 py-1 border border-rose-100">
-                    <Unlink size={14} className="animate-pulse" />
-                    <span className="font-bold">Problematic Groups Analysis</span>
+                <div className="hidden md:flex items-center gap-2 text-[10px] bg-rose-50 text-rose-600 rounded-full px-2.5 py-1 border border-rose-100">
+                    <Unlink size={12} className="animate-pulse" />
+                    <span className="font-bold uppercase tracking-tight">Problematic Groups Analysis</span>
                 </div>
             </div>
 
-            <div className="flex-1 p-4 md:p-8">
-                <div className="mb-8 max-w-[1400px] mx-auto">
-                    <h2 className="text-2xl font-bold text-neutral-900">Remaining Issues</h2>
-                    <p className="text-neutral-500 mt-1">Groups containing products with different Base IDs. Extracts products with the same Base ID into new groups.</p>
+            <div className="flex-1 p-2.5 sm:p-5">
+                <div className="mb-5 max-w-[1400px] mx-auto px-1">
+                    <h2 className="text-xl font-bold text-neutral-900">Remaining Issues</h2>
+                    <p className="text-neutral-500 text-xs mt-0.5">Groups containing products with different Base IDs. Extracts products with the same Base ID into new groups.</p>
                 </div>
 
                 {loading ? (
@@ -103,7 +103,7 @@ export default function CleanCheckPage() {
                         <p className="text-neutral-500 font-medium tracking-wide">Analyzing grouping structure...</p>
                     </div>
                 ) : error ? (
-                    <div className="max-w-[1400px] mx-auto p-6 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium">
+                    <div className="max-w-[1400px] mx-auto p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium">
                         Error: {error}
                     </div>
                 ) : groups.length === 0 ? (
@@ -113,13 +113,13 @@ export default function CleanCheckPage() {
                         <p className="text-neutral-500">No problematic groups found in the analysis file.</p>
                     </div>
                 ) : (
-                    <div className="max-w-[1400px] mx-auto space-y-6">
+                    <div className="max-w-[1400px] mx-auto space-y-2.5">
                         {groups.map((group) => (
-                            <div key={group.groupingId} className="bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                            <div key={group.groupingId} className="bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                                 {/* Group Header */}
-                                <div className="bg-neutral-50 px-6 py-4 border-b border-neutral-200 flex flex-wrap items-center justify-between gap-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-lg border border-neutral-200 bg-white p-1 overflow-hidden flex-shrink-0">
+                                <div className="bg-neutral-50 px-4 py-2.5 border-b border-neutral-200 flex flex-wrap items-center justify-between gap-2.5">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="h-10 w-10 rounded-lg border border-neutral-200 bg-white p-1 overflow-hidden flex-shrink-0">
                                             {group.primaryImage && group.primaryImage !== 'N/A' ? (
                                                 <img src={group.primaryImage} alt={group.primaryName} className="w-full h-full object-contain" />
                                             ) : (
@@ -127,19 +127,19 @@ export default function CleanCheckPage() {
                                             )}
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-neutral-900">{group.primaryName}</h3>
-                                            <p className="text-xs text-neutral-500 mt-0.5">ID: <span className="font-mono text-neutral-700">{group.groupingId}</span></p>
+                                            <h3 className="font-bold text-neutral-900 text-sm">{group.primaryName}</h3>
+                                            <p className="text-[10px] text-neutral-500 mt-0.5">ID: <span className="font-mono text-neutral-700">{group.groupingId}</span></p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold px-2 py-1 bg-neutral-900 text-white rounded-full uppercase tracking-wider">
+                                        <span className="text-[9px] font-bold px-2 py-0.5 bg-neutral-900 text-white rounded-full uppercase tracking-tighter">
                                             {group.category}
                                         </span>
-                                        <span className="text-[10px] font-bold px-2 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded-full">
+                                        <span className="text-[9px] font-bold px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-full">
                                             {group.products.length} Products
                                         </span>
                                         {group.primaryWeight && (
-                                            <span className="text-[10px] font-bold px-2 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded-full">
+                                            <span className="text-[9px] font-bold px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-full">
                                                 {group.primaryWeight}
                                             </span>
                                         )}

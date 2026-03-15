@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Search, X, Package, Menu as MenuIcon, RefreshCw, TrendingUp, TrendingDown, Check, ChevronUp, ChevronDown, ChevronsUpDown, Filter, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Search, X, Package, Menu as MenuIcon, TrendingUp, TrendingDown, Check, ChevronUp, ChevronDown, ChevronsUpDown, Filter, Plus, Edit2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BrandProductsDialog from './BrandProductsDialog';
 import Paper from '@mui/material/Paper';

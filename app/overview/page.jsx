@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Loader2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSidebar } from '@/components/SidebarContext';
 import { SidebarOpenIcon, SidebarCloseIcon } from '@/components/SidebarIcons';
@@ -106,6 +107,8 @@ function OverviewContent() {
     const [loadingPincode, setLoadingPincode] = useState({});
     const [error, setError] = useState(null);
     const { isSidebarOpen, toggleSidebar } = useSidebar();
+    const searchParams = useSearchParams();
+    const isAdmin = searchParams.get('admin') === 'true';
 
     const fetchOverviewDataForPincode = async (pincodeStr) => {
         if (!pincodeStr) return;
@@ -195,14 +198,16 @@ function OverviewContent() {
                         <span className="font-medium">Latest Scrape Data</span>
                     </div>
                 </div>
-                <button
-                    onClick={handleGlobalRefresh}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all cursor-pointer border border-gray-200 bg-white shadow-sm"
-                    title="Refresh Data"
-                >
-                    <RefreshCw size={16} className={(expandedPincode && loadingPincode[expandedPincode]) ? "animate-spin text-blue-600" : ""} />
-                    Refresh
-                </button>
+                {isAdmin && (
+                    <button
+                        onClick={handleGlobalRefresh}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all cursor-pointer border border-gray-200 bg-white shadow-sm"
+                        title="Refresh Data"
+                    >
+                        <RefreshCw size={16} className={(expandedPincode && loadingPincode[expandedPincode]) ? "animate-spin text-blue-600" : ""} />
+                        Refresh
+                    </button>
+                )}
             </div>
 
             {/* Main Content */}

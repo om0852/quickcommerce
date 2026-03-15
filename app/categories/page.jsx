@@ -1441,14 +1441,16 @@ function CategoriesPageContent() {
 
             {/* Right: Actions */}
             <div className="flex items-center justify-end gap-3 self-end lg:self-auto">
-              <button
-                id="reload-button"
-                onClick={() => fetchCategoryData()}
-                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all cursor-pointer"
-                title="Refresh Data (Alt + R)"
-              >
-                <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-              </button>
+              {isAdmin && (
+                <button
+                  id="reload-button"
+                  onClick={() => fetchCategoryData()}
+                  className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all cursor-pointer"
+                  title="Refresh Data (Alt + R)"
+                >
+                  <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+                </button>
+              )}
 
 
 

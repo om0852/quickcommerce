@@ -285,14 +285,6 @@ export default function GroupManagementDialog({
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-neutral-600 mb-2 block uppercase tracking-wider">Platform</label>
-                                <CustomDropdown
-                                    value={addProductState.platform}
-                                    onChange={v => setAddProductState(prev => ({ ...prev, platform: v }))}
-                                    options={PLATFORM_OPTIONS}
-                                />
-                            </div>
-                            <div>
                                 <label className="text-xs font-bold text-neutral-600 mb-2 block uppercase tracking-wider">Product ID</label>
                                 <input
                                     type="text"
@@ -313,7 +305,7 @@ export default function GroupManagementDialog({
                                                 const InstamartRegex = /^[A-Z0-9]{10}__/i;
                                                 const DMartRegex = /^[0-9]{7}__/i;
                                                 const BlinkitRegex = /^[0-9]{6}__/i;
-
+ 
                                                 if (ZeptoRegex.test(id)) return 'zepto';
                                                 if (JioMartRegex.test(id)) return 'jiomart';
                                                 if (FlipkartRegex.test(id)) return 'flipkartMinutes';
@@ -333,7 +325,16 @@ export default function GroupManagementDialog({
                                     }}
                                 />
                             </div>
-                            <div className="sm:col-span-2 lg:col-span-3">
+                            <div>
+                                <label className="text-xs font-bold text-neutral-600 mb-2 block uppercase tracking-wider">Platform</label>
+                                <CustomDropdown
+                                    value={addProductState.platform}
+                                    onChange={v => setAddProductState(prev => ({ ...prev, platform: v }))}
+                                    options={PLATFORM_OPTIONS}
+                                />
+                            </div>
+                        </div>
+                        <div className="sm:col-span-2 lg:col-span-3">
                                 <button
                                     onClick={handleAdd}
                                     disabled={loading || !addProductState.productId}
@@ -465,7 +466,6 @@ export default function GroupManagementDialog({
                     </div>
 
                 </div>
-            </div>
         </div>
     );
 }

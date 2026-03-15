@@ -55,11 +55,11 @@ function ProductDetailsDialog({
             <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="flex items-start justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
-                    <div className="flex gap-4 items-center">
+                <div className="flex items-start justify-between px-4 py-2.5 border-b border-neutral-100 bg-neutral-50/50">
+                    <div className="flex gap-2.5 items-center">
                         {/* Group Image Display */}
                         {(selectedProduct.groupImage || selectedProduct.image) ? (
-                            <div className="w-14 h-14 bg-white border border-gray-200 rounded flex-none p-1 flex items-center justify-center overflow-hidden shrink-0">
+                            <div className="w-12 h-12 bg-white border border-gray-200 rounded flex-none p-1 flex items-center justify-center overflow-hidden shrink-0">
                                 <img
                                     src={selectedProduct.groupImage || selectedProduct.image}
                                     alt="Group"
@@ -68,30 +68,32 @@ function ProductDetailsDialog({
                                 />
                             </div>
                         ) : (
-                            <div className="w-14 h-14 bg-gray-100 border border-gray-200 rounded flex-none p-1 shrink-0 flex items-center justify-center text-[10px] text-gray-400">
+                            <div className="w-12 h-12 bg-gray-100 border border-gray-200 rounded flex-none p-1 shrink-0 flex items-center justify-center text-[10px] text-gray-400">
                                 No Img
                             </div>
                         )}
                         <div>
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-xl font-bold text-neutral-900">{selectedProduct.name}</h2>
-                                <button
-                                    onClick={() => setIsEditOpen(true)}
-                                    className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200 rounded-full transition-colors cursor-pointer"
-                                    title="Edit Product Details"
-                                >
-                                    <Pencil size={16} />
-                                </button>
+                            <div className="flex items-center gap-2.5">
+                                <h2 className="text-lg font-bold text-neutral-900 leading-tight">{selectedProduct.name}</h2>
+                                {isAdmin && (
+                                    <button
+                                        onClick={() => setIsEditOpen(true)}
+                                        className="p-1 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200 rounded-full transition-colors cursor-pointer"
+                                        title="Edit Product Details"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                )}
                             </div>
                         </div>
-                        <div className="flex flex-col gap-1 mt-1">
-                            <div className="flex gap-2 text-xs text-neutral-500">
+                        <div className="flex flex-col gap-1 mt-0.5">
+                            <div className="flex gap-2 text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">
                                 <span>{category}</span>
                                 <span>•</span>
                                 <span>{pincode}</span>
                             </div>
                             {isAdmin && selectedProduct.groupingId && (
-                                <div className="mt-1 flex items-center gap-2">
+                                <div className="flex items-center gap-2">
                                     <span className="bg-neutral-100 text-neutral-600 text-[10px] font-mono px-1.5 py-0.5 rounded border border-neutral-200">
                                         GID: {selectedProduct.groupingId}
                                     </span>
@@ -101,17 +103,17 @@ function ProductDetailsDialog({
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 -mr-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-colors cursor-pointer"
+                        className="p-1.5 -mr-1.5 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-colors cursor-pointer"
                     >
-                        <X size={20} />
+                        <X size={18} />
                     </button>
                 </div>
 
                 {/* Scrollable Body */}
-                <div className="flex-1 overflow-y-auto p-6 bg-[#fafafa]">
+                <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 bg-[#fafafa]">
 
                     {/* Platform Details Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 mb-5">
                         {availablePlatforms.map(platform => {
                             const data = selectedProduct[platform];
 
