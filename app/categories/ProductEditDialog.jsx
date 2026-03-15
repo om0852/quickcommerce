@@ -304,11 +304,12 @@ export default function ProductEditDialog({
         setError(null);
 
         try {
+            const groupingId = product.parentGroupId || product.groupingId;
             const groupUpdatePromise = fetch('/api/grouping/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    groupingId: product.groupingId,
+                    groupingId: groupingId,
                     updates: { name, weight, brand, groupImage }
                 })
             });

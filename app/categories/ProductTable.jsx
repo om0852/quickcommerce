@@ -95,6 +95,8 @@ const ProductTable = React.memo(function ProductTable({
     const [editValue, setEditValue] = useState('');
     const [savingProductId, setSavingProductId] = useState(null);
     const [selectedBrand, setSelectedBrand] = useState('');
+    const [bulkName, setBulkName] = useState('');
+    const [bulkWeight, setBulkWeight] = useState('');
     const [bulkUpdating, setBulkUpdating] = useState(false);
 
     // TOAST STATE
@@ -209,30 +211,43 @@ const ProductTable = React.memo(function ProductTable({
         });
     };
 
-    const handleBulkBrandUpdate = async () => {
-        if (!selectedBrand || selectedGroupIds.length === 0 || bulkUpdating) return;
+    const handleBulkUpdate = async () => {
+        if (selectedGroupIds.length === 0 || bulkUpdating) return;
+        
+        // Check if at least one field is provided
+        if (!selectedBrand && !bulkName.trim() && !bulkWeight.trim()) {
+            showToast('Please provide at least one value to update', 'warning');
+            return;
+        }
 
-        const brand = bulkBrands.find(b => b._id === selectedBrand);
-        if (!brand) return;
-
+        const brand = selectedBrand ? bulkBrands.find(b => b._id === selectedBrand) : null;
+        
         setBulkUpdating(true);
         let successCount = 0;
         let failCount = 0;
 
         for (const groupingId of selectedGroupIds) {
             try {
+                const updates = {};
+                if (bulkName.trim()) updates.name = bulkName.trim();
+                if (bulkWeight.trim()) updates.weight = bulkWeight.trim();
+                if (brand) {
+                    updates.brand = brand.brandName;
+                    updates.brandId = brand._id;
+                }
+
                 const res = await fetch('/api/grouping/update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         groupingId,
-                        updates: { brand: brand.brandName, brandId: brand._id }
+                        updates
                     })
                 });
                 if (res.ok) {
                     successCount++;
                     if (onLocalUpdate) {
-                        onLocalUpdate({ groupingId, brand: brand.brandName, brandId: brand._id });
+                        onLocalUpdate({ groupingId, ...updates });
                     }
                 } else {
                     failCount++;
@@ -244,10 +259,12 @@ const ProductTable = React.memo(function ProductTable({
 
         setBulkUpdating(false);
         setSelectedBrand('');
+        setBulkName('');
+        setBulkWeight('');
         if (onSelectionChange) onSelectionChange([]);
         showToast(
             failCount === 0
-                ? `Brand updated for ${successCount} group(s)`
+                ? `Updated ${successCount} group(s)`
                 : `Updated ${successCount}, failed ${failCount}`,
             failCount === 0 ? 'success' : 'warning'
         );
@@ -288,29 +305,50 @@ const ProductTable = React.memo(function ProductTable({
                 {/* Bulk Action Bar */}
                 {isBulkEditMode && selectedGroupIds.length > 0 && (
                     <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-50 border-b border-blue-200">
-                        <span className="text-sm font-medium text-blue-700">{selectedGroupIds.length} group(s) selected</span>
-                        <div className="flex items-center gap-2 ml-auto">
+                        <span className="text-sm font-medium text-blue-700 whitespace-nowrap">{selectedGroupIds.length} group(s) selected</span>
+                        <div className="flex flex-wrap items-center gap-2 ml-auto">
+                            <input
+                                type="text"
+                                placeholder="New Name..."
+                                value={bulkName}
+                                onChange={(e) => setBulkName(e.target.value)}
+                                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:border-blue-400 w-48"
+                                disabled={bulkUpdating}
+                            />
+                            <input
+                                type="text"
+                                placeholder="New Weight..."
+                                value={bulkWeight}
+                                onChange={(e) => setBulkWeight(e.target.value)}
+                                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:border-blue-400 w-32"
+                                disabled={bulkUpdating}
+                            />
                             <select
                                 value={selectedBrand}
                                 onChange={(e) => setSelectedBrand(e.target.value)}
                                 className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:border-blue-400"
                                 disabled={bulkUpdating}
                             >
-                                <option value="">Select Brand to Apply...</option>
+                                <option value="">Select Brand...</option>
                                 {(Array.isArray(bulkBrands) ? bulkBrands : []).map(b => (
                                     <option key={b._id} value={b._id}>{b.brandName}</option>
                                 ))}
                             </select>
                             <button
-                                onClick={handleBulkBrandUpdate}
-                                disabled={!selectedBrand || bulkUpdating}
+                                onClick={handleBulkUpdate}
+                                disabled={bulkUpdating || (!selectedBrand && !bulkName.trim() && !bulkWeight.trim())}
                                 className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 transition-colors"
                             >
                                 {bulkUpdating ? <Loader2 size={14} className="animate-spin" /> : null}
-                                {bulkUpdating ? 'Updating...' : 'Update Brand'}
+                                {bulkUpdating ? 'Updating...' : 'Apply Changes'}
                             </button>
                             <button
-                                onClick={() => onSelectionChange && onSelectionChange([])}
+                                onClick={() => {
+                                    if (onSelectionChange) onSelectionChange([]);
+                                    setBulkName('');
+                                    setBulkWeight('');
+                                    setSelectedBrand('');
+                                }}
                                 className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                             >
                                 Clear
