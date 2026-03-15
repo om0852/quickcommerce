@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import { Switch } from '@/components/ui/switch';
 import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight, Loader2, Info } from 'lucide-react';
 import { Snackbar, Alert, Tooltip as MuiTooltip } from '@mui/material'; // NEW Import
+import { useSidebar } from '@/components/SidebarContext';
+import { SidebarOpenIcon, SidebarCloseIcon } from '@/components/SidebarIcons';
 import AnalyticsTab from './AnalyticsTab';
 import StockAnalysisTab from './StockAnalysisTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
@@ -25,12 +27,7 @@ import categoriesData from '../utils/categories_with_urls.json';
 
 
 function CategoriesPageContent() {
-  // ... (keep existing state)
-
-  // Memoize fixed header content
-
-
-  // ... (rest of component)
+  const { isSidebarOpen, toggleSidebar } = useSidebar();
 
   // Move PINCODE_OPTIONS up to be accessible by hydration effect
   const PINCODE_OPTIONS = useMemo(() => [
@@ -274,20 +271,28 @@ function CategoriesPageContent() {
           return;
         }
 
-        // Prefer rows present on more than 1 platform (they're "richer")
-        const multiPlatform = group.filter(p => getPlatformCount(p) > 1);
-        if (multiPlatform.length > 0) {
-          deduplicatedResult.push(...multiPlatform);
-        } else {
-          // All single-platform: keep only the one with the lowest rank
-          let bestP = group[0];
-          let bestRank = getMinRank(group[0]);
-          for (let i = 1; i < group.length; i++) {
-            const r = getMinRank(group[i]);
-            if (r < bestRank) { bestRank = r; bestP = group[i]; }
+        // Pick the BEST row from the cluster
+        // Criteria: 1. Most platforms, 2. Lowest rank
+        let bestRow = group[0];
+        let maxPlatforms = getPlatformCount(group[0]);
+        let minRank = getMinRank(group[0]);
+
+        for (let i = 1; i < group.length; i++) {
+          const row = group[i];
+          const platforms = getPlatformCount(row);
+          const rank = getMinRank(row);
+
+          if (platforms > maxPlatforms) {
+            maxPlatforms = platforms;
+            minRank = rank;
+            bestRow = row;
+          } else if (platforms === maxPlatforms && rank < minRank) {
+            minRank = rank;
+            bestRow = row;
           }
-          deduplicatedResult.push(bestP);
         }
+        
+        deduplicatedResult.push(bestRow);
       });
 
       result = deduplicatedResult;
@@ -1321,8 +1326,14 @@ function CategoriesPageContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
 
       {/* Header */}
-      <div className="flex-none bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-20">
+      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-[18px] flex items-center justify-between shadow-sm z-20">
         <div className="flex items-center gap-4">
+          <button 
+            onClick={toggleSidebar}
+            className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+          >
+            {isSidebarOpen ? <SidebarCloseIcon size={24} /> : <SidebarOpenIcon size={24} />}
+          </button>
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">

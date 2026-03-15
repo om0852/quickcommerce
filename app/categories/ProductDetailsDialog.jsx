@@ -1,6 +1,8 @@
 import React from 'react';
 import { X, ExternalLink, Loader2, Copy, Check, Pencil } from 'lucide-react';
 import ProductEditDialog from './ProductEditDialog';
+import { useSidebar } from '@/components/SidebarContext';
+import { cn } from '@/lib/utils';
 
 function ProductDetailsDialog({
     isOpen,
@@ -18,15 +20,15 @@ function ProductDetailsDialog({
     onLocalUpdate, 
     showToast 
 }) {
-    if (!isOpen || !selectedProduct) return null;
-
+    const { isSidebarOpen } = useSidebar();
     const [isEditOpen, setIsEditOpen] = React.useState(false); // State for edit dialog
+    const [toast, setToast] = React.useState(null);
+    const [copiedId, setCopiedId] = React.useState(null);
+
+    if (!isOpen || !selectedProduct) return null;
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
     const availablePlatforms = platforms.filter(p => selectedProduct[p]);
-
-    const [toast, setToast] = React.useState(null);
-    const [copiedId, setCopiedId] = React.useState(null);
 
     const handleCopy = (text) => {
         navigator.clipboard.writeText(text);
@@ -39,7 +41,10 @@ function ProductDetailsDialog({
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className={cn(
+            "fixed inset-0 z-[200] flex items-center justify-center p-4 transition-all duration-300",
+            isSidebarOpen ? "xl:ml-64" : "xl:ml-0"
+        )}>
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"

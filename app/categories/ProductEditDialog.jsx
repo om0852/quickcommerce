@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Save, Loader2, ChevronDown, ChevronUp, ExternalLink, Search } from 'lucide-react';
-import { Switch } from '@/components/ui/switch'; // Assuming you have a Switch component, if not will use standard input or create simple toggle
+import { Switch } from '@/components/ui/switch'; 
+import { useSidebar } from '@/components/SidebarContext';
+import { cn } from '@/lib/utils';
 // Removed: import { brands } from '@/app/utils/brandarray';
 
 // Searchable Brand Combobox Component
@@ -193,8 +195,8 @@ export default function ProductEditDialog({
     onUpdate,
     showToast // NEW Prop
 }) {
-    if (!isOpen || !product) return null;
-
+    const { isSidebarOpen } = useSidebar();
+    
     // Group Level State
     const [name, setName] = useState('');
     const [weight, setWeight] = useState('');
@@ -212,6 +214,8 @@ export default function ProductEditDialog({
     const [expandedPlatform, setExpandedPlatform] = useState(null); // Accordion state
 
     const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
+
+    if (!isOpen || !product) return null;
 
     // Fetch brands on mount
     useEffect(() => {
@@ -304,11 +308,12 @@ export default function ProductEditDialog({
         setError(null);
 
         try {
+            const groupingId = product.parentGroupId || product.groupingId;
             const groupUpdatePromise = fetch('/api/grouping/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    groupingId: product.groupingId,
+                    groupingId: groupingId,
                     updates: { name, weight, brand, groupImage }
                 })
             });
@@ -364,7 +369,10 @@ export default function ProductEditDialog({
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+        <div className={cn(
+            "fixed inset-0 z-[200] flex items-center justify-center p-4 transition-all duration-300",
+            isSidebarOpen ? "xl:ml-64" : "xl:ml-0"
+        )}>
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"

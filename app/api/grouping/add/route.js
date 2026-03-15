@@ -15,39 +15,44 @@ export async function POST(request) {
 
         await dbConnect();
 
-        // 1. Find the product snapshot to verify existence and get details
-        // using findOne to get the 'latest' or specific one. 
-        // Ideally we should have scrapedAt or something but we'll try to find the best match.
-        // We sort by scrapedAt desc to get the latest version of this product.
-        const product = await ProductSnapshot.findOne({
-            pincode,
+        // Helper to strip suffixes: xyz__fruits -> xyz
+        const getBaseId = (pid) => pid.split('__')[0].replace(/-[a-z]$/i, '');
+        const targetBaseId = getBaseId(productId);
+
+        // 1. Find all variants of this product on the same platform
+        // We search all snapshots for this platform to find any variant IDs
+        const escapedBaseId = targetBaseId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const variants = await ProductSnapshot.distinct('productId', {
             platform: { $regex: `^${platform}$`, $options: 'i' },
-            productId
-        }).sort({ scrapedAt: -1 });
-
-        if (!product) {
-            return NextResponse.json({ error: 'Product not found in snapshot' }, { status: 404 });
-        }
-
-        // 2. Add to group logic
-        const newGroupId = await addProductToGroup(targetGroupId, {
-            platform,
-            productId,
-            productName: product.productName,
-            // Pass other fields if needed by addProductToGroup, but usually it fetches or is lightweight
+            productId: { $regex: new RegExp(`^${escapedBaseId}(__|$)`) }
         });
 
-        // 3. Update the snapshot to reflect this new ID immediately (for UI responsiveness)
-        // We update ALL snapshots of this product? Or just latest?
-        // Use updateMany to be consistent across time if it's the "same" product?
-        // Or just the one found?
-        // Grouping is usually persistent for the product entity.
-        await ProductSnapshot.updateMany(
-            { platform, productId },
-            { groupingId: newGroupId }
-        );
+        if (variants.length === 0) {
+            // Fallback: If no others found by regex, at least process the requested one
+            variants.push(productId);
+        }
 
-        return NextResponse.json({ success: true, groupingId: newGroupId });
+        // 2. Add each variant to the group
+        // addProductToGroup automatically handles removing from old groups
+        for (const variantId of variants) {
+            await addProductToGroup(targetGroupId, {
+                platform,
+                productId: variantId
+            });
+
+            // 3. Update all snapshots of this variant
+            await ProductSnapshot.updateMany(
+                { platform, productId: variantId },
+                { groupingId: targetGroupId }
+            );
+        }
+
+        return NextResponse.json({ 
+            success: true, 
+            groupingId: targetGroupId, 
+            count: variants.length,
+            message: `Added ${variants.length} variant(s) to group`
+        });
     } catch (error) {
         console.error('Add to group error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });

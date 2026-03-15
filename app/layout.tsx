@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
+import { SidebarProvider } from "@/components/SidebarContext";
 
 export const metadata: Metadata = {
   title: "QuickCommerce Tracker",
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ClientLayout>
-          {children}
-        </ClientLayout>
+        <SidebarProvider>
+          <ClientLayout>
+            {children}
+          </ClientLayout>
+        </SidebarProvider>
       </body>
     </html>
   );

@@ -15,52 +15,69 @@ export async function POST(request) {
 
         await dbConnect();
 
-        // 0. Fetch product details for new group creation
-        const productSnapshot = await ProductSnapshot.findOne({ platform, productId });
-        if (!productSnapshot) {
-            return NextResponse.json({ error: 'Product snapshot not found' }, { status: 404 });
+        // Helper to strip suffixes: xyz__fruits -> xyz
+        const getBaseId = (pid) => pid.split('__')[0].replace(/-[a-z]$/i, '');
+        const targetBaseId = getBaseId(productId);
+
+        // 1. Fetch the OLD group
+        const oldGroup = await ProductGrouping.findOne({ groupingId });
+        if (!oldGroup) {
+            return NextResponse.json({ error: 'Source group not found' }, { status: 404 });
         }
 
-        // 1. Ungroup
-        const success = await ungroupProduct(groupingId, platform, productId);
-
-        if (!success) {
-            console.warn(`[Remove Group] Product ${productId} on ${platform} was not found in group ${groupingId}. Proceeding to create a new group anyway to heal data.`);
+        // 2. Identify all products in this group that share the same Base ID
+        const productsToMove = oldGroup.products.filter(p => getBaseId(p.productId) === targetBaseId);
+        
+        if (productsToMove.length === 0) {
+            return NextResponse.json({ error: 'No matching products found in the group' }, { status: 404 });
         }
 
-        // 2. CHECK REMOVED: User wants it to ALWAYS pop out as a new group, even if it's a duplicate.
-        // This prevents "disappearing" products.
-        // const existingCount = await ProductGrouping.countDocuments({ ... });
+        // 3. Update the OLD group: remove these products
+        const updatedOldProducts = oldGroup.products.filter(p => getBaseId(p.productId) !== targetBaseId);
+        
+        if (updatedOldProducts.length === 0) {
+            // If group becomes empty, delete it
+            await ProductGrouping.deleteOne({ _id: oldGroup._id });
+        } else {
+            oldGroup.products = updatedOldProducts;
+            oldGroup.totalProducts = updatedOldProducts.length;
+            await oldGroup.save();
+        }
 
-
-        // 3. If NOT found anywhere else, Create NEW Group for this single product (Ungrouping behavior)
+        // 4. Create the NEW Group with inherited metadata
         const newGroupId = uuidv4();
-
-        // Ensure we have minimal valid data
         const newGroup = new ProductGrouping({
             groupingId: newGroupId,
-            category: productSnapshot.category || 'Uncategorized',
-            primaryName: productSnapshot.productName || 'Unknown Product',
-            primaryImage: productSnapshot.productImage,
-            primaryWeight: productSnapshot.productWeight,
-            products: [{
-                platform: platform,
-                productId: productId,
-                scrapedAt: productSnapshot.scrapedAt
-            }],
-            totalProducts: 1,
-            isManuallyVerified: true // Since user manually separated it
+            category: oldGroup.category,
+            officialCategory: oldGroup.officialCategory,
+            officialSubCategory: oldGroup.officialSubCategory,
+            primaryName: oldGroup.primaryName,
+            primaryImage: oldGroup.primaryImage,
+            groupImage: oldGroup.groupImage,
+            primaryWeight: oldGroup.primaryWeight,
+            brand: oldGroup.brand,
+            brandId: oldGroup.brandId,
+            products: productsToMove,
+            totalProducts: productsToMove.length,
+            isManuallyVerified: true // User manually moved them
         });
 
         await newGroup.save();
 
-        // 4. Update Snapshots with NEW groupingId across all pincodes
-        await ProductSnapshot.updateMany(
-            { platform, productId },
-            { $set: { groupingId: newGroupId } }
-        );
+        // 5. Update Snapshots with NEW groupingId for all moved products
+        for (const p of productsToMove) {
+            await ProductSnapshot.updateMany(
+                { platform: p.platform, productId: p.productId },
+                { $set: { groupingId: newGroupId } }
+            );
+        }
 
-        return NextResponse.json({ success: true, newGroupId, message: 'Product moved to new group' });
+        return NextResponse.json({ 
+            success: true, 
+            newGroupId, 
+            count: productsToMove.length,
+            message: `Moved ${productsToMove.length} variant(s) to new group` 
+        });
 
     } catch (error) {
         console.error('Remove from group error:', error);
