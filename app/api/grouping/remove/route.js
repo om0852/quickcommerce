@@ -27,14 +27,14 @@ export async function POST(request) {
 
         // 2. Identify all products in this group that share the same Base ID
         const productsToMove = oldGroup.products.filter(p => getBaseId(p.productId) === targetBaseId);
-        
+
         if (productsToMove.length === 0) {
             return NextResponse.json({ error: 'No matching products found in the group' }, { status: 404 });
         }
 
         // 3. Update the OLD group: remove these products
         const updatedOldProducts = oldGroup.products.filter(p => getBaseId(p.productId) !== targetBaseId);
-        
+
         if (updatedOldProducts.length === 0) {
             // If group becomes empty, delete it
             await ProductGrouping.deleteOne({ _id: oldGroup._id });
@@ -44,22 +44,30 @@ export async function POST(request) {
             await oldGroup.save();
         }
 
-        // 4. Create the NEW Group with inherited metadata
+        // 4. Create the NEW Group with metadata from the product itself
+        const sampleSnap = await ProductSnapshot.findOne({
+            platform: { $regex: `^${platform}$`, $options: 'i' },
+            productId: productId,
+        }).sort({ scrapedAt: -1 }).lean();
+
+        if (!sampleSnap) {
+            return NextResponse.json({ error: 'Could not find product data to create new group' }, { status: 404 });
+        }
+
         const newGroupId = uuidv4();
         const newGroup = new ProductGrouping({
             groupingId: newGroupId,
             category: oldGroup.category,
             officialCategory: oldGroup.officialCategory,
             officialSubCategory: oldGroup.officialSubCategory,
-            primaryName: oldGroup.primaryName,
-            primaryImage: oldGroup.primaryImage,
-            groupImage: oldGroup.groupImage,
-            primaryWeight: oldGroup.primaryWeight,
-            brand: oldGroup.brand,
-            brandId: oldGroup.brandId,
+            primaryName: sampleSnap.productName,
+            primaryImage: sampleSnap.productImage,
+            groupImage: sampleSnap.productImage,
+            primaryWeight: sampleSnap.productWeight,
+            brand: sampleSnap.brand,
             products: productsToMove,
             totalProducts: productsToMove.length,
-            isManuallyVerified: true // User manually moved them
+            isManuallyVerified: true
         });
 
         await newGroup.save();
@@ -72,11 +80,11 @@ export async function POST(request) {
             );
         }
 
-        return NextResponse.json({ 
-            success: true, 
-            newGroupId, 
+        return NextResponse.json({
+            success: true,
+            newGroupId,
             count: productsToMove.length,
-            message: `Moved ${productsToMove.length} variant(s) to new group` 
+            message: `Moved ${productsToMove.length} variant(s) to new group`
         });
 
     } catch (error) {
