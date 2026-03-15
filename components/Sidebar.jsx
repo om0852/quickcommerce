@@ -54,7 +54,6 @@ export default function Sidebar({ isOpen, onClose }) {
         <div className="px-6 py-3 border-b border-neutral-800 flex items-center justify-between min-h-[64px]">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight">QuickCommerce</h1>
-            <span className="text-xs text-neutral-500 font-medium">Tracker</span>
           </div>
 
           <button
