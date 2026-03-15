@@ -956,12 +956,12 @@ const ProductTable = React.memo(function ProductTable({
                                                             <span
                                                                 className="flex-1 min-w-0 cursor-pointer"
                                                                 onDoubleClick={() => {
-                                                                    if (isAdmin) {
+                                                                    if (isAdmin && !product.isDuplicate) {
                                                                         setEditingProductId(product.groupingId);
                                                                         setEditValue(product.name);
                                                                     }
                                                                 }}
-                                                                title={isAdmin ? "Double click to edit" : product.name}
+                                                                title={isAdmin ? (product.isDuplicate ? "Master Group controls this variant" : "Double click to edit") : product.name}
                                                             >
                                                                 {editingProductId === product.groupingId ? (
                                                                     <div className="relative w-full h-8">
@@ -1034,7 +1034,7 @@ const ProductTable = React.memo(function ProductTable({
                                                                 {product.brand}
                                                             </div>
                                                         )}
-                                                        {isAdmin && (
+                                                        {isAdmin && !product.isDuplicate && (
                                                             <div className="mt-2 flex flex-row items-center gap-2">
                                                                 <button
                                                                     onClick={(e) => {
