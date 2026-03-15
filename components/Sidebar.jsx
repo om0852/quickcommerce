@@ -42,8 +42,15 @@ export default function Sidebar({ isOpen, onClose }) {
         "fixed top-0 left-0 h-screen w-64 bg-neutral-900 text-white flex flex-col border-r border-neutral-800 z-[160] transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="px-6 py-[18px] border-b border-neutral-800 flex items-center">
+        <div className="px-6 py-[18px] border-b border-neutral-800 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">QuickCommerce</h1>
+          <button 
+            onClick={onClose}
+            className="xl:hidden p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+            aria-label="Close Sidebar"
+          >
+            <SidebarCloseIcon size={24} />
+          </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">

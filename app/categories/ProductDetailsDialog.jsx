@@ -21,15 +21,13 @@ function ProductDetailsDialog({
     showToast 
 }) {
     const { isSidebarOpen } = useSidebar();
-    if (!isOpen || !selectedProduct) return null;
-
     const [isEditOpen, setIsEditOpen] = React.useState(false); // State for edit dialog
-
-    const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
-    const availablePlatforms = platforms.filter(p => selectedProduct[p]);
-
     const [toast, setToast] = React.useState(null);
     const [copiedId, setCopiedId] = React.useState(null);
+
+    if (!isOpen || !selectedProduct) return null;
+
+    const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
 
     const handleCopy = (text) => {
         navigator.clipboard.writeText(text);

@@ -270,6 +270,37 @@ const ProductTable = React.memo(function ProductTable({
         );
     };
 
+    const handleRegroup = async (product) => {
+        if (!confirm(`Create a separate group for "${product.name}" and all its variants?`)) return;
+
+        setSavingProductId(product.groupingId);
+        try {
+            const res = await fetch('/api/grouping/regroup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    productId: product.productId,
+                    platform: product[Object.keys(product).find(k => ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(k))]?.platform || Object.keys(product).find(k => product[k]?.productId === product.productId),
+                    category: product.officialCategory || 'Uncategorized',
+                    pincode: pincode
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message, 'success');
+                if (onRefresh) onRefresh();
+            } else {
+                showToast(data.error || 'Failed to regroup', 'error');
+            }
+        } catch (error) {
+            console.error('Error regrouping:', error);
+            showToast('Error regrouping product', 'error');
+        } finally {
+            setSavingProductId(null);
+        }
+    };
+
     const formatProductName = (name) => {
         if (!name) return '';
         const delimiter = name.includes(' - ') ? ' - ' : (name.includes(' -') ? ' -' : null);
@@ -1054,6 +1085,22 @@ const ProductTable = React.memo(function ProductTable({
                                                                     className="flex-1 text-[10px] font-bold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded border border-neutral-200 transition-colors text-center whitespace-nowrap"
                                                                 >
                                                                     Group
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                        {isAdmin && product.isDuplicate && (
+                                                            <div className="mt-2 flex flex-row items-center gap-2">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleRegroup(product);
+                                                                    }}
+                                                                    disabled={savingProductId === product.groupingId}
+                                                                    className="flex-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded border border-blue-200 transition-colors text-center whitespace-nowrap flex items-center justify-center gap-1"
+                                                                    title="Create a new separate group for this product and its variants"
+                                                                >
+                                                                    {savingProductId === product.groupingId ? <Loader2 size={10} className="animate-spin" /> : null}
+                                                                    Create Group
                                                                 </button>
                                                             </div>
                                                         )}

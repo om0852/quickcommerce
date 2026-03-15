@@ -15,8 +15,6 @@ export default function GroupManagementDialog({
     showToast // NEW: Function to show toast notifications
 }) {
     const { isSidebarOpen } = useSidebar();
-    if (!isOpen) return null;
-
     const [loading, setLoading] = useState(false);
     const [addProductState, setAddProductState] = useState({
         pincode: currentPincode, // Use passed prop as default
@@ -24,8 +22,9 @@ export default function GroupManagementDialog({
         productId: ''
     });
     const [error, setError] = useState(null);
-    // const [successMsg, setSuccessMsg] = useState(null); // REMOVED: Using toast instead
     const [productToDelete, setProductToDelete] = useState(''); // ID of product to delete in Danger Zone
+
+    if (!isOpen) return null;
 
 
     const PINCODE_OPTIONS = [

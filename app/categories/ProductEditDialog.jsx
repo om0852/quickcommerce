@@ -196,8 +196,7 @@ export default function ProductEditDialog({
     showToast // NEW Prop
 }) {
     const { isSidebarOpen } = useSidebar();
-    if (!isOpen || !product) return null;
-
+    
     // Group Level State
     const [name, setName] = useState('');
     const [weight, setWeight] = useState('');
@@ -215,6 +214,8 @@ export default function ProductEditDialog({
     const [expandedPlatform, setExpandedPlatform] = useState(null); // Accordion state
 
     const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
+
+    if (!isOpen || !product) return null;
 
     // Fetch brands on mount
     useEffect(() => {
