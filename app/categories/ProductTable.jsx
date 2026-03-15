@@ -213,7 +213,7 @@ const ProductTable = React.memo(function ProductTable({
 
     const handleBulkUpdate = async () => {
         if (selectedGroupIds.length === 0 || bulkUpdating) return;
-        
+
         // Check if at least one field is provided
         if (!selectedBrand && !bulkName.trim() && !bulkWeight.trim()) {
             showToast('Please provide at least one value to update', 'warning');
@@ -221,7 +221,7 @@ const ProductTable = React.memo(function ProductTable({
         }
 
         const brand = selectedBrand ? bulkBrands.find(b => b._id === selectedBrand) : null;
-        
+
         setBulkUpdating(true);
         let successCount = 0;
         let failCount = 0;
@@ -273,14 +273,26 @@ const ProductTable = React.memo(function ProductTable({
     const handleRegroup = async (product) => {
         if (!confirm(`Create a separate group for "${product.name}" and all its variants?`)) return;
 
+        // Find the active platform data for this row
+        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
+        const activePlatform = platforms.find(p => product[p] && product[p].productId);
+
+        if (!activePlatform) {
+            showToast('Could not find platform data for this product', 'error');
+            return;
+        }
+
+        const platformData = product[activePlatform];
+        const productId = platformData.productId;
+
         setSavingProductId(product.groupingId);
         try {
             const res = await fetch('/api/grouping/regroup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    productId: product.productId,
-                    platform: product[Object.keys(product).find(k => ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(k))]?.platform || Object.keys(product).find(k => product[k]?.productId === product.productId),
+                    productId: productId,
+                    platform: activePlatform,
                     category: product.officialCategory || 'Uncategorized',
                     pincode: pincode
                 })
