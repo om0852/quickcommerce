@@ -28,6 +28,7 @@ function ProductDetailsDialog({
     if (!isOpen || !selectedProduct) return null;
 
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
+    const availablePlatforms = platforms.filter(p => selectedProduct[p]);
 
     const handleCopy = (text) => {
         navigator.clipboard.writeText(text);
