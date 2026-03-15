@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Save, Loader2, ChevronDown, ChevronUp, ExternalLink, Search } from 'lucide-react';
-import { Switch } from '@/components/ui/switch'; // Assuming you have a Switch component, if not will use standard input or create simple toggle
+import { Switch } from '@/components/ui/switch'; 
 import { useSidebar } from '@/components/SidebarContext';
+import { cn } from '@/lib/utils';
 // Removed: import { brands } from '@/app/utils/brandarray';
 
 // Searchable Brand Combobox Component
