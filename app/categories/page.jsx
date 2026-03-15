@@ -123,6 +123,7 @@ function CategoriesPageContent() {
   const [useFilterToggle, setUseFilterToggle] = useState(true);
   const [showNewFirst, setShowNewFirst] = useState(false);
   const [showNonHyphenOnly, setShowNonHyphenOnly] = useState(false);
+  const [showDangerOnly, setShowDangerOnly] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [isBulkEditMode, setIsBulkEditMode] = useState(false);
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
@@ -698,8 +699,16 @@ function CategoriesPageContent() {
       });
     }
 
+    // Danger Filter (Show only items with platform conflicts)
+    if (showDangerOnly) {
+      const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
+      result = result.filter(product => {
+        return platforms.some(plat => product[plat]?.hasBaseIdConflict === true);
+      });
+    }
+
     return result;
-  }, [deduplicatedProducts, platformFilter, showMissing, showNonHyphenOnly]);
+  }, [deduplicatedProducts, platformFilter, showMissing, showNonHyphenOnly, showDangerOnly]);
 
   const sortedProducts = useMemo(() => {
     // If no grouping (no headers), just filter and sort normally
@@ -1326,14 +1335,16 @@ function CategoriesPageContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
 
       {/* Header */}
-      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-[18px] flex items-center justify-between shadow-sm z-20">
+      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shadow-sm z-20 min-h-[64px]">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={toggleSidebar}
-            className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
-          >
-            {isSidebarOpen ? <SidebarCloseIcon size={24} /> : <SidebarOpenIcon size={24} />}
-          </button>
+          {!isSidebarOpen && (
+            <button 
+              onClick={toggleSidebar}
+              className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in"
+            >
+              <SidebarOpenIcon size={24} />
+            </button>
+          )}
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
@@ -1514,6 +1525,25 @@ function CategoriesPageContent() {
                   disabled={platformFilter === 'all'}
                 />
               </div>
+
+              {isAdmin && (
+                <div className="flex items-center gap-2 px-2 py-1 mb-0.5">
+                  <span className="flex items-center gap-1.5 text-sm font-medium text-rose-600">
+                    Filter by Danger
+                    <MuiTooltip title="Shows only products with platform Base ID conflicts (⚠️ items)." arrow placement="top">
+                      <img 
+                        src="https://img.icons8.com/?size=100&id=4009&format=png&color=FA5252" 
+                        alt="Conflict" 
+                        className="w-4 h-4 cursor-help"
+                      />
+                    </MuiTooltip>
+                  </span>
+                  <Switch
+                    checked={showDangerOnly}
+                    onCheckedChange={setShowDangerOnly}
+                  />
+                </div>
+              )}
             </div>
 
           </div>

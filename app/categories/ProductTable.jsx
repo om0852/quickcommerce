@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown, Unlink } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
@@ -94,6 +94,7 @@ const ProductTable = React.memo(function ProductTable({
     const [editingProductId, setEditingProductId] = useState(null);
     const [editValue, setEditValue] = useState('');
     const [savingProductId, setSavingProductId] = useState(null);
+    const [isRegrouping, setIsRegrouping] = useState(false);
     const [selectedBrand, setSelectedBrand] = useState('');
     const [bulkName, setBulkName] = useState('');
     const [bulkWeight, setBulkWeight] = useState('');
@@ -271,7 +272,7 @@ const ProductTable = React.memo(function ProductTable({
     };
 
     const handleRegroup = async (product) => {
-        if (!confirm(`Create a separate group for "${product.name}" and all its variants?`)) return;
+        if (!confirm(`Before creating new group check whether you can add this in any existing group or not. If not then click Confirm else Cancel it.`)) return;
 
         // Find the active platform data for this row
         const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
@@ -285,6 +286,7 @@ const ProductTable = React.memo(function ProductTable({
         const platformData = product[activePlatform];
         const productId = platformData.productId;
 
+        setIsRegrouping(true);
         setSavingProductId(product.groupingId);
         try {
             const res = await fetch('/api/grouping/regroup', {
@@ -307,8 +309,9 @@ const ProductTable = React.memo(function ProductTable({
             }
         } catch (error) {
             console.error('Error regrouping:', error);
-            showToast('Error regrouping product', 'error');
+            showToast('Error regrouping', 'error');
         } finally {
+            setIsRegrouping(false);
             setSavingProductId(null);
         }
     };
@@ -1148,8 +1151,18 @@ const ProductTable = React.memo(function ProductTable({
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                {data.new && (
-                                                                    <span className="text-[10px] font-bold text-blue-600">NEW</span>
+                                                                    {data.new && (
+                                                                        <span className="text-[10px] font-bold text-blue-600">NEW</span>
+                                                                    )}
+                                                                {data.hasBaseIdConflict && (
+                                                                    <div className="mt-1">
+                                                                        <img 
+                                                                            src="https://img.icons8.com/?size=100&id=4009&format=png&color=FA5252" 
+                                                                            alt="Conflict" 
+                                                                            className="w-5 h-5"
+                                                                            title="Different Base IDs detected in group"
+                                                                        />
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         ) : (
@@ -1224,6 +1237,13 @@ const ProductTable = React.memo(function ProductTable({
                     />
                 )
             }
+
+            {/* Simple Loading Overlay for Regrouping */}
+            {isRegrouping && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/40 backdrop-blur-md transition-all animate-in fade-in">
+                    <Loader2 size={48} className="text-neutral-900 animate-spin" />
+                </div>
+            )}
 
             <Snackbar
                 open={toastState.open}

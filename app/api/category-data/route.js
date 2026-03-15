@@ -141,6 +141,21 @@ export async function GET(request) {
           }
         }
 
+        // Detect Base ID Conflicts per platform
+        const platformConflicts = {};
+        Object.keys(platformMatches).forEach(platform => {
+          const snaps = platformMatches[platform];
+          if (snaps.length > 1) {
+            const baseIds = new Set(snaps.map(s => {
+              const pid = s.productId || '';
+              return pid.includes('__') ? pid.split('__')[0] : pid;
+            }));
+            if (baseIds.size > 1) {
+              platformConflicts[platform] = true;
+            }
+          }
+        });
+
         if (hasData) {
           // Sort variants within each platform to ensure deterministic output
           Object.keys(platformMatches).forEach(platform => {
@@ -201,7 +216,8 @@ export async function GET(request) {
                     combo: snap.combo,
                     new: snap.new,
                     scrapedAt: snap.scrapedAt,
-                    snapshotId: snap._id.toString()
+                    snapshotId: snap._id.toString(),
+                    hasBaseIdConflict: platformConflicts[platform]
                   };
 
                   if (!masterObj.name) masterObj.name = snap.productName;
@@ -274,7 +290,8 @@ export async function GET(request) {
                     combo: snap.combo,
                     new: snap.new,
                     scrapedAt: snap.scrapedAt,
-                    snapshotId: snap._id.toString()
+                    snapshotId: snap._id.toString(),
+                    hasBaseIdConflict: platformConflicts[platform]
                   };
 
                   if (!dupObj.name) dupObj.name = snap.productName;

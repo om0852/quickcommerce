@@ -29,15 +29,16 @@ export default function Sidebar({ isOpen, onClose }) {
     { href: '/overview', label: 'Overview', icon: LayoutDashboard },
     { href: '/search', label: 'Search', icon: Search },
     { href: '/categories', label: 'Categories', icon: BarChart3 },
+    { href: '/clean-check', label: 'Clean Check', icon: BarChart3 },
     { href: '/alerts', label: 'Alerts', icon: Bell }
   ];
 
   return (
     <>
       {/* Backdrop for mobile */}
-      <div 
+      <div
         className={cn(
-          "fixed inset-0 bg-black/50 z-[150] xl:hidden transition-opacity duration-300",
+          "fixed inset-0 bg-black/50 z-[150] transition-opacity duration-300 xl:hidden",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -45,20 +46,20 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <aside
         className={cn(
-          "fixed top-0 left-0 h-screen w-64 bg-neutral-900 text-white flex flex-col border-r border-neutral-800 z-[160] transition-transform duration-300 ease-in-out xl:translate-x-0",
+          "fixed top-0 left-0 h-screen w-64 bg-neutral-900 text-white flex flex-col border-r border-neutral-800 z-[160] transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* HEADER */}
-        <div className="px-6 py-[18px] border-b border-neutral-800 flex items-center justify-between">
-          <div>
+        <div className="px-6 py-3 border-b border-neutral-800 flex items-center justify-between min-h-[64px]">
+          <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight">QuickCommerce</h1>
-            <p className="text-sm text-neutral-400">Category Tracker</p>
+            <span className="text-xs text-neutral-500 font-medium">Tracker</span>
           </div>
 
           <button
             onClick={onClose}
-            className="xl:hidden p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+            className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
             aria-label="Close Sidebar"
           >
             <SidebarCloseIcon size={24} />
