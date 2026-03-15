@@ -31,14 +31,14 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Backdrop for mobile */}
       <div 
         className={cn(
-          "fixed inset-0 bg-black/50 z-40 xl:hidden transition-opacity duration-300",
+          "fixed inset-0 bg-black/50 z-[150] xl:hidden transition-opacity duration-300",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
       />
 
       <aside className={cn(
-        "fixed top-0 left-0 h-screen w-64 bg-neutral-900 text-white flex flex-col border-r border-neutral-800 z-50 transition-transform duration-300 ease-in-out xl:translate-x-0",
+        "fixed top-0 left-0 h-screen w-64 bg-neutral-900 text-white flex flex-col border-r border-neutral-800 z-[160] transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6 border-b border-neutral-800 flex items-center justify-between">
@@ -48,7 +48,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
           <button 
             onClick={onClose}
-            className="xl:hidden p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+            className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
           >
             <X size={20} />
           </button>
