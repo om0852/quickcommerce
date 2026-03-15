@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Bell, Plus, Trash2, CheckCircle, AlertCircle, X, DollarSign, TrendingUp, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSidebar } from '@/components/SidebarContext';
+import { SidebarOpenIcon, SidebarCloseIcon } from '@/components/SidebarIcons';
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState([
@@ -57,6 +59,7 @@ export default function AlertsPage() {
     stockCondition: 'in_stock',
     platform: 'all'
   });
+  const { isSidebarOpen, toggleSidebar } = useSidebar();
 
   const handleAddAlert = (e) => {
     e.preventDefault();
@@ -120,21 +123,34 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] p-4 md:p-8 font-sans text-neutral-900">
+    <div className="min-h-screen bg-[#fafafa] font-sans text-neutral-900 flex flex-col">
       {/* Header */}
-      <div className="max-w-[1400px] mx-auto mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-neutral-900 mb-2">Price & Stock Alerts</h1>
+      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-[18px] flex items-center justify-between shadow-sm z-20">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={toggleSidebar}
+            className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+          >
+            {isSidebarOpen ? <SidebarCloseIcon size={24} /> : <SidebarOpenIcon size={24} />}
+          </button>
+          <h1 className="text-xl font-bold tracking-tight text-neutral-900">Price & Stock Alerts</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="h-[42px] px-4 md:px-6 bg-neutral-900 text-white rounded-md font-medium text-sm flex items-center gap-2 hover:bg-black transition-all shadow-sm hover:shadow-md"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">Create Alert</span>
+            <span className="sm:hidden">Create</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 p-4 md:p-8">
+        <div className="max-w-[1400px] mx-auto mb-8">
           <p className="text-neutral-500">Get notified about price changes, ranking shifts, and stock availability</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="h-[42px] px-6 bg-neutral-900 text-white rounded-md font-medium text-sm flex items-center gap-2 hover:bg-black transition-all shadow-sm hover:shadow-md"
-        >
-          <Plus size={18} />
-          Create Alert
-        </button>
-      </div>
 
       {/* Alerts Table */}
       <div className="max-w-[1400px] mx-auto">
@@ -407,6 +423,7 @@ export default function AlertsPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

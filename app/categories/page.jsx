@@ -4,9 +4,10 @@ import { useSearchParams } from 'next/navigation';
 
 
 import { Switch } from '@/components/ui/switch';
-import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight, Loader2, Info, Menu } from 'lucide-react';
+import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight, Loader2, Info } from 'lucide-react';
 import { Snackbar, Alert, Tooltip as MuiTooltip } from '@mui/material'; // NEW Import
 import { useSidebar } from '@/components/SidebarContext';
+import { SidebarOpenIcon, SidebarCloseIcon } from '@/components/SidebarIcons';
 import AnalyticsTab from './AnalyticsTab';
 import StockAnalysisTab from './StockAnalysisTab';
 import ExportCategoryDialog from './ExportCategoryDialog';
@@ -26,13 +27,7 @@ import categoriesData from '../utils/categories_with_urls.json';
 
 
 function CategoriesPageContent() {
-  const { toggleSidebar } = useSidebar();
-  // ... (keep existing state)
-
-  // Memoize fixed header content
-
-
-  // ... (rest of component)
+  const { isSidebarOpen, toggleSidebar } = useSidebar();
 
   // Move PINCODE_OPTIONS up to be accessible by hydration effect
   const PINCODE_OPTIONS = useMemo(() => [
@@ -1331,13 +1326,13 @@ function CategoriesPageContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
 
       {/* Header */}
-      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex items-center justify-between shadow-sm z-20">
-        <div className="flex items-center gap-2 md:gap-4">
+      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-[18px] flex items-center justify-between shadow-sm z-20">
+        <div className="flex items-center gap-4">
           <button 
             onClick={toggleSidebar}
             className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
           >
-            <Menu size={24} />
+            {isSidebarOpen ? <SidebarCloseIcon size={24} /> : <SidebarOpenIcon size={24} />}
           </button>
           <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 

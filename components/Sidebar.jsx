@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, BarChart3, Bell, LogOut, LayoutDashboard, X } from 'lucide-react';
+import { Search, BarChart3, Bell, LogOut, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SidebarCloseIcon } from './SidebarIcons';
 
 export default function Sidebar({ isOpen, onClose }) {
   const pathname = usePathname();
@@ -41,17 +42,8 @@ export default function Sidebar({ isOpen, onClose }) {
         "fixed top-0 left-0 h-screen w-64 bg-neutral-900 text-white flex flex-col border-r border-neutral-800 z-[160] transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-6 border-b border-neutral-800 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight mb-1">QuickCommerce</h1>
-            <p className="text-sm text-neutral-400">Category Tracker</p>
-          </div>
-          <button 
-            onClick={onClose}
-            className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
-          >
-            <X size={20} />
-          </button>
+        <div className="px-6 py-[18px] border-b border-neutral-800 flex items-center">
+          <h1 className="text-xl font-bold tracking-tight">QuickCommerce</h1>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">

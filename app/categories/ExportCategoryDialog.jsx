@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Download, X, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
+import { useSidebar } from '@/components/SidebarContext';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 
 export default function ExportCategoryDialog({
@@ -16,6 +16,7 @@ export default function ExportCategoryDialog({
     categoryOptions = [],
     latestSnapshotTime = null
 }) {
+    const { isSidebarOpen } = useSidebar();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
@@ -139,7 +140,10 @@ export default function ExportCategoryDialog({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[200] backdrop-blur-[4px] transition-opacity duration-200" onClick={onClose}>
+        <div className={cn(
+            "fixed inset-0 bg-black/40 flex items-center justify-center z-[200] backdrop-blur-[4px] transition-all duration-300",
+            isSidebarOpen ? "xl:ml-64" : "xl:ml-0"
+        )} onClick={onClose}>
             <div className="bg-white rounded-xl w-[90%] max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
 
                 {/* Header */}

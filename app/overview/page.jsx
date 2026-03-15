@@ -1,6 +1,9 @@
 "use client"
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { Loader2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { useSidebar } from '@/components/SidebarContext';
+import { SidebarOpenIcon, SidebarCloseIcon } from '@/components/SidebarIcons';
+import { cn } from '@/lib/utils';
 
 import categoriesData from '../utils/categories_with_urls.json';
 
@@ -102,6 +105,7 @@ function OverviewContent() {
     const [matrixDataByPincode, setMatrixDataByPincode] = useState({});
     const [loadingPincode, setLoadingPincode] = useState({});
     const [error, setError] = useState(null);
+    const { isSidebarOpen, toggleSidebar } = useSidebar();
 
     const fetchOverviewDataForPincode = async (pincodeStr) => {
         if (!pincodeStr) return;
@@ -177,8 +181,14 @@ function OverviewContent() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
             {/* Header */}
-            <div className="flex-none bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-20">
+            <div className="flex-none bg-white border-b border-gray-200 px-6 py-[18px] flex items-center justify-between shadow-sm z-20">
                 <div className="flex items-center gap-4">
+                    <button 
+                        onClick={toggleSidebar}
+                        className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                    >
+                        {isSidebarOpen ? <SidebarCloseIcon size={24} /> : <SidebarOpenIcon size={24} />}
+                    </button>
                     <h1 className="text-xl font-bold tracking-tight text-neutral-900">System Overview</h1>
                     <div className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 rounded-lg px-2 py-1 border border-blue-200">
                         <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />

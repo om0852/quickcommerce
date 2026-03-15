@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { X, Plus, Trash2, Loader2, Save, AlertTriangle, Unlink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CustomDropdown from '@/components/CustomDropdown';
+import { useSidebar } from '@/components/SidebarContext';
 
 export default function GroupManagementDialog({
     isOpen,
@@ -13,6 +14,7 @@ export default function GroupManagementDialog({
     currentPincode = '201303', // Default to 201303 if not provided
     showToast // NEW: Function to show toast notifications
 }) {
+    const { isSidebarOpen } = useSidebar();
     if (!isOpen) return null;
 
     const [loading, setLoading] = useState(false);
@@ -203,7 +205,10 @@ export default function GroupManagementDialog({
     });
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
+        <div className={cn(
+            "fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 transition-all duration-300",
+            isSidebarOpen ? "xl:ml-64" : "xl:ml-0"
+        )}>
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
                 onClick={onClose}

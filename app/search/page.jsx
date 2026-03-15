@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { Search, TrendingDown, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSidebar } from '@/components/SidebarContext';
+import { SidebarOpenIcon, SidebarCloseIcon } from '@/components/SidebarIcons';
 
 export default function Home() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -11,6 +13,7 @@ export default function Home() {
     const [error, setError] = useState(null);
     const [platformFilter, setPlatformFilter] = useState('all');
     const [showMissing, setShowMissing] = useState(false);
+    const { isSidebarOpen, toggleSidebar } = useSidebar();
 
     const PINCODE_OPTIONS = [
         { label: 'Delhi NCR — 201303', value: '201303' },
@@ -98,11 +101,28 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen bg-[#fafafa] p-4 md:p-8 font-sans text-neutral-900">
-            <div className="mb-8 max-w-[1400px] mx-auto text-center md:text-left">
-                <h1 className="text-3xl font-bold tracking-tight text-neutral-900 mb-2">Product Search</h1>
-                <p className="text-neutral-500">Compare prices across Zepto, Blinkit, JioMart, DMart, and Instamart</p>
+        <div className="min-h-screen bg-[#fafafa] font-sans text-neutral-900 flex flex-col">
+            {/* Header */}
+            <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-[18px] flex items-center justify-between shadow-sm z-20">
+                <div className="flex items-center gap-4">
+                    <button 
+                        onClick={toggleSidebar}
+                        className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                    >
+                        {isSidebarOpen ? <SidebarCloseIcon size={24} /> : <SidebarOpenIcon size={24} />}
+                    </button>
+                    <h1 className="text-xl font-bold tracking-tight text-neutral-900">Product Search</h1>
+                </div>
+                <div className="hidden md:flex items-center gap-2 text-sm bg-neutral-100 text-neutral-600 rounded-lg px-2 py-1 border border-neutral-200">
+                    <Search size={14} />
+                    <span className="font-medium">Global Lookup</span>
+                </div>
             </div>
+
+            <div className="flex-1 p-4 md:p-8">
+                <div className="mb-8 max-w-[1400px] mx-auto text-center md:text-left">
+                    <p className="text-neutral-500">Compare prices across Zepto, Blinkit, JioMart, DMart, and Instamart</p>
+                </div>
 
             {/* Search Section */}
             <div className="max-w-[1400px] mx-auto bg-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-8">
@@ -280,6 +300,7 @@ export default function Home() {
                     <p className="text-neutral-500 text-sm">Try searching for something else</p>
                 </div>
             )}
+            </div>
         </div>
     );
 }

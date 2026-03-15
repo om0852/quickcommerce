@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Save, Loader2, ChevronDown, ChevronUp, ExternalLink, Search } from 'lucide-react';
 import { Switch } from '@/components/ui/switch'; // Assuming you have a Switch component, if not will use standard input or create simple toggle
+import { useSidebar } from '@/components/SidebarContext';
 // Removed: import { brands } from '@/app/utils/brandarray';
 
 // Searchable Brand Combobox Component
@@ -193,6 +194,7 @@ export default function ProductEditDialog({
     onUpdate,
     showToast // NEW Prop
 }) {
+    const { isSidebarOpen } = useSidebar();
     if (!isOpen || !product) return null;
 
     // Group Level State
@@ -365,7 +367,10 @@ export default function ProductEditDialog({
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+        <div className={cn(
+            "fixed inset-0 z-[200] flex items-center justify-center p-4 transition-all duration-300",
+            isSidebarOpen ? "xl:ml-64" : "xl:ml-0"
+        )}>
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
