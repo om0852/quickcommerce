@@ -14,54 +14,9 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { cn } from '@/lib/utils'; // Keep cn for tailwind utility usage if needed
 
-const ProductImage = ({ product }) => {
-    const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
-
-    // Collect all available images from all platforms
-    const images = useMemo(() => {
-        return platforms
-            .map(p => product[p]?.productImage)
-            .filter(url => url && url.length > 5); // Basic filter for valid URL strings
-    }, [product]);
-
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [failed, setFailed] = useState(false);
-
-    // Reset state when product changes
-    React.useEffect(() => {
-        setCurrentImageIndex(0);
-        setFailed(false);
-    }, [product]);
-
-    const handleError = () => {
-        if (currentImageIndex < images.length - 1) {
-            setCurrentImageIndex(prev => prev + 1);
-        } else {
-            setFailed(true);
-        }
-    };
-
-    if (images.length === 0 || failed) {
-        return (
-            <div className="h-full w-full flex items-center justify-center bg-neutral-100 text-[10px] text-neutral-400">
-                No Img
-            </div>
-        );
-    }
-
-    return (
-        <img
-            className="h-full w-full object-contain mix-blend-multiply"
-            src={images[currentImageIndex]}
-            alt={product.name}
-            onError={handleError}
-            loading="lazy"
-        />
-    );
-};
-
 import GroupManagementDialog from './GroupManagementDialog';
-import ProductEditDialog from './ProductEditDialog'; // NEW Import
+import ProductEditDialog from './ProductEditDialog';
+import ProductImage from './ProductImage';
 
 const ProductTable = React.memo(function ProductTable({
     products,
@@ -155,6 +110,18 @@ const ProductTable = React.memo(function ProductTable({
         onSort(platform, rankSortDirection);
         handleRankSubMenuClose();
         handleSortMenuClose();
+    };
+
+    // Sort Submenu State (Price, Discount, Stock, Ads)
+    const [sortSubMenuAnchor, setSortSubMenuAnchor] = useState(null);
+    const isSortSubMenuOpen = Boolean(sortSubMenuAnchor);
+
+    const handleSortSubSubMenuOpen = (event) => {
+        setSortSubMenuAnchor(event.currentTarget);
+    };
+
+    const handleSortSubSubMenuClose = () => {
+        setSortSubMenuAnchor(null);
     };
 
     const newlyAddedCount = useMemo(() => {
@@ -446,9 +413,9 @@ const ProductTable = React.memo(function ProductTable({
                                         position: 'sticky',
                                         left: isBulkEditMode ? 44 : 0,
                                         zIndex: 30, // Lowered from 60 to be below dropdowns (z-50)
-                                        minWidth: { xs: 120, sm: 150, md: 200, lg: 220 },
-                                        width: { xs: 120, sm: 150, md: 200, lg: 220 },
-                                        maxWidth: { xs: 120, sm: 150, md: 200, lg: 220 },
+                                        minWidth: { xs: 120, sm: 155, md: 205, lg: 225 },
+                                        width: { xs: 120, sm: 155, md: 205, lg: 225 },
+                                        maxWidth: { xs: 120, sm: 155, md: 205, lg: 225 },
                                         borderBottom: '1px solid #e5e5e5',
                                         borderRight: '1px solid #e5e5e5',
                                         boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
@@ -457,34 +424,35 @@ const ProductTable = React.memo(function ProductTable({
                                 >
                                     <div className="flex flex-row items-center justify-start w-full gap-3">
                                         <span className="hidden sm:inline-block w-10 text-neutral-500 font-bold">SKUs</span>
-                                        <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
-                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
-                                            <input
-                                                type="text"
-                                                placeholder="Search by name, ID or Group ID..."
-                                                value={searchQuery}
-                                                onChange={(e) => onSearchChange(e.target.value)}
-                                                className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-all font-medium normal-case placeholder:text-gray-400 text-neutral-700"
-                                            />
-                                            {searchQuery && (
-                                                <button
-                                                    onClick={() => onSearchChange('')}
-                                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100"
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            )}
-                                        </div>
+                                        <div className="flex flex-row items-center justify-start w-full gap-1">
+                                            <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
+                                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                                                <input
+                                                    placeholder="Search by name, ID or Group ID..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => onSearchChange(e.target.value)}
+                                                    className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 transition-all font-medium normal-case placeholder:text-gray-400 text-neutral-700"
+                                                />
+                                                {searchQuery && (
+                                                    <button
+                                                        onClick={() => onSearchChange('')}
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-100"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                )}
+                                            </div>
 
-                                        {/* Hamburger Sort Menu */}
-                                        {/* Dropdown Trigger */}
-                                        <button
-                                            onClick={handleSortMenuClick}
-                                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700 cursor-pointer"
-                                            title="Filter & Sort"
-                                        >
-                                            <Filter size={16} />
-                                        </button>
+                                            {/* Hamburger Sort Menu */}
+                                            {/* Dropdown Trigger */}
+                                            <button
+                                                onClick={handleSortMenuClick}
+                                                className="hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700 cursor-pointer"
+                                                title="Filter & Sort"
+                                            >
+                                                <Filter size={16} />
+                                            </button>
+                                        </div>
 
                                         {/* Dropdown Menu */}
                                         <Menu
@@ -684,16 +652,9 @@ const ProductTable = React.memo(function ProductTable({
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
+                                            {/* "Sort by" Submenu Trigger */}
                                             <MenuItem
-                                                onClick={() => {
-                                                    onShowInStockFirstChange(true);
-                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
-                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
-                                                    if (onShowNewFirstChange) onShowNewFirstChange(false);
-                                                    if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
-                                                    onSort(null);
-                                                    handleSortMenuClose();
-                                                }}
+                                                onClick={handleSortSubSubMenuOpen}
                                                 sx={{
                                                     px: 1.5,
                                                     py: 1,
@@ -701,44 +662,227 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: showInStockFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: showInStockFirst ? 700 : 500,
-                                                    color: showInStockFirst ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst ? 700 : 500,
+                                                    color: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <span>Sort by In Stock</span>
-                                                {showInStockFirst && <Check size={14} className="text-neutral-900" />}
+                                                <span>Sort by</span>
+                                                <ChevronRight size={14} className="text-gray-400" />
                                             </MenuItem>
 
-                                            <MenuItem
-                                                onClick={() => {
-                                                    onShowOutStockFirstChange(true);
-                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
-                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
-                                                    if (onShowNewFirstChange) onShowNewFirstChange(false);
-                                                    if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
-                                                    onSort(null);
-                                                    handleSortMenuClose();
+                                            {/* "Sort by" Submenu Content */}
+                                            <Menu
+                                                anchorEl={sortSubMenuAnchor}
+                                                open={isSortSubMenuOpen}
+                                                onClose={handleSortSubSubMenuClose}
+                                                anchorOrigin={{
+                                                    vertical: 'top',
+                                                    horizontal: 'right',
                                                 }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: showOutStockFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: showOutStockFirst ? 700 : 500,
-                                                    color: showOutStockFirst ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
+                                                transformOrigin={{
+                                                    vertical: 'top',
+                                                    horizontal: 'left',
+                                                }}
+                                                PaperProps={{
+                                                    sx: {
+                                                        ml: 0.5,
+                                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                                        border: '1px solid #e5e7eb',
+                                                        minWidth: '160px',
+                                                        borderRadius: '0.375rem',
+                                                    }
                                                 }}
                                             >
-                                                <span>Sort by Out of Stock</span>
-                                                {showOutStockFirst && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        handlePriceSort('desc');
+                                                        handleSortSubSubMenuClose();
+                                                    }}
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        fontSize: '0.75rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' ? 700 : 500,
+                                                        color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <span>Price: High to Low</span>
+                                                    {sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && <Check size={14} />}
+                                                </MenuItem>
+
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        handlePriceSort('asc');
+                                                        handleSortSubSubMenuClose();
+                                                    }}
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        fontSize: '0.75rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' ? 700 : 500,
+                                                        color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <span>Price: Low to High</span>
+                                                    {sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && <Check size={14} />}
+                                                </MenuItem>
+
+                                                <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        onShowInStockFirstChange(true);
+                                                        if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
+                                                        if (onShowAdFirstChange) onShowAdFirstChange(false);
+                                                        if (onShowNewFirstChange) onShowNewFirstChange(false);
+                                                        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
+                                                        onSort(null);
+                                                        handleSortSubSubMenuClose();
+                                                        handleSortMenuClose();
+                                                    }}
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        fontSize: '0.75rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        backgroundColor: showInStockFirst ? '#f9fafb' : 'transparent',
+                                                        fontWeight: showInStockFirst ? 700 : 500,
+                                                        color: showInStockFirst ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <span>Stock In</span>
+                                                    {showInStockFirst && <Check size={14} />}
+                                                </MenuItem>
+
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        onShowOutStockFirstChange(true);
+                                                        if (onShowInStockFirstChange) onShowInStockFirstChange(false);
+                                                        if (onShowAdFirstChange) onShowAdFirstChange(false);
+                                                        if (onShowNewFirstChange) onShowNewFirstChange(false);
+                                                        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
+                                                        onSort(null);
+                                                        handleSortSubSubMenuClose();
+                                                        handleSortMenuClose();
+                                                    }}
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        fontSize: '0.75rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        backgroundColor: showOutStockFirst ? '#f9fafb' : 'transparent',
+                                                        fontWeight: showOutStockFirst ? 700 : 500,
+                                                        color: showOutStockFirst ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <span>Stock Out</span>
+                                                    {showOutStockFirst && <Check size={14} />}
+                                                </MenuItem>
+
+                                                <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        onShowAdFirstChange(true);
+                                                        if (onShowInStockFirstChange) onShowInStockFirstChange(false);
+                                                        if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
+                                                        if (onShowNewFirstChange) onShowNewFirstChange(false);
+                                                        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
+                                                        onSort(null);
+                                                        handleSortSubSubMenuClose();
+                                                        handleSortMenuClose();
+                                                    }}
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        fontSize: '0.75rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        backgroundColor: showAdFirst ? '#f9fafb' : 'transparent',
+                                                        fontWeight: showAdFirst ? 700 : 500,
+                                                        color: showAdFirst ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <span>Ads</span>
+                                                    {showAdFirst && <Check size={14} />}
+                                                </MenuItem>
+
+                                                <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        onSort('averageDiscount', 'desc');
+                                                        handleSortSubSubMenuClose();
+                                                        handleSortMenuClose();
+                                                    }}
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        fontSize: '0.75rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'desc' ? 700 : 500,
+                                                        color: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <span>High to Low Discount</span>
+                                                    {sortConfig.key === 'averageDiscount' && sortConfig.direction === 'desc' && <Check size={14} />}
+                                                </MenuItem>
+
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        onSort('averageDiscount', 'asc');
+                                                        handleSortSubSubMenuClose();
+                                                        handleSortMenuClose();
+                                                    }}
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        fontSize: '0.75rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'asc' ? 700 : 500,
+                                                        color: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <span>Low to High Discount</span>
+                                                    {sortConfig.key === 'averageDiscount' && sortConfig.direction === 'asc' && <Check size={14} />}
+                                                </MenuItem>
+                                            </Menu>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
@@ -842,35 +986,6 @@ const ProductTable = React.memo(function ProductTable({
                                                 ))}
                                             </Menu>
 
-                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    onShowAdFirstChange(true);
-                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
-                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
-                                                    if (onShowNewFirstChange) onShowNewFirstChange(false);
-                                                    if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
-                                                    onSort(null); // Clear manual sort
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: showAdFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: showAdFirst ? 700 : 500,
-                                                    color: showAdFirst ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <span>Show AD First</span>
-                                                {showAdFirst && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
@@ -940,32 +1055,22 @@ const ProductTable = React.memo(function ProductTable({
                                 {['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'].map((platform) => (
                                     <TableCell
                                         key={platform}
-                                        onClick={() => onSort(platform)}
                                         align="center"
                                         sx={{
                                             fontWeight: 'bold',
                                             textTransform: 'uppercase',
                                             color: '#737373',
                                             backgroundColor: '#fafafa',
-                                            cursor: 'pointer',
                                             userSelect: 'none',
                                             minWidth: 100,
                                             width: 100,
                                             maxWidth: 100,
                                             padding: '8px 12px',
                                             borderBottom: '1px solid #e5e5e5',
-                                            '&:hover': { backgroundColor: '#f5f5f5' }
                                         }}
                                     >
                                         <div className="flex items-center justify-center gap-1">
                                             {platform === 'flipkartMinutes' ? 'Flipkart' : platform}
-                                            {sortConfig.key === platform ? (
-                                                sortConfig.direction === 'asc' ? <ChevronUp size={14} /> :
-                                                    sortConfig.direction === 'desc' ? <ChevronDown size={14} /> :
-                                                        <ChevronsUpDown size={14} className="text-neutral-300" />
-                                            ) : (
-                                                <ChevronsUpDown size={14} className="text-neutral-300" />
-                                            )}
                                         </div>
                                     </TableCell>
                                 ))}
@@ -991,11 +1096,13 @@ const ProductTable = React.memo(function ProductTable({
                                                 padding: '16px 32px',
                                             }}
                                         >
-                                            <div className="grid grid-cols-[auto_1fr] gap-4">
-                                                <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-neutral-200 animate-pulse" />
-                                                <div className="w-full min-w-0 space-y-2">
-                                                    <div className="h-4 bg-neutral-200 rounded animate-pulse w-3/4" />
-                                                    <div className="h-3 bg-neutral-100 rounded animate-pulse w-1/2" />
+                                            <div style={{ height: isAdmin ? '95px' : '60px', overflow: 'hidden' }}>
+                                                <div className="grid grid-cols-[auto_1fr] gap-4">
+                                                    <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-neutral-200 animate-pulse" />
+                                                    <div className="w-full min-w-0 space-y-2">
+                                                        <div className="h-4 bg-neutral-200 rounded animate-pulse w-3/4" />
+                                                        <div className="h-3 bg-neutral-100 rounded animate-pulse w-1/2" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -1012,9 +1119,11 @@ const ProductTable = React.memo(function ProductTable({
                                                     padding: '8px 12px',
                                                 }}
                                             >
-                                                <div className="space-y-2 flex flex-col items-center">
-                                                    <div className="h-4 bg-neutral-200 rounded animate-pulse w-12" />
-                                                    <div className="h-3 bg-neutral-100 rounded animate-pulse w-16" />
+                                                <div style={{ height: isAdmin ? '95px' : '60px', overflow: 'hidden' }}>
+                                                    <div className="space-y-2 flex flex-col items-center">
+                                                        <div className="h-4 bg-neutral-200 rounded animate-pulse w-12" />
+                                                        <div className="h-3 bg-neutral-100 rounded animate-pulse w-16" />
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                         ))}
@@ -1113,132 +1222,132 @@ const ProductTable = React.memo(function ProductTable({
                                                     }
                                                 }}
                                             >
-                                                <div className="flex flex-row items-start gap-3">
-                                                    <div className="h-10 w-10 flex-shrink-0 rounded-lg border border-neutral-200 p-0.5 bg-white overflow-hidden self-start">
-                                                        <ProductImage product={product} />
-                                                    </div>
-                                                    <div className="w-full min-w-0">
-                                                        <div className="text-[13px] font-medium text-neutral-900 whitespace-normal break-words flex items-center gap-1.5" title={product.name}>
-                                                            <span
-                                                                className="flex-1 min-w-0 cursor-pointer"
-                                                                onDoubleClick={() => {
-                                                                    if (isAdmin && !product.isDuplicate) {
-                                                                        setEditingProductId(product.groupingId);
-                                                                        setEditValue(product.name);
-                                                                    }
-                                                                }}
-                                                                title={isAdmin ? (product.isDuplicate ? "Master Group controls this variant" : "Double click to edit") : product.name}
-                                                            >
-                                                                {editingProductId === product.groupingId ? (
-                                                                    <div className="relative w-full h-8">
-                                                                        <div className="absolute left-0 top-0 z-[100] flex flex-col gap-1.5 p-2 bg-white border border-black/20 rounded-lg shadow-2xl min-w-[450px]">
-                                                                            <div className="flex items-center gap-2">
-                                                                                <input
-                                                                                    type="text"
-                                                                                    autoFocus
-                                                                                    onFocus={(e) => e.target.select()}
-                                                                                    value={editValue}
-                                                                                    onChange={(e) => setEditValue(e.target.value)}
-                                                                                    onKeyDown={(e) => {
-                                                                                        if (e.key === 'Enter') {
-                                                                                            e.preventDefault();
-                                                                                            handleInlineSave(product.parentGroupId || product.groupingId);
-                                                                                        } else if (e.key === 'Escape') {
-                                                                                            setEditingProductId(null);
-                                                                                        }
-                                                                                    }}
-                                                                                    onBlur={() => setEditingProductId(null)}
-                                                                                    disabled={savingProductId === (product.parentGroupId || product.groupingId)}
-                                                                                    className="flex-1 px-3 py-1.5 text-sm border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black"
-                                                                                    title="Edit Product Name"
-                                                                                />
-                                                                                {savingProductId === (product.parentGroupId || product.groupingId) && (
-                                                                                    <Loader2 size={14} className="animate-spin text-neutral-400" />
+                                                <div style={{ height: isAdmin ? '95px' : '60px', overflow: 'hidden' }}>
+                                                    <div className="flex flex-row items-start gap-3">
+                                                        <div className="h-10 w-10 flex-shrink-0 rounded-lg border border-neutral-200 p-0.5 bg-white overflow-hidden self-start">
+                                                            <ProductImage product={product} />
+                                                        </div>
+                                                        <div className="w-full min-w-0">
+                                                            <div className="text-[13px] font-medium text-neutral-900 whitespace-normal break-words flex items-center gap-1.5" title={product.name}>
+                                                                <span
+                                                                    className="flex-1 min-w-0 cursor-pointer"
+                                                                    onDoubleClick={() => {
+                                                                        if (isAdmin && !product.isDuplicate) {
+                                                                            setEditingProductId(product.groupingId);
+                                                                            setEditValue(product.name);
+                                                                        }
+                                                                    }}
+                                                                    title={isAdmin ? (product.isDuplicate ? "Master Group controls this variant" : "Double click to edit") : product.name}
+                                                                >
+                                                                    {editingProductId === product.groupingId ? (
+                                                                        <div className="relative w-full h-8">
+                                                                            <div className="absolute left-0 top-0 z-[100] flex flex-col gap-1.5 p-2 bg-white border border-black/20 rounded-lg shadow-2xl min-w-[450px]">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        autoFocus
+                                                                                        onFocus={(e) => e.target.select()}
+                                                                                        value={editValue}
+                                                                                        onChange={(e) => setEditValue(e.target.value)}
+                                                                                        onKeyDown={(e) => {
+                                                                                            if (e.key === 'Enter') {
+                                                                                                e.preventDefault();
+                                                                                                handleInlineSave(product.parentGroupId || product.groupingId);
+                                                                                            } else if (e.key === 'Escape') {
+                                                                                                setEditingProductId(null);
+                                                                                            }
+                                                                                        }}
+                                                                                        onBlur={() => setEditingProductId(null)}
+                                                                                        disabled={savingProductId === (product.parentGroupId || product.groupingId)}
+                                                                                        className="flex-1 px-3 py-1.5 text-sm border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black"
+                                                                                        title="Edit Product Name"
+                                                                                    />
+                                                                                    {savingProductId === (product.parentGroupId || product.groupingId) && (
+                                                                                        <Loader2 size={14} className="animate-spin text-neutral-400" />
+                                                                                    )}
+                                                                                </div>
+                                                                                {((product.weight && product.weight !== 'N/A') || product.quantity) && (
+                                                                                    <span className="text-neutral-500 font-normal text-[11px] px-1">
+                                                                                        + Weight/Qty suffix: ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})
+                                                                                    </span>
                                                                                 )}
                                                                             </div>
-                                                                            {((product.weight && product.weight !== 'N/A') || product.quantity) && (
-                                                                                <span className="text-neutral-500 font-normal text-[11px] px-1">
-                                                                                    + Weight/Qty suffix: ({(product.weight && product.weight !== 'N/A') ? product.weight : product.quantity})
-                                                                                </span>
-                                                                            )}
                                                                         </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="block leading-tight break-words">
-                                                                        {formatProductName(product.name)}
-                                                                        {(() => {
-                                                                            const suffix = (product.weight && product.weight !== 'N/A') ? product.weight : product.quantity;
-                                                                            if (!suffix) return null;
+                                                                    ) : (
+                                                                        <div className="block leading-tight break-words line-clamp-2 min-h-[32px]">
+                                                                            {formatProductName(product.name)}
+                                                                            {(() => {
+                                                                                const suffix = (product.weight && product.weight !== 'N/A') ? product.weight : product.quantity;
+                                                                                if (!suffix) return null;
 
-                                                                            // Check if suffix is already mentioned in product name to avoid redundancy
-                                                                            const nameLower = product.name.toLowerCase();
-                                                                            const suffixLower = suffix.toString().toLowerCase();
-                                                                            if (nameLower.includes(suffixLower)) return null;
+                                                                                // Check if suffix is already mentioned in product name to avoid redundancy
+                                                                                const nameLower = product.name.toLowerCase();
+                                                                                const suffixLower = suffix.toString().toLowerCase();
+                                                                                if (nameLower.includes(suffixLower)) return null;
 
-                                                                            return <span className="text-neutral-400 font-normal ml-1">({suffix})</span>;
-                                                                        })()}
-                                                                    </div>
+                                                                                return <span className="text-neutral-400 font-normal ml-1">({suffix})</span>;
+                                                                            })()}
+                                                                        </div>
+                                                                    )}
+                                                                </span>
+                                                                {isAdmin && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            navigator.clipboard.writeText(product.name);
+                                                                            setCopiedId(product.groupingId);
+                                                                            setTimeout(() => setCopiedId(null), 3000);
+                                                                        }}
+                                                                        className={`p-1 rounded-md transition-colors flex-shrink-0 ${copiedId === product.groupingId ? 'text-green-600 bg-green-50' : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100'}`}
+                                                                        title={copiedId === product.groupingId ? "Copied!" : "Copy Group Name"}
+                                                                    >
+                                                                        {copiedId === product.groupingId ? <Check size={12} /> : <Copy size={12} />}
+                                                                    </button>
                                                                 )}
-                                                            </span>
-                                                            {isAdmin && (
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        navigator.clipboard.writeText(product.name);
-                                                                        setCopiedId(product.groupingId);
-                                                                        setTimeout(() => setCopiedId(null), 3000);
-                                                                    }}
-                                                                    className={`p-1 rounded-md transition-colors flex-shrink-0 ${copiedId === product.groupingId ? 'text-green-600 bg-green-50' : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100'}`}
-                                                                    title={copiedId === product.groupingId ? "Copied!" : "Copy Group Name"}
-                                                                >
-                                                                    {copiedId === product.groupingId ? <Check size={12} /> : <Copy size={12} />}
-                                                                </button>
+                                                            </div>
+                                                            <div className="text-xs text-orange-600 font-medium mt-0.5 min-h-[16px]">
+                                                                {product.brand || ""}
+                                                            </div>
+                                                            {isAdmin && !product.isDuplicate && (
+                                                                <div className="mt-2 flex flex-row items-center gap-2">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setEditProduct(product);
+                                                                        }}
+                                                                        className="flex-1 text-[10px] font-bold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded border border-neutral-200 transition-colors text-center whitespace-nowrap"
+                                                                        title="Edit Values"
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setManageGroup(product);
+                                                                        }}
+                                                                        className="flex-1 text-[10px] font-bold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded border border-neutral-200 transition-colors text-center whitespace-nowrap"
+                                                                    >
+                                                                        Group
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                            {isAdmin && product.isDuplicate && (
+                                                                <div className="mt-2 flex flex-row items-center gap-2">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleRegroup(product);
+                                                                        }}
+                                                                        disabled={savingProductId === product.groupingId}
+                                                                        className="flex-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded border border-blue-200 transition-colors text-center whitespace-nowrap flex items-center justify-center gap-1"
+                                                                        title="Create a new separate group for this product and its variants"
+                                                                    >
+                                                                        {savingProductId === product.groupingId ? <Loader2 size={10} className="animate-spin" /> : null}
+                                                                        Create Group
+                                                                    </button>
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        {product.brand && (
-                                                            <div className="text-xs text-orange-600 font-medium mt-0.5">
-                                                                {product.brand}
-                                                            </div>
-                                                        )}
-                                                        {isAdmin && !product.isDuplicate && (
-                                                            <div className="mt-2 flex flex-row items-center gap-2">
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setEditProduct(product);
-                                                                    }}
-                                                                    className="flex-1 text-[10px] font-bold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded border border-neutral-200 transition-colors text-center whitespace-nowrap"
-                                                                    title="Edit Values"
-                                                                >
-                                                                    Edit
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setManageGroup(product);
-                                                                    }}
-                                                                    className="flex-1 text-[10px] font-bold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded border border-neutral-200 transition-colors text-center whitespace-nowrap"
-                                                                >
-                                                                    Group
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                        {isAdmin && product.isDuplicate && (
-                                                            <div className="mt-2 flex flex-row items-center gap-2">
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleRegroup(product);
-                                                                    }}
-                                                                    disabled={savingProductId === product.groupingId}
-                                                                    className="flex-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded border border-blue-200 transition-colors text-center whitespace-nowrap flex items-center justify-center gap-1"
-                                                                    title="Create a new separate group for this product and its variants"
-                                                                >
-                                                                    {savingProductId === product.groupingId ? <Loader2 size={10} className="animate-spin" /> : null}
-                                                                    Create Group
-                                                                </button>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </TableCell>
@@ -1258,66 +1367,68 @@ const ProductTable = React.memo(function ProductTable({
                                                             verticalAlign: 'top'
                                                         }}
                                                     >
-                                                        <div className="flex flex-col items-center">
-                                                            {data ? (
-                                                                <div className="flex flex-col items-center">
-                                                                    <div className="flex items-center justify-center gap-2">
-                                                                        <div className={cn(
-                                                                            "text-sm font-semibold",
-                                                                            data.isOutOfStock ? "text-rose-600" : "text-neutral-900"
-                                                                        )}>
-                                                                            ₹{Number(data.currentPrice).toFixed(0)}
-                                                                        </div>
-                                                                        {data.ranking && !isNaN(data.ranking) && (
-                                                                            <span className={cn(
-                                                                                "text-[10px] font-bold px-1.5 py-0.5 rounded border bg-neutral-100 text-neutral-900 border-neutral-200"
+                                                        <div style={{ height: isAdmin ? '95px' : '60px', overflow: 'hidden' }}>
+                                                            <div className="flex flex-col items-center">
+                                                                {data ? (
+                                                                    <div className="flex flex-col items-center">
+                                                                        <div className="flex items-center justify-center gap-2">
+                                                                            <div className={cn(
+                                                                                "text-sm font-semibold",
+                                                                                data.isOutOfStock ? "text-rose-600" : "text-neutral-900"
                                                                             )}>
-                                                                                #{data.ranking}
-                                                                            </span>
+                                                                                ₹{Number(data.currentPrice).toFixed(0)}
+                                                                            </div>
+                                                                            {data.ranking && !isNaN(data.ranking) && (
+                                                                                <span className={cn(
+                                                                                    "text-[10px] font-bold px-1.5 py-0.5 rounded border bg-neutral-100 text-neutral-900 border-neutral-200"
+                                                                                )}>
+                                                                                    #{data.ranking}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        {data.new && (
+                                                                            <span className="text-[10px] font-bold text-blue-600">NEW</span>
+                                                                        )}
+                                                                        {data.isAd && (
+                                                                            <span className="text-[10px] font-bold text-green-600 text-center">AD</span>
                                                                         )}
                                                                     </div>
-                                                                    {data.new && (
-                                                                        <span className="text-[10px] font-bold text-blue-600">NEW</span>
-                                                                    )}
-                                                                    {data.isAd && (
-                                                                        <span className="text-[10px] font-bold text-green-600 text-center">AD</span>
-                                                                    )}
-                                                                </div>
-                                                            ) : (
-                                                                totalPlatformCounts && totalPlatformCounts[p] === 0 ? (
-                                                                    <span className="text-xs font-bold text-rose-500">U/S</span>
                                                                 ) : (
-                                                                    <span className="text-sm text-neutral-400 italic">--</span>
-                                                                )
-                                                            )}
-                                                            
-                                                            {/* Show group-wide/local conflict even if out of stock, but ONLY on master row and for ADMINS */}
-                                                            {isAdmin && !product.isDuplicate && (
-                                                                <>
-                                                                    {product.groupConflicts?.[p]?.hasConflict && (
-                                                                        <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 animate-pulse-subtle">
-                                                                            <Skull size={14} className="text-rose-600" />
-                                                                            <span className="text-[10px] font-bold text-rose-700">
-                                                                                {product.groupConflicts[p].count}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
+                                                                    totalPlatformCounts && totalPlatformCounts[p] === 0 ? (
+                                                                        <span className="text-xs font-bold text-rose-500">U/S</span>
+                                                                    ) : (
+                                                                        <span className="text-sm text-neutral-400 italic">--</span>
+                                                                    )
+                                                                )}
 
-                                                                    {/* Show Star icon for same-baseId duplicates */}
-                                                                    {product.groupConflicts?.[p]?.hasDuplicates && (
-                                                                        <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100">
-                                                                            <img 
-                                                                                src="https://img.icons8.com/?size=100&id=104&format=png&color=000000" 
-                                                                                alt="Star" 
-                                                                                style={{ width: 14, height: 14 }}
-                                                                            />
-                                                                            <span className="text-[10px] font-bold text-amber-700">
-                                                                                {product.groupConflicts[p].totalCount}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                </>
-                                                            )}
+                                                                {/* Show group-wide/local conflict even if out of stock, but ONLY on master row and for ADMINS */}
+                                                                {isAdmin && !product.isDuplicate && (
+                                                                    <>
+                                                                        {product.groupConflicts?.[p]?.hasConflict && (
+                                                                            <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 animate-pulse-subtle">
+                                                                                <Skull size={14} className="text-rose-600" />
+                                                                                <span className="text-[10px] font-bold text-rose-700">
+                                                                                    {product.groupConflicts[p].count}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Show Star icon for same-baseId duplicates */}
+                                                                        {product.groupConflicts?.[p]?.hasDuplicates && (
+                                                                            <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100">
+                                                                                <img
+                                                                                    src="https://img.icons8.com/?size=100&id=104&format=png&color=000000"
+                                                                                    alt="Star"
+                                                                                    style={{ width: 14, height: 14 }}
+                                                                                />
+                                                                                <span className="text-[10px] font-bold text-amber-700">
+                                                                                    {product.groupConflicts[p].totalCount}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </TableCell>
                                                 );

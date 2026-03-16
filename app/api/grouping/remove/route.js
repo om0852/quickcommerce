@@ -64,7 +64,7 @@ export async function POST(request) {
             primaryImage: sampleSnap.productImage,
             groupImage: sampleSnap.productImage,
             primaryWeight: sampleSnap.productWeight,
-            brand: sampleSnap.brand,
+            brand: "",
             products: productsToMove,
             totalProducts: productsToMove.length,
             isManuallyVerified: true

@@ -173,7 +173,7 @@ function CategoriesPageContent() {
     const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
     const query = searchQuery.toLowerCase().trim();
     const tokens = query.split(/\s+/).filter(t => t.length > 0);
-    
+
     // Detect search intent
     // Alphabetic: Only letters, spaces, and common name symbols (no digits)
     const isAlphabetic = /^[a-z\s\(\)\[\]\.,\&]+$/i.test(query);
@@ -184,8 +184,8 @@ function CategoriesPageContent() {
       // 1. Name & Brand Match (by tokens) - can match either name or brand
       const nameLower = (p.name || '').toLowerCase();
       const brandLower = (p.brand || '').toLowerCase();
-      
-      const searchMatch = tokens.every(token => 
+
+      const searchMatch = tokens.every(token =>
         nameLower.includes(token) || brandLower.includes(token)
       );
 
@@ -200,7 +200,7 @@ function CategoriesPageContent() {
       // Apply filtering logic based on intent
       if (isAlphabetic && !isNumericOrId) return searchMatch;
       if (isNumericOrId && !isAlphabetic) return idMatch;
-      
+
       // Mixed or fallback: Match either
       return searchMatch || idMatch;
     });
@@ -299,7 +299,7 @@ function CategoriesPageContent() {
             bestRow = row;
           }
         }
-        
+
         deduplicatedResult.push(bestRow);
       });
 
@@ -709,7 +709,7 @@ function CategoriesPageContent() {
     // Danger Filter (Show only items with platform conflicts)
     if (showDangerOnly) {
       result = result.filter(product => product.isHeader || product.hasGroupConflict === true);
-      
+
       // Prune empty headers (headers that have no danger products following them)
       const pruned = [];
       for (let i = 0; i < result.length; i++) {
@@ -790,6 +790,28 @@ function CategoriesPageContent() {
       return count > 0 ? total / count : Infinity;
     };
 
+    const getAverageDiscount = (product) => {
+      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+      let total = 0;
+      let count = 0;
+      platforms.forEach(p => {
+        const item = product[p];
+        if (!item) return;
+        if (item.discountPercentage != null && !isNaN(Number(item.discountPercentage))) {
+          total += Number(item.discountPercentage);
+          count++;
+        } else if (item.originalPrice != null && item.currentPrice != null) {
+          const oPrice = Number(item.originalPrice);
+          const cPrice = Number(item.currentPrice);
+          if (!isNaN(oPrice) && !isNaN(cPrice) && oPrice > 0) {
+            total += Math.max(0, ((oPrice - cPrice) / oPrice) * 100);
+            count++;
+          }
+        }
+      });
+      return count > 0 ? total / count : -Infinity;
+    };
+
     const getPrioritySort = (a, b) => {
       if (showInStockFirst) {
         const aIn = hasStockFlag(a);
@@ -841,6 +863,17 @@ function CategoriesPageContent() {
         if (priceB === Infinity) return -1;
         return sortConfig.direction === 'asc' ? priceA - priceB : priceB - priceA;
       }
+
+      if (sortConfig.key === 'averageDiscount') {
+        const dA = getAverageDiscount(a);
+        const dB = getAverageDiscount(b);
+        if (dA === -Infinity && dB === -Infinity) return 0;
+        if (dA === -Infinity) return 1;
+        if (dB === -Infinity) return -1;
+        return sortConfig.direction === 'asc' ? dA - dB : dB - dA;
+      }
+
+
 
       if (sortConfig.key === 'groupCount') {
         const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
@@ -1120,11 +1153,14 @@ function CategoriesPageContent() {
       ? brandPlatformCounts
       : platformCounts;
 
-  const renderPagination = () => {
+  const renderPagination = (isTop = false) => {
     if (activeTab !== 'products' || sortedProducts.length === 0) return null;
     return (
-      <div className="flex-none flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm">
-        <span className="text-sm text-gray-600 font-medium">
+      <div className={cn(
+        "flex-none flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm",
+        isTop && "bg-transparent px-0 py-0 border-none shadow-none"
+      )}>
+        <span className="text-sm text-gray-600 font-medium whitespace-nowrap mr-4">
           Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, sortedProducts.length)} - {Math.min(currentPage * ITEMS_PER_PAGE, sortedProducts.length)} of {sortedProducts.length} products
         </span>
         <div className="flex items-center gap-2">
@@ -1170,7 +1206,7 @@ function CategoriesPageContent() {
       <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shadow-sm z-20 min-h-[64px]">
         <div className="flex items-center gap-4">
           {!isSidebarOpen && (
-            <button 
+            <button
               onClick={toggleSidebar}
               className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in"
             >
@@ -1205,7 +1241,7 @@ function CategoriesPageContent() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-3 md:p-4 gap-3">
+      <div className="flex-1 flex flex-col w-full p-3 md:p-[10px] gap-3">
 
         {/* Controls */}
         <div className="flex-none flex flex-col gap-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
@@ -1246,7 +1282,7 @@ function CategoriesPageContent() {
                   onChange={(newDate) => {
                     setSnapshotDate(newDate);
                     setSortConfig({ key: 'name', direction: 'asc' });
-                    
+
                     // If it's the latest date, we consider it live mode
                     const isLatestDate = newDate === uniqueDates[0];
                     setIsLiveMode(isLatestDate);
@@ -1365,9 +1401,9 @@ function CategoriesPageContent() {
                   <span className="flex items-center gap-1.5 text-sm font-medium text-rose-600">
                     Filter by Danger
                     <MuiTooltip title="Shows only products with platform Base ID conflicts (⚠️ items)." arrow placement="top">
-                      <img 
-                        src="https://img.icons8.com/?size=100&id=4009&format=png&color=FA5252" 
-                        alt="Conflict" 
+                      <img
+                        src="https://img.icons8.com/?size=100&id=4009&format=png&color=FA5252"
+                        alt="Conflict"
                         className="w-4 h-4 cursor-help"
                       />
                     </MuiTooltip>
@@ -1383,55 +1419,57 @@ function CategoriesPageContent() {
           </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex-none flex items-center gap-3">
-          <div className="inline-flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-            {['products', 'analytics', 'stock', 'links', 'brands'].map((tab) => (
+        {/* Tab Switcher & Top Pagination */}
+        <div className="flex-none flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+              {['products', 'analytics', 'stock', 'links', 'brands'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize cursor-pointer",
+                    activeTab === tab
+                      ? "bg-neutral-900 text-white shadow-sm"
+                      : "text-neutral-500 hover:text-neutral-700 hover:bg-gray-100"
+                  )}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            {isAdmin && activeTab === 'products' && (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={async () => {
+                  if (!isBulkEditMode && bulkBrands.length === 0) {
+                    // Fetch brands when entering bulk edit mode
+                    try {
+                      const res = await fetch('/api/brands');
+                      if (res.ok) {
+                        const data = await res.json();
+                        setBulkBrands(Array.isArray(data) ? data : (data.brands || []));
+                      }
+                    } catch (e) { console.error('Failed to fetch brands', e); }
+                  }
+                  setIsBulkEditMode(prev => !prev);
+                  setSelectedGroupIds([]);
+                }}
                 className={cn(
-                  "px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize cursor-pointer",
-                  activeTab === tab
-                    ? "bg-neutral-900 text-white shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-700 hover:bg-gray-100"
+                  "px-4 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer border",
+                  isBulkEditMode
+                    ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                    : "bg-white text-neutral-700 border-gray-200 shadow-sm hover:bg-gray-50"
                 )}
               >
-                {tab}
+                {isBulkEditMode ? 'Cancel Bulk Edit' : 'Edit Bulk'}
               </button>
-            ))}
+            )}
           </div>
-          {isAdmin && activeTab === 'products' && (
-            <button
-              onClick={async () => {
-                if (!isBulkEditMode && bulkBrands.length === 0) {
-                  // Fetch brands when entering bulk edit mode
-                  try {
-                    const res = await fetch('/api/brands');
-                    if (res.ok) {
-                      const data = await res.json();
-                      setBulkBrands(Array.isArray(data) ? data : (data.brands || []));
-                    }
-                  } catch (e) { console.error('Failed to fetch brands', e); }
-                }
-                setIsBulkEditMode(prev => !prev);
-                setSelectedGroupIds([]);
-              }}
-              className={cn(
-                "px-4 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer border",
-                isBulkEditMode
-                  ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                  : "bg-white text-neutral-700 border-gray-200 shadow-sm hover:bg-gray-50"
-              )}
-            >
-              {isBulkEditMode ? 'Cancel Bulk Edit' : 'Edit Bulk'}
-            </button>
-          )}
+          {renderPagination(true)}
         </div>
 
         {/* Content Area */}
         <div className="flex-1 flex flex-col gap-4">
-          {activeTab === 'products' && isAdmin && renderPagination()}
 
           {activeTab === 'products' && (
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex-1">

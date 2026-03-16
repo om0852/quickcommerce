@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, ExternalLink, Loader2, Copy, Check, Pencil } from 'lucide-react';
 import ProductEditDialog from './ProductEditDialog';
+import ProductImage from './ProductImage';
 import { useSidebar } from '@/components/SidebarContext';
 import { cn } from '@/lib/utils';
 
@@ -58,20 +59,9 @@ function ProductDetailsDialog({
                 <div className="flex items-start justify-between px-4 py-2.5 border-b border-neutral-100 bg-neutral-50/50">
                     <div className="flex gap-2.5 items-center">
                         {/* Group Image Display */}
-                        {(selectedProduct.groupImage || selectedProduct.image) ? (
-                            <div className="w-12 h-12 bg-white border border-gray-200 rounded flex-none p-1 flex items-center justify-center overflow-hidden shrink-0">
-                                <img
-                                    src={selectedProduct.groupImage || selectedProduct.image}
-                                    alt="Group"
-                                    className="w-full h-full object-contain mix-blend-multiply"
-                                    onError={(e) => { e.target.style.display = 'none'; }}
-                                />
-                            </div>
-                        ) : (
-                            <div className="w-12 h-12 bg-gray-100 border border-gray-200 rounded flex-none p-1 shrink-0 flex items-center justify-center text-[10px] text-gray-400">
-                                No Img
-                            </div>
-                        )}
+                        <div className="w-12 h-12 bg-white border border-gray-200 rounded flex-none p-1 flex items-center justify-center overflow-hidden shrink-0">
+                            <ProductImage product={selectedProduct} />
+                        </div>
                         <div>
                             <div className="flex items-center gap-2.5">
                                 <h2 className="text-lg font-bold text-neutral-900 leading-tight">{selectedProduct.name}</h2>
@@ -92,11 +82,18 @@ function ProductDetailsDialog({
                                 <span>•</span>
                                 <span>{pincode}</span>
                             </div>
-                            {isAdmin && selectedProduct.groupingId && (
+                            {selectedProduct.groupingId && (
                                 <div className="flex items-center gap-2">
                                     <span className="bg-neutral-100 text-neutral-600 text-[10px] font-mono px-1.5 py-0.5 rounded border border-neutral-200">
                                         GID: {selectedProduct.groupingId}
                                     </span>
+                                    <button
+                                        onClick={() => handleCopy(selectedProduct.groupingId)}
+                                        className={`p-1 rounded-md transition-colors flex-shrink-0 ${copiedId === selectedProduct.groupingId ? 'text-green-600 bg-green-50' : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100'}`}
+                                        title={copiedId === selectedProduct.groupingId ? "Copied!" : "Copy Group ID"}
+                                    >
+                                        {copiedId === selectedProduct.groupingId ? <Check size={10} /> : <Copy size={10} />}
+                                    </button>
                                 </div>
                             )}
                         </div>
