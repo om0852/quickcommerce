@@ -178,9 +178,13 @@ function CategoriesPageContent() {
     const isNumericOrId = /^[0-9\-_]+$/.test(query);
 
     return products.filter(p => {
-      // 1. Name Match (by tokens)
+      // 1. Name & Brand Match (by tokens) - can match either name or brand
       const nameLower = (p.name || '').toLowerCase();
-      const nameMatch = tokens.every(token => nameLower.includes(token));
+      const brandLower = (p.brand || '').toLowerCase();
+      
+      const searchMatch = tokens.every(token => 
+        nameLower.includes(token) || brandLower.includes(token)
+      );
 
       // 2. ID Match (by strict query)
       const gId = (p.groupingId || '').toLowerCase();
@@ -191,11 +195,11 @@ function CategoriesPageContent() {
       });
 
       // Apply filtering logic based on intent
-      if (isAlphabetic && !isNumericOrId) return nameMatch;
+      if (isAlphabetic && !isNumericOrId) return searchMatch;
       if (isNumericOrId && !isAlphabetic) return idMatch;
       
       // Mixed or fallback: Match either
-      return nameMatch || idMatch;
+      return searchMatch || idMatch;
     });
   }, [products, searchQuery]);
 
