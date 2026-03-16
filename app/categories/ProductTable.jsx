@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown, Unlink } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown, Unlink, Skull } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
@@ -1139,41 +1139,61 @@ const ProductTable = React.memo(function ProductTable({
                                                             verticalAlign: 'top'
                                                         }}
                                                     >
-                                                        {data ? (
-                                                            <div className="flex flex-col items-center">
-                                                                <div className="flex items-center justify-center gap-2">
-                                                                    <div className="text-sm font-semibold text-neutral-900">
-                                                                        ₹{Number(data.currentPrice).toFixed(0)}
+                                                        <div className="flex flex-col items-center">
+                                                            {data ? (
+                                                                <div className="flex flex-col items-center">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <div className="text-sm font-semibold text-neutral-900">
+                                                                            ₹{Number(data.currentPrice).toFixed(0)}
+                                                                        </div>
+                                                                        {data.ranking && !isNaN(data.ranking) && (
+                                                                            <span className={cn(
+                                                                                "text-[10px] font-bold px-1.5 py-0.5 rounded border bg-neutral-100 text-neutral-900 border-neutral-200"
+                                                                            )}>
+                                                                                #{data.ranking}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
-                                                                    {data.ranking && !isNaN(data.ranking) && (
-                                                                        <span className={cn(
-                                                                            "text-[10px] font-bold px-1.5 py-0.5 rounded border bg-neutral-100 text-neutral-900 border-neutral-200"
-                                                                        )}>
-                                                                            #{data.ranking}
-                                                                        </span>
+                                                                    {data.new && (
+                                                                        <span className="text-[10px] font-bold text-blue-600">NEW</span>
                                                                     )}
                                                                 </div>
-                                                                {data.new && (
-                                                                    <span className="text-[10px] font-bold text-blue-600">NEW</span>
-                                                                )}
-                                                                {data.hasBaseIdConflict && (
-                                                                    <div className="mt-1">
-                                                                        <img
-                                                                            src="https://img.icons8.com/?size=100&id=4009&format=png&color=FA5252"
-                                                                            alt="Conflict"
-                                                                            className="w-5 h-5"
-                                                                            title="Different Base IDs detected in group"
-                                                                        />
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ) : (
-                                                            totalPlatformCounts && totalPlatformCounts[p] === 0 ? (
-                                                                <span className="text-xs font-bold text-rose-500">U/S</span>
                                                             ) : (
-                                                                <span className="text-sm text-neutral-400 italic">--</span>
-                                                            )
-                                                        )}
+                                                                totalPlatformCounts && totalPlatformCounts[p] === 0 ? (
+                                                                    <span className="text-xs font-bold text-rose-500">U/S</span>
+                                                                ) : (
+                                                                    <span className="text-sm text-neutral-400 italic">--</span>
+                                                                )
+                                                            )}
+                                                            
+                                                            {/* Show group-wide/local conflict even if out of stock, but ONLY on master row */}
+                                                            {!product.isDuplicate && (
+                                                                <>
+                                                                    {product.groupConflicts?.[p]?.hasConflict && (
+                                                                        <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 animate-pulse-subtle">
+                                                                            <Skull size={14} className="text-rose-600" />
+                                                                            <span className="text-[10px] font-bold text-rose-700">
+                                                                                {product.groupConflicts[p].count}
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Show Star icon for same-baseId duplicates */}
+                                                                    {product.groupConflicts?.[p]?.hasDuplicates && (
+                                                                        <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100">
+                                                                            <img 
+                                                                                src="https://img.icons8.com/?size=100&id=104&format=png&color=000000" 
+                                                                                alt="Star" 
+                                                                                style={{ width: 14, height: 14 }}
+                                                                            />
+                                                                            <span className="text-[10px] font-bold text-amber-700">
+                                                                                {product.groupConflicts[p].totalCount}
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </TableCell>
                                                 );
                                             })}

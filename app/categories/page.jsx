@@ -701,10 +701,25 @@ function CategoriesPageContent() {
 
     // Danger Filter (Show only items with platform conflicts)
     if (showDangerOnly) {
-      const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
-      result = result.filter(product => {
-        return platforms.some(plat => product[plat]?.hasBaseIdConflict === true);
-      });
+      result = result.filter(product => product.isHeader || product.hasGroupConflict === true);
+      
+      // Prune empty headers (headers that have no danger products following them)
+      const pruned = [];
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].isHeader) {
+          // Check if there's at least one non-header product before the next header or end of list
+          let hasContent = false;
+          for (let j = i + 1; j < result.length; j++) {
+            if (result[j].isHeader) break;
+            hasContent = true;
+            break;
+          }
+          if (hasContent) pruned.push(result[i]);
+        } else {
+          pruned.push(result[i]);
+        }
+      }
+      result = pruned;
     }
 
     return result;

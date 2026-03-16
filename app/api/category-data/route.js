@@ -141,19 +141,47 @@ export async function GET(request) {
           }
         }
 
-        // Detect Base ID Conflicts per platform
-        const platformConflicts = {};
-        Object.keys(platformMatches).forEach(platform => {
-          const snaps = platformMatches[platform];
-          if (snaps.length > 1) {
-            const baseIds = new Set(snaps.map(s => {
-              const pid = s.productId || '';
-              return pid.includes('__') ? pid.split('__')[0] : pid;
-            }));
-            if (baseIds.size > 1) {
-              platformConflicts[platform] = true;
-            }
+        // --- Danger (Skull) Logic: Global group definition ---
+        const globalPlatformConflicts = {};
+        const globalPlatformBaseIdCounts = {};
+        const groupDefinedProducts = {};
+        
+        group.products.forEach(p => {
+          const plat = p.platform.toLowerCase();
+          if (!groupDefinedProducts[plat]) groupDefinedProducts[plat] = new Set();
+          const pid = p.productId || '';
+          const baseId = pid.includes('__') ? pid.split('__')[0] : pid;
+          groupDefinedProducts[plat].add(baseId);
+        });
+
+        Object.keys(groupDefinedProducts).forEach(platform => {
+          const uniqueBaseIds = groupDefinedProducts[platform];
+          globalPlatformBaseIdCounts[platform] = uniqueBaseIds.size;
+          if (uniqueBaseIds.size > 1) {
+            globalPlatformConflicts[platform] = true;
           }
+        });
+
+        const hasGroupConflict = Object.values(globalPlatformConflicts).some(c => c === true);
+
+        // --- Duplicate (Star) Logic: Local pincode snapshots ---
+        const localPlatformTotalCounts = {};
+        const localPlatformBaseIdCounts = {};
+        const localPlatformHasDuplicates = {};
+
+        Object.keys(platformMatches).forEach(platform => {
+          const snapshots = platformMatches[platform];
+          localPlatformTotalCounts[platform] = snapshots.length;
+          
+          const uniqueBaseIds = new Set();
+          snapshots.forEach(snap => {
+            const pid = snap.productId || '';
+            const baseId = pid.includes('__') ? pid.split('__')[0] : pid;
+            uniqueBaseIds.add(baseId);
+          });
+          
+          localPlatformBaseIdCounts[platform] = uniqueBaseIds.size;
+          localPlatformHasDuplicates[platform] = snapshots.length > uniqueBaseIds.size;
         });
 
         if (hasData) {
@@ -188,7 +216,17 @@ export async function GET(request) {
                 scrapedAt: targetScrapedAt,
                 isGrouped: true,
                 pincode: currentPincode,
-                isHeader: false
+                isHeader: false,
+                hasGroupConflict: hasGroupConflict,
+                groupConflicts: Object.keys(platformMatches).reduce((acc, plat) => {
+                  acc[plat] = {
+                    hasConflict: globalPlatformConflicts[plat] || false,
+                    count: globalPlatformBaseIdCounts[plat] || 0,
+                    hasDuplicates: localPlatformHasDuplicates[plat] || false,
+                    totalCount: localPlatformTotalCounts[plat] || 0
+                  };
+                  return acc;
+                }, {})
               };
 
               let masterHasData = false;
@@ -217,7 +255,8 @@ export async function GET(request) {
                     new: snap.new,
                     scrapedAt: snap.scrapedAt,
                     snapshotId: snap._id.toString(),
-                    hasBaseIdConflict: platformConflicts[platform]
+                    hasBaseIdConflict: globalPlatformConflicts[platform],
+                    platformConflictCount: globalPlatformBaseIdCounts[platform] || 0
                   };
 
                   if (!masterObj.name) masterObj.name = snap.productName;
@@ -266,7 +305,17 @@ export async function GET(request) {
                     scrapedAt: targetScrapedAt,
                     isGrouped: true,
                     pincode: currentPincode,
-                    isHeader: false
+                    isHeader: false,
+                    hasGroupConflict: hasGroupConflict,
+                    groupConflicts: Object.keys(platformMatches).reduce((acc, plat) => {
+                      acc[plat] = {
+                        hasConflict: globalPlatformConflicts[plat] || false,
+                        count: globalPlatformBaseIdCounts[plat] || 0,
+                        hasDuplicates: localPlatformHasDuplicates[plat] || false,
+                        totalCount: localPlatformTotalCounts[plat] || 0
+                      };
+                      return acc;
+                    }, {})
                   };
 
                   dupObj[platform] = {
@@ -291,7 +340,8 @@ export async function GET(request) {
                     new: snap.new,
                     scrapedAt: snap.scrapedAt,
                     snapshotId: snap._id.toString(),
-                    hasBaseIdConflict: platformConflicts[platform]
+                    hasBaseIdConflict: globalPlatformConflicts[platform],
+                    platformConflictCount: globalPlatformBaseIdCounts[platform] || 0
                   };
 
                   if (!dupObj.name) dupObj.name = snap.productName;
