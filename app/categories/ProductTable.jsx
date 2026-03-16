@@ -79,6 +79,12 @@ const ProductTable = React.memo(function ProductTable({
     onRefresh,
     showNewFirst,
     onShowNewFirstChange,
+    showAdFirst = false,
+    onShowAdFirstChange,
+    showInStockFirst = false,
+    onShowInStockFirstChange,
+    showOutStockFirst = false,
+    onShowOutStockFirstChange,
     showNonHyphenOnly = false,
     onShowNonHyphenOnlyChange,
     isAdmin = false, // Passed from parent
@@ -510,6 +516,9 @@ const ProductTable = React.memo(function ProductTable({
                                                 onClick={() => {
                                                     onSort(null);
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showAdFirst) onShowAdFirstChange(false);
+                                                    if (showInStockFirst) onShowInStockFirstChange(false);
+                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
                                                     if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
@@ -520,21 +529,24 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === null && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === null && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === null && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === null && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === null && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === null && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Group With Highest Product</span>
-                                                {sortConfig.key === null && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === null && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <MenuItem
                                                 onClick={() => {
                                                     onSort('groupCount', 'asc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showAdFirst) onShowAdFirstChange(false);
+                                                    if (showInStockFirst) onShowInStockFirstChange(false);
+                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
                                                     if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
@@ -545,15 +557,15 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Group With Lowest Product</span>
-                                                {sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -562,6 +574,9 @@ const ProductTable = React.memo(function ProductTable({
                                                 onClick={() => {
                                                     onSort('brand', 'asc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showAdFirst) onShowAdFirstChange(false);
+                                                    if (showInStockFirst) onShowInStockFirstChange(false);
+                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
                                                     if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
@@ -572,21 +587,24 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Brand Name (A to Z)</span>
-                                                {sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <MenuItem
                                                 onClick={() => {
                                                     onSort('brand', 'desc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showAdFirst) onShowAdFirstChange(false);
+                                                    if (showInStockFirst) onShowInStockFirstChange(false);
+                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
                                                     if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
@@ -597,15 +615,15 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Brand Name (Z to A)</span>
-                                                {sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -614,6 +632,7 @@ const ProductTable = React.memo(function ProductTable({
                                                 onClick={() => {
                                                     onSort('name', 'asc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showAdFirst) onShowAdFirstChange(false);
                                                     if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
@@ -624,21 +643,24 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Product Name (A to Z)</span>
-                                                {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <MenuItem
                                                 onClick={() => {
                                                     onSort('name', 'desc');
                                                     if (showNewFirst) onShowNewFirstChange(false);
+                                                    if (showAdFirst) onShowAdFirstChange(false);
+                                                    if (showInStockFirst) onShowInStockFirstChange(false);
+                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
                                                     if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                     handleSortMenuClose();
                                                 }}
@@ -649,15 +671,73 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Product Name (Z to A)</span>
-                                                {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onShowInStockFirstChange(true);
+                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
+                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
+                                                    if (onShowNewFirstChange) onShowNewFirstChange(false);
+                                                    if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
+                                                    onSort(null);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: showInStockFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: showInStockFirst ? 700 : 500,
+                                                    color: showInStockFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <span>Sort by In Stock</span>
+                                                {showInStockFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <MenuItem
+                                                onClick={() => {
+                                                    onShowOutStockFirstChange(true);
+                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
+                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
+                                                    if (onShowNewFirstChange) onShowNewFirstChange(false);
+                                                    if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
+                                                    onSort(null);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: showOutStockFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: showOutStockFirst ? 700 : 500,
+                                                    color: showOutStockFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <span>Sort by Out of Stock</span>
+                                                {showOutStockFirst && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -671,9 +751,9 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
-                                                    color: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
@@ -694,9 +774,9 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
-                                                    color: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
@@ -737,6 +817,9 @@ const ProductTable = React.memo(function ProductTable({
                                                         onClick={() => {
                                                             handlePlatformRankSort(plat);
                                                             if (showNewFirst) onShowNewFirstChange(false);
+                                                            if (showAdFirst) onShowAdFirstChange(false);
+                                                            if (showInStockFirst) onShowInStockFirstChange(false);
+                                                            if (showOutStockFirst) onShowOutStockFirstChange(false);
                                                             if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
                                                         }}
                                                         sx={{
@@ -746,15 +829,15 @@ const ProductTable = React.memo(function ProductTable({
                                                             display: 'flex',
                                                             alignItems: 'center',
                                                             justifyContent: 'space-between',
-                                                            backgroundColor: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                            fontWeight: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showNonHyphenOnly ? 700 : 500,
-                                                            color: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                            backgroundColor: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                            fontWeight: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                            color: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
                                                             '&:hover': { backgroundColor: '#f9fafb' },
                                                             cursor: 'pointer'
                                                         }}
                                                     >
                                                         <span className="capitalize">{plat === 'flipkartMinutes' ? 'Flipkart' : plat}</span>
-                                                        {sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                        {sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                                     </MenuItem>
                                                 ))}
                                             </Menu>
@@ -763,7 +846,40 @@ const ProductTable = React.memo(function ProductTable({
 
                                             <MenuItem
                                                 onClick={() => {
+                                                    onShowAdFirstChange(true);
+                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
+                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
+                                                    if (onShowNewFirstChange) onShowNewFirstChange(false);
+                                                    if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
+                                                    onSort(null); // Clear manual sort
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: showAdFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: showAdFirst ? 700 : 500,
+                                                    color: showAdFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <span>Show AD First</span>
+                                                {showAdFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                            <MenuItem
+                                                onClick={() => {
                                                     onShowNewFirstChange(true);
+                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
+                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
+                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
                                                     if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
                                                     onSort(null); // Clear manual sort
                                                     handleSortMenuClose();
@@ -791,6 +907,9 @@ const ProductTable = React.memo(function ProductTable({
                                                     onClick={() => {
                                                         if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(true);
                                                         onShowNewFirstChange(false);
+                                                        onShowAdFirstChange(false);
+                                                        onShowInStockFirstChange(false);
+                                                        onShowOutStockFirstChange(false);
                                                         onSort(null); // Clear manual sort
                                                         handleSortMenuClose();
                                                     }}
@@ -1143,7 +1262,10 @@ const ProductTable = React.memo(function ProductTable({
                                                             {data ? (
                                                                 <div className="flex flex-col items-center">
                                                                     <div className="flex items-center justify-center gap-2">
-                                                                        <div className="text-sm font-semibold text-neutral-900">
+                                                                        <div className={cn(
+                                                                            "text-sm font-semibold",
+                                                                            data.isOutOfStock ? "text-rose-600" : "text-neutral-900"
+                                                                        )}>
                                                                             ₹{Number(data.currentPrice).toFixed(0)}
                                                                         </div>
                                                                         {data.ranking && !isNaN(data.ranking) && (
@@ -1157,6 +1279,9 @@ const ProductTable = React.memo(function ProductTable({
                                                                     {data.new && (
                                                                         <span className="text-[10px] font-bold text-blue-600">NEW</span>
                                                                     )}
+                                                                    {data.isAd && (
+                                                                        <span className="text-[10px] font-bold text-green-600 text-center">AD</span>
+                                                                    )}
                                                                 </div>
                                                             ) : (
                                                                 totalPlatformCounts && totalPlatformCounts[p] === 0 ? (
@@ -1166,8 +1291,8 @@ const ProductTable = React.memo(function ProductTable({
                                                                 )
                                                             )}
                                                             
-                                                            {/* Show group-wide/local conflict even if out of stock, but ONLY on master row */}
-                                                            {!product.isDuplicate && (
+                                                            {/* Show group-wide/local conflict even if out of stock, but ONLY on master row and for ADMINS */}
+                                                            {isAdmin && !product.isDuplicate && (
                                                                 <>
                                                                     {product.groupConflicts?.[p]?.hasConflict && (
                                                                         <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 animate-pulse-subtle">

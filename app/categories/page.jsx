@@ -124,6 +124,9 @@ function CategoriesPageContent() {
   const [showNewFirst, setShowNewFirst] = useState(false);
   const [showNonHyphenOnly, setShowNonHyphenOnly] = useState(false);
   const [showDangerOnly, setShowDangerOnly] = useState(false);
+  const [showAdFirst, setShowAdFirst] = useState(false);
+  const [showInStockFirst, setShowInStockFirst] = useState(false);
+  const [showOutStockFirst, setShowOutStockFirst] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [isBulkEditMode, setIsBulkEditMode] = useState(false);
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
@@ -730,192 +733,7 @@ function CategoriesPageContent() {
   }, [deduplicatedProducts, platformFilter, showMissing, showNonHyphenOnly, showDangerOnly]);
 
   const sortedProducts = useMemo(() => {
-    // If no grouping (no headers), just filter and sort normally
-    if (!filteredProducts.some(p => p.isHeader)) {
-      // ... (Existing logic for single group) ...
-      let sortableProducts = [...filteredProducts];
-
-      // Helper to intelligently resolve subcategory
-      const resolveSubCategory = (item) => {
-        if (item.officialSubCategory && item.officialSubCategory !== 'General') return item.officialSubCategory;
-        const platforms = ['zepto', 'blinkit', 'instamart', 'flipkartMinutes', 'jiomart', 'dmart'];
-        for (const p of platforms) {
-          if (item[p]) {
-            const sub = item[p].subcategory || item[p].officialSubCategory;
-            if (sub && sub !== 'General') return sub;
-          }
-        }
-        return item.officialSubCategory || item.subCategory || 'Other';
-      };
-
-      const hasNewFlag = (product) => {
-        if (platformFilter !== 'all') {
-          return product[platformFilter]?.new === true;
-        }
-        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-        return platforms.some(p => product[p]?.new === true);
-      };
-
-
-      // ... inside useMemo for sortedProducts ...
-      const sortFunction = (a, b) => {
-        if (showNonHyphenOnly || showNewFirst) {
-          const aIsNew = hasNewFlag(a);
-          const bIsNew = hasNewFlag(b);
-          if (aIsNew && !bIsNew) return -1;
-          if (!aIsNew && bIsNew) return 1;
-        }
-
-        if (sortConfig.key === 'groupCount') {
-          const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-          const countA = platforms.filter(p => a[p]).length;
-          const countB = platforms.filter(p => b[p]).length;
-          if (countA !== countB) return sortConfig.direction === 'asc' ? countA - countB : countB - countA;
-          const nameA = a.name || '';
-          const nameB = b.name || '';
-          return nameA.localeCompare(nameB);
-        }
-
-        if (sortConfig.key === 'brand') {
-          const brandA = (a.brand || '').trim();
-          const brandB = (b.brand || '').trim();
-
-          if (!brandA && !brandB) {
-            const nameA = a.name || '';
-            const nameB = b.name || '';
-            return nameA.localeCompare(nameB);
-          }
-          if (!brandA) return 1;
-          if (!brandB) return -1;
-
-          if (brandA.toLowerCase() !== brandB.toLowerCase()) {
-            return sortConfig.direction === 'asc'
-              ? brandA.localeCompare(brandB)
-              : brandB.localeCompare(brandA);
-          }
-          const nameA = a.name || '';
-          const nameB = b.name || '';
-          return nameA.localeCompare(nameB);
-        }
-
-        if (sortConfig.key === 'name') {
-          if (platformFilter !== 'all' || showNewFirst) {
-            const aIsNew = hasNewFlag(a);
-            const bIsNew = hasNewFlag(b);
-            if (aIsNew && !bIsNew) return -1;
-            if (!aIsNew && bIsNew) return 1;
-          }
-          const nameA = a.name || '';
-          const nameB = b.name || '';
-          if (sortConfig.direction === 'asc') return nameA.localeCompare(nameB);
-          return nameB.localeCompare(nameA);
-        }
-        if (sortConfig.key !== null) {
-          const platformKey = sortConfig.key;
-          // ... existing sort by platform logic ...
-          const itemA = a[platformKey];
-          const itemB = b[platformKey];
-          if (!itemA && !itemB) return 0;
-          if (!itemA) return 1;
-          if (!itemB) return -1;
-          if (showNewFirst) {
-            const aIsNew = hasNewFlag(a);
-            const bIsNew = hasNewFlag(b);
-            if (aIsNew && !bIsNew) return -1;
-            if (!aIsNew && bIsNew) return 1;
-          }
-          // Prioritize Rank Sort first!
-          const getRank = (item) => {
-            if (item && item.ranking !== undefined && item.ranking !== null) {
-              const num = Number(item.ranking);
-              return isNaN(num) ? Infinity : num;
-            }
-            return Infinity;
-          };
-          const rankA = getRank(itemA);
-          const rankB = getRank(itemB);
-          if (rankA < rankB) return sortConfig.direction === 'asc' ? -1 : 1;
-          if (rankA > rankB) return sortConfig.direction === 'asc' ? 1 : -1;
-
-          // If ranks are equal, maintain stable order (return 0)
-          return 0;
-        } else {
-          if (showNewFirst) {
-            const aIsNew = hasNewFlag(a);
-            const bIsNew = hasNewFlag(b);
-            if (aIsNew && !bIsNew) return -1;
-            if (!aIsNew && bIsNew) return 1;
-
-            const nameA = a.name || '';
-            const nameB = b.name || '';
-            if (nameA !== nameB) return nameA.localeCompare(nameB);
-            return 0;
-          }
-          const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-          const countA = platforms.filter(p => a[p]).length;
-          const countB = platforms.filter(p => b[p]).length;
-          if (countA !== countB) return countB - countA;
-
-          // Sort by Name alphabetically if counts are equal
-          const nameA = a.name || '';
-          const nameB = b.name || '';
-          if (nameA !== nameB) return nameA.localeCompare(nameB);
-
-          const catA = a.officialCategory || '';
-          const catB = b.officialCategory || '';
-          if (catA !== catB) return catA.localeCompare(catB);
-          const subA = resolveSubCategory(a);
-          const subB = resolveSubCategory(b);
-          if (subA !== subB) return subA.localeCompare(subB);
-          const getMinRank = (p) => {
-            let min = Infinity;
-            platforms.forEach(key => {
-              const item = p[key];
-              if (item && item.ranking !== undefined && item.ranking !== null) {
-                const num = Number(item.ranking);
-                if (!isNaN(num)) {
-                  if (num < min) min = num;
-                }
-              }
-            });
-            return min;
-          };
-          return getMinRank(a) - getMinRank(b);
-        }
-      };
-
-      return sortableProducts.sort(sortFunction);
-    }
-
-    // --- MULTI-PINCODE GROUPING LOGIC ---
-    // Split into groups based on Headers
-    const groups = [];
-    let currentGroup = null;
-
-    filteredProducts.forEach(item => {
-      if (item.isHeader) {
-        if (currentGroup) groups.push(currentGroup);
-        currentGroup = { header: item, items: [] };
-      } else {
-        if (currentGroup) {
-          currentGroup.items.push(item);
-        } else {
-          // Should not happen if data is well-formed (header first), but handle strays
-          // If there's a stray item before any header? Treat as a "Misc" group or just ignore?
-          // Or create a dummy group? Let's safeguard.
-          if (groups.length === 0) {
-            // Maybe these are items belonging to previous selection? Just put them in a temp group
-            currentGroup = { header: { isHeader: true, title: "Uncategorized Region", pincode: "Unknown" }, items: [item] };
-          } else {
-            // This is weird, but append to last group?
-            // Actually better:
-          }
-        }
-      }
-    });
-    if (currentGroup) groups.push(currentGroup);
-
-    // Reuse the exact same sorting logic
+    // --- HELPERS ---
     const resolveSubCategory = (item) => {
       if (item.officialSubCategory && item.officialSubCategory !== 'General') return item.officialSubCategory;
       const platforms = ['zepto', 'blinkit', 'instamart', 'flipkartMinutes', 'jiomart', 'dmart'];
@@ -936,7 +754,21 @@ function CategoriesPageContent() {
       return platforms.some(p => product[p]?.new === true);
     };
 
-    // ... inside useMemo ...
+    const hasAdFlag = (product) => {
+      if (platformFilter !== 'all') {
+        return product[platformFilter]?.isAd === true;
+      }
+      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+      return platforms.some(p => product[p]?.isAd === true);
+    };
+
+    const hasStockFlag = (product) => {
+      if (platformFilter !== 'all') {
+        return product[platformFilter] && !product[platformFilter]?.isOutOfStock;
+      }
+      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+      return platforms.some(p => product[p] && !product[p]?.isOutOfStock);
+    };
 
     const getAveragePrice = (product) => {
       const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
@@ -945,12 +777,9 @@ function CategoriesPageContent() {
       platforms.forEach(p => {
         const item = product[p];
         if (item) {
-          // Pure Frontend Calculation: Use currentPrice
-          // Ensure we parse standard price format safely
           const priceVal = item.currentPrice;
           if (priceVal !== undefined && priceVal !== null) {
             const num = Number(priceVal);
-            // Filter out invalid numbers or 0 if 0 is considered invalid price
             if (!isNaN(num) && num > 0) {
               total += num;
               count++;
@@ -958,29 +787,59 @@ function CategoriesPageContent() {
           }
         }
       });
-
-      // Return Infinity for unserviceable to sort to bottom
       return count > 0 ? total / count : Infinity;
     };
 
-    const sortFunction = (a, b) => {
-      if (sortConfig.key === 'name') {
-        // ... (existing name sort)
+    const getPrioritySort = (a, b) => {
+      if (showInStockFirst) {
+        const aIn = hasStockFlag(a);
+        const bIn = hasStockFlag(b);
+        if (aIn && !bIn) return -1;
+        if (!aIn && bIn) return 1;
       }
 
-      // Handle Price Sorting (Low to High / High to Low)
-      // Let's stick to a clean implementation. I will use 'averagePrice' as key.
+      if (showOutStockFirst) {
+        const aIn = hasStockFlag(a);
+        const bIn = hasStockFlag(b);
+        if (!aIn && bIn) return -1;
+        if (aIn && !bIn) return 1;
+      }
+
+      if (showAdFirst) {
+        const aIsAd = hasAdFlag(a);
+        const bIsAd = hasAdFlag(b);
+        if (aIsAd && !bIsAd) return -1;
+        if (!aIsAd && bIsAd) return 1;
+      }
+
+      if (showNonHyphenOnly || showNewFirst) {
+        const aIsNew = hasNewFlag(a);
+        const bIsNew = hasNewFlag(b);
+        if (aIsNew && !bIsNew) return -1;
+        if (!aIsNew && bIsNew) return 1;
+      }
+
+      return 0;
+    };
+
+    // --- SHARED SORT FUNCTION ---
+    const sortFunction = (a, b) => {
+      const priority = getPrioritySort(a, b);
+      if (priority !== 0) {
+        if (!sortConfig.key) {
+          return priority || (a.name || '').localeCompare(b.name || '');
+        }
+        return priority;
+      }
+
+      // 1. Specific Keys Sort
       if (sortConfig.key === 'averagePrice') {
         const priceA = getAveragePrice(a);
         const priceB = getAveragePrice(b);
-
-        // Always push Infinity (Unserviceable) to the bottom
         if (priceA === Infinity && priceB === Infinity) return 0;
         if (priceA === Infinity) return 1;
         if (priceB === Infinity) return -1;
-
-        if (sortConfig.direction === 'asc') return priceA - priceB;
-        return priceB - priceA;
+        return sortConfig.direction === 'asc' ? priceA - priceB : priceB - priceA;
       }
 
       if (sortConfig.key === 'groupCount') {
@@ -988,54 +847,26 @@ function CategoriesPageContent() {
         const countA = platforms.filter(p => a[p]).length;
         const countB = platforms.filter(p => b[p]).length;
         if (countA !== countB) return sortConfig.direction === 'asc' ? countA - countB : countB - countA;
-        const nameA = a.name || '';
-        const nameB = b.name || '';
-        return nameA.localeCompare(nameB);
+        return (a.name || '').localeCompare(b.name || '');
       }
 
       if (sortConfig.key === 'brand') {
-        const brandA = (a.brand || '').trim();
-        const brandB = (b.brand || '').trim();
-
-        if (!brandA && !brandB) {
-          const nameA = a.name || '';
-          const nameB = b.name || '';
-          return nameA.localeCompare(nameB);
-        }
+        const brandA = (a.brand || '').trim().toLowerCase();
+        const brandB = (b.brand || '').trim().toLowerCase();
+        if (!brandA && !brandB) return (a.name || '').localeCompare(b.name || '');
         if (!brandA) return 1;
         if (!brandB) return -1;
-
-        if (brandA.toLowerCase() !== brandB.toLowerCase()) {
-          return sortConfig.direction === 'asc'
-            ? brandA.localeCompare(brandB)
-            : brandB.localeCompare(brandA);
-        }
-        const nameA = a.name || '';
-        const nameB = b.name || '';
-        return nameA.localeCompare(nameB);
+        if (brandA !== brandB) return sortConfig.direction === 'asc' ? brandA.localeCompare(brandB) : brandB.localeCompare(brandA);
+        return (a.name || '').localeCompare(b.name || '');
       }
 
       if (sortConfig.key === 'name') {
-        if (platformFilter !== 'all' || showNewFirst) {
-          const aIsNew = hasNewFlag(a);
-          const bIsNew = hasNewFlag(b);
-          if (aIsNew && !bIsNew) return -1;
-          if (!aIsNew && bIsNew) return 1;
-        }
-
-        const nameA = a.name || '';
-        const nameB = b.name || '';
-        if (sortConfig.direction === 'asc') return nameA.localeCompare(nameB);
-        return nameB.localeCompare(nameA);
-      }
-      // ... existing code ...
-      if (sortConfig.key === 'averagePrice') {
-        const priceA = getAveragePrice(a);
-        const priceB = getAveragePrice(b);
-        if (sortConfig.direction === 'asc') return priceA - priceB;
-        return priceB - priceA;
+        const nameA = (a.name || '');
+        const nameB = (b.name || '');
+        return sortConfig.direction === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
       }
 
+      // 2. Platform Column Sort
       if (sortConfig.key !== null) {
         const platformKey = sortConfig.key;
         const itemA = a[platformKey];
@@ -1044,96 +875,78 @@ function CategoriesPageContent() {
         if (!itemA) return 1;
         if (!itemB) return -1;
 
-        if (showNewFirst) {
-          const aIsNew = hasNewFlag(a);
-          const bIsNew = hasNewFlag(b);
-          if (aIsNew && !bIsNew) return -1;
-          if (!aIsNew && bIsNew) return 1;
-        }
-
-        // Handle Price Sort Direction
         if (sortConfig.direction === 'price_asc' || sortConfig.direction === 'price_desc') {
-          // Use averagePrice if available (from backend), else fallback to currentPrice
           const getPrice = (item) => {
             if (item.averagePrice !== undefined && item.averagePrice !== null) return Number(item.averagePrice);
             if (item.currentPrice !== undefined && item.currentPrice !== null) return Number(item.currentPrice);
             return Infinity;
           };
-
           const priceA = getPrice(itemA);
           const priceB = getPrice(itemB);
-
-          if (priceA < priceB) return sortConfig.direction === 'price_asc' ? -1 : 1;
-          if (priceA > priceB) return sortConfig.direction === 'price_asc' ? 1 : -1;
+          if (priceA !== priceB) return sortConfig.direction === 'price_asc' ? priceA - priceB : priceB - priceA;
           return 0;
         }
 
-        // Pure Rank Sort (no category grouping)
         const rankA = itemA.ranking && !isNaN(itemA.ranking) ? Number(itemA.ranking) : Infinity;
         const rankB = itemB.ranking && !isNaN(itemB.ranking) ? Number(itemB.ranking) : Infinity;
-        if (rankA < rankB) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (rankA > rankB) return sortConfig.direction === 'asc' ? 1 : -1;
+        if (rankA !== rankB) return sortConfig.direction === 'asc' ? rankA - rankB : rankB - rankA;
         return 0;
-      } else {
-        if (showNewFirst) {
-          const aIsNew = hasNewFlag(a);
-          const bIsNew = hasNewFlag(b);
-          if (aIsNew && !bIsNew) return -1;
-          if (!aIsNew && bIsNew) return 1;
-
-          const nameA = a.name || '';
-          const nameB = b.name || '';
-          if (nameA !== nameB) return nameA.localeCompare(nameB);
-          return 0;
-        }
-        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-        const countA = platforms.filter(p => a[p]).length;
-        const countB = platforms.filter(p => b[p]).length;
-        if (countA !== countB) return countB - countA;
-
-        // Prioritize New When showNonHyphenOnly is active (for grouped items)
-        if (showNonHyphenOnly) {
-          const aIsNew = hasNewFlag(a);
-          const bIsNew = hasNewFlag(b);
-          if (aIsNew && !bIsNew) return -1;
-          if (!aIsNew && bIsNew) return 1;
-        }
-
-        // Sort by Name alphabetically if counts are equal
-        const nameA = a.name || '';
-        const nameB = b.name || '';
-        if (nameA !== nameB) return nameA.localeCompare(nameB);
-
-
-        const catA = a.officialCategory || '';
-        const catB = b.officialCategory || '';
-        if (catA !== catB) return catA.localeCompare(catB);
-        const subA = resolveSubCategory(a);
-        const subB = resolveSubCategory(b);
-        if (subA !== subB) return subA.localeCompare(subB);
-        const getMinRank = (p) => {
-          let min = Infinity;
-          platforms.forEach(key => {
-            if (p[key] && p[key].ranking && !isNaN(p[key].ranking)) {
-              if (p[key].ranking < min) min = p[key].ranking;
-            }
-          });
-          return min;
-        };
-        return getMinRank(a) - getMinRank(b);
       }
+
+      // 3. Default Sort (Menu is null)
+      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
+      const countA = platforms.filter(p => a[p]).length;
+      const countB = platforms.filter(p => b[p]).length;
+      if (countA !== countB) return countB - countA;
+
+      const nameA = a.name || '';
+      const nameB = b.name || '';
+      if (nameA !== nameB) return nameA.localeCompare(nameB);
+
+      const catA = a.officialCategory || '';
+      const catB = b.officialCategory || '';
+      if (catA !== catB) return catA.localeCompare(catB);
+
+      const subA = resolveSubCategory(a);
+      const subB = resolveSubCategory(b);
+      if (subA !== subB) return subA.localeCompare(subB);
+
+      const getMinRank = (p) => {
+        let min = Infinity;
+        platforms.forEach(key => {
+          if (p[key] && p[key].ranking && !isNaN(p[key].ranking)) {
+            if (p[key].ranking < min) min = p[key].ranking;
+          }
+        });
+        return min;
+      };
+      return getMinRank(a) - getMinRank(b);
     };
+
+    // --- EXECUTION ---
+    if (!filteredProducts.some(p => p.isHeader)) {
+      return [...filteredProducts].sort(sortFunction);
+    }
+
+    const groups = [];
+    let currentGroup = null;
+    filteredProducts.forEach(item => {
+      if (item.isHeader) {
+        if (currentGroup) groups.push(currentGroup);
+        currentGroup = { header: item, items: [] };
+      } else if (currentGroup) {
+        currentGroup.items.push(item);
+      }
+    });
+    if (currentGroup) groups.push(currentGroup);
 
     let flatList = [];
     groups.forEach(group => {
       flatList.push(group.header);
-      const sortedItems = [...group.items].sort(sortFunction);
-      flatList = flatList.concat(sortedItems);
+      flatList = flatList.concat([...group.items].sort(sortFunction));
     });
-
     return flatList;
-
-  }, [filteredProducts, sortConfig, showNewFirst, showNonHyphenOnly]);
+  }, [filteredProducts, sortConfig, showNewFirst, showNonHyphenOnly, showAdFirst, showInStockFirst, showOutStockFirst, platformFilter]);
 
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -1653,6 +1466,12 @@ function CategoriesPageContent() {
                 onRefresh={fetchCategoryData}
                 showNewFirst={showNewFirst}
                 onShowNewFirstChange={setShowNewFirst}
+                showAdFirst={showAdFirst}
+                onShowAdFirstChange={setShowAdFirst}
+                showInStockFirst={showInStockFirst}
+                onShowInStockFirstChange={setShowInStockFirst}
+                showOutStockFirst={showOutStockFirst}
+                onShowOutStockFirstChange={setShowOutStockFirst}
                 showNonHyphenOnly={showNonHyphenOnly}
                 onShowNonHyphenOnlyChange={setShowNonHyphenOnly}
                 isAdmin={isAdmin}
