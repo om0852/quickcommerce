@@ -29,7 +29,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { href: '/overview', label: 'Overview', icon: LayoutDashboard },
     { href: '/search', label: 'Search', icon: Search },
     { href: '/categories', label: 'Categories', icon: BarChart3 },
-    { href: '/clean-check', label: 'Clean Check', icon: BarChart3 },
+    // { href: '/clean-check', label: 'Clean Check', icon: BarChart3 },
     { href: '/alerts', label: 'Alerts', icon: Bell }
   ];
 
