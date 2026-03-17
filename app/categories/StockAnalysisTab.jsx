@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { getPlatformColor } from '@/app/constants/platforms';
 
 function StockAnalysisTab({ category, pincode, platform }) {
     const [data, setData] = useState(null);
@@ -196,10 +197,7 @@ function StockAnalysisTab({ category, pincode, platform }) {
                                                 <td className="px-6 py-4">
                                                     <span className={cn(
                                                         "text-xs font-bold uppercase tracking-wide",
-                                                        item.category?.toLowerCase() === 'zepto' ? 'text-purple-700' :
-                                                            item.category?.toLowerCase() === 'blinkit' ? 'text-yellow-700' :
-                                                                item.category?.toLowerCase() === 'jiomart' ? 'text-blue-700' :
-                                                                    item.category?.toLowerCase() === 'flipkart minutes' ? 'text-blue-600' : 'text-neutral-600'
+                                                        getPlatformColor(item.category || '')
                                                     )}>
                                                         {item.category}
                                                     </span>

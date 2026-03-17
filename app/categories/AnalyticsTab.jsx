@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import CustomDropdown from '@/components/CustomDropdown';
 import { cn } from '@/lib/utils';
+import { PLATFORMS } from '@/app/constants/platforms';
 
 // Skeleton component
 const Skeleton = ({ className }) => (
@@ -53,6 +54,7 @@ function AnalyticsTab({ products, pincode, loading: productsLoading }) {
     if (!product) return;
 
     setHistoryLoading(true);
+    const controller = new AbortController();
 
     // Construct IDs for fetch
     const productIds = {};
@@ -74,7 +76,8 @@ function AnalyticsTab({ products, pincode, loading: productsLoading }) {
         pincode,
         productIds,
         productNames
-      })
+      }),
+      signal: controller.signal
     })
       .then(res => res.json())
       .then(data => {
@@ -101,9 +104,15 @@ function AnalyticsTab({ products, pincode, loading: productsLoading }) {
         setHistoryLoading(false);
       })
       .catch(err => {
+        if (err.name === 'AbortError') {
+          console.log('History fetch aborted');
+          return;
+        }
         console.error("Failed to fetch history", err);
         setHistoryLoading(false);
       });
+
+    return () => controller.abort();
 
   }, [selectedProductValue, pincode, products]);
 

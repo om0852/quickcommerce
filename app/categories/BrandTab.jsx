@@ -424,7 +424,7 @@ const MemoizedBrandsTable = React.memo(({
                             <>
                                 {filteredBrands.map((brand, index) => (
                                     <TableRow
-                                        key={brand.name}
+                                        key={`${brand.name}-${index}`}
                                         hover
                                         sx={{
                                             backgroundColor: brand.total === 0 ? '#fafafa' : index % 2 === 0 ? '#ffffff' : '#fafafa',

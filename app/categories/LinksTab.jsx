@@ -40,8 +40,6 @@ const LinksTab = ({ data, selectedCategory, platformFilter }) => {
                 return (
                     item.masterCategory?.toLowerCase().includes(query) ||
                     item.officialCategory?.toLowerCase().includes(query) ||
-                    item.officialCategory?.toLowerCase().includes(query) || // Handle typo in JSON if exists
-                    item.officialSubCategory?.toLowerCase().includes(query) ||
                     item.officialSubCategory?.toLowerCase().includes(query) ||
                     item.platform.toLowerCase().includes(query)
                 );

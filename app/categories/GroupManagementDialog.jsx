@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Loader2, Save, AlertTriangle, Unlink } from 'lucide-react';
+import { X, Plus, Trash2, Loader2, Save, AlertTriangle, Unlink, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CustomDropdown from '@/components/CustomDropdown';
 import { useSidebar } from '@/components/SidebarContext';
+import { PINCODE_OPTIONS, PLATFORM_OPTIONS } from '@/app/constants/platforms';
+import { parseProductName } from '@/app/utils/formatters';
 
 export default function GroupManagementDialog({
     isOpen,
@@ -26,30 +28,7 @@ export default function GroupManagementDialog({
 
     if (!isOpen) return null;
 
-
-    const PINCODE_OPTIONS = [
-        { label: 'Delhi NCR — 201303', value: '201303' },
-        { label: 'Navi Mumbai — 400706', value: '400706' },
-        { label: 'Delhi NCR — 201014', value: '201014' },
-        { label: 'Delhi NCR — 122008', value: '122008' },
-        { label: 'Delhi NCR — 122010', value: '122010' },
-        { label: 'Delhi NCR — 122016', value: '122016' },
-        { label: 'Mumbai — 400070', value: '400070' },
-        { label: 'Mumbai — 400703', value: '400703' },
-        { label: 'Mumbai — 401101', value: '401101' },
-        { label: 'Mumbai — 401202', value: '401202' },
-        { label: 'Delhi — 110001', value: '110001' },
-        { label: 'Delhi — 110075', value: '110075' }
-    ];
-
-    const PLATFORM_OPTIONS = [
-        { label: 'JioMart', value: 'jiomart' },
-        { label: 'Zepto', value: 'zepto' },
-        { label: 'Blinkit', value: 'blinkit' },
-        { label: 'DMart', value: 'dmart' },
-        { label: 'Flipkart', value: 'flipkartMinutes' },
-        { label: 'Instamart', value: 'instamart' }
-    ];
+    // Handle Auto-detect platform from product ID logic
 
     const handleRemove = async (product) => {
         const displayName = product.productName || product.name || 'Product';
@@ -79,8 +58,6 @@ export default function GroupManagementDialog({
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-
             if (!res.ok) throw new Error(data.error);
 
             // setSuccessMsg('Product removed!'); // REMOVED
@@ -113,8 +90,6 @@ export default function GroupManagementDialog({
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-
             if (!res.ok) throw new Error(data.error);
 
             // setSuccessMsg(`Permanently deleted product: ${product.name}`);
@@ -167,27 +142,6 @@ export default function GroupManagementDialog({
         }
     };
 
-    const formatProductName = (name) => {
-        if (!name) return '';
-        if (name.includes(' - ')) {
-            const [firstPart, ...rest] = name.split(' - ');
-            return (
-                <>
-                    <span className="font-extrabold text-neutral-900">{firstPart}</span>
-                    {" - "}{rest.join(' - ')}
-                </>
-            );
-        } else if (name.includes(' -')) {
-            const [firstPart, ...rest] = name.split(' -');
-            return (
-                <>
-                    <span className="font-extrabold text-neutral-900">{firstPart}</span>
-                    {" -"}{rest.join(' -')}
-                </>
-            );
-        }
-        return name;
-    };
 
     // Flatten the products for list view
     // The `productsInGroup` prop passed from parent should be the `product` object from the table.
@@ -248,18 +202,39 @@ export default function GroupManagementDialog({
                                     <div key={item.srcKey} className="bg-white p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all">
                                         <div className="flex items-start justify-between mb-3">
                                             <span className="text-xs font-bold uppercase px-2 py-1 bg-neutral-900 text-white rounded">{item.srcKey}</span>
-                                            <button
-                                                onClick={() => handleRemove(item)}
-                                                disabled={loading}
-                                                className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 cursor-pointer"
-                                                title="Remove from group"
-                                            >
-                                                {loading ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-                                            </button>
+                                            <div className="flex items-center gap-1">
+                                                {item.productUrl && (
+                                                    <a
+                                                        href={item.productUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                                                        title="Open Product URL"
+                                                    >
+                                                        <ExternalLink size={18} />
+                                                    </a>
+                                                )}
+                                                <button
+                                                    onClick={() => handleRemove(item)}
+                                                    disabled={loading}
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 cursor-pointer"
+                                                    title="Remove from group"
+                                                >
+                                                    {loading ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="space-y-2">
                                             <p className="text-sm font-semibold text-neutral-900 line-clamp-2">
-                                                {formatProductName(item.productName || item.name)}
+                                                {(() => {
+                                                  const parsed = parseProductName(item.productName || item.name);
+                                                  return parsed ? (
+                                                    <>
+                                                      <span className="font-extrabold text-neutral-900">{parsed.firstPart}</span>
+                                                      {parsed.rest && <span className="text-neutral-600 font-medium">{parsed.delimiter}{parsed.rest}</span>}
+                                                    </>
+                                                  ) : <span className="font-extrabold text-neutral-900">{item.productName || item.name}</span>;
+                                                })()}
                                             </p>
                                             <div className="p-2 bg-neutral-50 rounded border border-neutral-200">
                                                 <p className="text-[10px] text-neutral-500 font-medium">Product ID</p>

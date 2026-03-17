@@ -18,8 +18,10 @@ import LinksTab from './LinksTab';
 import BrandTab from './BrandTab';
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-
-
+import { PLATFORMS, PLATFORM_OPTIONS, PINCODE_OPTIONS } from '@/app/constants/platforms';
+import { createSortFunction, createPrioritySort } from '@/app/utils/sorting';
+import { fetchCategoryData as fetchCategoryDataAPI, fetchAvailableSnapshots } from '@/app/lib/api/category';
+import { fetchProductHistory } from '@/app/lib/api/productHistory';
 
 import categoriesData from '../utils/categories_with_urls.json';
 
@@ -28,20 +30,6 @@ import categoriesData from '../utils/categories_with_urls.json';
 
 function CategoriesPageContent() {
   const { isSidebarOpen, toggleSidebar } = useSidebar();
-
-  // Move PINCODE_OPTIONS up to be accessible by hydration effect
-  const PINCODE_OPTIONS = useMemo(() => [
-    { label: 'Delhi NCR — 201303', value: '201303' },
-    { label: 'Navi Mumbai — 400706', value: '400706' },
-    { label: 'Delhi NCR — 201014', value: '201014' },
-    { label: 'Delhi NCR — 122008', value: '122008' },
-    { label: 'Delhi NCR — 122010', value: '122010' },
-    { label: 'Delhi NCR — 122016', value: '122016' },
-    { label: 'Mumbai — 400070', value: '400070' },
-    { label: 'Mumbai — 400703', value: '400703' },
-    { label: 'Mumbai — 401101', value: '401101' },
-    { label: 'Mumbai — 401202', value: '401202' },
-  ], []);
 
   // Generate options from the JSON data
   // The JSON structure is { "Platform": [ { masterCategory: "Name", ... } ] }
@@ -156,21 +144,9 @@ function CategoriesPageContent() {
 
 
 
-  const PLATFORM_OPTIONS = [
-    { label: 'All', value: 'all' },
-    { label: 'JioMart', value: 'jiomart' },
-    { label: 'Zepto', value: 'zepto' },
-    { label: 'Blinkit', value: 'blinkit' },
-    { label: 'DMart', value: 'dmart' },
-    { label: 'Flipkart', value: 'flipkartMinutes' },
-    { label: 'Instamart', value: 'instamart' }
-  ];
-
-  // Apply search filter first
   const searchedProducts = useMemo(() => {
     if (!searchQuery) return products;
 
-    const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
     const query = searchQuery.toLowerCase().trim();
     const tokens = query.split(/\s+/).filter(t => t.length > 0);
 
@@ -192,7 +168,7 @@ function CategoriesPageContent() {
       // 2. ID Match (by strict query)
       const gId = (p.groupingId || '').toLowerCase();
       const pgId = (p.parentGroupId || '').toLowerCase();
-      const idMatch = gId.includes(query) || pgId.includes(query) || platforms.some(plat => {
+      const idMatch = gId.includes(query) || pgId.includes(query) || PLATFORMS.some(plat => {
         const pid = (p[plat]?.productId || '').toLowerCase();
         return pid && pid.includes(query);
       });
@@ -211,8 +187,6 @@ function CategoriesPageContent() {
     let result = searchedProducts;
 
     if (useFilterToggle) {
-      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-
       // Strip __category-suffix and trailing -a/b to get the canonical base ID
       const getBaseId = (productId) =>
         productId.split('__')[0].replace(/-[a-z]$/i, '');
@@ -233,13 +207,13 @@ function CategoriesPageContent() {
       // Map "platform:baseId" -> first index seen; union when same base ID found
       const baseIdMap = {};
       result.forEach((p, i) => {
-        // DEBUG: log productIds for products whose name includes 'amla'
+        // Note: Could add debug logging here for specific products
         if ((p.name || '').toLowerCase().includes('amla')) {
           const ids = {};
-          platforms.forEach(plat => { if (p[plat]?.productId) ids[plat] = { raw: p[plat].productId, base: getBaseId(p[plat].productId) }; });
+          PLATFORMS.forEach(plat => { if (p[plat]?.productId) ids[plat] = { raw: p[plat].productId, base: getBaseId(p[plat].productId) }; });
           console.log('[HideSimilar DEBUG]', p.name, ids);
         }
-        platforms.forEach(plat => {
+        PLATFORMS.forEach(plat => {
           const pid = p[plat]?.productId;
           if (pid) {
             const key = `${plat}:${getBaseId(pid)}`;
@@ -260,10 +234,10 @@ function CategoriesPageContent() {
         groups[root].push(p);
       });
 
-      const getPlatformCount = (p) => platforms.filter(plat => p[plat]).length;
+      const getPlatformCount = (p) => PLATFORMS.filter(plat => p[plat]).length;
       const getMinRank = (p) => {
         let min = Infinity;
-        platforms.forEach(key => {
+        PLATFORMS.forEach(key => {
           if (p[key]?.ranking !== undefined && p[key]?.ranking !== null) {
             const num = Number(p[key].ranking);
             if (!isNaN(num) && num < min) min = num;
@@ -321,11 +295,9 @@ function CategoriesPageContent() {
       instamart: 0
     };
 
-    const platforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
-
     deduplicatedProducts.forEach(product => {
       // Check if product exists on ANY platform (to filter out complete ghosts, though unlikely)
-      const existsSomewhere = platforms.some(p => product[p]);
+      const existsSomewhere = PLATFORMS.some(p => product[p]);
 
       if (!existsSomewhere) return;
 
@@ -363,6 +335,7 @@ function CategoriesPageContent() {
       instamart: 0
     };
 
+    // Count products across all platforms
     products.forEach(product => {
       if (product.jiomart) counts.jiomart++;
       if (product.zepto) counts.zepto++;
@@ -393,19 +366,8 @@ function CategoriesPageContent() {
       const timeToFetch = customTimestamp !== null ? customTimestamp : (snapshotTime || null);
       // Join pincodes with comma
       const pincodeParam = pincode;
-      let url = `/api/category-data?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincodeParam)}`;
-
-      if (timeToFetch) {
-        url += `&timestamp=${encodeURIComponent(timeToFetch)}`;
-      }
-
-      const response = await fetch(url, {
-        cache: 'no-store',
-        signal: controller.signal
-      });
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || 'Failed to fetch category data');
+      
+      const data = await fetchCategoryDataAPI(category, pincodeParam, timeToFetch, controller.signal);
 
       setProducts(data.products || []);
 
@@ -480,7 +442,6 @@ function CategoriesPageContent() {
         })
       });
 
-
       const data = await response.json();
       if (data.history) {
         const transformedData = data.history.map(h => ({
@@ -523,22 +484,19 @@ function CategoriesPageContent() {
 
       try {
         const pincodeParam = pincode;
-        const res = await fetch(`/api/available-snapshots?category=${encodeURIComponent(category)}&pincode=${encodeURIComponent(pincodeParam)}`, {
-          signal: controller.signal
-        });
-        const data = await res.json();
+        const snapshots = await fetchAvailableSnapshots(category, pincodeParam, controller.signal);
 
-        if (data.snapshots && data.snapshots.length > 0) {
-          setAvailableSnapshots(data.snapshots);
+        if (snapshots && snapshots.length > 0) {
+          setAvailableSnapshots(snapshots);
 
           if (isLiveMode) {
-            const latestTS = data.snapshots[0];
+            const latestTS = snapshots[0];
             const dateObj = new Date(latestTS);
             setSnapshotDate(dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
             setSnapshotTime(latestTS);
             fetchCategoryData(latestTS);
           } else {
-            const snapshotsForSameDate = data.snapshots.filter(ts =>
+            const snapshotsForSameDate = snapshots.filter(ts =>
               new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) === snapshotDate
             );
             if (snapshotDate && snapshotsForSameDate.length > 0) {
@@ -549,7 +507,7 @@ function CategoriesPageContent() {
               setIsLiveMode(true);
               // Re-run for live mode (or just let the effect re-run if we depend on isLiveMode?)
               // Better to just force fetch live data here
-              const latestTS = data.snapshots[0];
+              const latestTS = snapshots[0];
               const dateObj = new Date(latestTS);
               setSnapshotDate(dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
               setSnapshotTime(latestTS);
@@ -616,6 +574,8 @@ function CategoriesPageContent() {
             return {
               date: formattedDate,
               timestamp: date.getTime(),
+              // Stock Status: 1 = In Stock, 0 = Out of Stock
+              // Logic: If stock field is false (out of stock), return 0; otherwise return 1
               Zepto: item.Zepto !== null ? (item.zeptoStock === false ? 0 : 1) : null,
               Blinkit: item.Blinkit !== null ? (item.blinkitStock === false ? 0 : 1) : null,
               JioMart: item.JioMart !== null ? (item.jiomartStock === false ? 0 : 1) : null,
@@ -733,234 +693,24 @@ function CategoriesPageContent() {
   }, [deduplicatedProducts, platformFilter, showMissing, showNonHyphenOnly, showDangerOnly]);
 
   const sortedProducts = useMemo(() => {
-    // --- HELPERS ---
-    const resolveSubCategory = (item) => {
-      if (item.officialSubCategory && item.officialSubCategory !== 'General') return item.officialSubCategory;
-      const platforms = ['zepto', 'blinkit', 'instamart', 'flipkartMinutes', 'jiomart', 'dmart'];
-      for (const p of platforms) {
-        if (item[p]) {
-          const sub = item[p].subcategory || item[p].officialSubCategory;
-          if (sub && sub !== 'General') return sub;
-        }
-      }
-      return item.officialSubCategory || item.subCategory || 'Other';
-    };
+    // Use the sorting utility functions instead of inline logic
+    const prioritySort = createPrioritySort({
+      showNewFirst,
+      showNonHyphenOnly,
+      showAdFirst,
+      showInStockFirst,
+      showOutStockFirst,
+      platformFilter
+    });
 
-    const hasNewFlag = (product) => {
-      if (platformFilter !== 'all') {
-        return product[platformFilter]?.new === true;
-      }
-      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-      return platforms.some(p => product[p]?.new === true);
-    };
+    const sortFunc = createSortFunction(sortConfig, prioritySort, platformFilter);
 
-    const hasAdFlag = (product) => {
-      if (platformFilter !== 'all') {
-        return product[platformFilter]?.isAd === true;
-      }
-      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-      return platforms.some(p => product[p]?.isAd === true);
-    };
-
-    const hasStockFlag = (product) => {
-      if (platformFilter !== 'all') {
-        return product[platformFilter] && !product[platformFilter]?.isOutOfStock;
-      }
-      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-      return platforms.some(p => product[p] && !product[p]?.isOutOfStock);
-    };
-
-    const getAveragePrice = (product) => {
-      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-      let total = 0;
-      let count = 0;
-      platforms.forEach(p => {
-        const item = product[p];
-        if (item) {
-          const priceVal = item.currentPrice;
-          if (priceVal !== undefined && priceVal !== null) {
-            const num = Number(priceVal);
-            if (!isNaN(num) && num > 0) {
-              total += num;
-              count++;
-            }
-          }
-        }
-      });
-      return count > 0 ? total / count : Infinity;
-    };
-
-    const getAverageDiscount = (product) => {
-      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-      let total = 0;
-      let count = 0;
-      platforms.forEach(p => {
-        const item = product[p];
-        if (!item) return;
-        if (item.discountPercentage != null && !isNaN(Number(item.discountPercentage))) {
-          total += Number(item.discountPercentage);
-          count++;
-        } else if (item.originalPrice != null && item.currentPrice != null) {
-          const oPrice = Number(item.originalPrice);
-          const cPrice = Number(item.currentPrice);
-          if (!isNaN(oPrice) && !isNaN(cPrice) && oPrice > 0) {
-            total += Math.max(0, ((oPrice - cPrice) / oPrice) * 100);
-            count++;
-          }
-        }
-      });
-      return count > 0 ? total / count : -Infinity;
-    };
-
-    const getPrioritySort = (a, b) => {
-      if (showInStockFirst) {
-        const aIn = hasStockFlag(a);
-        const bIn = hasStockFlag(b);
-        if (aIn && !bIn) return -1;
-        if (!aIn && bIn) return 1;
-      }
-
-      if (showOutStockFirst) {
-        const aIn = hasStockFlag(a);
-        const bIn = hasStockFlag(b);
-        if (!aIn && bIn) return -1;
-        if (aIn && !bIn) return 1;
-      }
-
-      if (showAdFirst) {
-        const aIsAd = hasAdFlag(a);
-        const bIsAd = hasAdFlag(b);
-        if (aIsAd && !bIsAd) return -1;
-        if (!aIsAd && bIsAd) return 1;
-      }
-
-      if (showNonHyphenOnly || showNewFirst) {
-        const aIsNew = hasNewFlag(a);
-        const bIsNew = hasNewFlag(b);
-        if (aIsNew && !bIsNew) return -1;
-        if (!aIsNew && bIsNew) return 1;
-      }
-
-      return 0;
-    };
-
-    // --- SHARED SORT FUNCTION ---
-    const sortFunction = (a, b) => {
-      const priority = getPrioritySort(a, b);
-      if (priority !== 0) {
-        if (!sortConfig.key) {
-          return priority || (a.name || '').localeCompare(b.name || '');
-        }
-        return priority;
-      }
-
-      // 1. Specific Keys Sort
-      if (sortConfig.key === 'averagePrice') {
-        const priceA = getAveragePrice(a);
-        const priceB = getAveragePrice(b);
-        if (priceA === Infinity && priceB === Infinity) return 0;
-        if (priceA === Infinity) return 1;
-        if (priceB === Infinity) return -1;
-        return sortConfig.direction === 'asc' ? priceA - priceB : priceB - priceA;
-      }
-
-      if (sortConfig.key === 'averageDiscount') {
-        const dA = getAverageDiscount(a);
-        const dB = getAverageDiscount(b);
-        if (dA === -Infinity && dB === -Infinity) return 0;
-        if (dA === -Infinity) return 1;
-        if (dB === -Infinity) return -1;
-        return sortConfig.direction === 'asc' ? dA - dB : dB - dA;
-      }
-
-
-
-      if (sortConfig.key === 'groupCount') {
-        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-        const countA = platforms.filter(p => a[p]).length;
-        const countB = platforms.filter(p => b[p]).length;
-        if (countA !== countB) return sortConfig.direction === 'asc' ? countA - countB : countB - countA;
-        return (a.name || '').localeCompare(b.name || '');
-      }
-
-      if (sortConfig.key === 'brand') {
-        const brandA = (a.brand || '').trim().toLowerCase();
-        const brandB = (b.brand || '').trim().toLowerCase();
-        if (!brandA && !brandB) return (a.name || '').localeCompare(b.name || '');
-        if (!brandA) return 1;
-        if (!brandB) return -1;
-        if (brandA !== brandB) return sortConfig.direction === 'asc' ? brandA.localeCompare(brandB) : brandB.localeCompare(brandA);
-        return (a.name || '').localeCompare(b.name || '');
-      }
-
-      if (sortConfig.key === 'name') {
-        const nameA = (a.name || '');
-        const nameB = (b.name || '');
-        return sortConfig.direction === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-      }
-
-      // 2. Platform Column Sort
-      if (sortConfig.key !== null) {
-        const platformKey = sortConfig.key;
-        const itemA = a[platformKey];
-        const itemB = b[platformKey];
-        if (!itemA && !itemB) return 0;
-        if (!itemA) return 1;
-        if (!itemB) return -1;
-
-        if (sortConfig.direction === 'price_asc' || sortConfig.direction === 'price_desc') {
-          const getPrice = (item) => {
-            if (item.averagePrice !== undefined && item.averagePrice !== null) return Number(item.averagePrice);
-            if (item.currentPrice !== undefined && item.currentPrice !== null) return Number(item.currentPrice);
-            return Infinity;
-          };
-          const priceA = getPrice(itemA);
-          const priceB = getPrice(itemB);
-          if (priceA !== priceB) return sortConfig.direction === 'price_asc' ? priceA - priceB : priceB - priceA;
-          return 0;
-        }
-
-        const rankA = itemA.ranking && !isNaN(itemA.ranking) ? Number(itemA.ranking) : Infinity;
-        const rankB = itemB.ranking && !isNaN(itemB.ranking) ? Number(itemB.ranking) : Infinity;
-        if (rankA !== rankB) return sortConfig.direction === 'asc' ? rankA - rankB : rankB - rankA;
-        return 0;
-      }
-
-      // 3. Default Sort (Menu is null)
-      const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-      const countA = platforms.filter(p => a[p]).length;
-      const countB = platforms.filter(p => b[p]).length;
-      if (countA !== countB) return countB - countA;
-
-      const nameA = a.name || '';
-      const nameB = b.name || '';
-      if (nameA !== nameB) return nameA.localeCompare(nameB);
-
-      const catA = a.officialCategory || '';
-      const catB = b.officialCategory || '';
-      if (catA !== catB) return catA.localeCompare(catB);
-
-      const subA = resolveSubCategory(a);
-      const subB = resolveSubCategory(b);
-      if (subA !== subB) return subA.localeCompare(subB);
-
-      const getMinRank = (p) => {
-        let min = Infinity;
-        platforms.forEach(key => {
-          if (p[key] && p[key].ranking && !isNaN(p[key].ranking)) {
-            if (p[key].ranking < min) min = p[key].ranking;
-          }
-        });
-        return min;
-      };
-      return getMinRank(a) - getMinRank(b);
-    };
-
-    // --- EXECUTION ---
+    // Handle grouped products (with headers)
     if (!filteredProducts.some(p => p.isHeader)) {
-      return [...filteredProducts].sort(sortFunction);
+      return [...filteredProducts].sort(sortFunc);
     }
 
+    // Sort within groups while preserving headers
     const groups = [];
     let currentGroup = null;
     filteredProducts.forEach(item => {
@@ -976,7 +726,7 @@ function CategoriesPageContent() {
     let flatList = [];
     groups.forEach(group => {
       flatList.push(group.header);
-      flatList = flatList.concat([...group.items].sort(sortFunction));
+      flatList = flatList.concat([...group.items].sort(sortFunc));
     });
     return flatList;
   }, [filteredProducts, sortConfig, showNewFirst, showNonHyphenOnly, showAdFirst, showInStockFirst, showOutStockFirst, platformFilter]);

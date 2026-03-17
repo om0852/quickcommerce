@@ -4,6 +4,7 @@ import { Download, X, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/components/SidebarContext';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
+import { validateEmail } from '@/app/utils/formatters';
 
 export default function ExportCategoryDialog({
     isOpen,
@@ -49,6 +50,14 @@ export default function ExportCategoryDialog({
         if (actionType === 'email' && !email) {
             setError("Email address is required for sending email.");
             return;
+        }
+
+        // Validate email format
+        if (actionType === 'email' && email) {
+            if (!validateEmail(email)) {
+                setError("Please enter a valid email address.");
+                return;
+            }
         }
 
         setLoading(true);

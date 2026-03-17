@@ -489,7 +489,19 @@ export default function ProductEditDialog({
                                             <span className="text-sm font-medium text-gray-700 truncate max-w-[200px] md:max-w-md">{data.productName}</span>
                                             {data.isModified && <span className="text-xs text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">Modified</span>}
                                         </div>
-                                        <div className="text-gray-400">
+                                        <div className="flex items-center gap-2 text-gray-400">
+                                            {data.productUrl && (
+                                                <a
+                                                    href={data.productUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="p-1 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                                                    title="Open Product URL"
+                                                >
+                                                    <ExternalLink size={16} />
+                                                </a>
+                                            )}
                                             {expandedPlatform === idx ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                         </div>
                                     </div>

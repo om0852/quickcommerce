@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { PLATFORMS } from '@/app/constants/platforms';
 
 const ProductImage = ({ product }) => {
-    const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
 
     // Collect all available images from all sources
     const images = useMemo(() => {
-        const platformImages = platforms
+        const platformImages = PLATFORMS
             .map(p => product[p]?.productImage)
             .filter(url => url && url.length > 5);
         

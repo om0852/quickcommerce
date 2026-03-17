@@ -12,7 +12,10 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import { cn } from '@/lib/utils'; // Keep cn for tailwind utility usage if needed
+import { cn } from '@/lib/utils';
+import { PLATFORMS } from '@/app/constants/platforms';
+import { parseProductName } from '@/app/utils/formatters';
+import { useNotification } from '@/app/hooks/useNotification';
 
 import GroupManagementDialog from './GroupManagementDialog';
 import ProductEditDialog from './ProductEditDialog';
@@ -61,19 +64,8 @@ const ProductTable = React.memo(function ProductTable({
     const [bulkWeight, setBulkWeight] = useState('');
     const [bulkUpdating, setBulkUpdating] = useState(false);
 
-    // TOAST STATE
-    const [toastState, setToastState] = useState({
-        open: false,
-        message: '',
-        severity: 'success' // 'success' | 'error' | 'info' | 'warning'
-    });
-
-    const handleCloseToast = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-        setToastState(prev => ({ ...prev, open: false }));
-    };
+    // Notification management (toast)
+    const { toastState, showToast, handleCloseToast } = useNotification();
 
     // Sort Menu State
     const [sortMenuAnchor, setSortMenuAnchor] = useState(null);
@@ -133,7 +125,7 @@ const ProductTable = React.memo(function ProductTable({
         let count = 0;
         productsToCount.forEach(p => {
             if (!p.isHeader) {
-                if (platforms.some(plat => p[plat]?.new === true)) {
+                if (PLATFORMS.some(plat => p[plat]?.new === true)) {
                     count++;
                 }
             }
@@ -164,25 +156,17 @@ const ProductTable = React.memo(function ProductTable({
                 if (onLocalUpdate) {
                     onLocalUpdate({ groupingId, name: editValue.trim() });
                 }
-                setToastState({ open: true, message: 'Name updated successfully', severity: 'success' });
+                showToast('Name updated successfully', 'success');
             } else {
-                setToastState({ open: true, message: 'Failed to update name', severity: 'error' });
+                showToast('Failed to update name', 'error');
             }
         } catch (error) {
             console.error('Error updating name:', error);
-            setToastState({ open: true, message: 'Error updating name', severity: 'error' });
+            showToast('Error updating name', 'error');
         } finally {
             setSavingProductId(null);
             setEditingProductId(null);
         }
-    };
-
-    const showToast = (message, severity = 'success') => {
-        setToastState({
-            open: true,
-            message,
-            severity
-        });
     };
 
     const handleBulkUpdate = async () => {
@@ -248,8 +232,7 @@ const ProductTable = React.memo(function ProductTable({
         if (!confirm(`Before creating new group check whether you can add this in any existing group or not. If not then click Confirm else Cancel it.`)) return;
 
         // Find the active platform data for this row
-        const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
-        const activePlatform = platforms.find(p => product[p] && product[p].productId);
+        const activePlatform = PLATFORMS.find(p => product[p] && product[p].productId);
 
         if (!activePlatform) {
             showToast('Could not find platform data for this product', 'error');
@@ -287,24 +270,6 @@ const ProductTable = React.memo(function ProductTable({
             setIsRegrouping(false);
             setSavingProductId(null);
         }
-    };
-
-    const formatProductName = (name) => {
-        if (!name) return '';
-        const delimiter = name.includes(' - ') ? ' - ' : (name.includes(' -') ? ' -' : null);
-
-        if (delimiter) {
-            const parts = name.split(delimiter);
-            const firstPart = parts[0].trim();
-            const rest = parts.slice(1).join(delimiter).trim();
-            return (
-                <>
-                    <span className="font-extrabold text-neutral-900">{firstPart}</span>
-                    {rest && <span className="text-neutral-600 font-medium"> - {rest}</span>}
-                </>
-            );
-        }
-        return <span className="font-extrabold text-neutral-900">{name}</span>;
     };
 
     return (
@@ -1207,7 +1172,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     position: 'sticky',
                                                     left: isBulkEditMode ? 44 : 0,
                                                     backgroundColor: 'white',
-                                                    zIndex: 20,
+                                                    zIndex: editingProductId === product.groupingId ? 40 : 20,
                                                     minWidth: { xs: 150, md: 200, lg: 220 },
                                                     width: { xs: 150, md: 200, lg: 220 },
                                                     maxWidth: { xs: 150, md: 200, lg: 220 },
@@ -1222,7 +1187,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     }
                                                 }}
                                             >
-                                                <div style={{ height: isAdmin ? '95px' : '60px', overflow: 'hidden' }}>
+                                                <div style={{ height: isAdmin ? '95px' : '60px', overflow: editingProductId === product.groupingId ? 'visible' : 'hidden' }}>
                                                     <div className="flex flex-row items-start gap-3">
                                                         <div className="h-10 w-10 flex-shrink-0 rounded-lg border border-neutral-200 p-0.5 bg-white overflow-hidden self-start">
                                                             <ProductImage product={product} />
@@ -1275,7 +1240,15 @@ const ProductTable = React.memo(function ProductTable({
                                                                         </div>
                                                                     ) : (
                                                                         <div className="block leading-tight break-words line-clamp-2 min-h-[32px]">
-                                                                            {formatProductName(product.name)}
+                                                                            {(() => {
+                                                                                const parsed = parseProductName(product.name);
+                                                                                return parsed ? (
+                                                                                  <>
+                                                                                    <span className="font-extrabold text-neutral-900">{parsed.firstPart}</span>
+                                                                                    {parsed.rest && <span className="text-neutral-600 font-medium">{parsed.delimiter}{parsed.rest}</span>}
+                                                                                  </>
+                                                                                ) : <span className="font-extrabold text-neutral-900">{product.name}</span>;
+                                                                            })()}
                                                                             {(() => {
                                                                                 const suffix = (product.weight && product.weight !== 'N/A') ? product.weight : product.quantity;
                                                                                 if (!suffix) return null;
