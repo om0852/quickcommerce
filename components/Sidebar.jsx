@@ -51,9 +51,9 @@ export default function Sidebar({ isOpen, onClose }) {
         )}
       >
         {/* HEADER */}
-        <div className="px-6 py-3 border-b border-neutral-800 flex items-center justify-between min-h-[64px]">
+        <div className="px-4 py-2 border-b border-neutral-800 flex items-center justify-between min-h-[52px]">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight">QuickCommerce</h1>
+            <h1 className="text-lg font-bold tracking-tight">QuickCommerce</h1>
           </div>
 
           <button
@@ -61,7 +61,7 @@ export default function Sidebar({ isOpen, onClose }) {
             className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
             aria-label="Close Sidebar"
           >
-            <SidebarCloseIcon size={24} />
+            <SidebarCloseIcon size={20} />
           </button>
         </div>
 

@@ -25,15 +25,15 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Source group not found' }, { status: 404 });
         }
 
-        // 2. Identify all products in this group that share the same Base ID
-        const productsToMove = oldGroup.products.filter(p => getBaseId(p.productId) === targetBaseId);
+        // 2. Identify the SPECIFIC product in this group
+        const productsToMove = oldGroup.products.filter(p => p.productId === productId && p.platform === platform);
 
         if (productsToMove.length === 0) {
-            return NextResponse.json({ error: 'No matching products found in the group' }, { status: 404 });
+            return NextResponse.json({ error: 'No matching product found in the group' }, { status: 404 });
         }
 
-        // 3. Update the OLD group: remove these products
-        const updatedOldProducts = oldGroup.products.filter(p => getBaseId(p.productId) !== targetBaseId);
+        // 3. Update the OLD group: remove ONLY this product/platform combo
+        const updatedOldProducts = oldGroup.products.filter(p => !(p.productId === productId && p.platform === platform));
 
         if (updatedOldProducts.length === 0) {
             // If group becomes empty, delete it
@@ -44,14 +44,24 @@ export async function POST(request) {
             await oldGroup.save();
         }
 
-        // 4. Create the NEW Group with metadata from the product itself
+        // 4. Try to create the NEW Group with metadata from the product itself
         const sampleSnap = await ProductSnapshot.findOne({
             platform: { $regex: `^${platform}$`, $options: 'i' },
             productId: productId,
         }).sort({ scrapedAt: -1 }).lean();
 
         if (!sampleSnap) {
-            return NextResponse.json({ error: 'Could not find product data to create new group' }, { status: 404 });
+            // If metadata is not found, we still complete the removal but skip creating a new group
+            for (const p of productsToMove) {
+                await ProductSnapshot.updateMany(
+                    { platform: p.platform, productId: p.productId },
+                    { $set: { groupingId: null } }
+                );
+            }
+            return NextResponse.json({
+                success: true,
+                message: `Removed product from group. No new group created as metadata was missing.`
+            });
         }
 
         const newGroupId = uuidv4();
@@ -72,7 +82,7 @@ export async function POST(request) {
 
         await newGroup.save();
 
-        // 5. Update Snapshots with NEW groupingId for all moved products
+        // 5. Update Snapshots with NEW groupingId for all moved product variants
         for (const p of productsToMove) {
             await ProductSnapshot.updateMany(
                 { platform: p.platform, productId: p.productId },
@@ -84,7 +94,7 @@ export async function POST(request) {
             success: true,
             newGroupId,
             count: productsToMove.length,
-            message: `Moved ${productsToMove.length} variant(s) to new group`
+            message: `Moved product to new group`
         });
 
     } catch (error) {

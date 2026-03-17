@@ -19,6 +19,7 @@ import { useNotification } from '@/app/hooks/useNotification';
 
 import GroupManagementDialog from './GroupManagementDialog';
 import ProductEditDialog from './ProductEditDialog';
+import GroupDetailsCrossPincodeDialog from './GroupDetailsCrossPincodeDialog';
 import ProductImage from './ProductImage';
 
 const ProductTable = React.memo(function ProductTable({
@@ -54,6 +55,8 @@ const ProductTable = React.memo(function ProductTable({
 }) {
     const [manageGroup, setManageGroup] = useState(null);
     const [editProduct, setEditProduct] = useState(null);
+    const [crossPincodeGroup, setCrossPincodeGroup] = useState(null);
+    const [crossPincodePlatform, setCrossPincodePlatform] = useState(null);
     const [copiedId, setCopiedId] = useState(null);
     const [editingProductId, setEditingProductId] = useState(null);
     const [editValue, setEditValue] = useState('');
@@ -1378,7 +1381,15 @@ const ProductTable = React.memo(function ProductTable({
                                                                 {isAdmin && !product.isDuplicate && (
                                                                     <>
                                                                         {product.groupConflicts?.[p]?.hasConflict && (
-                                                                            <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 animate-pulse-subtle">
+                                                                            <div 
+                                                                                className="mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 animate-pulse-subtle cursor-pointer hover:bg-rose-100 transition-colors"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setCrossPincodeGroup(product);
+                                                                                    setCrossPincodePlatform(p);
+                                                                                }}
+                                                                                title="Click to view cross-pincode group details"
+                                                                            >
                                                                                 <Skull size={14} className="text-rose-600" />
                                                                                 <span className="text-[10px] font-bold text-rose-700">
                                                                                     {product.groupConflicts[p].count}
@@ -1464,6 +1475,24 @@ const ProductTable = React.memo(function ProductTable({
                             }
                             setEditProduct(null);
                         }}
+                        showToast={showToast}
+                    />
+                )
+            }
+
+            {/* Cross-Pincode Group Details Dialog */}
+            {
+                crossPincodeGroup && (
+                    <GroupDetailsCrossPincodeDialog
+                        isOpen={!!crossPincodeGroup}
+                        onClose={() => {
+                            setCrossPincodeGroup(null);
+                            setCrossPincodePlatform(null);
+                        }}
+                        groupingId={crossPincodeGroup.parentGroupId || crossPincodeGroup.groupingId}
+                        primaryName={crossPincodeGroup.name}
+                        selectedPlatform={crossPincodePlatform}
+                        onUpdate={onRefresh || onLocalUpdate}
                         showToast={showToast}
                     />
                 )

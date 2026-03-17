@@ -953,17 +953,17 @@ function CategoriesPageContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
 
       {/* Header */}
-      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shadow-sm z-20 min-h-[64px]">
+      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-2 flex items-center justify-between shadow-sm z-20 min-h-[52px]">
         <div className="flex items-center gap-4">
           {!isSidebarOpen && (
             <button
               onClick={toggleSidebar}
-              className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in"
+              className="p-1.5 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in"
             >
-              <SidebarOpenIcon size={24} />
+              <SidebarOpenIcon size={20} />
             </button>
           )}
-          <h1 className="text-xl font-bold tracking-tight text-neutral-900">Category Tracker</h1>
+          <h1 className="text-lg font-bold tracking-tight text-neutral-900">Category Tracker</h1>
 
           <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-2 py-1">
             <span className={`w-2 h-2 rounded-full ${isLiveMode ? 'bg-neutral-900 animate-pulse' : 'bg-neutral-400'}`}></span>
