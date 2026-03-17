@@ -18,7 +18,7 @@ import LinksTab from './LinksTab';
 import BrandTab from './BrandTab';
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { PLATFORMS, PLATFORM_OPTIONS, PINCODE_OPTIONS } from '@/app/constants/platforms';
+import { PLATFORMS, PLATFORM_OPTIONS, PINCODE_OPTIONS, PLATFORM_SHORT_NAMES } from '@/app/constants/platforms';
 import { createSortFunction, createPrioritySort } from '@/app/utils/sorting';
 import { fetchCategoryData as fetchCategoryDataAPI, fetchAvailableSnapshots } from '@/app/lib/api/category';
 import { fetchProductHistory } from '@/app/lib/api/productHistory';
@@ -366,7 +366,7 @@ function CategoriesPageContent() {
       const timeToFetch = customTimestamp !== null ? customTimestamp : (snapshotTime || null);
       // Join pincodes with comma
       const pincodeParam = pincode;
-      
+
       const data = await fetchCategoryDataAPI(category, pincodeParam, timeToFetch, controller.signal);
 
       setProducts(data.products || []);
@@ -694,14 +694,13 @@ function CategoriesPageContent() {
 
   const sortedProducts = useMemo(() => {
     // Use the sorting utility functions instead of inline logic
-    const prioritySort = createPrioritySort({
-      showNewFirst,
-      showNonHyphenOnly,
-      showAdFirst,
+    const prioritySort = createPrioritySort(
       showInStockFirst,
       showOutStockFirst,
+      showAdFirst,
+      showNewFirst,
       platformFilter
-    });
+    );
 
     const sortFunc = createSortFunction(sortConfig, prioritySort, platformFilter);
 
@@ -903,6 +902,16 @@ function CategoriesPageContent() {
       ? brandPlatformCounts
       : platformCounts;
 
+  const platformDropdownOptions = useMemo(() => {
+    return PLATFORM_OPTIONS.map(opt => {
+      const shortName = PLATFORM_SHORT_NAMES[opt.value] || opt.label;
+      return {
+        label: `${shortName} (${loading ? '...' : (currentCounts[opt.value] || 0)})`,
+        value: opt.value
+      };
+    });
+  }, [currentCounts, loading]);
+
   const renderPagination = (isTop = false) => {
     if (activeTab !== 'products' || sortedProducts.length === 0) return null;
     return (
@@ -997,9 +1006,9 @@ function CategoriesPageContent() {
         <div className="flex-none flex flex-col gap-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
 
           {/* Top Row: Selectors and Actions */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Selectors */}
-            <div className="flex flex-wrap items-center gap-3 md:gap-4">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4 font-sans">
               <div className="w-full sm:w-64 relative z-[100]">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Category</label>
                 <CustomDropdown
@@ -1025,7 +1034,7 @@ function CategoriesPageContent() {
               </div>
 
               {/* Snapshot Selectors */}
-              <div className="w-full sm:w-40 relative z-[80] mr-0 sm:mr-4">
+              <div className="w-full sm:w-40 relative z-[80] mr-0 sm:mr-4 font-sans">
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Date</label>
                 <CustomDropdown
                   value={snapshotDate}
@@ -1055,10 +1064,25 @@ function CategoriesPageContent() {
                   minimal
                 />
               </div>
+
+              {/* Platform Selector (Mobile/Tablet only) */}
+              <div className="w-full sm:w-60 relative z-[70] font-sans lg:hidden">
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                  Platform <span className="text-neutral-400 font-normal ml-1">({loading ? <Loader2 size={10} className="animate-spin inline-block" /> : currentCounts[platformFilter] || 0})</span>
+                </label>
+                <CustomDropdown
+                  value={platformFilter}
+                  onChange={(val) => {
+                    setPlatformFilter(val);
+                    setCurrentPage(1);
+                  }}
+                  options={platformDropdownOptions}
+                />
+              </div>
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center justify-end gap-3 self-end lg:self-auto">
+            <div className="flex items-center justify-end gap-3 self-end md:self-auto">
               {isAdmin && (
                 <button
                   id="reload-button"
@@ -1082,36 +1106,39 @@ function CategoriesPageContent() {
             </div>
           </div>
 
-          {/* Bottom Row: Platform Filter */}
+          {/* Bottom Row: Controls */}
           <div className="w-full border-t border-gray-100 pt-2 flex items-end justify-between gap-3">
             <div className="flex-1 overflow-hidden">
-              <label className="text-xs font-semibold text-gray-500 mb-2 block">
-                Platform Filter <span className="text-neutral-400 font-normal ml-1">({loading ? <Loader2 size={10} className="animate-spin inline-block" /> : currentCounts[platformFilter] || 0})</span>
-              </label>
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                {PLATFORM_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => {
-                      setPlatformFilter(opt.value);
-                      setCurrentPage(1);
-                    }}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1",
-                      platformFilter === opt.value
-                        ? "bg-neutral-900 text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    )}
-                  >
-                    {opt.label} <span className="text-xs opacity-80">
-                      {loading ? (
-                        <Loader2 size={10} className="animate-spin inline-block" />
-                      ) : (
-                        `(${currentCounts[opt.value] || 0})`
+              {/* Platform Filter (Desktop only) */}
+              <div className="hidden lg:block lg:mb-1">
+                <label className="text-xs font-semibold text-gray-500 mb-2 block">
+                  Platform Filter <span className="text-neutral-400 font-normal ml-1">({loading ? <Loader2 size={10} className="animate-spin inline-block" /> : currentCounts[platformFilter] || 0})</span>
+                </label>
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                  {PLATFORM_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        setPlatformFilter(opt.value);
+                        setCurrentPage(1);
+                      }}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1",
+                        platformFilter === opt.value
+                          ? "bg-neutral-900 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       )}
-                    </span>
-                  </button>
-                ))}
+                    >
+                      {opt.label} <span className="text-xs opacity-80">
+                        {loading ? (
+                          <Loader2 size={10} className="animate-spin inline-block" />
+                        ) : (
+                          `(${currentCounts[opt.value] || 0})`
+                        )}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Tooltip from '@mui/material/Tooltip';
 import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown, Unlink, Skull } from 'lucide-react';
 import Menu from '@mui/material/Menu';
@@ -13,7 +13,7 @@ import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { cn } from '@/lib/utils';
-import { PLATFORMS } from '@/app/constants/platforms';
+import { PLATFORMS, PLATFORM_SHORT_NAMES, PLATFORM_OPTIONS } from '@/app/constants/platforms';
 import { parseProductName } from '@/app/utils/formatters';
 import { useNotification } from '@/app/hooks/useNotification';
 
@@ -66,6 +66,20 @@ const ProductTable = React.memo(function ProductTable({
     const [bulkName, setBulkName] = useState('');
     const [bulkWeight, setBulkWeight] = useState('');
     const [bulkUpdating, setBulkUpdating] = useState(false);
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const platformLabels = useMemo(() => {
+        return PLATFORM_OPTIONS.reduce((acc, opt) => ({
+            ...acc,
+            [opt.value]: opt.label
+        }), {});
+    }, []);
 
     // Notification management (toast)
     const { toastState, showToast, handleCloseToast } = useNotification();
@@ -278,14 +292,12 @@ const ProductTable = React.memo(function ProductTable({
     return (
         <>
             <Paper
+                elevation={0}
+                square
                 sx={{
                     width: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    maxWidth: 'calc(100vw - 2rem)', // Constraint to prevent page overflow
-                    borderRadius: '0.75rem', // rounded-xl
-                    border: '1px solid #e5e5e5', // border-neutral-200
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
                     position: 'relative' // Ensure relative positioning for overlay
                 }}
             >
@@ -381,9 +393,9 @@ const ProductTable = React.memo(function ProductTable({
                                         position: 'sticky',
                                         left: isBulkEditMode ? 44 : 0,
                                         zIndex: 30, // Lowered from 60 to be below dropdowns (z-50)
-                                        minWidth: { xs: 120, sm: 155, md: 205, lg: 225 },
-                                        width: { xs: 120, sm: 155, md: 205, lg: 225 },
-                                        maxWidth: { xs: 120, sm: 155, md: 205, lg: 225 },
+                                        minWidth: { xs: 240, sm: 280, md: 320, lg: 350 },
+                                        width: { xs: 240, sm: 280, md: 320, lg: 350 },
+                                        maxWidth: { xs: 240, sm: 280, md: 320, lg: 350 },
                                         borderBottom: '1px solid #e5e5e5',
                                         borderRight: '1px solid #e5e5e5',
                                         boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
@@ -1030,15 +1042,15 @@ const ProductTable = React.memo(function ProductTable({
                                             color: '#737373',
                                             backgroundColor: '#fafafa',
                                             userSelect: 'none',
-                                            minWidth: 100,
-                                            width: 100,
-                                            maxWidth: 100,
+                                            minWidth: windowWidth < 1000 ? 80 : 110,
+                                            width: windowWidth < 1000 ? 80 : 110,
+                                            maxWidth: windowWidth < 1000 ? 80 : 110,
                                             padding: '8px 12px',
                                             borderBottom: '1px solid #e5e5e5',
                                         }}
                                     >
                                         <div className="flex items-center justify-center gap-1">
-                                            {platform === 'flipkartMinutes' ? 'Flipkart' : platform}
+                                            {windowWidth < 1000 ? (PLATFORM_SHORT_NAMES[platform] || platform) : (platformLabels[platform] || platform)}
                                         </div>
                                     </TableCell>
                                 ))}
@@ -1056,9 +1068,9 @@ const ProductTable = React.memo(function ProductTable({
                                                 left: isBulkEditMode ? 44 : 0,
                                                 backgroundColor: 'white',
                                                 zIndex: 20,
-                                                minWidth: { xs: 150, md: 220 },
-                                                width: { xs: 150, md: 220 },
-                                                maxWidth: { xs: 150, md: 220 },
+                                                minWidth: { xs: 240, sm: 280, md: 320, lg: 350 },
+                                                width: { xs: 240, sm: 280, md: 320, lg: 350 },
+                                                maxWidth: { xs: 240, sm: 280, md: 320, lg: 350 },
                                                 borderBottom: '1px solid #e5e5e5',
                                                 borderRight: '1px solid #e5e5e5',
                                                 padding: '16px 32px',
@@ -1080,9 +1092,9 @@ const ProductTable = React.memo(function ProductTable({
                                                 key={p}
                                                 align="center"
                                                 sx={{
-                                                    minWidth: 110,
-                                                    width: 110,
-                                                    maxWidth: 110,
+                                                    minWidth: windowWidth < 1000 ? 80 : 110,
+                                                    width: windowWidth < 1000 ? 80 : 110,
+                                                    maxWidth: windowWidth < 1000 ? 80 : 110,
                                                     borderBottom: '1px solid #e5e5e5',
                                                     padding: '8px 12px',
                                                 }}
@@ -1176,9 +1188,9 @@ const ProductTable = React.memo(function ProductTable({
                                                     left: isBulkEditMode ? 44 : 0,
                                                     backgroundColor: 'white',
                                                     zIndex: editingProductId === product.groupingId ? 40 : 20,
-                                                    minWidth: { xs: 150, md: 200, lg: 220 },
-                                                    width: { xs: 150, md: 200, lg: 220 },
-                                                    maxWidth: { xs: 150, md: 200, lg: 220 },
+                                                    minWidth: { xs: 240, sm: 280, md: 320, lg: 350 },
+                                                    width: { xs: 240, sm: 280, md: 320, lg: 350 },
+                                                    maxWidth: { xs: 240, sm: 280, md: 320, lg: 350 },
                                                     borderBottom: '1px solid #e5e5e5',
                                                     borderRight: '1px solid #e5e5e5',
                                                     boxShadow: '4px 0 8px -4px rgba(0,0,0,0.05)',
@@ -1336,9 +1348,9 @@ const ProductTable = React.memo(function ProductTable({
                                                         key={p}
                                                         align="center"
                                                         sx={{
-                                                            minWidth: 100,
-                                                            width: 100,
-                                                            maxWidth: 100,
+                                                            minWidth: windowWidth < 1000 ? 80 : 110,
+                                                            width: windowWidth < 1000 ? 80 : 110,
+                                                            maxWidth: windowWidth < 1000 ? 80 : 110,
                                                             padding: '8px 12px',
                                                             verticalAlign: 'top'
                                                         }}

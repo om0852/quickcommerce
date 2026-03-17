@@ -25,6 +25,15 @@ export const PLATFORM_OPTIONS = [
   { label: 'Instamart', value: 'instamart' }
 ] as const;
 
+export const PLATFORM_SHORT_NAMES: Record<string, string> = {
+  jiomart: 'JT',
+  zepto: 'ZP',
+  blinkit: 'BT',
+  dmart: 'DM',
+  flipkartMinutes: 'FM',
+  instamart: 'IM'
+};
+
 export const PINCODE_OPTIONS = [
   { label: 'Delhi NCR — 201303', value: '201303' },
   { label: 'Navi Mumbai — 400706', value: '400706' },
