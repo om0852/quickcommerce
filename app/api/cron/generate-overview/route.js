@@ -8,10 +8,10 @@ import categoriesData from '@/app/utils/categories_with_urls.json';
 // Reuse the exact same mapper logic as the original overview endpoint
 function getMasterCategory(platform, category) {
     if (!category) return "Other";
-    
+
     const catLower = category.toLowerCase();
     const allItems = Object.values(categoriesData).flat();
-    
+
     const exactMasterCat = allItems.find(item => item.masterCategory?.toLowerCase() === catLower);
     if (exactMasterCat) return exactMasterCat.masterCategory;
 
@@ -34,7 +34,7 @@ function getMasterCategory(platform, category) {
     if (catLower.includes('fruit') && catLower.includes('veg')) return 'Fruits & Vegetables';
     if (catLower.includes('masala') && catLower.includes('dry')) return 'Masala, Dry Fruits & More';
 
-    return category; 
+    return category;
 }
 
 const PINCODE_OPTIONS = [
@@ -55,51 +55,75 @@ async function generateOverviewForPincode(pincode, groupMap) {
         }
     ];
 
-    const uniqueSnaps = await ProductSnapshot.aggregate(pipeline);
+    const uniqueSnapsFromDb = await ProductSnapshot.aggregate(pipeline);
 
-    const aggregated = {};
-    for (const snap of uniqueSnaps) {
+    // 1. Map snapshots to categories and find the absolute latest time per category
+    const maxTimePerCategory = new Map();
+    const snapCategoryInfo = [];
+
+    for (const snap of uniqueSnapsFromDb) {
         const { platform, productId, scrapedAt } = snap._id;
         const key = `${platform}:${productId}`;
         const groupInfo = groupMap.get(key);
+        if (!groupInfo) continue;
 
-        if (!groupInfo) continue; // Skip products that aren't grouped
+        const { category } = groupInfo;
+        const curMax = maxTimePerCategory.get(category);
+        if (!curMax || new Date(scrapedAt) > new Date(curMax)) {
+            maxTimePerCategory.set(category, scrapedAt);
+        }
+        snapCategoryInfo.push({ ...snap._id, category, brandId: groupInfo.brandId });
+    }
 
-        const { category, brandId } = groupInfo;
-        const aggKey = `${category}_${platform}_${scrapedAt}`;
+    // 2. Aggregate counts ONLY for the latest scrape time of each category
+    const aggregated = {};
+    const seenBaseIds = new Set(); // Track "category:platform:baseId" for the latest time
+
+    for (const snap of snapCategoryInfo) {
+        const { platform, productId, scrapedAt, category, brandId } = snap;
+        
+        // Filter: Only use snapshots matching the global latest time for this category
+        if (scrapedAt.toString() !== maxTimePerCategory.get(category)?.toString()) {
+            continue;
+        }
+
+        // Extract baseId for deduplication
+        const baseId = productId.includes('__') ? productId.split('__')[0] : productId;
+        
+        // Key is now just category+platform since we've already filtered for the latest time
+        const aggKey = `${category}_${platform}`;
+        const dedupKey = `${aggKey}_${baseId}`;
 
         if (!aggregated[aggKey]) {
             aggregated[aggKey] = {
-                category, platform, scrapedAt, count: 0, brands: new Set()
+                category, 
+                platform, 
+                count: 0, 
+                brands: new Set(),
+                latestScrapedAt: scrapedAt
             };
         }
-        aggregated[aggKey].count++;
+
+        if (!seenBaseIds.has(dedupKey)) {
+            aggregated[aggKey].count++;
+            seenBaseIds.add(dedupKey);
+        }
+
         if (brandId && brandId.toLowerCase() !== 'n/a' && brandId !== '') {
             aggregated[aggKey].brands.add(brandId.toLowerCase());
         }
     }
 
-    const latestMap = {};
-    for (const data of Object.values(aggregated)) {
-        const key = `${data.category}_${data.platform}`;
-        if (!latestMap[key] || new Date(data.scrapedAt) > new Date(latestMap[key].scrapedAt)) {
-            latestMap[key] = {
-                category: data.category,
-                platform: data.platform,
-                count: data.count,
-                brandCount: data.brands.size,
-                latestScrapedAt: data.scrapedAt
-            };
-        }
-    }
-
-    return Object.values(latestMap);
+    return Object.values(aggregated).map(data => ({
+        ...data,
+        brandCount: data.brands.size
+    }));
 }
 
 export async function GET(request) {
     try {
         await dbConnect();
-        
+
         // Pre-load all groupings into memory for hyper-fast mapping
         const groupings = await ProductGrouping.find({}).lean();
         const groupMap = new Map();
@@ -110,21 +134,21 @@ export async function GET(request) {
                 groupMap.set(key, { category: g.category, brandId: g.brandId || g.brand || 'N/A' });
             }
         }
-        
+
         let successCount = 0;
         const results = [];
 
         for (const pincode of PINCODE_OPTIONS) {
             try {
                 const data = await generateOverviewForPincode(pincode, groupMap);
-                
+
                 // Upsert to Cache Collection
                 await OverviewCache.findOneAndUpdate(
                     { pincode: pincode },
                     { data: data, lastUpdated: new Date() },
                     { upsert: true, new: true }
                 );
-                
+
                 successCount++;
                 results.push({ pincode, cachedRows: data.length });
             } catch (pincodeError) {

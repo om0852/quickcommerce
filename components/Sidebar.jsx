@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, BarChart3, Bell, LogOut, LayoutDashboard, MessageSquare } from 'lucide-react';
+import { Search, BarChart3, Bell, LogOut, LayoutDashboard, MessageSquare, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FeedbackModal from './FeedbackModal';
 import { SidebarCloseIcon } from './SidebarIcons';
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, isAdmin = false }) {
   const pathname = usePathname();
   const router = useRouter();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -30,7 +30,8 @@ export default function Sidebar({ isOpen, onClose }) {
     { href: '/search', label: 'Search', icon: Search },
     { href: '/categories', label: 'Categories', icon: BarChart3 },
     // { href: '/clean-check', label: 'Clean Check', icon: BarChart3 },
-    { href: '/alerts', label: 'Alerts', icon: Bell }
+    { href: '/alerts', label: 'Alerts', icon: Bell },
+    ...(isAdmin ? [{ href: '/admin-search', label: 'Admin Search', icon: ShieldCheck, adminOnly: true }] : [])
   ];
 
   return (
@@ -81,12 +82,13 @@ export default function Sidebar({ isOpen, onClose }) {
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "bg-white text-neutral-900 shadow-sm"
-                    : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
+                    ? item.adminOnly ? "bg-amber-500 text-white shadow-sm" : "bg-white text-neutral-900 shadow-sm"
+                    : item.adminOnly ? "text-amber-400 hover:bg-neutral-800 hover:text-amber-300" : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
                 )}
               >
                 <Icon size={20} />
                 <span>{item.label}</span>
+                {item.adminOnly && <span className="ml-auto text-[9px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded-full font-bold tracking-wide">ADMIN</span>}
               </Link>
             );
           })}

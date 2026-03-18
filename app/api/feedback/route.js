@@ -7,7 +7,7 @@ export async function POST(req) {
 
     if (!email || !contactNumber || !message) {
       return NextResponse.json(
-        { error: 'Email, contact number, and message are required' }, 
+        { error: 'Email, contact number, and message are required' },
         { status: 400 }
       );
     }
@@ -15,7 +15,7 @@ export async function POST(req) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: 'Invalid email format' }, 
+        { error: 'Invalid email format' },
         { status: 400 }
       );
     }
@@ -32,8 +32,7 @@ export async function POST(req) {
     // Set up the email data
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
-      cc: 'malav2202@gmail.com',
+      to: "malav2202@gmail.com",
       replyTo: email,
       subject: 'New User Feedback - QuickCommerce',
       text: `You have received new feedback.\n\nFrom: ${email}${contactNumber ? `\nContact Number: ${contactNumber}` : ''}\n\nMessage:\n${message}`,
@@ -43,14 +42,14 @@ export async function POST(req) {
     await transporter.sendMail(mailOptions);
 
     return NextResponse.json(
-      { success: true, message: 'Feedback sent successfully' }, 
+      { success: true, message: 'Feedback sent successfully' },
       { status: 200 }
     );
-    
+
   } catch (error) {
     console.error('Error sending feedback email:', error);
     return NextResponse.json(
-      { error: 'Failed to send feedback' }, 
+      { error: 'Failed to send feedback' },
       { status: 500 }
     );
   }

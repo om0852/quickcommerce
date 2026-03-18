@@ -309,14 +309,25 @@ export default function ProductEditDialog({
 
         try {
             const groupingId = product.parentGroupId || product.groupingId;
-            const groupUpdatePromise = fetch('/api/grouping/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    groupingId: groupingId,
-                    updates: { name, weight, brand, groupImage }
-                })
-            });
+            
+            // 1. Prepare Group Level Updates (Only include changed fields)
+            const groupUpdates = {};
+            if (name !== (product.name || '')) groupUpdates.name = name;
+            if (weight !== (product.weight || '')) groupUpdates.weight = weight;
+            if (brand !== (product.brand || '')) groupUpdates.brand = brand;
+            if (groupImage !== (product.groupImage || '')) groupUpdates.groupImage = groupImage;
+
+            let groupUpdatePromise = Promise.resolve();
+            if (Object.keys(groupUpdates).length > 0) {
+                groupUpdatePromise = fetch('/api/grouping/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupingId: groupingId,
+                        updates: groupUpdates
+                    })
+                });
+            }
 
             // 2. Update Platform Snapshots
             const modifiedPlatforms = platformData.filter(p => p.isModified);
@@ -353,13 +364,11 @@ export default function ProductEditDialog({
             if (showToast) showToast('Product updated successfully', 'success'); // Trigger Toast
             onUpdate({
                 groupingId: product.groupingId,
-                name,
-                weight,
-                brand,
-                groupImage,
+                ...groupUpdates,
                 modifiedPlatforms
             });
             onClose();
+
 
         } catch (err) {
             setError(err.message);

@@ -263,7 +263,7 @@ export default function GroupManagementDialog({
                                 <label className="text-xs font-bold text-neutral-600 mb-2 block uppercase tracking-wider">Product ID</label>
                                 <input
                                     type="text"
-                                    className="w-full px-3 py-2.5 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                                    className="w-full px-3 py-2.5 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
                                     placeholder="Enter Product ID..."
                                     value={addProductState.productId}
                                     onChange={e => {

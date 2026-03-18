@@ -399,16 +399,26 @@ function CategoriesPageContent() {
 
   const handleLocalProductUpdate = (updatedData) => {
     // updatedData = { groupingId, name?, weight?, brand?, brandId?, modifiedPlatforms?: [...] }
+    
+    // Determine the canonical grouping ID (parent ID) to ensure all related table rows are updated
+    let targetParentId = updatedData.groupingId;
+    if (targetParentId && targetParentId.includes('_dup_')) {
+      targetParentId = targetParentId.split('_dup_')[0];
+    }
+
     setProducts((prev) => prev.map(p => {
-      // If the row matches the updated group (either as the main row or its duplicate)
-      if (p.groupingId === updatedData.groupingId || p.parentGroupId === updatedData.groupingId) {
+      // If the row belongs to the updated group (matches by parent ID)
+      if (p.parentGroupId === targetParentId || p.groupingId === targetParentId) {
         // Only merge fields that are actually present in updatedData (not undefined)
         const updates = {};
         if (updatedData.name !== undefined) updates.name = updatedData.name;
         if (updatedData.weight !== undefined) updates.weight = updatedData.weight;
         if (updatedData.brand !== undefined) updates.brand = updatedData.brand;
         if (updatedData.brandId !== undefined) updates.brandId = updatedData.brandId;
+        
         const newProduct = { ...p, ...updates };
+
+        // Handle platform-specific snapshot updates if provided
         if (updatedData.modifiedPlatforms) {
           updatedData.modifiedPlatforms.forEach(mp => {
             if (newProduct[mp.platform]) {
@@ -421,6 +431,7 @@ function CategoriesPageContent() {
       return p;
     }));
   };
+
 
   const fetchHistoryData = async () => {
     if (!selectedProduct) return;

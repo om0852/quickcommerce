@@ -145,8 +145,9 @@ export async function GET(request) {
         const globalPlatformConflicts = {};
         const globalPlatformBaseIdCounts = {};
         const groupDefinedProducts = {};
-        
+
         group.products.forEach(p => {
+          // NOTE: keys are stored lowercase here (e.g., "flipkartminutes")
           const plat = p.platform.toLowerCase();
           if (!groupDefinedProducts[plat]) groupDefinedProducts[plat] = new Set();
           const pid = p.productId || '';
@@ -172,14 +173,14 @@ export async function GET(request) {
         Object.keys(platformMatches).forEach(platform => {
           const snapshots = platformMatches[platform];
           localPlatformTotalCounts[platform] = snapshots.length;
-          
+
           const uniqueBaseIds = new Set();
           snapshots.forEach(snap => {
             const pid = snap.productId || '';
             const baseId = pid.includes('__') ? pid.split('__')[0] : pid;
             uniqueBaseIds.add(baseId);
           });
-          
+
           localPlatformBaseIdCounts[platform] = uniqueBaseIds.size;
           localPlatformHasDuplicates[platform] = snapshots.length > uniqueBaseIds.size;
         });
@@ -220,9 +221,10 @@ export async function GET(request) {
                 hasGroupConflict: hasGroupConflict,
                 createdAt: group.createdAt,
                 groupConflicts: Object.keys(platformMatches).reduce((acc, plat) => {
+                  const platLower = plat.toLowerCase(); // globalPlatformConflicts keys are lowercase
                   acc[plat] = {
-                    hasConflict: globalPlatformConflicts[plat] || false,
-                    count: globalPlatformBaseIdCounts[plat] || 0,
+                    hasConflict: globalPlatformConflicts[platLower] || false,
+                    count: globalPlatformBaseIdCounts[platLower] || 0,
                     hasDuplicates: localPlatformHasDuplicates[plat] || false,
                     totalCount: localPlatformTotalCounts[plat] || 0
                   };
@@ -310,9 +312,10 @@ export async function GET(request) {
                     hasGroupConflict: hasGroupConflict,
                     createdAt: group.createdAt,
                     groupConflicts: Object.keys(platformMatches).reduce((acc, plat) => {
+                      const platLower = plat.toLowerCase(); // globalPlatformConflicts keys are lowercase
                       acc[plat] = {
-                        hasConflict: globalPlatformConflicts[plat] || false,
-                        count: globalPlatformBaseIdCounts[plat] || 0,
+                        hasConflict: globalPlatformConflicts[platLower] || false,
+                        count: globalPlatformBaseIdCounts[platLower] || 0,
                         hasDuplicates: localPlatformHasDuplicates[plat] || false,
                         totalCount: localPlatformTotalCounts[plat] || 0
                       };
@@ -358,7 +361,44 @@ export async function GET(request) {
             }
           }
         }
+        // Even if no snapshot exists at this pincode, render a ghost row for groups with a known conflict.
+        // This ensures the skull (conflict) icon is always visible, regardless of pincode selection.
+        else if (hasGroupConflict) {
+          const ghostMasterObj = {
+            groupingId: group.groupingId,
+            parentGroupId: group.groupingId,
+            isDuplicate: false,
+            name: group.primaryName,
+            image: group.primaryImage,
+            groupImage: group.groupImage || group.primaryImage || '',
+            weight: group.primaryWeight,
+            brand: brandMap[group.brandId] || group.brand || '',
+            brandId: group.brandId || '',
+            zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
+            officialCategory: group.category,
+            officialSubCategory: null,
+            scrapedAt: targetScrapedAt,
+            isGrouped: true,
+            pincode: currentPincode,
+            isHeader: false,
+            hasGroupConflict: true,
+            isGhostConflict: true, // flag to indicate no live snapshot at this pincode
+            createdAt: group.createdAt,
+            groupConflicts: Object.keys(platformMatches).reduce((acc, plat) => {
+              const platLower = plat.toLowerCase(); // globalPlatformConflicts keys are lowercase
+              acc[plat] = {
+                hasConflict: globalPlatformConflicts[platLower] || false,
+                count: globalPlatformBaseIdCounts[platLower] || 0,
+                hasDuplicates: false,
+                totalCount: 0
+              };
+              return acc;
+            }, {})
+          };
+          currentPincodeItems.push(ghostMasterObj);
+        }
       }
+
 
       // Sort by best rank
       currentPincodeItems.sort((a, b) => {

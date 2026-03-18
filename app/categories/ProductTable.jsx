@@ -1147,8 +1147,15 @@ const ProductTable = React.memo(function ProductTable({
                                                     window.clickTimer = null;
                                                 }
                                             }}
-                                            sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#fafafa' } }}
-                                        >
+                                        sx={{ 
+                                            cursor: 'pointer', 
+                                            '&:hover': { backgroundColor: product.isGhostConflict ? '#fff1f2' : '#fafafa' },
+                                            backgroundColor: product.isGhostConflict ? '#fff5f5' : 'transparent',
+                                            opacity: product.isGhostConflict ? 0.75 : 1,
+                                        }}
+                                        title={product.isGhostConflict ? 'This group has a conflict but no data at the current pincode' : undefined}
+                                    >
+
                                             {/* Bulk Checkbox Cell */}
                                             {isBulkEditMode && (
                                                 <TableCell
