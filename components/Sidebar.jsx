@@ -51,7 +51,7 @@ export default function Sidebar({ isOpen, onClose }) {
         )}
       >
         {/* HEADER */}
-        <div className="px-4 py-2 border-b border-neutral-800 flex items-center justify-between min-h-[52px]">
+        <div className="px-4 py-2 border-b border-neutral-800 flex items-center justify-between min-h-[58px]">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold tracking-tight">QuickCommerce</h1>
           </div>

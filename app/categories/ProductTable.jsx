@@ -1022,7 +1022,7 @@ const ProductTable = React.memo(function ProductTable({
                                                         cursor: 'pointer'
                                                     }}
                                                 >
-                                                    <span>Non Hyphen ( - )</span>
+                                                    <span>Non Hyphen ( - ) ({platformCounts.nonHyphen || 0})</span>
                                                     {showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                                 </MenuItem>
                                             )}
@@ -1293,8 +1293,11 @@ const ProductTable = React.memo(function ProductTable({
                                                                     </button>
                                                                 )}
                                                             </div>
-                                                            <div className="text-xs text-orange-600 font-medium mt-0.5 min-h-[16px]">
-                                                                {product.brand || ""}
+                                                            <div className="text-xs text-orange-600 font-medium mt-0.5 min-h-[16px] flex items-center gap-2">
+                                                                <span>{product.brand || ""}</span>
+                                                                {product.createdAt && new Date(product.createdAt).toDateString() === new Date().toDateString() && (
+                                                                    <span className="text-[10px] font-bold px-1 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 animate-pulse">NG</span>
+                                                                )}
                                                             </div>
                                                             {isAdmin && !product.isDuplicate && (
                                                                 <div className="mt-2 flex flex-row items-center gap-2">

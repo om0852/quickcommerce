@@ -218,6 +218,7 @@ export async function GET(request) {
                 pincode: currentPincode,
                 isHeader: false,
                 hasGroupConflict: hasGroupConflict,
+                createdAt: group.createdAt,
                 groupConflicts: Object.keys(platformMatches).reduce((acc, plat) => {
                   acc[plat] = {
                     hasConflict: globalPlatformConflicts[plat] || false,
@@ -307,6 +308,7 @@ export async function GET(request) {
                     pincode: currentPincode,
                     isHeader: false,
                     hasGroupConflict: hasGroupConflict,
+                    createdAt: group.createdAt,
                     groupConflicts: Object.keys(platformMatches).reduce((acc, plat) => {
                       acc[plat] = {
                         hasConflict: globalPlatformConflicts[plat] || false,

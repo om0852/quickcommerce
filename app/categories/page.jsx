@@ -21,7 +21,6 @@ import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianG
 import { PLATFORMS, PLATFORM_OPTIONS, PINCODE_OPTIONS, PLATFORM_SHORT_NAMES } from '@/app/constants/platforms';
 import { createSortFunction, createPrioritySort } from '@/app/utils/sorting';
 import { fetchCategoryData as fetchCategoryDataAPI, fetchAvailableSnapshots } from '@/app/lib/api/category';
-import { fetchProductHistory } from '@/app/lib/api/productHistory';
 
 import categoriesData from '../utils/categories_with_urls.json';
 
@@ -292,14 +291,22 @@ function CategoriesPageContent() {
       blinkit: 0,
       dmart: 0,
       flipkartMinutes: 0,
-      instamart: 0
+      instamart: 0,
+      nonHyphen: 0
     };
+
+    const hyphenRegex = /[-\u2010-\u2015\u2212]/;
 
     deduplicatedProducts.forEach(product => {
       // Check if product exists on ANY platform (to filter out complete ghosts, though unlikely)
       const existsSomewhere = PLATFORMS.some(p => product[p]);
 
       if (!existsSomewhere) return;
+
+      // Count products without hyphens in their name
+      if (!hyphenRegex.test(product.name || '')) {
+        counts.nonHyphen++;
+      }
 
       if (showMissing) {
         // Count MISSING: If product is NOT on platform P (but exists somewhere else)
@@ -962,7 +969,7 @@ function CategoriesPageContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
 
       {/* Header */}
-      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-2 flex items-center justify-between shadow-sm z-20 min-h-[52px]">
+      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-2 flex items-center justify-between shadow-sm z-20 min-h-[58px]">
         <div className="flex items-center gap-4">
           {!isSidebarOpen && (
             <button
