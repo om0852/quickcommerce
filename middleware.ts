@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Public paths
-    const isPublicPath = pathname === '/login' || pathname.startsWith('/api/auth');
+    const isPublicPath = pathname === '/login' || pathname.startsWith('/api/auth') || pathname.startsWith('/api/cron');
 
     const authSession = request.cookies.get('auth_session')?.value;
 
@@ -23,6 +23,9 @@ export async function middleware(request: NextRequest) {
     }
 
     if (!isPublicPath && !isValid) {
+        if (pathname.startsWith('/api/')) {
+            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
