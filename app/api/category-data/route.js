@@ -362,8 +362,8 @@ export async function GET(request) {
           }
         }
         // Even if no snapshot exists at this pincode, render a ghost row for groups with a known conflict.
-        // This ensures the skull (conflict) icon is always visible, regardless of pincode selection.
-        else if (hasGroupConflict) {
+        // BUT: Only show this in LIVE mode (not history) to help admins fix current config issues.
+        else if (hasGroupConflict && !requestedTimestamp) {
           const ghostMasterObj = {
             groupingId: group.groupingId,
             parentGroupId: group.groupingId,

@@ -52,6 +52,7 @@ const ProductTable = React.memo(function ProductTable({
     selectedGroupIds = [],
     onSelectionChange,
     bulkBrands = [],
+    isLiveMode = true, // NEW Prop
 }) {
     const [manageGroup, setManageGroup] = useState(null);
     const [editProduct, setEditProduct] = useState(null);
@@ -83,6 +84,13 @@ const ProductTable = React.memo(function ProductTable({
 
     // Notification management (toast)
     const { toastState, showToast, handleCloseToast } = useNotification();
+
+    // Custom Unserviceable Pincodes Mapping
+    const UNSERVICEABLE_PINCODES = useMemo(() => ({
+        dmart: ['122008', '122016', '122010', '201303', '201014'],
+        flipkartMinutes: ['400070', '401101'],
+        zepto: ['401101', '401202']
+    }), []);
 
     // Sort Menu State
     const [sortMenuAnchor, setSortMenuAnchor] = useState(null);
@@ -1392,11 +1400,32 @@ const ProductTable = React.memo(function ProductTable({
                                                                         )}
                                                                     </div>
                                                                 ) : (
-                                                                    totalPlatformCounts && totalPlatformCounts[p] === 0 ? (
-                                                                        <span className="text-xs font-bold text-rose-500">U/S</span>
-                                                                    ) : (
-                                                                        <span className="text-sm text-neutral-400 italic">--</span>
-                                                                    )
+                                                                    <div className="flex flex-col items-center">
+                                                                        {(() => {
+                                                                            // 1. Explicit Unserviceable check
+                                                                            if (UNSERVICEABLE_PINCODES[p]?.includes(pincode)) {
+                                                                                return <span className="text-xs font-bold text-rose-500">U/S</span>;
+                                                                            }
+
+                                                                            // 2. Data missing check
+                                                                            if (totalPlatformCounts && totalPlatformCounts[p] === 0) {
+                                                                                if (isLiveMode) {
+                                                                                    return (
+                                                                                        <Tooltip title="Wait for some time data is getting updated" arrow>
+                                                                                            <div className="flex flex-col items-center gap-0.5 cursor-help">
+                                                                                                <span className="text-sm">⌛</span>
+                                                                                                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Sync</span>
+                                                                                            </div>
+                                                                                        </Tooltip>
+                                                                                    );
+                                                                                }
+                                                                                return <span className="text-xs font-bold text-rose-500">U/S</span>;
+                                                                            }
+
+                                                                            // 3. Just not in this group
+                                                                            return <span className="text-sm text-neutral-400 italic">--</span>;
+                                                                        })()}
+                                                                    </div>
                                                                 )}
 
                                                                 {/* Show group-wide/local conflict even if out of stock, but ONLY on master row and for ADMINS */}

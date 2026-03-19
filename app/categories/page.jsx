@@ -1313,6 +1313,7 @@ function CategoriesPageContent() {
                 selectedGroupIds={selectedGroupIds}
                 onSelectionChange={setSelectedGroupIds}
                 bulkBrands={bulkBrands}
+                isLiveMode={isLiveMode}
               />
             </div>
           )}
