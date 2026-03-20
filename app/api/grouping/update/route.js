@@ -12,6 +12,7 @@ export async function POST(request) {
         }
 
         await dbConnect();
+        console.log('[update-group] Received update for:', groupingId, 'updates:', updates);
 
         // Map frontend specific names to DB fields
         const allowedUpdates = {};
@@ -19,6 +20,7 @@ export async function POST(request) {
         if (typeof updates.name !== 'undefined') allowedUpdates.primaryName = updates.name;
         if (typeof updates.weight !== 'undefined') allowedUpdates.primaryWeight = updates.weight;
         if (typeof updates.groupImage !== 'undefined') allowedUpdates.groupImage = updates.groupImage;
+        if (typeof updates.label !== 'undefined') allowedUpdates.label = updates.label;
 
         if (typeof updates.brand !== 'undefined') {
             allowedUpdates.brand = updates.brand;
@@ -65,7 +67,8 @@ export async function POST(request) {
             { groupingId },
             { $set: allowedUpdates },
             { new: true }
-        );
+        ).lean();
+        console.log('[update-group] Update result:', group ? 'Success' : 'Found no group', group ? `Full Group: ${JSON.stringify(group)}` : '');
 
         if (!group) {
             return NextResponse.json({ error: 'Group not found' }, { status: 404 });

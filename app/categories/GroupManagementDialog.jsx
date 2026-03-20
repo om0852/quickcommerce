@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Loader2, Save, AlertTriangle, Unlink, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CustomDropdown from '@/components/CustomDropdown';
@@ -25,6 +25,14 @@ export default function GroupManagementDialog({
     });
     const [error, setError] = useState(null);
     const [productToDelete, setProductToDelete] = useState(''); // ID of product to delete in Danger Zone
+
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && isOpen) onClose();
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -169,7 +177,7 @@ export default function GroupManagementDialog({
             <div className="relative w-full h-full max-w-6xl max-h-[95vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 sm:px-8 py-5 border-b border-neutral-200 bg-gradient-to-r from-neutral-50 to-neutral-100/50">
+                <div className="flex items-center justify-between px-4 sm:px-8 py-5 border-b border-neutral-200 bg-white">
                     <div>
                         <h3 className="text-lg sm:text-2xl font-bold text-neutral-900">Manage Product Group</h3>
                         <p className="text-xs sm:text-sm text-neutral-500 mt-1">Group ID: <span className="font-mono font-semibold text-neutral-700">{groupingId}</span></p>
@@ -179,7 +187,7 @@ export default function GroupManagementDialog({
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 bg-neutral-100">
 
                     {/* Status Messages - Error block kept for persistent errors, but successMsg removed */}
                     {error && <div className="p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200 flex items-start gap-3"><span className="text-lg">⚠️</span>{error}</div>}

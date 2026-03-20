@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown, Unlink, Skull, LayoutGrid } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown, Unlink, Skull, LayoutGrid, Info } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
@@ -109,6 +109,7 @@ const ProductTable = React.memo(function ProductTable({
     };
 
     const handleNameSort = (direction) => {
+        resetOtherState();
         onSort('name', direction);
         handleSortMenuClose();
     };
@@ -128,6 +129,7 @@ const ProductTable = React.memo(function ProductTable({
     };
 
     const handlePlatformRankSort = (platform) => {
+        resetOtherState();
         onSort(platform, rankSortDirection);
         handleRankSubMenuClose();
         handleSortMenuClose();
@@ -162,8 +164,91 @@ const ProductTable = React.memo(function ProductTable({
         return count;
     }, [allFilteredProducts, products, platformFilter]);
 
+    const resetOtherState = () => {
+        if (showNewFirst) onShowNewFirstChange(false);
+        if (showAdFirst) onShowAdFirstChange(false);
+        if (showInStockFirst) onShowInStockFirstChange(false);
+        if (showOutStockFirst) onShowOutStockFirstChange(false);
+        if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
+        if (showDangerFirst && onShowDangerFirstChange) onShowDangerFirstChange(false);
+        if (showPureNewFirst && onShowPureNewFirstChange) onShowPureNewFirstChange(false);
+    };
+
+    const handleHighestProductCountSort = () => {
+        resetOtherState();
+        onSort('groupCount', 'desc');
+        handleSortMenuClose();
+    };
+
+    const handleLowestProductCountSort = () => {
+        resetOtherState();
+        onSort('groupCount', 'asc');
+        handleSortMenuClose();
+    };
+
     const handlePriceSort = (direction) => {
+        resetOtherState();
         onSort('averagePrice', direction);
+        handleSortMenuClose();
+    };
+
+    const handleInStockSort = () => {
+        resetOtherState();
+        onShowInStockFirstChange(true);
+        onSort(null);
+        handleSortSubSubMenuClose();
+        handleSortMenuClose();
+    };
+
+    const handleOutStockSort = () => {
+        resetOtherState();
+        onShowOutStockFirstChange(true);
+        onSort(null);
+        handleSortSubSubMenuClose();
+        handleSortMenuClose();
+    };
+
+    const handleAdSort = () => {
+        resetOtherState();
+        onShowAdFirstChange(true);
+        onSort(null);
+        handleSortSubSubMenuClose();
+        handleSortMenuClose();
+    };
+
+    const handleNewlyAddedToggle = () => {
+        const next = !showNewFirst;
+        resetOtherState();
+        onSort(null);
+        onShowNewFirstChange(next);
+        handleSortMenuClose();
+    };
+
+    const handleNonHyphenToggle = () => {
+        resetOtherState();
+        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(true);
+        onSort(null);
+        handleSortMenuClose();
+    };
+
+    const handleDangerFirstToggle = () => {
+        const next = !showDangerFirst;
+        resetOtherState();
+        onSort(null);
+        if (onShowDangerFirstChange) onShowDangerFirstChange(next);
+        handleSortSubSubMenuClose();
+        handleSortMenuClose();
+    };
+
+    const handlePureNewFirstToggle = () => {
+        const next = !showPureNewFirst;
+        resetOtherState();
+        onSort(null);
+        if (onShowPureNewFirstChange) onShowPureNewFirstChange(true); // Toggle logic or set true? 
+        // User said "Danger filter" and "Pure & New filter" move into sort by.
+        // Usually these are toggles, but mutually exclusive.
+        if (onShowPureNewFirstChange) onShowPureNewFirstChange(next);
+        handleSortSubSubMenuClose();
         handleSortMenuClose();
     };
 
@@ -473,131 +558,7 @@ const ProductTable = React.memo(function ProductTable({
                                             }}
                                         >
                                             <MenuItem
-                                                onClick={() => {
-                                                    onSort(null);
-                                                    if (showNewFirst) onShowNewFirstChange(false);
-                                                    if (showAdFirst) onShowAdFirstChange(false);
-                                                    if (showInStockFirst) onShowInStockFirstChange(false);
-                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
-                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === null && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === null && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === null && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <span>Group With Highest Product</span>
-                                                {sortConfig.key === null && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    onSort('groupCount', 'asc');
-                                                    if (showNewFirst) onShowNewFirstChange(false);
-                                                    if (showAdFirst) onShowAdFirstChange(false);
-                                                    if (showInStockFirst) onShowInStockFirstChange(false);
-                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
-                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <span>Group With Lowest Product</span>
-                                                {sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    onSort('brand', 'asc');
-                                                    if (showNewFirst) onShowNewFirstChange(false);
-                                                    if (showAdFirst) onShowAdFirstChange(false);
-                                                    if (showInStockFirst) onShowInStockFirstChange(false);
-                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
-                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <span>Brand Name (A to Z)</span>
-                                                {sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    onSort('brand', 'desc');
-                                                    if (showNewFirst) onShowNewFirstChange(false);
-                                                    if (showAdFirst) onShowAdFirstChange(false);
-                                                    if (showInStockFirst) onShowInStockFirstChange(false);
-                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
-                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <span>Brand Name (Z to A)</span>
-                                                {sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
-
-                                            <MenuItem
-                                                onClick={() => {
-                                                    onSort('name', 'asc');
-                                                    if (showNewFirst) onShowNewFirstChange(false);
-                                                    if (showAdFirst) onShowAdFirstChange(false);
-                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
-                                                    if (showDangerFirst && onShowDangerFirstChange) onShowDangerFirstChange(false);
-                                                    if (showPureNewFirst && onShowPureNewFirstChange) onShowPureNewFirstChange(false);
-                                                    handleSortMenuClose();
-                                                }}
+                                                onClick={() => handleNameSort('asc')}
                                                 sx={{
                                                     px: 1.5,
                                                     py: 1,
@@ -617,17 +578,7 @@ const ProductTable = React.memo(function ProductTable({
                                             </MenuItem>
 
                                             <MenuItem
-                                                onClick={() => {
-                                                    onSort('name', 'desc');
-                                                    if (showNewFirst) onShowNewFirstChange(false);
-                                                    if (showAdFirst) onShowAdFirstChange(false);
-                                                    if (showInStockFirst) onShowInStockFirstChange(false);
-                                                    if (showOutStockFirst) onShowOutStockFirstChange(false);
-                                                    if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
-                                                    if (showDangerFirst && onShowDangerFirstChange) onShowDangerFirstChange(false);
-                                                    if (showPureNewFirst && onShowPureNewFirstChange) onShowPureNewFirstChange(false);
-                                                    handleSortMenuClose();
-                                                }}
+                                                onClick={() => handleNameSort('desc')}
                                                 sx={{
                                                     px: 1.5,
                                                     py: 1,
@@ -648,7 +599,6 @@ const ProductTable = React.memo(function ProductTable({
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
-                                            {/* "Sort by" Submenu Trigger */}
                                             <MenuItem
                                                 onClick={handleSortSubSubMenuOpen}
                                                 sx={{
@@ -658,9 +608,9 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst ? 700 : 500,
-                                                    color: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst || ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) || showDangerFirst || showPureNewFirst || sortConfig.key === 'groupCount' ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst || ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) || showDangerFirst || showPureNewFirst || sortConfig.key === 'groupCount' ? 700 : 500,
+                                                    color: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst || ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) || showDangerFirst || showPureNewFirst || sortConfig.key === 'groupCount' ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
@@ -669,7 +619,6 @@ const ProductTable = React.memo(function ProductTable({
                                                 <ChevronRight size={14} className="text-gray-400" />
                                             </MenuItem>
 
-                                            {/* "Sort by" Submenu Content */}
                                             <Menu
                                                 anchorEl={sortSubMenuAnchor}
                                                 open={isSortSubMenuOpen}
@@ -693,46 +642,124 @@ const ProductTable = React.memo(function ProductTable({
                                                 }}
                                             >
                                                 <MenuItem
-                                                    onClick={() => {
-                                                        handlePriceSort('desc');
-                                                        handleSortSubSubMenuClose();
-                                                    }}
+                                                    onClick={handleHighestProductCountSort}
                                                     sx={{
-                                                        px: 1.5,
-                                                        py: 1,
-                                                        fontSize: '0.75rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
-                                                        fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' ? 700 : 500,
-                                                        color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
-                                                        '&:hover': { backgroundColor: '#f9fafb' },
-                                                        cursor: 'pointer'
+                                                        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.key === 'groupCount' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.key === 'groupCount' && sortConfig.direction === 'desc' ? 700 : 500,
+                                                        color: sortConfig.key === 'groupCount' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
                                                     }}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <TrendingUp size={14} className="text-blue-600" />
+                                                        <span>Group With Highest Product</span>
+                                                    </div>
+                                                    {sortConfig.key === 'groupCount' && sortConfig.direction === 'desc' && <Check size={14} />}
+                                                </MenuItem>
+
+                                                <MenuItem
+                                                    onClick={handleLowestProductCountSort}
+                                                    sx={{
+                                                        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' ? 700 : 500,
+                                                        color: sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <TrendingDown size={14} className="text-blue-600" />
+                                                        <span>Group With Lowest Product</span>
+                                                    </div>
+                                                    {sortConfig.key === 'groupCount' && sortConfig.direction === 'asc' && <Check size={14} />}
+                                                </MenuItem>
+
+                                                <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                                <MenuItem
+                                                    onClick={(e) => handleRankSubMenuOpen(e, 'asc')}
+                                                    sx={{
+                                                        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
+                                                        color: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <TrendingUp size={14} className="text-emerald-600" />
+                                                        <span>Rank: Low to High</span>
+                                                    </div>
+                                                    <ChevronRight size={14} className="text-gray-400" />
+                                                </MenuItem>
+
+                                                <MenuItem
+                                                    onClick={(e) => handleRankSubMenuOpen(e, 'desc')}
+                                                    sx={{
+                                                        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
+                                                        color: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <TrendingDown size={14} className="text-rose-600" />
+                                                        <span>Rank: High to Low</span>
+                                                    </div>
+                                                    <ChevronRight size={14} className="text-gray-400" />
+                                                </MenuItem>
+
+                                                <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                                <MenuItem
+                                                    onClick={handleDangerFirstToggle}
+                                                    sx={{
+                                                        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        backgroundColor: showDangerFirst ? '#f9fafb' : 'transparent',
+                                                        fontWeight: showDangerFirst ? 700 : 500,
+                                                        color: showDangerFirst ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <Skull size={14} className="text-rose-600" />
+                                                        <span>Danger First</span>
+                                                    </div>
+                                                    {showDangerFirst && <Check size={14} className="text-neutral-900" />}
+                                                </MenuItem>
+
+                                                <MenuItem
+                                                    onClick={handlePureNewFirstToggle}
+                                                    sx={{
+                                                        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        backgroundColor: showPureNewFirst ? '#f9fafb' : 'transparent',
+                                                        fontWeight: showPureNewFirst ? 700 : 500,
+                                                        color: showPureNewFirst ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <LayoutGrid size={14} className="text-purple-600" />
+                                                        <span>Pure & New (NG)</span>
+                                                    </div>
+                                                    {showPureNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                </MenuItem>
+
+                                                <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                                <MenuItem
+                                                    onClick={() => handlePriceSort('desc')}
+                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent', fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' ? 700 : 500, color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
                                                 >
                                                     <span>Price: High to Low</span>
                                                     {sortConfig.key === 'averagePrice' && sortConfig.direction === 'desc' && <Check size={14} />}
                                                 </MenuItem>
 
                                                 <MenuItem
-                                                    onClick={() => {
-                                                        handlePriceSort('asc');
-                                                        handleSortSubSubMenuClose();
-                                                    }}
-                                                    sx={{
-                                                        px: 1.5,
-                                                        py: 1,
-                                                        fontSize: '0.75rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
-                                                        fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' ? 700 : 500,
-                                                        color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
-                                                        '&:hover': { backgroundColor: '#f9fafb' },
-                                                        cursor: 'pointer'
-                                                    }}
+                                                    onClick={() => handlePriceSort('asc')}
+                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent', fontWeight: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' ? 700 : 500, color: sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
                                                 >
                                                     <span>Price: Low to High</span>
                                                     {sortConfig.key === 'averagePrice' && sortConfig.direction === 'asc' && <Check size={14} />}
@@ -741,220 +768,41 @@ const ProductTable = React.memo(function ProductTable({
                                                 <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
                                                 <MenuItem
-                                                    onClick={() => {
-                                                        onShowInStockFirstChange(true);
-                                                        if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
-                                                        if (onShowAdFirstChange) onShowAdFirstChange(false);
-                                                        if (onShowNewFirstChange) onShowNewFirstChange(false);
-                                                        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
-                                                        if (onShowDangerFirstChange) onShowDangerFirstChange(false);
-                                                        if (onShowPureNewFirstChange) onShowPureNewFirstChange(false);
-                                                        onSort(null);
-                                                        handleSortSubSubMenuClose();
-                                                        handleSortMenuClose();
-                                                    }}
-                                                    sx={{
-                                                        px: 1.5,
-                                                        py: 1,
-                                                        fontSize: '0.75rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        backgroundColor: showInStockFirst ? '#f9fafb' : 'transparent',
-                                                        fontWeight: showInStockFirst ? 700 : 500,
-                                                        color: showInStockFirst ? '#171717' : '#4b5563',
-                                                        '&:hover': { backgroundColor: '#f9fafb' },
-                                                        cursor: 'pointer'
-                                                    }}
+                                                    onClick={handleInStockSort}
+                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: showInStockFirst ? '#f9fafb' : 'transparent', fontWeight: showInStockFirst ? 700 : 500, color: showInStockFirst ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
                                                 >
                                                     <span>Stock In</span>
                                                     {showInStockFirst && <Check size={14} />}
                                                 </MenuItem>
 
                                                 <MenuItem
-                                                    onClick={() => {
-                                                        onShowOutStockFirstChange(true);
-                                                        if (onShowInStockFirstChange) onShowInStockFirstChange(false);
-                                                        if (onShowAdFirstChange) onShowAdFirstChange(false);
-                                                        if (onShowNewFirstChange) onShowNewFirstChange(false);
-                                                        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
-                                                        if (onShowDangerFirstChange) onShowDangerFirstChange(false);
-                                                        if (onShowPureNewFirstChange) onShowPureNewFirstChange(false);
-                                                        onSort(null);
-                                                        handleSortSubSubMenuClose();
-                                                        handleSortMenuClose();
-                                                    }}
-                                                    sx={{
-                                                        px: 1.5,
-                                                        py: 1,
-                                                        fontSize: '0.75rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        backgroundColor: showOutStockFirst ? '#f9fafb' : 'transparent',
-                                                        fontWeight: showOutStockFirst ? 700 : 500,
-                                                        color: showOutStockFirst ? '#171717' : '#4b5563',
-                                                        '&:hover': { backgroundColor: '#f9fafb' },
-                                                        cursor: 'pointer'
-                                                    }}
+                                                    onClick={handleOutStockSort}
+                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: showOutStockFirst ? '#f9fafb' : 'transparent', fontWeight: showOutStockFirst ? 700 : 500, color: showOutStockFirst ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
                                                 >
                                                     <span>Stock Out</span>
                                                     {showOutStockFirst && <Check size={14} />}
                                                 </MenuItem>
-
+                                                
                                                 <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
                                                 <MenuItem
-                                                    onClick={() => {
-                                                        onShowAdFirstChange(true);
-                                                        if (onShowInStockFirstChange) onShowInStockFirstChange(false);
-                                                        if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
-                                                        if (onShowNewFirstChange) onShowNewFirstChange(false);
-                                                        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
-                                                        if (onShowDangerFirstChange) onShowDangerFirstChange(false);
-                                                        if (onShowPureNewFirstChange) onShowPureNewFirstChange(false);
-                                                        onSort(null);
-                                                        handleSortSubSubMenuClose();
-                                                        handleSortMenuClose();
-                                                    }}
-                                                    sx={{
-                                                        px: 1.5,
-                                                        py: 1,
-                                                        fontSize: '0.75rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        backgroundColor: showAdFirst ? '#f9fafb' : 'transparent',
-                                                        fontWeight: showAdFirst ? 700 : 500,
-                                                        color: showAdFirst ? '#171717' : '#4b5563',
-                                                        '&:hover': { backgroundColor: '#f9fafb' },
-                                                        cursor: 'pointer'
-                                                    }}
+                                                    onClick={handleAdSort}
+                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: showAdFirst ? '#f9fafb' : 'transparent', fontWeight: showAdFirst ? 700 : 500, color: showAdFirst ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
                                                 >
                                                     <span>Ads</span>
                                                     {showAdFirst && <Check size={14} />}
                                                 </MenuItem>
-
-                                                <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
-
-                                                <MenuItem
-                                                    onClick={() => {
-                                                        onSort('averageDiscount', 'desc');
-                                                        handleSortSubSubMenuClose();
-                                                        handleSortMenuClose();
-                                                    }}
-                                                    sx={{
-                                                        px: 1.5,
-                                                        py: 1,
-                                                        fontSize: '0.75rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        backgroundColor: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'desc' ? '#f9fafb' : 'transparent',
-                                                        fontWeight: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'desc' ? 700 : 500,
-                                                        color: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'desc' ? '#171717' : '#4b5563',
-                                                        '&:hover': { backgroundColor: '#f9fafb' },
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    <span>High to Low Discount</span>
-                                                    {sortConfig.key === 'averageDiscount' && sortConfig.direction === 'desc' && <Check size={14} />}
-                                                </MenuItem>
-
-                                                <MenuItem
-                                                    onClick={() => {
-                                                        onSort('averageDiscount', 'asc');
-                                                        handleSortSubSubMenuClose();
-                                                        handleSortMenuClose();
-                                                    }}
-                                                    sx={{
-                                                        px: 1.5,
-                                                        py: 1,
-                                                        fontSize: '0.75rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        backgroundColor: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'asc' ? '#f9fafb' : 'transparent',
-                                                        fontWeight: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'asc' ? 700 : 500,
-                                                        color: sortConfig.key === 'averageDiscount' && sortConfig.direction === 'asc' ? '#171717' : '#4b5563',
-                                                        '&:hover': { backgroundColor: '#f9fafb' },
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    <span>Low to High Discount</span>
-                                                    {sortConfig.key === 'averageDiscount' && sortConfig.direction === 'asc' && <Check size={14} />}
-                                                </MenuItem>
                                             </Menu>
 
-                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
-
-                                            <MenuItem
-                                                onClick={(e) => handleRankSubMenuOpen(e, 'asc')}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.direction === 'asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <TrendingUp size={14} className="text-emerald-600" />
-                                                    <span>Rank: Low to High</span>
-                                                </div>
-                                                <ChevronRight size={14} className="text-gray-400" />
-                                            </MenuItem>
-
-                                            <MenuItem
-                                                onClick={(e) => handleRankSubMenuOpen(e, 'desc')}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.direction === 'desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <TrendingDown size={14} className="text-rose-600" />
-                                                    <span>Rank: High to Low</span>
-                                                </div>
-                                                <ChevronRight size={14} className="text-gray-400" />
-                                            </MenuItem>
-
-                                            {/* Submenu for Platform Selection */}
+                                            {/* Rank Selection Platforms Submenu */}
                                             <Menu
                                                 anchorEl={rankSubMenuAnchor}
                                                 open={isRankSubMenuOpen}
                                                 onClose={handleRankSubMenuClose}
-                                                anchorOrigin={{
-                                                    vertical: 'top',
-                                                    horizontal: 'right',
-                                                }}
-                                                transformOrigin={{
-                                                    vertical: 'top',
-                                                    horizontal: 'left',
-                                                }}
+                                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
                                                 PaperProps={{
-                                                    sx: {
-                                                        ml: 0.5,
-                                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                                                        border: '1px solid #e5e7eb',
-                                                        minWidth: '140px',
-                                                        borderRadius: '0.375rem',
-                                                    }
+                                                    sx: { ml: 0.5, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', border: '1px solid #e5e7eb', minWidth: '140px', borderRadius: '0.375rem' }
                                                 }}
                                             >
                                                 {['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'].map((plat) => (
@@ -962,128 +810,34 @@ const ProductTable = React.memo(function ProductTable({
                                                         key={plat}
                                                         onClick={() => {
                                                             handlePlatformRankSort(plat);
-                                                            if (showNewFirst) onShowNewFirstChange(false);
-                                                            if (showAdFirst) onShowAdFirstChange(false);
-                                                            if (showInStockFirst) onShowInStockFirstChange(false);
-                                                            if (showOutStockFirst) onShowOutStockFirstChange(false);
-                                                            if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
+                                                            handleRankSubMenuClose();
+                                                            handleSortSubSubMenuClose();
+                                                            handleSortMenuClose();
                                                         }}
                                                         sx={{
-                                                            px: 1.5,
-                                                            py: 1,
-                                                            fontSize: '0.75rem',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'space-between',
-                                                            backgroundColor: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                            fontWeight: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                            color: sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                            '&:hover': { backgroundColor: '#f9fafb' },
-                                                            cursor: 'pointer'
+                                                            px: 1.5, py: 0.75, fontSize: '0.725rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                            backgroundColor: sortConfig.key === plat && sortConfig.direction === rankSortDirection ? '#f9fafb' : 'transparent',
+                                                            fontWeight: sortConfig.key === plat && sortConfig.direction === rankSortDirection ? 700 : 500,
+                                                            color: sortConfig.key === plat && sortConfig.direction === rankSortDirection ? '#171717' : '#4b5563',
+                                                            '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
                                                         }}
                                                     >
                                                         <span className="capitalize">{plat === 'flipkartMinutes' ? 'Flipkart' : plat}</span>
-                                                        {sortConfig.key === plat && sortConfig.direction === rankSortDirection && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                        {sortConfig.key === plat && sortConfig.direction === rankSortDirection && <Check size={14} className="text-neutral-900" />}
                                                     </MenuItem>
                                                 ))}
                                             </Menu>
 
-
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
-                                            <MenuItem 
-                                                onClick={() => {
-                                                    const next = !showPureNewFirst;
-                                                    // Reset all other sort states (mutually exclusive)
-                                                    onShowNewFirstChange(false);
-                                                    onShowDangerFirstChange(false);
-                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
-                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
-                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
-                                                    onSort(null);
-                                                    onShowPureNewFirstChange(next);
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{ 
-                                                    px: 1.5, 
-                                                    py: 1, 
-                                                    fontSize: '0.75rem', 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: showPureNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: showPureNewFirst ? 700 : 500,
-                                                    color: showPureNewFirst ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <LayoutGrid size={14} className="text-purple-600" />
-                                                    <span>Pure & New (NG)</span>
-                                                </div>
-                                                {showPureNewFirst && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <MenuItem 
-                                                onClick={() => {
-                                                    const next = !showDangerFirst;
-                                                    // Reset all other sort states (mutually exclusive)
-                                                    onShowNewFirstChange(false);
-                                                    onShowPureNewFirstChange(false);
-                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
-                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
-                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
-                                                    onSort(null);
-                                                    onShowDangerFirstChange(next);
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{ 
-                                                    px: 1.5, 
-                                                    py: 1, 
-                                                    fontSize: '0.75rem', 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'space-between',
-                                                    backgroundColor: showDangerFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: showDangerFirst ? 700 : 500,
-                                                    color: showDangerFirst ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <Skull size={14} className="text-rose-600" />
-                                                    <span>Danger First</span>
-                                                </div>
-                                                {showDangerFirst && <Check size={14} className="text-neutral-900" />}
-                                            </MenuItem>
-
-                                            <MenuItem 
-                                                onClick={() => {
-                                                    const next = !showNewFirst;
-                                                    // Reset all other sort states (mutually exclusive)
-                                                    onShowDangerFirstChange(false);
-                                                    onShowPureNewFirstChange(false);
-                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
-                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
-                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
-                                                    onSort(null);
-                                                    onShowNewFirstChange(next);
-                                                    handleSortMenuClose();
-                                                }}
-                                                sx={{ 
-                                                    px: 1.5, 
-                                                    py: 1, 
-                                                    fontSize: '0.75rem', 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'space-between',
+                                            <MenuItem
+                                                onClick={handleNewlyAddedToggle}
+                                                sx={{
+                                                    px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                                     backgroundColor: showNewFirst ? '#f9fafb' : 'transparent',
                                                     fontWeight: showNewFirst ? 700 : 500,
                                                     color: showNewFirst ? '#171717' : '#4b5563',
-                                                    '&:hover': { backgroundColor: '#f9fafb' },
-                                                    cursor: 'pointer'
+                                                    '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
                                                 }}
                                             >
                                                 <div className="flex items-center gap-2">
@@ -1095,29 +849,13 @@ const ProductTable = React.memo(function ProductTable({
 
                                             {isAdmin && (
                                                 <MenuItem
-                                                    onClick={() => {
-                                                        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(true);
-                                                        onShowNewFirstChange(false);
-                                                        onShowAdFirstChange(false);
-                                                        onShowInStockFirstChange(false);
-                                                        onShowOutStockFirstChange(false);
-                                                        onShowDangerFirstChange(false);
-                                                        onShowPureNewFirstChange(false);
-                                                        onSort(null); // Clear manual sort
-                                                        handleSortMenuClose();
-                                                    }}
+                                                    onClick={handleNonHyphenToggle}
                                                     sx={{
-                                                        px: 1.5,
-                                                        py: 1,
-                                                        fontSize: '0.75rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
+                                                        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                                         backgroundColor: showNonHyphenOnly ? '#f9fafb' : 'transparent',
                                                         fontWeight: showNonHyphenOnly ? 700 : 500,
                                                         color: showNonHyphenOnly ? '#171717' : '#4b5563',
-                                                        '&:hover': { backgroundColor: '#f9fafb' },
-                                                        cursor: 'pointer'
+                                                        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
                                                     }}
                                                 >
                                                     <span>Non Hyphen ( - ) ({platformCounts.nonHyphen || 0})</span>
@@ -1369,6 +1107,14 @@ const ProductTable = React.memo(function ProductTable({
                                                                                   </>
                                                                                 ) : <span className="font-extrabold text-neutral-900">{product.name}</span>;
                                                                             })()}
+                                                                            {product.label && (
+                                                                                <span 
+                                                                                    className="ml-1.5 text-amber-500 inline-flex items-center" 
+                                                                                    title={`Label: ${product.label}`}
+                                                                                >
+                                                                                    ★
+                                                                                </span>
+                                                                            )}
                                                                             {(() => {
                                                                                 const suffix = (product.weight && product.weight !== 'N/A') ? product.weight : product.quantity;
                                                                                 if (!suffix) return null;
@@ -1397,6 +1143,17 @@ const ProductTable = React.memo(function ProductTable({
                                                                         {copiedId === product.groupingId ? <Check size={12} /> : <Copy size={12} />}
                                                                     </button>
                                                                 )}
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setCrossPincodeGroup(product);
+                                                                        setCrossPincodePlatform(null);
+                                                                    }}
+                                                                    className="p-1 rounded-md transition-colors flex-shrink-0 text-blue-400 hover:text-blue-600 hover:bg-blue-50 ml-1"
+                                                                    title="View Group Details (All Pincodes)"
+                                                                >
+                                                                    <Info size={14} />
+                                                                </button>
                                                             </div>
                                                             <div className="text-xs text-orange-600 font-medium mt-0.5 min-h-[16px] flex items-center gap-2">
                                                                 <span>{product.brand || ""}</span>

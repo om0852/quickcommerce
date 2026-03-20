@@ -23,7 +23,11 @@ export async function GET(request) {
     // STEP 1: Fetch all groups for this category (category-level)
     // ============================================================
     const groups = await ProductGrouping.find({ category }).lean();
-    console.log(groups.length);
+    console.log(`[category-data] Found ${groups.length} groups for ${category}`);
+    // Debug first few groups to see if label exists
+    groups.slice(0, 5).forEach(g => {
+      if (g.label) console.log(`[category-data] Group ${g.groupingId} has label: ${g.label}`);
+    });
     // Fetch all brands for lookup
     const allBrands = await Brand.find({}).lean();
     const brandMap = {};
@@ -211,6 +215,7 @@ export async function GET(request) {
                 weight: group.primaryWeight,
                 brand: brandMap[group.brandId] || group.brand || '',
                 brandId: group.brandId || '',
+                label: group.label || '',
                 zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
                 officialCategory: group.category,
                 officialSubCategory: null,
@@ -302,6 +307,7 @@ export async function GET(request) {
                     weight: group.primaryWeight,
                     brand: brandMap[group.brandId] || group.brand || '',
                     brandId: group.brandId || '',
+                    label: group.label || '',
                     zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
                     officialCategory: group.category,
                     officialSubCategory: null,
@@ -370,10 +376,9 @@ export async function GET(request) {
             isDuplicate: false,
             name: group.primaryName,
             image: group.primaryImage,
-            groupImage: group.groupImage || group.primaryImage || '',
-            weight: group.primaryWeight,
             brand: brandMap[group.brandId] || group.brand || '',
             brandId: group.brandId || '',
+            label: group.label || '',
             zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
             officialCategory: group.category,
             officialSubCategory: null,

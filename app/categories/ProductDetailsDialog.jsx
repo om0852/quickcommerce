@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, ExternalLink, Loader2, Copy, Check, Pencil } from 'lucide-react';
 import ProductEditDialog from './ProductEditDialog';
 import ProductImage from './ProductImage';
@@ -25,6 +25,14 @@ function ProductDetailsDialog({
     const [isEditOpen, setIsEditOpen] = React.useState(false); // State for edit dialog
     const [toast, setToast] = React.useState(null);
     const [copiedId, setCopiedId] = React.useState(null);
+
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && isOpen) onClose();
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
 
     if (!isOpen || !selectedProduct) return null;
 
@@ -56,7 +64,7 @@ function ProductDetailsDialog({
             <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="flex items-start justify-between px-4 py-2.5 border-b border-neutral-100 bg-neutral-50/50">
+                <div className="flex items-start justify-between px-4 py-3 border-b border-neutral-200 bg-white">
                     <div className="flex gap-2.5 items-center">
                         {/* Group Image Display */}
                         <div className="w-12 h-12 bg-white border border-gray-200 rounded flex-none p-1 flex items-center justify-center overflow-hidden shrink-0">
@@ -81,6 +89,8 @@ function ProductDetailsDialog({
                                 <span>{category}</span>
                                 <span>•</span>
                                 <span>{pincode}</span>
+                                <span>•</span>
+                                <span className="text-neutral-500">{availablePlatforms.length} Products</span>
                             </div>
                             {selectedProduct.groupingId && (
                                 <div className="flex items-center gap-2">
@@ -107,7 +117,7 @@ function ProductDetailsDialog({
                 </div>
 
                 {/* Scrollable Body */}
-                <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 bg-[#fafafa]">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-5 bg-neutral-100">
 
                     {/* Platform Details Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 mb-5">

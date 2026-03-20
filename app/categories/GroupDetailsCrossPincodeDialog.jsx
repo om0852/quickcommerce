@@ -75,6 +75,14 @@ export default function GroupDetailsCrossPincodeDialog({
         }
     };
 
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && isOpen) onClose();
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const targetPincodes = ['400706', '400703'];
@@ -92,7 +100,7 @@ export default function GroupDetailsCrossPincodeDialog({
 
             <div className="relative w-full max-w-4xl h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="flex-none px-6 py-4 border-b border-gray-100 bg-rose-50/50 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-4 border-b border-neutral-200 bg-white flex items-center justify-between">
                     <div>
                         <h3 className="text-xl font-bold text-gray-900">Cross-Pincode Analysis</h3>
                         <p className="text-sm text-gray-500 truncate max-w-md">{primaryName || groupingId}</p>
@@ -103,7 +111,7 @@ export default function GroupDetailsCrossPincodeDialog({
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-neutral-100">
                     {loading ? (
                         <div className="h-full flex flex-col items-center justify-center space-y-4">
                             <Loader2 size={40} className="text-rose-500 animate-spin" />

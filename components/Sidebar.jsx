@@ -31,6 +31,7 @@ export default function Sidebar({ isOpen, onClose, isAdmin = false }) {
     { href: '/categories', label: 'Categories', icon: BarChart3 },
     // { href: '/clean-check', label: 'Clean Check', icon: BarChart3 },
     { href: '/alerts', label: 'Alerts', icon: Bell },
+    { href: '/suggestions', label: 'Suggestions', icon: MessageSquare },
     ...(isAdmin ? [{ href: '/admin-search', label: 'Admin Search', icon: ShieldCheck, adminOnly: true }] : [])
   ];
 

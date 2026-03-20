@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, X, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/components/SidebarContext';
@@ -33,6 +33,14 @@ export default function ExportCategoryDialog({
     // Initialize with current pincode as array, or empty/first option
     const [selectedPincodes, setSelectedPincodes] = useState(currentPincode ? [currentPincode] : (pincodeOptions[0]?.value ? [pincodeOptions[0].value] : []));
     const [exportType, setExportType] = useState('latest');
+
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && isOpen) onClose();
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -153,10 +161,10 @@ export default function ExportCategoryDialog({
             "fixed inset-0 bg-black/40 flex items-center justify-center z-[200] backdrop-blur-[4px] transition-all duration-300",
             isSidebarOpen ? "xl:ml-64" : "xl:ml-0"
         )} onClick={onClose}>
-            <div className="bg-white rounded-xl w-[90%] max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-xl w-[90%] max-w-[480px] max-h-[90vh] flex flex-col shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
 
                 {/* Header */}
-                <div className="p-6 bg-white border-b border-neutral-100 flex items-start justify-between">
+                <div className="flex-none p-6 bg-white border-b border-neutral-200 flex items-start justify-between">
                     <div>
                         <h2 className="text-xl font-bold text-neutral-900 mb-1">Export Data</h2>
                         <p className="text-sm text-neutral-500">
@@ -171,10 +179,11 @@ export default function ExportCategoryDialog({
                     </button>
                 </div>
 
-                <div className="p-6">
+                <div className="flex-1 overflow-y-auto p-6 bg-neutral-100">
 
-                    {/* Email Input */}
-                    <div className="mb-6">
+                    <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm mb-6">
+                        {/* Email Input */}
+                        <div className="mb-0">
                         <label className="block mb-2 text-sm font-semibold text-neutral-900">
                             Email Address <span className="text-neutral-400 font-normal">(Required for Email)</span>
                         </label>
@@ -188,10 +197,11 @@ export default function ExportCategoryDialog({
                                 className="w-full pl-10 pr-4 py-2.5 rounded-md border border-neutral-200 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors placeholder:text-neutral-400"
                             />
                         </div>
+                        </div>
                     </div>
 
                     {/* Filters Container */}
-                    <div className="mb-8">
+                    <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm mb-6">
 
                         {/* Grid for Dropdowns */}
                         <div className="grid gap-4">
@@ -267,7 +277,6 @@ export default function ExportCategoryDialog({
                         </div>
                     </div>
 
-
                     {/* Progress Bar */}
                     {loading && (
                         <div className="mb-6">
@@ -285,7 +294,8 @@ export default function ExportCategoryDialog({
                     )}
 
                     {/* Footer actions */}
-                    <div className="flex gap-3 pt-6 border-t border-neutral-100">
+                </div>
+                <div className="flex-none flex gap-3 p-6 bg-white border-t border-neutral-200">
                         {/* Cancel */}
                         <button
                             type="button"
@@ -346,7 +356,6 @@ export default function ExportCategoryDialog({
                             </div>
                         )}
                     </div>
-                </div>
             </div>
         </div>
     );

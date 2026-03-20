@@ -21,7 +21,11 @@ const ProductGroupingSchema = new mongoose.Schema({
             required: true
         }
     }],
+    label: {
+        type: String,
+        default: '',
 
+    },
     // Category for this group (Enforce constraint)
     category: {
         type: String,

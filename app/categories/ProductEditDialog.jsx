@@ -202,6 +202,7 @@ export default function ProductEditDialog({
     const [weight, setWeight] = useState('');
     const [brand, setBrand] = useState('');
     const [groupImage, setGroupImage] = useState('');
+    const [label, setLabel] = useState('');
 
     // Access available brands from API
     const [availableBrands, setAvailableBrands] = useState([]);
@@ -214,6 +215,14 @@ export default function ProductEditDialog({
     const [expandedPlatform, setExpandedPlatform] = useState(null); // Accordion state
 
     const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
+
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && isOpen) onClose();
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
 
     if (!isOpen || !product) return null;
 
@@ -264,6 +273,7 @@ export default function ProductEditDialog({
             setWeight(product.weight || '');
             setBrand(product.brand || '');
             setGroupImage(product.groupImage || '');
+            setLabel(product.label || '');
 
             // Platform Init
             const initialData = [];
@@ -316,6 +326,7 @@ export default function ProductEditDialog({
             if (weight !== (product.weight || '')) groupUpdates.weight = weight;
             if (brand !== (product.brand || '')) groupUpdates.brand = brand;
             if (groupImage !== (product.groupImage || '')) groupUpdates.groupImage = groupImage;
+            if (label !== (product.label || '')) groupUpdates.label = label;
 
             let groupUpdatePromise = Promise.resolve();
             if (Object.keys(groupUpdates).length > 0) {
@@ -446,6 +457,16 @@ export default function ProductEditDialog({
                                     setBrand={setBrand}
                                     availableBrands={availableBrands}
                                     onAddNewBrand={handleAddNewBrand}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-500">Label (Custom Tag)</label>
+                                <input
+                                    type="text"
+                                    value={label}
+                                    onChange={(e) => setLabel(e.target.value)}
+                                    placeholder="e.g. Best Seller, New..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-colors"
                                 />
                             </div>
                             <div className="space-y-1 col-span-1 md:col-span-2">

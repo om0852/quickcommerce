@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import ProductTable from './ProductTable';
 
@@ -14,6 +14,14 @@ const BrandProductsDialog = ({
     snapshotDate,
     isAdmin = false
 }) => {
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && isOpen) onClose();
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -71,7 +79,7 @@ const BrandProductsDialog = ({
 
             <div className="relative w-full max-w-6xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 bg-white">
                     <div>
                         <h3 className="text-xl font-bold text-gray-900">
                             {brandName === 'Other' ? 'Unbranded / Other' : brandName} {pincode && `(${pincode})`} {snapshotDate && snapshotDate}
@@ -91,7 +99,7 @@ const BrandProductsDialog = ({
                 </div>
 
                 {/* Body - Reusing ProductTable */}
-                <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4">
+                <div className="flex-1 overflow-y-auto bg-neutral-100 p-4">
                     <ProductTable
                         products={filteredProducts}
                         sortConfig={sortConfig}
