@@ -182,9 +182,80 @@ function CategoriesPageContent() {
     });
   }, [products, searchQuery]);
 
+  const preFilteredProducts = useMemo(() => {
+    let result = searchedProducts;
+
+    // Platform Filter
+    if (platformFilter !== 'all') {
+      if (showMissing) {
+        result = result.filter(product => {
+          if (product.isHeader) return true;
+          const missingInSelected = !product[platformFilter];
+          const presentInOthers = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart']
+            .filter(p => p !== platformFilter)
+            .some(p => product[p]);
+          return missingInSelected && presentInOthers;
+        });
+      } else {
+        result = result.filter(product => {
+          if (product.isHeader) return true;
+          return product[platformFilter];
+        });
+      }
+    }
+
+    // Non-Hyphen Filter (Strict) - Regex catches standard and unicode hyphens/dashes
+    if (showNonHyphenOnly) {
+      const hyphenRegex = /[-\u2010-\u2015\u2212]/;
+      result = result.filter(product => {
+        if (product.isHeader) return true;
+        const name = product.name || '';
+        return !hyphenRegex.test(name);
+      });
+    }
+
+    // Danger Filter removed (now handled as a priority sort)
+
+    // Pure & New Filter - show only groups created today (based on createdAt timestamp)
+    if (showPureNewFirst) {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+
+      result = result.filter(product => {
+        if (product.isHeader) return true;
+        if (!product.createdAt) return false;
+        const created = new Date(product.createdAt);
+        return created >= startOfToday && created <= endOfToday;
+      });
+    }
+
+    // Prune empty headers globally (run if any filter was active)
+    if (platformFilter !== 'all' || showNonHyphenOnly || showPureNewFirst) {
+      const pruned = [];
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].isHeader) {
+          let hasContent = false;
+          for (let j = i + 1; j < result.length; j++) {
+            if (result[j].isHeader) break;
+            hasContent = true;
+            break;
+          }
+          if (hasContent) pruned.push(result[i]);
+        } else {
+          pruned.push(result[i]);
+        }
+      }
+      result = pruned;
+    }
+
+    return result;
+  }, [searchedProducts, platformFilter, showMissing, showNonHyphenOnly, showDangerFirst, showPureNewFirst]);
+
   // Apply deduplication filter (Hide Similar — by base productId, same logic as ProductDetailsDialog)
   const deduplicatedProducts = useMemo(() => {
-    let result = searchedProducts;
+    let result = preFilteredProducts;
 
     if (useFilterToggle) {
       // Strip __category-suffix and trailing -a/b to get the canonical base ID
@@ -253,14 +324,32 @@ function CategoriesPageContent() {
           return;
         }
 
-        // Pick the BEST row from the cluster
-        // Criteria: 1. Most platforms, 2. Lowest rank
+        // Criteria: 0. isHeader, 1. !isDuplicate, 2. Most platforms, 3. Lowest rank
         let bestRow = group[0];
         let maxPlatforms = getPlatformCount(group[0]);
         let minRank = getMinRank(group[0]);
 
         for (let i = 1; i < group.length; i++) {
           const row = group[i];
+
+          // 0. isHeader takes absolute precedence
+          if (bestRow.isHeader && !row.isHeader) continue;
+          if (row.isHeader && !bestRow.isHeader) {
+            bestRow = row;
+            maxPlatforms = getPlatformCount(row);
+            minRank = getMinRank(row);
+            continue;
+          }
+
+          // 1. !isDuplicate takes precedence over isDuplicate (master group vs standalone)
+          if (!bestRow.isDuplicate && row.isDuplicate) continue;
+          if (!row.isDuplicate && bestRow.isDuplicate) {
+             bestRow = row;
+             maxPlatforms = getPlatformCount(row);
+             minRank = getMinRank(row);
+             continue;
+          }
+
           const platforms = getPlatformCount(row);
           const rank = getMinRank(row);
 
@@ -281,12 +370,15 @@ function CategoriesPageContent() {
     }
 
     return result;
-  }, [searchedProducts, useFilterToggle]);
+  }, [preFilteredProducts, useFilterToggle]);
+
+  const filteredProducts = deduplicatedProducts;
+
 
   // Calculate platform counts from deduplicated products
   const platformCounts = useMemo(() => {
     const counts = {
-      all: deduplicatedProducts.length,
+      all: deduplicatedProducts.filter(p => !p.isHeader).length,
       jiomart: 0,
       zepto: 0,
       blinkit: 0,
@@ -334,7 +426,7 @@ function CategoriesPageContent() {
   // Calculate TOTAL platform counts (unfiltered by search) to distinguish "Not Found" vs "Unserviceable"
   const totalPlatformCounts = useMemo(() => {
     const counts = {
-      all: products.length,
+      all: products.filter(p => !p.isHeader).length,
       jiomart: 0,
       zepto: 0,
       blinkit: 0,
@@ -658,69 +750,6 @@ function CategoriesPageContent() {
 
 
 
-  const filteredProducts = useMemo(() => {
-    let result = deduplicatedProducts;
-
-    // Platform Filter
-    if (platformFilter !== 'all') {
-      if (showMissing) {
-        result = result.filter(product => {
-          const missingInSelected = !product[platformFilter];
-          const presentInOthers = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart']
-            .filter(p => p !== platformFilter)
-            .some(p => product[p]);
-          return missingInSelected && presentInOthers;
-        });
-      } else {
-        result = result.filter(product => product[platformFilter]);
-      }
-    }
-
-    // Non-Hyphen Filter (Strict) - Regex catches standard and unicode hyphens/dashes
-    if (showNonHyphenOnly) {
-      const hyphenRegex = /[-\u2010-\u2015\u2212]/;
-      result = result.filter(product => {
-        const name = product.name || '';
-        return !hyphenRegex.test(name);
-      });
-    }
-
-    // Danger Filter removed (now handled as a priority sort)
-
-    // Pure & New Filter - show only groups created today (based on createdAt timestamp)
-    if (showPureNewFirst) {
-      const startOfToday = new Date();
-      startOfToday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date();
-      endOfToday.setHours(23, 59, 59, 999);
-
-      result = result.filter(product => {
-        if (product.isHeader) return true;
-        if (!product.createdAt) return false;
-        const created = new Date(product.createdAt);
-        return created >= startOfToday && created <= endOfToday;
-      });
-
-      // Prune empty headers (headers with no matching products following them)
-      const pruned = [];
-      for (let i = 0; i < result.length; i++) {
-        if (result[i].isHeader) {
-          let hasContent = false;
-          for (let j = i + 1; j < result.length; j++) {
-            if (result[j].isHeader) break;
-            hasContent = true;
-            break;
-          }
-          if (hasContent) pruned.push(result[i]);
-        } else {
-          pruned.push(result[i]);
-        }
-      }
-      result = pruned;
-    }
-
-    return result;
-  }, [deduplicatedProducts, platformFilter, showMissing, showNonHyphenOnly, showDangerFirst, showPureNewFirst]);
 
   const sortedProducts = useMemo(() => {
     // Use the sorting utility functions instead of inline logic
@@ -756,7 +785,7 @@ function CategoriesPageContent() {
 
     let flatList = [];
     groups.forEach(group => {
-      flatList.push(group.header);
+      // flatList.push(group.header);
       flatList = flatList.concat([...group.items].sort(sortFunc));
     });
     return flatList;
@@ -1161,7 +1190,9 @@ function CategoriesPageContent() {
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       )}
                     >
-                      {opt.label} <span className="text-xs opacity-80">
+                      <span className="hidden min-[1124px]:inline">{opt.label}</span>
+                      <span className="min-[1124px]:hidden">{PLATFORM_SHORT_NAMES[opt.value] || opt.label}</span>
+                      <span className="text-xs opacity-80">
                         {loading ? (
                           <Loader2 size={10} className="animate-spin inline-block" />
                         ) : (
