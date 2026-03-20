@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown, Unlink, Skull } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X, Pencil, Filter, Menu as MenuIcon, Check, Copy, Loader2, ChevronRight, TrendingUp, TrendingDown, Unlink, Skull, LayoutGrid } from 'lucide-react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Table from '@mui/material/Table';
@@ -53,6 +53,10 @@ const ProductTable = React.memo(function ProductTable({
     onSelectionChange,
     bulkBrands = [],
     isLiveMode = true, // NEW Prop
+    showDangerFirst = false, // NEW
+    onShowDangerFirstChange, // NEW
+    showPureNewFirst = false, // NEW
+    onShowPureNewFirstChange, // NEW
 }) {
     const [manageGroup, setManageGroup] = useState(null);
     const [editProduct, setEditProduct] = useState(null);
@@ -590,6 +594,8 @@ const ProductTable = React.memo(function ProductTable({
                                                     if (showNewFirst) onShowNewFirstChange(false);
                                                     if (showAdFirst) onShowAdFirstChange(false);
                                                     if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
+                                                    if (showDangerFirst && onShowDangerFirstChange) onShowDangerFirstChange(false);
+                                                    if (showPureNewFirst && onShowPureNewFirstChange) onShowPureNewFirstChange(false);
                                                     handleSortMenuClose();
                                                 }}
                                                 sx={{
@@ -618,6 +624,8 @@ const ProductTable = React.memo(function ProductTable({
                                                     if (showInStockFirst) onShowInStockFirstChange(false);
                                                     if (showOutStockFirst) onShowOutStockFirstChange(false);
                                                     if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
+                                                    if (showDangerFirst && onShowDangerFirstChange) onShowDangerFirstChange(false);
+                                                    if (showPureNewFirst && onShowPureNewFirstChange) onShowPureNewFirstChange(false);
                                                     handleSortMenuClose();
                                                 }}
                                                 sx={{
@@ -739,6 +747,8 @@ const ProductTable = React.memo(function ProductTable({
                                                         if (onShowAdFirstChange) onShowAdFirstChange(false);
                                                         if (onShowNewFirstChange) onShowNewFirstChange(false);
                                                         if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
+                                                        if (onShowDangerFirstChange) onShowDangerFirstChange(false);
+                                                        if (onShowPureNewFirstChange) onShowPureNewFirstChange(false);
                                                         onSort(null);
                                                         handleSortSubSubMenuClose();
                                                         handleSortMenuClose();
@@ -768,6 +778,8 @@ const ProductTable = React.memo(function ProductTable({
                                                         if (onShowAdFirstChange) onShowAdFirstChange(false);
                                                         if (onShowNewFirstChange) onShowNewFirstChange(false);
                                                         if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
+                                                        if (onShowDangerFirstChange) onShowDangerFirstChange(false);
+                                                        if (onShowPureNewFirstChange) onShowPureNewFirstChange(false);
                                                         onSort(null);
                                                         handleSortSubSubMenuClose();
                                                         handleSortMenuClose();
@@ -799,6 +811,8 @@ const ProductTable = React.memo(function ProductTable({
                                                         if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
                                                         if (onShowNewFirstChange) onShowNewFirstChange(false);
                                                         if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
+                                                        if (onShowDangerFirstChange) onShowDangerFirstChange(false);
+                                                        if (onShowPureNewFirstChange) onShowPureNewFirstChange(false);
                                                         onSort(null);
                                                         handleSortSubSubMenuClose();
                                                         handleSortMenuClose();
@@ -977,22 +991,93 @@ const ProductTable = React.memo(function ProductTable({
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
-                                            <MenuItem
+                                            <MenuItem 
                                                 onClick={() => {
-                                                    onShowNewFirstChange(true);
+                                                    const next = !showPureNewFirst;
+                                                    // Reset all other sort states (mutually exclusive)
+                                                    onShowNewFirstChange(false);
+                                                    onShowDangerFirstChange(false);
                                                     if (onShowInStockFirstChange) onShowInStockFirstChange(false);
                                                     if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
                                                     if (onShowAdFirstChange) onShowAdFirstChange(false);
-                                                    if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(false);
-                                                    onSort(null); // Clear manual sort
+                                                    onSort(null);
+                                                    onShowPureNewFirstChange(next);
                                                     handleSortMenuClose();
                                                 }}
-                                                sx={{
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    fontSize: '0.75rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
+                                                sx={{ 
+                                                    px: 1.5, 
+                                                    py: 1, 
+                                                    fontSize: '0.75rem', 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: showPureNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: showPureNewFirst ? 700 : 500,
+                                                    color: showPureNewFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <LayoutGrid size={14} className="text-purple-600" />
+                                                    <span>Pure & New (NG)</span>
+                                                </div>
+                                                {showPureNewFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <MenuItem 
+                                                onClick={() => {
+                                                    const next = !showDangerFirst;
+                                                    // Reset all other sort states (mutually exclusive)
+                                                    onShowNewFirstChange(false);
+                                                    onShowPureNewFirstChange(false);
+                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
+                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
+                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
+                                                    onSort(null);
+                                                    onShowDangerFirstChange(next);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{ 
+                                                    px: 1.5, 
+                                                    py: 1, 
+                                                    fontSize: '0.75rem', 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: showDangerFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: showDangerFirst ? 700 : 500,
+                                                    color: showDangerFirst ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Skull size={14} className="text-rose-600" />
+                                                    <span>Danger First</span>
+                                                </div>
+                                                {showDangerFirst && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <MenuItem 
+                                                onClick={() => {
+                                                    const next = !showNewFirst;
+                                                    // Reset all other sort states (mutually exclusive)
+                                                    onShowDangerFirstChange(false);
+                                                    onShowPureNewFirstChange(false);
+                                                    if (onShowInStockFirstChange) onShowInStockFirstChange(false);
+                                                    if (onShowOutStockFirstChange) onShowOutStockFirstChange(false);
+                                                    if (onShowAdFirstChange) onShowAdFirstChange(false);
+                                                    onSort(null);
+                                                    onShowNewFirstChange(next);
+                                                    handleSortMenuClose();
+                                                }}
+                                                sx={{ 
+                                                    px: 1.5, 
+                                                    py: 1, 
+                                                    fontSize: '0.75rem', 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
                                                     justifyContent: 'space-between',
                                                     backgroundColor: showNewFirst ? '#f9fafb' : 'transparent',
                                                     fontWeight: showNewFirst ? 700 : 500,
@@ -1001,7 +1086,10 @@ const ProductTable = React.memo(function ProductTable({
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <span>Newly Added {newlyAddedCount > 0 && `(${newlyAddedCount})`}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <TrendingUp size={14} className="text-blue-600" />
+                                                    <span>Newly Added {newlyAddedCount > 0 && `(${newlyAddedCount})`}</span>
+                                                </div>
                                                 {showNewFirst && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
@@ -1013,6 +1101,8 @@ const ProductTable = React.memo(function ProductTable({
                                                         onShowAdFirstChange(false);
                                                         onShowInStockFirstChange(false);
                                                         onShowOutStockFirstChange(false);
+                                                        onShowDangerFirstChange(false);
+                                                        onShowPureNewFirstChange(false);
                                                         onSort(null); // Clear manual sort
                                                         handleSortMenuClose();
                                                     }}
@@ -1084,7 +1174,7 @@ const ProductTable = React.memo(function ProductTable({
                                                 padding: '16px 32px',
                                             }}
                                         >
-                                            <div style={{ height: isAdmin ? '95px' : '60px', overflow: 'hidden' }}>
+                                            <div style={{ height: isAdmin ? '95px' : '70px', overflow: 'hidden' }}>
                                                 <div className="grid grid-cols-[auto_1fr] gap-4">
                                                     <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-neutral-200 animate-pulse" />
                                                     <div className="w-full min-w-0 space-y-2">
@@ -1107,7 +1197,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     padding: '8px 12px',
                                                 }}
                                             >
-                                                <div style={{ height: isAdmin ? '95px' : '60px', overflow: 'hidden' }}>
+                                                <div style={{ height: isAdmin ? '95px' : '70px', overflow: 'hidden' }}>
                                                     <div className="space-y-2 flex flex-col items-center">
                                                         <div className="h-4 bg-neutral-200 rounded animate-pulse w-12" />
                                                         <div className="h-3 bg-neutral-100 rounded animate-pulse w-16" />
@@ -1217,7 +1307,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     }
                                                 }}
                                             >
-                                                <div style={{ height: isAdmin ? '95px' : '60px', overflow: editingProductId === product.groupingId ? 'visible' : 'hidden' }}>
+                                                <div style={{ height: isAdmin ? '95px' : '70px', overflow: editingProductId === product.groupingId ? 'visible' : 'hidden' }}>
                                                     <div className="flex flex-row items-start gap-3">
                                                         <div className="h-10 w-10 flex-shrink-0 rounded-lg border border-neutral-200 p-0.5 bg-white overflow-hidden self-start">
                                                             <ProductImage product={product} />
@@ -1373,7 +1463,7 @@ const ProductTable = React.memo(function ProductTable({
                                                             verticalAlign: 'top'
                                                         }}
                                                     >
-                                                        <div style={{ height: isAdmin ? '95px' : '60px', overflow: 'hidden' }}>
+                                                        <div style={{ height: isAdmin ? '95px' : '70px', overflow: 'hidden' }}>
                                                             <div className="flex flex-col items-center">
                                                                 {data ? (
                                                                     <div className="flex flex-col items-center">
@@ -1428,8 +1518,8 @@ const ProductTable = React.memo(function ProductTable({
                                                                     </div>
                                                                 )}
 
-                                                                {/* Show group-wide/local conflict even if out of stock, but ONLY on master row and for ADMINS */}
-                                                                {isAdmin && !product.isDuplicate && (
+                                                                {/* Show group-wide/local conflict. For non-admins, ONLY show for JioMart. */}
+                                                                {((isAdmin) || (p === 'jiomart' && product.groupConflicts?.[p]?.hasConflict)) && !product.isDuplicate && (
                                                                     <>
                                                                         {product.groupConflicts?.[p]?.hasConflict && (
                                                                             <div 
@@ -1545,6 +1635,7 @@ const ProductTable = React.memo(function ProductTable({
                         selectedPlatform={crossPincodePlatform}
                         onUpdate={onRefresh || onLocalUpdate}
                         showToast={showToast}
+                        isAdmin={isAdmin}
                     />
                 )
             }

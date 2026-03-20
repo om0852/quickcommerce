@@ -160,9 +160,27 @@ export const createPrioritySort = (
   showOutStockFirst: boolean,
   showAdFirst: boolean,
   showNewFirst: boolean,
+  showDangerFirst: boolean, // NEW
+  showPureNewFirst: boolean, // NEW
   platformFilter: string
 ) => {
   return (a: Product, b: Product): number => {
+    if (showPureNewFirst) {
+      const aPure = a.groupingId?.startsWith('NG');
+      const bPure = b.groupingId?.startsWith('NG');
+      if (aPure && !bPure) return -1;
+      if (!aPure && bPure) return 1;
+    }
+
+    if (showDangerFirst) {
+      const hasDanger = (p: Product) => 
+        Object.values(p.groupConflicts || {}).some((c: any) => c.hasConflict);
+      const aD = hasDanger(a);
+      const bD = hasDanger(b);
+      if (aD && !bD) return -1;
+      if (!aD && bD) return 1;
+    }
+
     if (showInStockFirst) {
       const aIn = hasStockFlag(a, platformFilter);
       const bIn = hasStockFlag(b, platformFilter);

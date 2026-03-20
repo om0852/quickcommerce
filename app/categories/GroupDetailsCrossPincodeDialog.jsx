@@ -10,7 +10,8 @@ export default function GroupDetailsCrossPincodeDialog({
     primaryName,
     selectedPlatform,
     onUpdate,
-    showToast
+    showToast,
+    isAdmin = false
 }) {
     const { isSidebarOpen } = useSidebar();
     const [loading, setLoading] = useState(true);
@@ -193,18 +194,20 @@ export default function GroupDetailsCrossPincodeDialog({
                                                 <span className="text-[11px] font-mono font-medium text-gray-600 break-all">{product.productId}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => handleRemove(product)}
-                                                    disabled={removingId === product.productId}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-all border border-rose-100 disabled:opacity-50 cursor-pointer"
-                                                >
-                                                    {removingId === product.productId ? (
-                                                        <Loader2 size={14} className="animate-spin" />
-                                                    ) : (
-                                                        <Unlink size={14} />
-                                                    )}
-                                                    Remove
-                                                </button>
+                                                {isAdmin && (
+                                                    <button
+                                                        onClick={() => handleRemove(product)}
+                                                        disabled={removingId === product.productId}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-all border border-rose-100 disabled:opacity-50 cursor-pointer"
+                                                    >
+                                                        {removingId === product.productId ? (
+                                                            <Loader2 size={14} className="animate-spin" />
+                                                        ) : (
+                                                            <Unlink size={14} />
+                                                        )}
+                                                        Remove
+                                                    </button>
+                                                )}
                                                 {product.pincodeDetails[product.pincodes[0]]?.productUrl && (
                                                     <a 
                                                         href={product.pincodeDetails[product.pincodes[0]].productUrl}

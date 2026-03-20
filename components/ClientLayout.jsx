@@ -43,8 +43,8 @@ export default function ClientLayout({ children }) {
                 <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} isAdmin={isAdmin} />
             )}
             <main className={cn(
-                "flex-1 min-h-screen transition-all duration-300",
-                !isLoginPage ? (isSidebarOpen ? "xl:ml-64" : "xl:ml-0") : "w-full"
+                "flex-1 min-h-screen transition-all duration-300 overflow-x-hidden",
+                !isLoginPage ? (isSidebarOpen ? "xl:pl-64" : "xl:pl-0") : "w-full"
             )}>
                 {children}
             </main>

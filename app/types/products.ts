@@ -39,6 +39,7 @@ export interface Product {
   officialSubCategory?: string;
   isHeader?: boolean;
   hasGroupConflict?: boolean;
+  groupConflicts?: Record<string, any>;
 
   // Platform-specific data
   zepto?: PlatformProductData;

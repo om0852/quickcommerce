@@ -22,12 +22,12 @@ const PINCODE_OPTIONS = [
 ];
 
 const PLATFORMS = [
-    { id: 'jiomart', label: 'JioMart' },
-    { id: 'zepto', label: 'Zepto' },
-    { id: 'blinkit', label: 'Blinkit' },
-    { id: 'dmart', label: 'DMart' },
-    { id: 'flipkartMinutes', label: 'Flipkart Minutes' },
-    { id: 'instamart', label: 'Swiggy Instamart' },
+    { id: 'jiomart', label: 'JioMart', short: 'JioMart' },
+    { id: 'zepto', label: 'Zepto', short: 'Zepto' },
+    { id: 'blinkit', label: 'Blinkit', short: 'Blinkit' },
+    { id: 'dmart', label: 'DMart', short: 'DMart' },
+    { id: 'flipkartMinutes', label: 'Flipkart Minutes', short: 'FK Min.' },
+    { id: 'instamart', label: 'Swiggy Instamart', short: 'Instamart' },
 ];
 
 // Based on user provided data:
@@ -48,7 +48,7 @@ const isPincodeAvailableForPlatform = (pincode, platformId) => {
 function SkeletonRow({ index }) {
     return (
         <tr className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-            <td className="sticky left-0 z-10 border-b border-gray-200 px-6 py-4 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+            <td className="sticky left-0 z-10 border-b border-gray-200 px-3 py-3 md:px-6 md:py-4 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                 <div className="flex items-center justify-between w-full">
                     <div>
                         <div className="h-4 bg-gray-200 animate-pulse rounded w-32 mb-1.5" />
@@ -66,15 +66,16 @@ function SkeletonTable() {
         <table className="w-full text-left border-collapse">
             <thead>
                 <tr>
-                    <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-full">
+                <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-3 py-3 font-bold text-neutral-800 tracking-wider text-[11px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[140px]">
                         Pincodes / Regions
                     </th>
                     {PLATFORMS.map(p => (
-                        <th key={p.id} className="sticky top-0 z-10 bg-neutral-100 border-b border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm text-center min-w-[140px]">
-                            {p.label}
+                        <th key={p.id} className="sticky top-0 z-10 bg-neutral-100 border-b border-gray-200 px-2 py-3 font-bold text-neutral-800 tracking-wider text-[11px] text-center min-w-[80px]" title={p.label}>
+                            <span className="hidden lg:inline">{p.label}</span>
+                            <span className="lg:hidden">{p.short}</span>
                         </th>
                     ))}
-                    <th className="sticky top-0 right-0 z-20 bg-neutral-100 border-b border-gray-200 px-6 py-4 w-12"></th>
+                    <th className="sticky top-0 right-0 z-20 bg-neutral-100 border-b border-gray-200 px-2 py-3 w-8"></th>
                 </tr>
             </thead>
             <tbody>
@@ -184,18 +185,20 @@ function OverviewContent() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
             {/* Header */}
-            <div className="flex-none bg-white border-b border-gray-200 px-6 py-[18px] flex items-center justify-between shadow-sm z-20">
+            <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-2 flex items-center justify-between shadow-sm z-20 min-h-[58px]">
                 <div className="flex items-center gap-4">
-                    <button 
-                        onClick={toggleSidebar}
-                        className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
-                    >
-                        {isSidebarOpen ? <SidebarCloseIcon size={24} /> : <SidebarOpenIcon size={24} />}
-                    </button>
-                    <h1 className="text-xl font-bold tracking-tight text-neutral-900">System Overview</h1>
+                    {!isSidebarOpen && (
+                        <button 
+                            onClick={toggleSidebar}
+                            className="p-1.5 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in"
+                        >
+                            <SidebarOpenIcon size={20} />
+                        </button>
+                    )}
+                    <h1 className="text-lg font-bold tracking-tight text-neutral-900">System Overview</h1>
                     <div className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 rounded-lg px-2 py-1 border border-blue-200">
                         <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                        <span className="font-medium">Latest Scrape Data</span>
+                        <span className="font-medium text-[11px] md:text-sm">Latest Scrape Data</span>
                     </div>
                 </div>
                 {isAdmin && (
@@ -211,7 +214,7 @@ function OverviewContent() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-6 gap-6">
+            <div className="flex-1 flex flex-col w-full max-w-[1920px] mx-auto p-3 md:p-[10px] gap-3">
 
                 {/* Main List */}
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
@@ -222,18 +225,19 @@ function OverviewContent() {
                     )}
 
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left border-collapse table-fixed">
                             <thead>
                                 <tr>
-                                    <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[250px]">
+                                    <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-3 py-3 font-bold text-neutral-800 tracking-wider text-[11px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-[260px] min-w-[260px] border-l-4 border-l-transparent">
                                         Pincodes / Regions
                                     </th>
                                     {PLATFORMS.map(p => (
-                                        <th key={p.id} className="sticky top-0 z-10 bg-neutral-100 border-b border-gray-200 px-6 py-4 font-bold text-neutral-800 tracking-wider text-sm text-center min-w-[140px]">
-                                            {p.label}
+                                        <th key={p.id} className="sticky top-0 z-10 bg-neutral-100 border-b border-gray-200 px-2 py-3 font-bold text-neutral-800 tracking-wider text-[11px] text-center w-[100px] min-w-[100px]" title={p.label}>
+                                            <span className="hidden xl:inline">{p.label}</span>
+                                            <span className="xl:hidden">{p.short}</span>
                                         </th>
                                     ))}
-                                    <th className="sticky top-0 right-0 z-20 bg-neutral-100 border-b border-gray-200 px-6 py-4 w-12"></th>
+                                    <th className="sticky top-0 right-0 z-20 bg-neutral-100 border-b border-gray-200 px-2 py-3 w-[40px] min-w-[40px]"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -248,10 +252,10 @@ function OverviewContent() {
                                                 className={`cursor-pointer transition-colors ${isExpanded ? 'bg-blue-50/50' : (idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100')}`}
                                                 onClick={() => handleToggleExpand(pinOption.value)}
                                             >
-                                                <td className="sticky left-0 z-10 border-b border-gray-200 px-6 py-4 font-semibold text-neutral-800 bg-inherit border-r">
+                                                <td className="sticky left-0 z-10 border-b border-gray-200 px-3 py-3 md:px-6 md:py-4 font-semibold text-neutral-800 bg-inherit border-r w-[260px] min-w-[260px] border-l-4 border-l-transparent">
                                                     <div>
-                                                        <div className="text-base">{pinOption.label}</div>
-                                                        <div className="text-xs text-neutral-400 font-mono mt-0.5">{pinOption.value}</div>
+                                                        <div className="text-sm md:text-base truncate">{pinOption.label}</div>
+                                                        <div className="text-[10px] text-neutral-400 font-mono mt-0.5">{pinOption.value}</div>
                                                     </div>
                                                 </td>
 
@@ -262,23 +266,23 @@ function OverviewContent() {
                                                     const hasData = totalCount > 0;
 
                                                     return (
-                                                        <td key={plat.id} className="border-b border-gray-200 px-6 py-4 text-center align-middle">
+                                                        <td key={plat.id} className="border-b border-gray-200 px-2 py-3 text-center align-middle w-[100px] min-w-[100px]">
                                                             {isLoadingThisPincode ? (
-                                                                <Loader2 className="animate-spin text-gray-400 mx-auto" size={20} />
+                                                                <Loader2 className="animate-spin text-gray-400 mx-auto" size={16} />
                                                             ) : hasData ? (
-                                                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-800 font-bold rounded-md border border-green-200">
-                                                                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                                                    <div className="flex flex-col text-left justify-center">
-                                                                        <span className="text-[10px] leading-[1.15] text-green-700">P: {totalCount}</span>
-                                                                        {totalBrands > 0 && <span className="text-[9px] leading-[1.15] text-green-600/80 font-semibold">B: {totalBrands}</span>}
+                                                                <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-800 font-bold rounded-md border border-green-200">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></div>
+                                                                    <div className="flex flex-col text-left">
+                                                                        <span className="text-[10px] leading-tight text-green-700">P: {totalCount}</span>
+                                                                        {totalBrands > 0 && <span className="text-[9px] leading-tight text-green-600/80 font-semibold">B: {totalBrands}</span>}
                                                                     </div>
                                                                 </div>
                                                             ) : isAvailable ? (
-                                                                <div className="inline-flex items-center px-2.5 py-0.5 bg-yellow-50 text-yellow-700 font-bold rounded-full text-xs border border-yellow-200 shadow-sm">
-                                                                    Not Scraped
+                                                                <div className="inline-flex items-center px-1.5 py-0.5 bg-yellow-50 text-yellow-700 font-bold rounded-full text-[9px] border border-yellow-200">
+                                                                    N/A
                                                                 </div>
                                                             ) : (
-                                                                <div className="inline-flex items-center px-2.5 py-0.5 bg-red-50 text-red-600 font-bold rounded-full text-xs border border-red-200 shadow-sm">
+                                                                <div className="inline-flex items-center px-1.5 py-0.5 bg-red-50 text-red-600 font-bold rounded-full text-[9px] border border-red-200">
                                                                     U/S
                                                                 </div>
                                                             )}
@@ -286,8 +290,8 @@ function OverviewContent() {
                                                     );
                                                 })}
 
-                                                <td className="border-b border-gray-200 px-6 py-4 text-gray-400 text-right">
-                                                    {isExpanded ? <ChevronUp size={20} className="ml-auto" /> : <ChevronDown className="ml-auto" size={20} />}
+                                                <td className="border-b border-gray-200 px-2 py-3 text-gray-400 text-right w-[40px] min-w-[40px]">
+                                                    {isExpanded ? <ChevronUp size={16} className="ml-auto" /> : <ChevronDown className="ml-auto" size={16} />}
                                                 </td>
                                             </tr>
 
@@ -300,25 +304,27 @@ function OverviewContent() {
                                                                 <Loader2 className="animate-spin text-gray-400" size={32} />
                                                             </div>
                                                         ) : (
-                                                            <div className="overflow-x-auto border-l-4 border-blue-400">
-                                                                <table className="w-full text-left border-collapse">
+                                                            <div className="overflow-x-auto">
+                                                                <table className="w-full text-left border-collapse table-fixed">
                                                                     <thead>
                                                                         <tr>
-                                                                            <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-6 py-3 font-bold text-neutral-700 tracking-wider text-xs shadow-[1px_0_3px_-1px_rgba(0,0,0,0.1)] min-w-[200px]">
+                                                                            <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-3 py-3 font-bold text-sky-700 tracking-wider text-[11px] shadow-[1px_0_3px_-1px_rgba(0,0,0,0.1)] w-[260px] min-w-[260px] border-l-4 border-l-sky-500">
                                                                                 Category
                                                                             </th>
                                                                             {PLATFORMS.map(p => (
-                                                                                <th key={p.id} className="sticky top-0 z-10 bg-neutral-50 border-b border-gray-200 px-6 py-3 font-bold text-neutral-500 tracking-wider text-xs text-center min-w-[140px]">
-                                                                                    {p.label}
+                                                                                <th key={p.id} className="sticky top-0 z-10 bg-neutral-50 border-b border-gray-200 px-2 py-3 font-bold text-neutral-500 tracking-wider text-[11px] text-center w-[100px] min-w-[100px]" title={p.label}>
+                                                                                    <span className="hidden xl:inline">{p.label}</span>
+                                                                                    <span className="xl:hidden">{p.short}</span>
                                                                                 </th>
                                                                             ))}
+                                                                            <th className="sticky top-0 right-0 z-20 bg-neutral-100 border-b border-gray-200 px-2 py-3 w-[40px] min-w-[40px]"></th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
                                                                         {CATEGORY_OPTIONS.map((cat, catIdx) => (
                                                                             <tr key={cat} className={catIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50 whitespace-nowrap'}>
-                                                                                <td className="sticky left-0 z-10 border-r border-gray-200 px-6 py-3 font-medium text-neutral-700 shadow-[1px_0_3px_-1px_rgba(0,0,0,0.05)] bg-inherit">
-                                                                                    {cat}
+                                                                                <td className="sticky left-0 z-10 border-r border-gray-200 px-3 py-3 md:px-6 md:py-3 font-medium text-neutral-700 shadow-[1px_0_3px_-1px_rgba(0,0,0,0.05)] bg-inherit text-xs md:text-sm border-l-4 border-l-sky-500/50 w-[260px] min-w-[260px]">
+                                                                                    <div className="truncate">{cat}</div>
                                                                                 </td>
 
                                                                                 {PLATFORMS.map(plat => {
@@ -335,7 +341,7 @@ function OverviewContent() {
                                                                                     }
 
                                                                                     return (
-                                                                                        <td key={plat.id} className="border-b border-gray-100 px-6 py-3 text-center align-top">
+                                                                                        <td key={plat.id} className="border-b border-gray-100 px-2 py-3 text-center align-top w-[100px] min-w-[100px]">
                                                                                             <div className="flex flex-col items-center justify-center min-h-[48px]">
                                                                                                 {hasData ? (
                                                                                                     <div className="flex flex-col items-center gap-1">
@@ -345,14 +351,14 @@ function OverviewContent() {
                                                                                                                 {brandCount > 0 && <span className="text-[9px] leading-[1.15] text-green-600/80 font-semibold">B: {brandCount}</span>}
                                                                                                             </div>
                                                                                                         </div>
-                                                                                                        <span className="text-[9px] text-gray-500 font-medium whitespace-nowrap bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">{dateStr}</span>
+                                                                                                        <span className="text-[8px] text-gray-500 font-medium whitespace-nowrap bg-neutral-100/80 px-1 py-0.5 rounded border border-gray-100">{dateStr}</span>
                                                                                                     </div>
                                                                                                 ) : isAvailable ? (
-                                                                                                    <div className="inline-flex items-center px-2.5 py-0.5 bg-yellow-50 text-yellow-700 font-bold rounded-full text-xs border border-yellow-200 shadow-sm">
-                                                                                                        Not Scraped
+                                                                                                    <div className="inline-flex items-center px-1.5 py-0.5 bg-yellow-50 text-yellow-700 font-bold rounded-full text-[9px] border border-yellow-200">
+                                                                                                        N/A
                                                                                                     </div>
                                                                                                 ) : (
-                                                                                                    <div className="inline-flex items-center px-2.5 py-0.5 bg-red-50 text-red-600 font-bold rounded-full text-xs border border-red-200 shadow-sm">
+                                                                                                    <div className="inline-flex items-center px-1.5 py-0.5 bg-red-50 text-red-600 font-bold rounded-full text-[9px] border border-red-200">
                                                                                                         U/S
                                                                                                     </div>
                                                                                                 )}
@@ -360,6 +366,7 @@ function OverviewContent() {
                                                                                         </td>
                                                                                     );
                                                                                 })}
+                                                                                <td className="border-b border-gray-100 px-2 py-2 w-[40px] min-w-[40px]"></td>
                                                                             </tr>
                                                                         ))}
                                                                     </tbody>

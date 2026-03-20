@@ -110,7 +110,8 @@ function CategoriesPageContent() {
   const [useFilterToggle, setUseFilterToggle] = useState(true);
   const [showNewFirst, setShowNewFirst] = useState(false);
   const [showNonHyphenOnly, setShowNonHyphenOnly] = useState(false);
-  const [showDangerOnly, setShowDangerOnly] = useState(false);
+  const [showDangerFirst, setShowDangerFirst] = useState(false);
+  const [showPureNewFirst, setShowPureNewFirst] = useState(false);
   const [showAdFirst, setShowAdFirst] = useState(false);
   const [showInStockFirst, setShowInStockFirst] = useState(false);
   const [showOutStockFirst, setShowOutStockFirst] = useState(false);
@@ -684,15 +685,26 @@ function CategoriesPageContent() {
       });
     }
 
-    // Danger Filter (Show only items with platform conflicts)
-    if (showDangerOnly) {
-      result = result.filter(product => product.isHeader || product.hasGroupConflict === true);
+    // Danger Filter removed (now handled as a priority sort)
 
-      // Prune empty headers (headers that have no danger products following them)
+    // Pure & New Filter - show only groups created today (based on createdAt timestamp)
+    if (showPureNewFirst) {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+
+      result = result.filter(product => {
+        if (product.isHeader) return true;
+        if (!product.createdAt) return false;
+        const created = new Date(product.createdAt);
+        return created >= startOfToday && created <= endOfToday;
+      });
+
+      // Prune empty headers (headers with no matching products following them)
       const pruned = [];
       for (let i = 0; i < result.length; i++) {
         if (result[i].isHeader) {
-          // Check if there's at least one non-header product before the next header or end of list
           let hasContent = false;
           for (let j = i + 1; j < result.length; j++) {
             if (result[j].isHeader) break;
@@ -708,7 +720,7 @@ function CategoriesPageContent() {
     }
 
     return result;
-  }, [deduplicatedProducts, platformFilter, showMissing, showNonHyphenOnly, showDangerOnly]);
+  }, [deduplicatedProducts, platformFilter, showMissing, showNonHyphenOnly, showDangerFirst, showPureNewFirst]);
 
   const sortedProducts = useMemo(() => {
     // Use the sorting utility functions instead of inline logic
@@ -717,6 +729,8 @@ function CategoriesPageContent() {
       showOutStockFirst,
       showAdFirst,
       showNewFirst,
+      showDangerFirst,
+      showPureNewFirst, // NEW
       platformFilter
     );
 
@@ -746,7 +760,7 @@ function CategoriesPageContent() {
       flatList = flatList.concat([...group.items].sort(sortFunc));
     });
     return flatList;
-  }, [filteredProducts, sortConfig, showNewFirst, showNonHyphenOnly, showAdFirst, showInStockFirst, showOutStockFirst, platformFilter]);
+  }, [filteredProducts, sortConfig, showNewFirst, showDangerFirst, showPureNewFirst, showNonHyphenOnly, showAdFirst, showInStockFirst, showOutStockFirst, platformFilter]);
 
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -1204,8 +1218,8 @@ function CategoriesPageContent() {
                     </MuiTooltip>
                   </span>
                   <Switch
-                    checked={showDangerOnly}
-                    onCheckedChange={setShowDangerOnly}
+                    checked={showDangerFirst}
+                    onCheckedChange={setShowDangerFirst}
                   />
                 </div>
               )}
@@ -1313,7 +1327,20 @@ function CategoriesPageContent() {
                 selectedGroupIds={selectedGroupIds}
                 onSelectionChange={setSelectedGroupIds}
                 bulkBrands={bulkBrands}
-                isLiveMode={isLiveMode}
+                isLiveMode={(() => {
+                  if (!isLiveMode || !snapshotTime) return false;
+                  const scrapeDate = new Date(snapshotTime);
+                  const today = new Date();
+                  return (
+                    scrapeDate.getFullYear() === today.getFullYear() &&
+                    scrapeDate.getMonth() === today.getMonth() &&
+                    scrapeDate.getDate() === today.getDate()
+                  );
+                })()}
+                showDangerFirst={showDangerFirst}
+                onShowDangerFirstChange={setShowDangerFirst}
+                showPureNewFirst={showPureNewFirst}
+                onShowPureNewFirstChange={setShowPureNewFirst}
               />
             </div>
           )}
