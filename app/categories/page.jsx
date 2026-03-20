@@ -400,7 +400,7 @@ function CategoriesPageContent() {
 
   const handleLocalProductUpdate = (updatedData) => {
     // updatedData = { groupingId, name?, weight?, brand?, brandId?, modifiedPlatforms?: [...] }
-    
+
     // Determine the canonical grouping ID (parent ID) to ensure all related table rows are updated
     let targetParentId = updatedData.groupingId;
     if (targetParentId && targetParentId.includes('_dup_')) {
@@ -416,7 +416,7 @@ function CategoriesPageContent() {
         if (updatedData.weight !== undefined) updates.weight = updatedData.weight;
         if (updatedData.brand !== undefined) updates.brand = updatedData.brand;
         if (updatedData.brandId !== undefined) updates.brandId = updatedData.brandId;
-        
+
         const newProduct = { ...p, ...updates };
 
         // Handle platform-specific snapshot updates if provided
@@ -1231,7 +1231,7 @@ function CategoriesPageContent() {
         {/* Tab Switcher & Top Pagination */}
         <div className="flex-none flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="inline-flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+            <div className="inline-flex p-1 rounded-lg  shadow-sm">
               {['products', 'analytics', 'stock', 'links', 'brands'].map((tab) => (
                 <button
                   key={tab}
