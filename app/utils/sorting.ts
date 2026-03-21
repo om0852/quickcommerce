@@ -162,12 +162,22 @@ export const createPrioritySort = (
   showNewFirst: boolean,
   showDangerFirst: boolean, // NEW
   showPureNewFirst: boolean, // NEW
-  platformFilter: string
+  platformFilter: string,
+  scrapeIntervals?: { start: Date | null, end: Date | null }
 ) => {
   return (a: Product, b: Product): number => {
     if (showPureNewFirst) {
-      const aPure = a.groupingId?.startsWith('NG');
-      const bPure = b.groupingId?.startsWith('NG');
+      const isPureNew = (p: Product) => {
+        if (!p.createdAt) return false;
+        if (scrapeIntervals?.start && scrapeIntervals?.end) {
+          const created = new Date(p.createdAt);
+          return created > scrapeIntervals.start && created <= scrapeIntervals.end;
+        }
+        return p.groupingId?.startsWith('NG');
+      };
+      
+      const aPure = isPureNew(a);
+      const bPure = isPureNew(b);
       if (aPure && !bPure) return -1;
       if (!aPure && bPure) return 1;
     }

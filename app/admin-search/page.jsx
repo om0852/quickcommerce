@@ -29,13 +29,18 @@ function formatDate(d) {
 }
 
 function PriceTag({ price, originalPrice, isOutOfStock }) {
-  if (isOutOfStock) return <span className="text-rose-600 font-semibold text-xs">Out of Stock</span>;
-  if (!price && price !== 0) return <span className="text-neutral-400 text-sm">—</span>;
   return (
-    <div className="flex flex-col items-end">
-      <span className="font-bold text-neutral-900">₹{Number(price).toFixed(0)}</span>
+    <div className="flex flex-col items-end gap-0.5">
+      {price != null || price === 0 ? (
+        <span className="font-bold text-neutral-900">₹{Number(price).toFixed(0)}</span>
+      ) : (
+        <span className="text-neutral-400 text-sm">—</span>
+      )}
       {originalPrice && originalPrice > price && (
         <span className="text-xs text-neutral-400 line-through">₹{Number(originalPrice).toFixed(0)}</span>
+      )}
+      {isOutOfStock && (
+        <span className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">OOS</span>
       )}
     </div>
   );
@@ -407,7 +412,7 @@ export default function AdminSearchPage() {
       </div>
 
       {/* Page body */}
-      <div className="max-w-5xl mx-auto px-4 py-4">
+      <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Error */}
         {error && (
           <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs mb-4">

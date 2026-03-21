@@ -20,7 +20,7 @@ export async function POST(request) {
         await connectToDatabase();
         const data = await request.json();
 
-        const { pincode, category, groupId, productId, description } = data;
+        const { pincode, category, groupId, productId, description, images } = data;
 
         if (!pincode || !category || !description) {
             return NextResponse.json({ success: false, error: 'Pincode, category, and description are required' }, { status: 400 });
@@ -32,6 +32,7 @@ export async function POST(request) {
             groupId,
             productId,
             description,
+            images: images || [],
             status: 'pending'
         });
 

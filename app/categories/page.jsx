@@ -142,6 +142,18 @@ function CategoriesPageContent() {
   const lastActivePageRef = useRef(1);
   const abortControllerRef = useRef(null);
 
+  const scrapeIntervals = useMemo(() => {
+    if (!availableSnapshots || availableSnapshots.length === 0) return { start: null, end: null };
+    const sorted = [...availableSnapshots].sort((a, b) => new Date(b) - new Date(a));
+    const currentIx = snapshotTime ? sorted.indexOf(snapshotTime) : 0;
+    const current = currentIx !== -1 ? sorted[currentIx] : sorted[0];
+    const prev = currentIx + 1 < sorted.length ? sorted[currentIx + 1] : null;
+    return {
+      end: new Date(current),
+      start: prev ? new Date(prev) : new Date(new Date(current).getTime() - 24 * 60 * 60 * 1000)
+    };
+  }, [availableSnapshots, snapshotTime]);
+
 
 
   const searchedProducts = useMemo(() => {
@@ -216,19 +228,17 @@ function CategoriesPageContent() {
 
     // Danger Filter removed (now handled as a priority sort)
 
-    // Pure & New Filter - show only groups created today (based on createdAt timestamp)
+    // Pure & New Filter - show only groups created between last scrape date and next scrape time
     if (showPureNewFirst) {
-      const startOfToday = new Date();
-      startOfToday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date();
-      endOfToday.setHours(23, 59, 59, 999);
-
-      result = result.filter(product => {
-        if (product.isHeader) return true;
-        if (!product.createdAt) return false;
-        const created = new Date(product.createdAt);
-        return created >= startOfToday && created <= endOfToday;
-      });
+      const { start, end } = scrapeIntervals;
+      if (start && end) {
+        result = result.filter(product => {
+          if (product.isHeader) return true;
+          if (!product.createdAt) return false;
+          const created = new Date(product.createdAt);
+          return created > start && created <= end;
+        });
+      }
     }
 
     // Prune empty headers globally (run if any filter was active)
@@ -344,10 +354,10 @@ function CategoriesPageContent() {
           // 1. !isDuplicate takes precedence over isDuplicate (master group vs standalone)
           if (!bestRow.isDuplicate && row.isDuplicate) continue;
           if (!row.isDuplicate && bestRow.isDuplicate) {
-             bestRow = row;
-             maxPlatforms = getPlatformCount(row);
-             minRank = getMinRank(row);
-             continue;
+            bestRow = row;
+            maxPlatforms = getPlatformCount(row);
+            minRank = getMinRank(row);
+            continue;
           }
 
           const platforms = getPlatformCount(row);
@@ -440,7 +450,7 @@ function CategoriesPageContent() {
       if (product.zepto) counts.zepto++;
       if (product.blinkit) counts.blinkit++;
       if (product.dmart) counts.dmart++;
-      if (product.flipkartMinutes) counts.flipkartMinutes++;    if (product.instamart) counts.instamart++;
+      if (product.flipkartMinutes) counts.flipkartMinutes++; if (product.instamart) counts.instamart++;
     });
 
     return counts;
@@ -754,7 +764,8 @@ function CategoriesPageContent() {
       showNewFirst,
       showDangerFirst,
       showPureNewFirst, // NEW
-      platformFilter
+      platformFilter,
+      scrapeIntervals
     );
 
     const sortFunc = createSortFunction(sortConfig, prioritySort, platformFilter);
@@ -1236,18 +1247,18 @@ function CategoriesPageContent() {
         </div>
 
         {/* Tab Switcher & Top Pagination */}
-        <div className="flex-none flex flex-wrap items-center justify-between gap-3 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex p-1 rounded-lg  shadow-sm">
+        <div className="flex-none flex flex-wrap items-center justify-between gap-2 bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="inline-flex p-0.5 rounded-lg gap-1">
               {['products', 'analytics', 'stock', 'links', 'brands'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={cn(
-                    "px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize cursor-pointer",
+                    "px-3 py-1 rounded-md text-sm font-medium transition-all capitalize cursor-pointer",
                     activeTab === tab
                       ? "bg-neutral-900 text-white shadow-sm"
-                      : "text-neutral-500 hover:text-neutral-700 hover:bg-gray-100"
+                      : "text-neutral-500 hover:text-neutral-700 bg-gray-100"
                   )}
                 >
                   {tab}
@@ -1271,7 +1282,7 @@ function CategoriesPageContent() {
                   setSelectedGroupIds([]);
                 }}
                 className={cn(
-                  "px-4 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer border",
+                  "px-3 py-[4px] rounded-md text-sm font-medium transition-all cursor-pointer border",
                   isBulkEditMode
                     ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
                     : "bg-white text-neutral-700 border-gray-200 shadow-sm hover:bg-gray-50"
@@ -1348,6 +1359,11 @@ function CategoriesPageContent() {
                 onShowDangerFirstChange={setShowDangerFirst}
                 showPureNewFirst={showPureNewFirst}
                 onShowPureNewFirstChange={setShowPureNewFirst}
+                scrapeIntervals={scrapeIntervals}
+                onInfoClick={(product) => {
+                  setSelectedProduct(product);
+                  setIsDetailsOpen(true);
+                }}
               />
             </div>
           )}

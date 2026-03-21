@@ -179,7 +179,7 @@ export default function ExportCategoryDialog({
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 bg-neutral-100">
+                <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
 
                     <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm mb-6">
                         {/* Email Input */}

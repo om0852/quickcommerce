@@ -409,7 +409,7 @@ export default function ProductEditDialog({
                 }}
             >
                 {/* Header */}
-                <div className="flex-none px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                <div className="flex-none px-6 py-4 border-b border-gray-200 bg-white flex items-center justify-between">
                     <div>
                         <h3 className="text-xl font-bold text-gray-900">Edit Product Details</h3>
                         <p className="text-sm text-gray-500">Edit master group and individual platform data</p>
@@ -420,7 +420,7 @@ export default function ProductEditDialog({
                 </div>
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-gray-50/50">
+                <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-gray-50">
 
                     {error && (
                         <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-md">
@@ -460,14 +460,30 @@ export default function ProductEditDialog({
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-gray-500">Label (Custom Tag)</label>
-                                <input
-                                    type="text"
-                                    value={label}
-                                    onChange={(e) => setLabel(e.target.value)}
-                                    placeholder="e.g. Best Seller, New..."
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-colors"
-                                />
+                                <label className="text-xs font-semibold text-gray-500">Label</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setLabel(label === 'Main' ? '' : 'Main')}
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg border-2 transition-all duration-200 cursor-pointer select-none
+                                        ${label === 'Main'
+                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                            : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300 hover:text-gray-500'
+                                        }`}
+                                >
+                                    {/* Bookmark icon */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={`w-5 h-5 flex-shrink-0 transition-all duration-200 ${label === 'Main' ? 'fill-emerald-500 stroke-emerald-500' : 'fill-none stroke-gray-300'}`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                                    </svg>
+                                    <span className={`text-sm font-semibold transition-colors duration-200 ${label === 'Main' ? 'text-emerald-700' : 'text-gray-400'}`}>
+                                        {label === 'Main' ? 'Main' : 'Set as Main'}
+                                    </span>
+                                    {/* Toggle indicator */}
+                                    <span className="ml-auto">
+                                        <span className={`inline-block w-8 h-4 rounded-full transition-all duration-200 relative ${label === 'Main' ? 'bg-emerald-500' : 'bg-gray-200'}`}>
+                                            <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all duration-200 ${label === 'Main' ? 'left-4' : 'left-0.5'}`} />
+                                        </span>
+                                    </span>
+                                </button>
                             </div>
                             <div className="space-y-1 col-span-1 md:col-span-2">
                                 <label className="text-xs font-semibold text-gray-500">Group Image URL (Optional Override)</label>
@@ -677,7 +693,7 @@ export default function ProductEditDialog({
                 </div>
 
                 {/* Footer */}
-                <div className="flex-none px-6 py-5 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 z-10">
+                <div className="flex-none px-6 py-5 bg-white border-t border-gray-200 flex justify-end gap-4 z-10">
                     <button
                         onClick={onClose}
                         className="px-8 py-3 text-base font-semibold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer border border-gray-200"

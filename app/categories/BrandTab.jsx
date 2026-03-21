@@ -57,7 +57,7 @@ const CustomBrandDialog = ({ isOpen, mode, brand, onClose, onSubmit }) => {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={!isSubmitting ? onClose : undefined} />
             <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 bg-neutral-50/50">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200 bg-white">
                     <h3 className="text-lg font-bold text-neutral-900">
                         {mode === 'add' ? 'Add New Brand' : mode === 'edit' ? 'Rename Brand' : 'Delete Brand'}
                     </h3>
@@ -65,7 +65,7 @@ const CustomBrandDialog = ({ isOpen, mode, brand, onClose, onSubmit }) => {
                         <X size={20} />
                     </button>
                 </div>
-                <div className="p-5">
+                <div className="p-5 bg-gray-50 rounded-b-xl">
                     {error && (
                         <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
                             {error}

@@ -187,7 +187,7 @@ export default function GroupManagementDialog({
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 bg-neutral-100">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 bg-gray-50">
 
                     {/* Status Messages - Error block kept for persistent errors, but successMsg removed */}
                     {error && <div className="p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200 flex items-start gap-3"><span className="text-lg">⚠️</span>{error}</div>}

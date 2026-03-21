@@ -99,7 +99,7 @@ const BrandProductsDialog = ({
                 </div>
 
                 {/* Body - Reusing ProductTable */}
-                <div className="flex-1 overflow-y-auto bg-neutral-100 p-4">
+                <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
                     <ProductTable
                         products={filteredProducts}
                         sortConfig={sortConfig}

@@ -20,6 +20,7 @@ import { useNotification } from '@/app/hooks/useNotification';
 import GroupManagementDialog from './GroupManagementDialog';
 import ProductEditDialog from './ProductEditDialog';
 import GroupDetailsCrossPincodeDialog from './GroupDetailsCrossPincodeDialog';
+import GroupInfoDialog from './GroupInfoDialog';
 import ProductImage from './ProductImage';
 
 const ProductTable = React.memo(function ProductTable({
@@ -57,11 +58,14 @@ const ProductTable = React.memo(function ProductTable({
     onShowDangerFirstChange, // NEW
     showPureNewFirst = false, // NEW
     onShowPureNewFirstChange, // NEW
+    scrapeIntervals,
+    onInfoClick, // NEW: open ProductDetailsDialog for a product
 }) {
     const [manageGroup, setManageGroup] = useState(null);
     const [editProduct, setEditProduct] = useState(null);
     const [crossPincodeGroup, setCrossPincodeGroup] = useState(null);
     const [crossPincodePlatform, setCrossPincodePlatform] = useState(null);
+    const [groupInfoProduct, setGroupInfoProduct] = useState(null);
     const [copiedId, setCopiedId] = useState(null);
     const [editingProductId, setEditingProductId] = useState(null);
     const [editValue, setEditValue] = useState('');
@@ -113,6 +117,12 @@ const ProductTable = React.memo(function ProductTable({
     const handleNameSort = (direction) => {
         resetOtherState();
         onSort('name', direction);
+        handleSortMenuClose();
+    };
+
+    const handleBrandSort = (direction) => {
+        resetOtherState();
+        onSort('brand', direction);
         handleSortMenuClose();
     };
 
@@ -597,6 +607,48 @@ const ProductTable = React.memo(function ProductTable({
                                             >
                                                 <span>Product Name (Z to A)</span>
                                                 {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                            <MenuItem
+                                                onClick={() => handleBrandSort('asc')}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <span>Brand Name (A to Z)</span>
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                            </MenuItem>
+
+                                            <MenuItem
+                                                onClick={() => handleBrandSort('desc')}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <span>Brand Name (Z to A)</span>
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -1111,10 +1163,14 @@ const ProductTable = React.memo(function ProductTable({
                                                                             })()}
                                                                             {product.label && (
                                                                                 <span 
-                                                                                    className="ml-1.5 text-amber-500 inline-flex items-center" 
+                                                                                    className="ml-1.5 inline-flex items-center" 
                                                                                     title={`Label: ${product.label}`}
                                                                                 >
-                                                                                    ★
+                                                                                    <img
+                                                                                        src="https://img.icons8.com/?size=100&id=86717&format=png&color=DAA520"
+                                                                                        alt="Crown"
+                                                                                        style={{ width: 14, height: 14 }}
+                                                                                    />
                                                                                 </span>
                                                                             )}
                                                                             {(() => {
@@ -1145,24 +1201,21 @@ const ProductTable = React.memo(function ProductTable({
                                                                         {copiedId === product.groupingId ? <Check size={12} /> : <Copy size={12} />}
                                                                     </button>
                                                                 )}
-                                                                 {isAdmin && (
-                                                                    <button
+                                                                 <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            setCrossPincodeGroup(product);
-                                                                            setCrossPincodePlatform(null);
+                                                                            setGroupInfoProduct(product);
                                                                         }}
                                                                         className="p-1 rounded-md transition-colors flex-shrink-0 text-blue-400 hover:text-blue-600 hover:bg-blue-50 ml-1"
                                                                         title="View Group Details (All Pincodes)"
                                                                     >
                                                                         <Info size={14} />
                                                                     </button>
-                                                                )}
                                                             </div>
                                                             <div className="text-xs text-orange-600 font-medium mt-0.5 min-h-[16px] flex items-center gap-2">
                                                                 <span>{product.brand || ""}</span>
-                                                                {product.createdAt && new Date(product.createdAt).toDateString() === new Date().toDateString() && (
-                                                                    <span className="text-[10px] font-bold px-1 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 animate-pulse">NG</span>
+                                                                {product.createdAt && scrapeIntervals?.start && scrapeIntervals?.end && new Date(product.createdAt) > scrapeIntervals.start && new Date(product.createdAt) <= scrapeIntervals.end && (
+                                                                    <span className="text-[10px] font-bold px-1 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 animate-pulse" title="New Group (Created since last scrape)">NG</span>
                                                                 )}
                                                             </div>
                                                             {isAdmin && !product.isDuplicate && (
@@ -1407,6 +1460,12 @@ const ProductTable = React.memo(function ProductTable({
                     <Loader2 size={48} className="text-neutral-900 animate-spin" />
                 </div>
             )}
+
+            <GroupInfoDialog
+                isOpen={!!groupInfoProduct}
+                onClose={() => setGroupInfoProduct(null)}
+                product={groupInfoProduct}
+            />
 
             <Snackbar
                 open={toastState.open}

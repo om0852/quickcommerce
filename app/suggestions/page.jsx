@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { PINCODE_OPTIONS } from '@/app/constants/platforms';
 import categoriesData from '../utils/categories_with_urls.json';
 import CustomDropdown from '@/components/CustomDropdown';
-import { Loader2, Check, X, RefreshCw, MessageSquare, Info, AlertCircle, Clock } from 'lucide-react';
+import { Loader2, Check, X, RefreshCw, MessageSquare, Info, AlertCircle, Clock, Upload } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Snackbar, Alert, Tooltip as MuiTooltip } from '@mui/material';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,7 @@ function SuggestionsContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedSuggestion, setSelectedSuggestion] = useState(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -28,7 +29,8 @@ function SuggestionsContent() {
     category: '',
     groupId: '',
     productId: '',
-    description: ''
+    description: '',
+    images: []
   });
 
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
@@ -68,6 +70,34 @@ function SuggestionsContent() {
     fetchSuggestions();
   }, []);
 
+  // Handle Image Upload
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + formData.images.length > 3) {
+      setToast({ open: true, message: 'Maximum 3 images allowed', severity: 'warning' });
+      return;
+    }
+    
+    files.forEach(file => {
+      if (file.size > 2 * 1024 * 1024) {
+        setToast({ open: true, message: 'Image must be less than 2MB', severity: 'warning' });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, images: [...prev.images, reader.result] }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
   // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -83,7 +113,7 @@ function SuggestionsContent() {
       const data = await res.json();
       if (data.success) {
         setToast({ open: true, message: 'Suggestion submitted successfully!', severity: 'success' });
-        setFormData(prev => ({ ...prev, groupId: '', productId: '', description: '' }));
+        setFormData(prev => ({ ...prev, groupId: '', productId: '', description: '', images: [] }));
         fetchSuggestions();
       } else {
         setToast({ open: true, message: data.error || 'Failed to submit', severity: 'error' });
@@ -115,36 +145,54 @@ function SuggestionsContent() {
     }
   };
 
+  // Prevent row click when clicking action buttons
+  const handleActionClick = (e, id, status) => {
+    e.stopPropagation();
+    handleUpdateStatus(id, status);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-neutral-900">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center gap-4">
-            {!isSidebarOpen && (
-              <button 
-                onClick={toggleSidebar}
-                className="p-1.5 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in xl:hidden"
-              >
-                <SidebarOpenIcon size={20} />
-              </button>
-            )}
-            <div className="p-3 bg-neutral-900 text-white rounded-lg">
-              <MessageSquare size={24} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Suggestions & Issue Tracking</h1>
-              <p className="text-gray-500 text-sm">Submit and track improvements for product grouping and data accuracy.</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-neutral-900">
+      {/* Top Fixed Header */}
+      <div className="flex-none bg-white border-b border-gray-200 px-4 md:px-6 py-2 flex items-center justify-between shadow-sm z-20 min-h-[58px]">
+        <div className="flex items-center gap-4">
+          {!isSidebarOpen && (
+            <button
+              onClick={toggleSidebar}
+              className="p-1.5 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in"
+            >
+              <SidebarOpenIcon size={20} />
+            </button>
+          )}
+          <h1 className="text-lg font-bold tracking-tight text-neutral-900">Suggestions</h1>
+        </div>
+        <div className="flex items-center gap-4">
           <button 
             onClick={fetchSuggestions}
             className="p-2 text-gray-500 hover:text-neutral-900 hover:bg-gray-100 rounded-lg transition-all"
             title="Refresh List"
           >
-            <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
+      </div>
+
+      {/* Main Form Content */}
+      <div className="flex-1 overflow-auto p-4 md:p-8">
+        <div className="max-w-6xl mx-auto space-y-8">
+          
+          {/* Header Info */}
+          <div className="flex items-center justify-between bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-neutral-900 text-white rounded-lg">
+                <MessageSquare size={24} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Suggestions & Issue Tracking</h1>
+                <p className="text-gray-500 text-sm">Submit and track improvements for product grouping and data accuracy.</p>
+              </div>
+            </div>
+          </div>
 
         {/* Suggestion Form (Admin Only or Default for now) */}
         {isAdmin && (
@@ -190,15 +238,39 @@ function SuggestionsContent() {
                   placeholder="e.g. zepto-4455"
                 />
               </div>
-              <div className="md:col-span-2 space-y-1">
+              <div className="md:col-span-3 space-y-1 mt-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</label>
                 <textarea
                   required
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-neutral-900 focus:outline-none transition-all min-h-[42px]"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-neutral-900 focus:outline-none transition-all min-h-[80px]"
                   placeholder="Describe the issue or suggestion..."
                 />
+              </div>
+              <div className="md:col-span-3 space-y-2 mt-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Attachments (Optional, Max 3)</label>
+                <div className="flex flex-wrap gap-4 items-center">
+                  {formData.images.map((img, idx) => (
+                    <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                      <img src={img} alt="preview" className="w-16 h-16 object-cover" />
+                      <button 
+                        type="button" 
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Remove Image"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  {formData.images.length < 3 && (
+                    <label className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:border-gray-400 transition-colors cursor-pointer">
+                      <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+                      <Upload size={20} />
+                    </label>
+                  )}
+                </div>
               </div>
               <div className="md:col-span-3 flex justify-end">
                 <button
@@ -230,11 +302,11 @@ function SuggestionsContent() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/80 text-[10px] uppercase tracking-widest font-black text-gray-500 border-b border-gray-100">
+              <thead className="bg-gray-50/80 text-[10px] uppercase tracking-widest font-black text-gray-500 border-b border-gray-100">
+                <tr>
                   <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Context</th>
                   <th className="px-6 py-4">Description</th>
+                  <th className="px-6 py-4">Context</th>
                   <th className="px-6 py-4">Submitted</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
@@ -256,7 +328,11 @@ function SuggestionsContent() {
                   </tr>
                 )}
                 {suggestions.map((s) => (
-                  <tr key={s._id} className="hover:bg-gray-50/50 transition-colors">
+                  <tr 
+                    key={s._id} 
+                    onClick={() => setSelectedSuggestion(s)}
+                    className="hover:bg-gray-50/50 transition-colors cursor-pointer group"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={cn(
                         "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide",
@@ -266,6 +342,14 @@ function SuggestionsContent() {
                       )}>
                         {s.status}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 max-w-[200px]">
+                      <p className="text-sm text-gray-700 truncate">{s.description}</p>
+                      {s.images && s.images.length > 0 && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">{s.images.length} attachment(s)</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs space-y-1">
@@ -289,9 +373,6 @@ function SuggestionsContent() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-gray-700 max-w-md break-words">{s.description}</p>
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-400">
                       {new Date(s.createdAt).toLocaleDateString('en-GB')}
                       <br />
@@ -299,16 +380,16 @@ function SuggestionsContent() {
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       {!isAdmin && s.status === 'pending' ? (
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={() => handleUpdateStatus(s._id, 'completed')}
+                            onClick={(e) => handleActionClick(e, s._id, 'completed')}
                             className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg transition-all"
                             title="Approve"
                           >
                             <Check size={18} />
                           </button>
                           <button
-                            onClick={() => handleUpdateStatus(s._id, 'rejected')}
+                            onClick={(e) => handleActionClick(e, s._id, 'rejected')}
                             className="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition-all"
                             title="Reject"
                           >
@@ -329,6 +410,114 @@ function SuggestionsContent() {
         </div>
       </div>
 
+      {/* Suggestion Details Modal */}
+      {selectedSuggestion && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity animate-in fade-in">
+          <div 
+            className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-4 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <Info size={20} className="text-blue-500" />
+                Suggestion Details
+              </h3>
+              <button 
+                onClick={() => setSelectedSuggestion(null)} 
+                className="p-2 text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto space-y-6 bg-gray-50">
+               <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm">
+                  <div>
+                    <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status</span>
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide inline-block",
+                      selectedSuggestion.status === 'pending' && "bg-amber-100 text-amber-700",
+                      selectedSuggestion.status === 'completed' && "bg-emerald-100 text-emerald-700",
+                      selectedSuggestion.status === 'rejected' && "bg-rose-100 text-rose-700",
+                    )}>
+                      {selectedSuggestion.status}
+                    </span>
+                  </div>
+                  <div className="col-span-1 md:col-span-2">
+                    <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Submitted At</span>
+                    <span className="text-gray-900 font-medium">
+                      {new Date(selectedSuggestion.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Pincode</span>
+                    <span className="text-gray-900 font-medium">{selectedSuggestion.pincode}</span>
+                  </div>
+                  <div>
+                    <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Category</span>
+                    <span className="text-gray-900 font-medium">{selectedSuggestion.category}</span>
+                  </div>
+                  {(selectedSuggestion.groupId || selectedSuggestion.productId) && (
+                    <div className="col-span-2 md:col-span-3 grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100 mt-2">
+                      {selectedSuggestion.groupId && (
+                        <div>
+                          <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Group ID</span>
+                          <span className="text-gray-900 font-mono text-xs font-bold bg-white px-2 py-1 border border-gray-200 rounded">{selectedSuggestion.groupId}</span>
+                        </div>
+                      )}
+                      {selectedSuggestion.productId && (
+                        <div>
+                          <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Product ID</span>
+                          <span className="text-gray-900 font-mono text-xs font-bold bg-white px-2 py-1 border border-gray-200 rounded">{selectedSuggestion.productId}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+               </div>
+
+               <div>
+                 <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Description</span>
+                 <div className="bg-white p-4 rounded-xl border border-gray-100 text-gray-700 text-sm whitespace-pre-wrap leading-relaxed shadow-sm">
+                   {selectedSuggestion.description}
+                 </div>
+               </div>
+
+               {selectedSuggestion.images && selectedSuggestion.images.length > 0 && (
+                 <div>
+                   <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Attached Images</span>
+                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                     {selectedSuggestion.images.map((img, idx) => (
+                       <a href={img} target="_blank" rel="noopener noreferrer" key={idx} className="block group aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                         <img src={img} alt="attachment" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                       </a>
+                     ))}
+                   </div>
+                 </div>
+               )}
+            </div>
+            
+            {/* Modal Actions */}
+            {!isAdmin && selectedSuggestion.status === 'pending' && (
+              <div className="p-4 border-t border-gray-200 bg-white flex items-center justify-end gap-3 rounded-b-2xl">
+                <button
+                  onClick={() => { handleUpdateStatus(selectedSuggestion._id, 'rejected'); setSelectedSuggestion(null); }}
+                  className="px-5 py-2 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg font-bold text-sm transition-all"
+                >
+                  Reject Suggestion
+                </button>
+                <button
+                  onClick={() => { handleUpdateStatus(selectedSuggestion._id, 'completed'); setSelectedSuggestion(null); }}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all shadow-md flex items-center gap-2"
+                >
+                  <Check size={16} />
+                  Approve Suggestion
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <Snackbar
         open={toast.open}
         autoHideDuration={4000}
@@ -339,6 +528,7 @@ function SuggestionsContent() {
           {toast.message}
         </Alert>
       </Snackbar>
+      </div>
     </div>
   );
 }
