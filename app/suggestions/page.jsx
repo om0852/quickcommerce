@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { PINCODE_OPTIONS } from '@/app/constants/platforms';
 import categoriesData from '../utils/categories_with_urls.json';
 import CustomDropdown from '@/components/CustomDropdown';
@@ -9,7 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { Snackbar, Alert, Tooltip as MuiTooltip } from '@mui/material';
 import { cn } from '@/lib/utils';
 
-export default function SuggestionsPage() {
+function SuggestionsContent() {
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get('admin') === 'true';
 
@@ -329,5 +329,17 @@ export default function SuggestionsPage() {
         </Alert>
       </Snackbar>
     </div>
+  );
+}
+
+export default function SuggestionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 size={48} className="animate-spin text-neutral-400 opacity-20" />
+      </div>
+    }>
+      <SuggestionsContent />
+    </Suspense>
   );
 }
