@@ -59,6 +59,7 @@ export async function GET(request) {
                 platform: p.platform,
                 productName: latestAnywhere?.productName || 'N/A',
                 productWeight: latestAnywhere?.productWeight || 'N/A',
+                productImage: latestAnywhere?.productImage, // Adding image
                 pincodes: availablePincodes,
                 pincodeDetails: pincodesData
             };
