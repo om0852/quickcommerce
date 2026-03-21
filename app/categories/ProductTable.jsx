@@ -106,6 +106,8 @@ const ProductTable = React.memo(function ProductTable({
 
     const handleSortMenuClose = () => {
         setSortMenuAnchor(null);
+        setSortSubMenuAnchor(null);
+        setRankSubMenuAnchor(null);
     };
 
     const handleNameSort = (direction) => {
@@ -1143,17 +1145,19 @@ const ProductTable = React.memo(function ProductTable({
                                                                         {copiedId === product.groupingId ? <Check size={12} /> : <Copy size={12} />}
                                                                     </button>
                                                                 )}
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setCrossPincodeGroup(product);
-                                                                        setCrossPincodePlatform(null);
-                                                                    }}
-                                                                    className="p-1 rounded-md transition-colors flex-shrink-0 text-blue-400 hover:text-blue-600 hover:bg-blue-50 ml-1"
-                                                                    title="View Group Details (All Pincodes)"
-                                                                >
-                                                                    <Info size={14} />
-                                                                </button>
+                                                                 {isAdmin && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setCrossPincodeGroup(product);
+                                                                            setCrossPincodePlatform(null);
+                                                                        }}
+                                                                        className="p-1 rounded-md transition-colors flex-shrink-0 text-blue-400 hover:text-blue-600 hover:bg-blue-50 ml-1"
+                                                                        title="View Group Details (All Pincodes)"
+                                                                    >
+                                                                        <Info size={14} />
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                             <div className="text-xs text-orange-600 font-medium mt-0.5 min-h-[16px] flex items-center gap-2">
                                                                 <span>{product.brand || ""}</span>

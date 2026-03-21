@@ -8,8 +8,11 @@ import { Loader2, Check, X, RefreshCw, MessageSquare, Info, AlertCircle, Clock }
 import { useSearchParams } from 'next/navigation';
 import { Snackbar, Alert, Tooltip as MuiTooltip } from '@mui/material';
 import { cn } from '@/lib/utils';
+import { useSidebar } from '@/components/SidebarContext';
+import { SidebarOpenIcon } from '@/components/SidebarIcons';
 
 function SuggestionsContent() {
+  const { isSidebarOpen, toggleSidebar } = useSidebar();
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get('admin') === 'true';
 
@@ -118,6 +121,14 @@ function SuggestionsContent() {
         {/* Header */}
         <div className="flex items-center justify-between bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <div className="flex items-center gap-4">
+            {!isSidebarOpen && (
+              <button 
+                onClick={toggleSidebar}
+                className="p-1.5 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in xl:hidden"
+              >
+                <SidebarOpenIcon size={20} />
+              </button>
+            )}
             <div className="p-3 bg-neutral-900 text-white rounded-lg">
               <MessageSquare size={24} />
             </div>

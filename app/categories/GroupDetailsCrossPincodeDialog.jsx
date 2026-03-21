@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader2, MapPin, Package, ExternalLink, Unlink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/components/SidebarContext';
+import ProductImage from './ProductImage';
 
 export default function GroupDetailsCrossPincodeDialog({
     isOpen,
@@ -101,9 +102,19 @@ export default function GroupDetailsCrossPincodeDialog({
             <div className="relative w-full max-w-4xl h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="px-4 sm:px-6 py-4 border-b border-neutral-200 bg-white flex items-center justify-between">
-                    <div>
-                        <h3 className="text-xl font-bold text-gray-900">Cross-Pincode Analysis</h3>
-                        <p className="text-sm text-gray-500 truncate max-w-md">{primaryName || groupingId}</p>
+                    <div className="flex items-center gap-4">
+                        {/* Group Image */}
+                        <div className="w-12 h-12 bg-white border border-gray-200 rounded flex-none p-1 flex items-center justify-center overflow-hidden shrink-0">
+                            {data?.products?.[0] ? (
+                                <ProductImage product={data.products[0]} />
+                            ) : (
+                                <div className="text-[10px] text-gray-300">No Img</div>
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <h3 className="text-xl font-bold text-gray-900 truncate">{primaryName || groupingId}</h3>
+                            <p className="text-sm text-gray-500 font-mono truncate max-w-md">{groupingId}</p>
+                        </div>
                     </div>
                     <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200/50 cursor-pointer">
                         <X size={20} />
@@ -129,12 +140,17 @@ export default function GroupDetailsCrossPincodeDialog({
                                 <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                                     <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-neutral-900 text-white rounded">
-                                                {product.platform}
-                                            </span>
-                                            <h4 className="text-sm font-bold text-gray-800 truncate max-w-[300px] md:max-w-xl">
-                                                {product.productName}
-                                            </h4>
+                                            <div className="w-8 h-8 bg-white border border-gray-100 rounded flex-none p-0.5 flex items-center justify-center overflow-hidden">
+                                                <ProductImage product={product} />
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-neutral-900 text-white rounded">
+                                                    {product.platform}
+                                                </span>
+                                                <h4 className="text-sm font-bold text-gray-800 truncate max-w-[250px] md:max-w-md">
+                                                    {product.productName}
+                                                </h4>
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">

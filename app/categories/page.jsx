@@ -374,7 +374,6 @@ function CategoriesPageContent() {
 
   const filteredProducts = deduplicatedProducts;
 
-
   // Calculate platform counts from deduplicated products
   const platformCounts = useMemo(() => {
     const counts = {
@@ -1231,24 +1230,6 @@ function CategoriesPageContent() {
                 />
               </div>
 
-              {isAdmin && (
-                <div className="flex items-center gap-2 px-2 py-1 mb-0.5">
-                  <span className="flex items-center gap-1.5 text-sm font-medium text-rose-600">
-                    Filter by Danger
-                    <MuiTooltip title="Shows only products with platform Base ID conflicts (⚠️ items)." arrow placement="top">
-                      <img
-                        src="https://img.icons8.com/?size=100&id=4009&format=png&color=FA5252"
-                        alt="Conflict"
-                        className="w-4 h-4 cursor-help"
-                      />
-                    </MuiTooltip>
-                  </span>
-                  <Switch
-                    checked={showDangerFirst}
-                    onCheckedChange={setShowDangerFirst}
-                  />
-                </div>
-              )}
             </div>
 
           </div>
