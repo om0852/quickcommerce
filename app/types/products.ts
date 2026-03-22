@@ -41,6 +41,11 @@ export interface Product {
   hasGroupConflict?: boolean;
   groupConflicts?: Record<string, any>;
 
+  // Additional fields
+  createdAt?: string | Date;
+  label?: string;
+  isDuplicate?: boolean;
+
   // Platform-specific data
   zepto?: PlatformProductData;
   blinkit?: PlatformProductData;

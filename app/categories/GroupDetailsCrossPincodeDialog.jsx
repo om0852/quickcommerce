@@ -63,7 +63,7 @@ export default function GroupDetailsCrossPincodeDialog({
             if (!res.ok) throw new Error(result.error || 'Failed to remove product');
 
             if (showToast) showToast('Product removed from group successfully!', 'success');
-            
+
             // If there was only one product (or after filtering), maybe close the dialog
             // More robust: just re-fetch data to reflect changes
             await fetchData();
@@ -85,8 +85,6 @@ export default function GroupDetailsCrossPincodeDialog({
     }, [isOpen, onClose]);
 
     if (!isOpen) return null;
-
-    const targetPincodes = ['400706', '400703'];
 
     return (
         <div className={cn(
@@ -138,15 +136,51 @@ export default function GroupDetailsCrossPincodeDialog({
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            {data.products
-                                .filter(product => !selectedPlatform || product.platform.toLowerCase() === selectedPlatform.toLowerCase())
-                                .map((product, idx) => {
+                            {(() => {
+                                const filteredProducts = data.products.filter(product => !selectedPlatform || product.platform.toLowerCase() === selectedPlatform.toLowerCase());
+
+                                // Determine unique baseIds across all filtered products to assign colors globally within this dialog
+                                const globalUniqueBaseIds = new Set();
+                                filteredProducts.forEach(product => {
+                                    if (product.productId) {
+                                        const baseId = product.productId.includes('__') ? product.productId.split('__')[0] : product.productId;
+                                        globalUniqueBaseIds.add(baseId);
+                                    }
+                                });
+
+                                // Provide a wide palette of badge colors for distinguishing many items
+                                const colorPalette = [
+                                    'text-blue-700 bg-blue-100 border border-blue-200',
+                                    'text-emerald-700 bg-emerald-100 border border-emerald-200',
+                                    'text-amber-700 bg-amber-100 border border-amber-200',
+                                    'text-purple-700 bg-purple-100 border border-purple-200',
+                                    'text-rose-700 bg-rose-100 border border-rose-200',
+                                    'text-cyan-700 bg-cyan-100 border border-cyan-200',
+                                    'text-indigo-700 bg-indigo-100 border border-indigo-200',
+                                    'text-pink-700 bg-pink-100 border border-pink-200',
+                                    'text-orange-700 bg-orange-100 border border-orange-200',
+                                    'text-teal-700 bg-teal-100 border border-teal-200',
+                                    'text-fuchsia-700 bg-fuchsia-100 border border-fuchsia-200',
+                                    'text-lime-700 bg-lime-100 border border-lime-200'
+                                ];
+
+                                const globalBaseIdColorMap = {};
+                                let colorIdx = 0;
+                                Array.from(globalUniqueBaseIds).forEach(baseId => {
+                                    globalBaseIdColorMap[baseId] = colorPalette[colorIdx % colorPalette.length];
+                                    colorIdx++;
+                                });
+
+                                return filteredProducts.map((product, idx) => {
                                     // Map product to structure expected by ProductImage 
                                     const productForImg = {
                                         ...product,
                                         [product.platform.toLowerCase()]: { productImage: product.productImage },
                                         image: product.productImage
                                     };
+
+                                    const productBaseId = product.productId?.includes('__') ? product.productId.split('__')[0] : product.productId;
+                                    const productBaseIdClass = globalBaseIdColorMap[productBaseId] || 'text-gray-600 bg-gray-50 border-gray-200';
 
                                     return (
                                         <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -170,48 +204,37 @@ export default function GroupDetailsCrossPincodeDialog({
                                                     </span>
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="p-4">
                                                 <div className="flex flex-col gap-3">
                                                     <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
                                                         <MapPin size={14} />
                                                         Availability across Pincodes
                                                     </div>
-                                                    
+
                                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                                                         {product.pincodes.map(pc => {
-                                                            const isTarget = targetPincodes.includes(pc);
                                                             const details = product.pincodeDetails[pc];
+
                                                             return (
-                                                                <div 
-                                                                    key={pc} 
-                                                                    className={cn(
-                                                                        "px-2 py-2 rounded-lg border transition-all flex flex-col items-center justify-center gap-0.5 text-center min-h-[85px]",
-                                                                        isTarget 
-                                                                            ? "bg-rose-50 border-rose-200 ring-2 ring-rose-500/20" 
-                                                                            : "bg-white border-gray-100"
-                                                                    )}
+                                                                <div
+                                                                    key={pc}
+                                                                    className="px-2 py-2 rounded-lg border border-gray-100 bg-white transition-all flex flex-col items-center justify-center gap-0.5 text-center min-h-[85px]"
                                                                 >
-                                                                    <span className={cn(
-                                                                        "text-xs font-bold font-mono tracking-tight",
-                                                                        isTarget ? "text-rose-700" : "text-gray-600"
-                                                                    )}>
+                                                                    <span className="text-xs font-bold font-mono tracking-tight text-gray-700">
                                                                         {pc}
                                                                     </span>
                                                                     <span className="text-[10px] font-bold text-gray-900">
                                                                         ₹{details?.currentPrice?.toFixed(0) || '--'}
                                                                     </span>
-                                                                    <div className="flex flex-col gap-0 mt-0.5">
+                                                                    <div className="flex flex-col gap-0 mt-0.5 w-full items-center">
                                                                         <span className="text-[8px] font-medium text-gray-400 leading-tight">
                                                                             {details?.scrapedAt ? new Date(details.scrapedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
                                                                         </span>
-                                                                        <span className="text-[7px] font-mono text-gray-300 leading-tight overflow-hidden text-ellipsis w-16 whitespace-nowrap" title={details?.productId}>
+                                                                        <span className="mt-1 px-1.5 py-0.5 rounded text-[8px] font-bold font-mono leading-tight overflow-hidden text-ellipsis w-[4.5rem] whitespace-nowrap inline-block text-gray-500 bg-gray-50 border border-gray-100" title={details?.productId}>
                                                                             {details?.productId || 'N/A'}
                                                                         </span>
                                                                     </div>
-                                                                    {isTarget && (
-                                                                        <span className="text-[7px] font-black uppercase text-rose-600 mt-1">CRITICAL</span>
-                                                                    )}
                                                                 </div>
                                                             );
                                                         })}
@@ -225,9 +248,14 @@ export default function GroupDetailsCrossPincodeDialog({
                                                 </div>
 
                                                 <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
-                                                    <div className="flex flex-col">
+                                                    <div className="flex flex-col items-start gap-1">
                                                         <span className="text-[10px] text-gray-400 font-bold uppercase">Product ID</span>
-                                                        <span className="text-[11px] font-mono font-medium text-gray-600 break-all">{product.productId}</span>
+                                                        <span className={cn(
+                                                            "px-2 py-1 text-[11px] font-mono font-bold break-all rounded-md border",
+                                                            productBaseIdClass
+                                                        )}>
+                                                            {product.productId}
+                                                        </span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         {isAdmin && (
@@ -245,7 +273,7 @@ export default function GroupDetailsCrossPincodeDialog({
                                                             </button>
                                                         )}
                                                         {product.pincodeDetails[product.pincodes[0]]?.productUrl && (
-                                                            <a 
+                                                            <a
                                                                 href={product.pincodeDetails[product.pincodes[0]].productUrl}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
@@ -260,7 +288,8 @@ export default function GroupDetailsCrossPincodeDialog({
                                             </div>
                                         </div>
                                     );
-                                })}
+                                });
+                            })()}
                         </div>
                     )}
                 </div>
