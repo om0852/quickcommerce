@@ -16,6 +16,7 @@ import ProductDetailsDialog from './ProductDetailsDialog';
 import ProductTable from './ProductTable';
 import LinksTab from './LinksTab';
 import BrandTab from './BrandTab';
+import DictionaryTab from './DictionaryTab';
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { PLATFORMS, PLATFORM_OPTIONS, PINCODE_OPTIONS, PLATFORM_SHORT_NAMES } from '@/app/constants/platforms';
@@ -1250,7 +1251,7 @@ function CategoriesPageContent() {
         <div className="flex-none flex flex-wrap items-center justify-between gap-2 bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="inline-flex p-0.5 rounded-lg gap-1">
-              {['products', 'analytics', 'stock', 'links', 'brands'].map((tab) => (
+              {['products', 'analytics', 'stock', 'links', 'brands', 'dictionary'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -1404,6 +1405,10 @@ function CategoriesPageContent() {
               snapshotDate={snapshotDate}
               isAdmin={isAdmin}
             />
+          )}
+
+          {activeTab === 'dictionary' && (
+            <DictionaryTab products={products} loading={loading} />
           )}
         </div>
 
