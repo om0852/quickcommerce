@@ -1,27 +1,15 @@
 "use client"
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Loader2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2, RefreshCw } from 'lucide-react';
 import { useSidebar } from '@/components/SidebarContext';
-import { SidebarOpenIcon, SidebarCloseIcon } from '@/components/SidebarIcons';
+import { useAuth } from '@/components/AuthProvider'; 
+import { SidebarCloseIcon, SidebarOpenIcon } from '@/components/SidebarIcons';
 import { cn } from '@/lib/utils';
 
 import categoriesData from '../utils/categories_with_urls.json';
 
-const PINCODE_OPTIONS = [
-    { label: 'Delhi NCR — 201303', value: '201303' },
-    { label: 'Navi Mumbai — 400706', value: '400706' },
-    { label: 'Delhi NCR — 201014', value: '201014' },
-    { label: 'Delhi NCR — 122008', value: '122008' },
-    { label: 'Delhi NCR — 122010', value: '122010' },
-    { label: 'Delhi NCR — 122016', value: '122016' },
-    { label: 'Mumbai — 400070', value: '400070' },
-    { label: 'Mumbai — 400703', value: '400703' },
-    { label: 'Mumbai — 401101', value: '401101' },
-    { label: 'Mumbai — 401202', value: '401202' },
-];
-
-const PLATFORMS = [
+const OVERVIEW_PLATFORMS = [
     { id: 'jiomart', label: 'JioMart', short: 'JioMart' },
     { id: 'zepto', label: 'Zepto', short: 'Zepto' },
     { id: 'blinkit', label: 'Blinkit', short: 'Blinkit' },
@@ -30,19 +18,22 @@ const PLATFORMS = [
     { id: 'instamart', label: 'Swiggy Instamart', short: 'Instamart' },
 ];
 
-// Based on user provided data:
-const PINCODE_AVAILABILITY = {
-    zepto: PINCODE_OPTIONS.map(p => p.value).filter(val => !['401101', '401202'].includes(val)),
-    jiomart: PINCODE_OPTIONS.map(p => p.value), // ALL
-    blinkit: PINCODE_OPTIONS.map(p => p.value), // ALL
-    dmart: PINCODE_OPTIONS.map(p => p.value).filter(val => !['122008', '122016', '122010', '201303', '201014'].includes(val)), // Excluded as requested
-    instamart: PINCODE_OPTIONS.map(p => p.value), // ALL
-    flipkartMinutes: PINCODE_OPTIONS.map(p => p.value).filter(val => !['400070', '401101'].includes(val)), // Not available in 400070, 401101
-};
+import { PLATFORMS, PLATFORM_OPTIONS, PINCODE_OPTIONS, PLATFORM_SHORT_NAMES, PINCODE_AVAILABILITY } from '@/app/constants/platforms';
 
 const isPincodeAvailableForPlatform = (pincode, platformId) => {
     return PINCODE_AVAILABILITY[platformId]?.includes(pincode) || false;
 };
+
+// --- Static Computations ---
+const allItems = Object.values(categoriesData).flat();
+const uniqueCategories = [...new Set(allItems.map(item => item.masterCategory).filter(Boolean))].sort();
+const prioritized = 'Fruits & Vegetables';
+if (uniqueCategories.includes(prioritized)) {
+    const index = uniqueCategories.indexOf(prioritized);
+    uniqueCategories.splice(index, 1);
+    uniqueCategories.unshift(prioritized);
+}
+const CATEGORY_OPTIONS = uniqueCategories;
 
 // --- Skeleton Components ---
 function SkeletonRow({ index }) {
@@ -69,7 +60,7 @@ function SkeletonTable() {
                 <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-3 py-3 font-bold text-neutral-800 tracking-wider text-[11px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[140px]">
                         Pincodes / Regions
                     </th>
-                    {PLATFORMS.map(p => (
+                    {OVERVIEW_PLATFORMS.map(p => (
                         <th key={p.id} className="sticky top-0 z-10 bg-neutral-100 border-b border-gray-200 px-2 py-3 font-bold text-neutral-800 tracking-wider text-[11px] text-center min-w-[80px]" title={p.label}>
                             <span className="hidden lg:inline">{p.label}</span>
                             <span className="lg:hidden">{p.short}</span>
@@ -87,29 +78,111 @@ function SkeletonTable() {
     );
 }
 
+// --- Expanded Sub-Component (Memoized) ---
+const ExpandedCategoryMatrix = React.memo(({ pincodeOption, isLoading, dataForPin }) => {
+    // Fast O(1) dictionary for matrix cells
+    const cellMap = useMemo(() => {
+        const map = {};
+        dataForPin.forEach(d => {
+            const key = `${d.category}_${d.platform?.toLowerCase()}`;
+            map[key] = d;
+        });
+        return map;
+    }, [dataForPin]);
+
+    if (isLoading) {
+        return (
+            <tr>
+                <td colSpan={OVERVIEW_PLATFORMS.length + 2} className="p-0 border-b border-gray-200 bg-gray-50">
+                    <div className="p-8 flex justify-center items-center">
+                        <Loader2 className="animate-spin text-gray-400" size={32} />
+                    </div>
+                </td>
+            </tr>
+        );
+    }
+
+    return (
+        <tr>
+            <td colSpan={OVERVIEW_PLATFORMS.length + 2} className="p-0 border-b border-gray-200 bg-gray-50">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse table-fixed">
+                        <thead>
+                            <tr>
+                                <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-3 py-3 font-bold text-sky-700 tracking-wider text-[11px] shadow-[1px_0_3px_-1px_rgba(0,0,0,0.1)] w-[260px] min-w-[260px] border-l-4 border-l-sky-500">
+                                    Category
+                                </th>
+                                {OVERVIEW_PLATFORMS.map(p => (
+                                    <th key={p.id} className="sticky top-0 z-10 bg-neutral-50 border-b border-gray-200 px-2 py-3 font-bold text-neutral-500 tracking-wider text-[11px] text-center w-[100px] min-w-[100px]" title={p.label}>
+                                        <span className="hidden xl:inline">{p.label}</span>
+                                        <span className="xl:hidden">{p.short}</span>
+                                    </th>
+                                ))}
+                                <th className="sticky top-0 right-0 z-20 bg-neutral-100 border-b border-gray-200 px-2 py-3 w-[40px] min-w-[40px]"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {CATEGORY_OPTIONS.map((cat, catIdx) => (
+                                <tr key={cat} className={catIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50 whitespace-nowrap'}>
+                                    <td className="sticky left-0 z-10 border-r border-gray-200 px-3 py-3 md:px-6 md:py-3 font-medium text-neutral-700 shadow-[1px_0_3px_-1px_rgba(0,0,0,0.05)] bg-inherit text-xs md:text-sm border-l-4 border-l-sky-500/50 w-[260px] min-w-[260px]">
+                                        <div className="truncate">{cat}</div>
+                                    </td>
+
+                                    {OVERVIEW_PLATFORMS.map(plat => {
+                                        const isAvailable = isPincodeAvailableForPlatform(pincodeOption.value, plat.id);
+                                        const cellData = cellMap[`${cat}_${plat.id.toLowerCase()}`];
+                                        const count = cellData ? cellData.count : 0;
+                                        const brandCount = cellData ? (cellData.brandCount || 0) : 0;
+                                        const hasData = count > 0;
+
+                                        return (
+                                            <td key={plat.id} className="border-b border-gray-100 px-2 py-3 text-center align-top w-[100px] min-w-[100px]">
+                                                <div className="flex flex-col items-center justify-center min-h-[48px]">
+                                                    {hasData ? (
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-800 font-bold rounded-md border border-green-200 min-w-[70px] justify-center">
+                                                                <div className="flex flex-col text-center justify-center">
+                                                                    <span className="text-[10px] leading-[1.15] text-green-700">P: {count}</span>
+                                                                    {brandCount > 0 && <span className="text-[9px] leading-[1.15] text-green-600/80 font-semibold">B: {brandCount}</span>}
+                                                                </div>
+                                                            </div>
+                                                            <span className="text-[8px] text-gray-500 font-medium whitespace-nowrap bg-neutral-100/80 px-1 py-0.5 rounded border border-gray-100">
+                                                                {cellData.dateStr || ''}
+                                                            </span>
+                                                        </div>
+                                                    ) : isAvailable ? (
+                                                        <div className="inline-flex items-center px-1.5 py-0.5 bg-yellow-50 text-yellow-700 font-bold rounded-full text-[9px] border border-yellow-200">
+                                                            N/A
+                                                        </div>
+                                                    ) : (
+                                                        <div className="inline-flex items-center px-1.5 py-0.5 bg-red-50 text-red-600 font-bold rounded-full text-[9px] border border-red-200">
+                                                            U/S
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        );
+                                    })}
+                                    <td className="border-b border-gray-100 px-2 py-2 w-[40px] min-w-[40px]"></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    );
+});
+
 // --- Main Content ---
 function OverviewContent() {
-    const CATEGORY_OPTIONS = useMemo(() => {
-        const allItems = Object.values(categoriesData).flat();
-        const uniqueCategories = [...new Set(allItems.map(item => item.masterCategory).filter(Boolean))].sort();
-
-        const prioritized = 'Fruits & Vegetables';
-        if (uniqueCategories.includes(prioritized)) {
-            const index = uniqueCategories.indexOf(prioritized);
-            uniqueCategories.splice(index, 1);
-            uniqueCategories.unshift(prioritized);
-        }
-
-        return uniqueCategories;
-    }, []);
-
     const [expandedPincode, setExpandedPincode] = useState(null);
     const [matrixDataByPincode, setMatrixDataByPincode] = useState({});
+    const [pincodeAggregator, setPincodeAggregator] = useState({});
     const [loadingPincode, setLoadingPincode] = useState({});
     const [error, setError] = useState(null);
     const { isSidebarOpen, toggleSidebar } = useSidebar();
-    const searchParams = useSearchParams();
-    const isAdmin = searchParams.get('admin') === 'true';
+    const { isAdmin } = useAuth(); 
 
     const fetchOverviewDataForPincode = async (pincodeStr) => {
         if (!pincodeStr) return;
@@ -123,10 +196,33 @@ function OverviewContent() {
 
             if (!res.ok) throw new Error(data.error || 'Failed to fetch matrix data');
 
+            const rawData = data.data || [];
+            
+            // O(N) single-pass computation for aggregates and date parsing
+            const aggs = {};
+            rawData.forEach(d => {
+                const pId = d.platform?.toLowerCase();
+                if (!aggs[pId]) aggs[pId] = { count: 0, brandCount: 0 };
+                aggs[pId].count += (d.count || 0);
+                aggs[pId].brandCount += (d.brandCount || 0);
+                
+                // Pre-compute Date rendering perfectly once
+                if (d.latestScrapedAt) {
+                    const dt = new Date(d.latestScrapedAt);
+                    d.dateStr = dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                }
+            });
+
             setMatrixDataByPincode(prev => ({
                 ...prev,
-                [pincodeStr]: data.data || []
+                [pincodeStr]: rawData
             }));
+            
+            setPincodeAggregator(prev => ({
+                ...prev,
+                [pincodeStr]: aggs
+            }));
+            
         } catch (err) {
             setError(err.message);
         } finally {
@@ -135,10 +231,17 @@ function OverviewContent() {
     };
 
     useEffect(() => {
-        // Pre-fetch all overview data once on component mount
-        PINCODE_OPTIONS.forEach(pinOption => {
-            fetchOverviewDataForPincode(pinOption.value);
-        });
+        // Pre-fetch all overview data staggered to avoid HTTP connection storming
+        const loadAll = async () => {
+             // Create chunks of 3 for concurrent requests
+             for (let i = 0; i < PINCODE_OPTIONS.length; i += 3) {
+                 const chunk = PINCODE_OPTIONS.slice(i, i + 3);
+                 await Promise.allSettled(chunk.map(pin => fetchOverviewDataForPincode(pin.value)));
+                 // Tiny delay to let the Node express loops breathe
+                 await new Promise(r => setTimeout(r, 100));
+             }
+        };
+        loadAll();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -151,29 +254,6 @@ function OverviewContent() {
                 fetchOverviewDataForPincode(pincodeStr);
             }
         }
-    };
-
-    const getCellData = (pincodeStr, cat, plat) => {
-        const dataForPin = matrixDataByPincode[pincodeStr] || [];
-        const found = dataForPin.find(d =>
-            d.category === cat &&
-            d.platform?.toLowerCase() === plat.toLowerCase()
-        );
-        return found || null;
-    };
-
-    const getTotalCountForPlatform = (pincodeStr, platformId) => {
-        const dataForPin = matrixDataByPincode[pincodeStr] || [];
-        return dataForPin
-            .filter(d => d.platform?.toLowerCase() === platformId.toLowerCase())
-            .reduce((sum, current) => sum + (current.count || 0), 0);
-    };
-
-    const getTotalBrandsForPlatform = (pincodeStr, platformId) => {
-        const dataForPin = matrixDataByPincode[pincodeStr] || [];
-        return dataForPin
-            .filter(d => d.platform?.toLowerCase() === platformId.toLowerCase())
-            .reduce((sum, current) => sum + (current.brandCount || 0), 0);
     };
 
     const handleGlobalRefresh = () => {
@@ -231,7 +311,7 @@ function OverviewContent() {
                                     <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-3 py-3 font-bold text-neutral-800 tracking-wider text-[11px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-[260px] min-w-[260px] border-l-4 border-l-transparent">
                                         Pincodes / Regions
                                     </th>
-                                    {PLATFORMS.map(p => (
+                                    {OVERVIEW_PLATFORMS.map(p => (
                                         <th key={p.id} className="sticky top-0 z-10 bg-neutral-100 border-b border-gray-200 px-2 py-3 font-bold text-neutral-800 tracking-wider text-[11px] text-center w-[100px] min-w-[100px]" title={p.label}>
                                             <span className="hidden xl:inline">{p.label}</span>
                                             <span className="xl:hidden">{p.short}</span>
@@ -244,6 +324,7 @@ function OverviewContent() {
                                 {PINCODE_OPTIONS.map((pinOption, idx) => {
                                     const isExpanded = expandedPincode === pinOption.value;
                                     const isLoadingThisPincode = loadingPincode[pinOption.value];
+                                    const aggsForPin = pincodeAggregator[pinOption.value] || {};
 
                                     return (
                                         <React.Fragment key={pinOption.value}>
@@ -259,10 +340,13 @@ function OverviewContent() {
                                                     </div>
                                                 </td>
 
-                                                {PLATFORMS.map(plat => {
+                                                {OVERVIEW_PLATFORMS.map(plat => {
                                                     const isAvailable = isPincodeAvailableForPlatform(pinOption.value, plat.id);
-                                                    const totalCount = getTotalCountForPlatform(pinOption.value, plat.id);
-                                                    const totalBrands = getTotalBrandsForPlatform(pinOption.value, plat.id);
+                                                    
+                                                    // O(1) Dictionary Lookup!
+                                                    const platformAggs = aggsForPin[plat.id.toLowerCase()];
+                                                    const totalCount = platformAggs ? platformAggs.count : 0;
+                                                    const totalBrands = platformAggs ? platformAggs.brandCount : 0;
                                                     const hasData = totalCount > 0;
 
                                                     return (
@@ -297,84 +381,11 @@ function OverviewContent() {
 
                                             {/* Expanded Content: Category x Platform Matrix */}
                                             {isExpanded && (
-                                                <tr>
-                                                    <td colSpan={PLATFORMS.length + 2} className="p-0 border-b border-gray-200 bg-gray-50">
-                                                        {isLoadingThisPincode ? (
-                                                            <div className="p-8 flex justify-center items-center">
-                                                                <Loader2 className="animate-spin text-gray-400" size={32} />
-                                                            </div>
-                                                        ) : (
-                                                            <div className="overflow-x-auto">
-                                                                <table className="w-full text-left border-collapse table-fixed">
-                                                                    <thead>
-                                                                        <tr>
-                                                                            <th className="sticky top-0 left-0 z-20 bg-neutral-100 border-b border-r border-gray-200 px-3 py-3 font-bold text-sky-700 tracking-wider text-[11px] shadow-[1px_0_3px_-1px_rgba(0,0,0,0.1)] w-[260px] min-w-[260px] border-l-4 border-l-sky-500">
-                                                                                Category
-                                                                            </th>
-                                                                            {PLATFORMS.map(p => (
-                                                                                <th key={p.id} className="sticky top-0 z-10 bg-neutral-50 border-b border-gray-200 px-2 py-3 font-bold text-neutral-500 tracking-wider text-[11px] text-center w-[100px] min-w-[100px]" title={p.label}>
-                                                                                    <span className="hidden xl:inline">{p.label}</span>
-                                                                                    <span className="xl:hidden">{p.short}</span>
-                                                                                </th>
-                                                                            ))}
-                                                                            <th className="sticky top-0 right-0 z-20 bg-neutral-100 border-b border-gray-200 px-2 py-3 w-[40px] min-w-[40px]"></th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        {CATEGORY_OPTIONS.map((cat, catIdx) => (
-                                                                            <tr key={cat} className={catIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50 whitespace-nowrap'}>
-                                                                                <td className="sticky left-0 z-10 border-r border-gray-200 px-3 py-3 md:px-6 md:py-3 font-medium text-neutral-700 shadow-[1px_0_3px_-1px_rgba(0,0,0,0.05)] bg-inherit text-xs md:text-sm border-l-4 border-l-sky-500/50 w-[260px] min-w-[260px]">
-                                                                                    <div className="truncate">{cat}</div>
-                                                                                </td>
-
-                                                                                {PLATFORMS.map(plat => {
-                                                                                    const isAvailable = isPincodeAvailableForPlatform(pinOption.value, plat.id);
-                                                                                    const cellData = getCellData(pinOption.value, cat, plat.id);
-                                                                                    const count = cellData ? cellData.count : 0;
-                                                                                    const brandCount = cellData ? (cellData.brandCount || 0) : 0;
-                                                                                    const hasData = count > 0;
-
-                                                                                    let dateStr = '';
-                                                                                    if (hasData && cellData?.latestScrapedAt) {
-                                                                                        const d = new Date(cellData.latestScrapedAt);
-                                                                                        dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                                                                                    }
-
-                                                                                    return (
-                                                                                        <td key={plat.id} className="border-b border-gray-100 px-2 py-3 text-center align-top w-[100px] min-w-[100px]">
-                                                                                            <div className="flex flex-col items-center justify-center min-h-[48px]">
-                                                                                                {hasData ? (
-                                                                                                    <div className="flex flex-col items-center gap-1">
-                                                                                                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-800 font-bold rounded-md border border-green-200 min-w-[70px] justify-center">
-                                                                                                            <div className="flex flex-col text-center justify-center">
-                                                                                                                <span className="text-[10px] leading-[1.15] text-green-700">P: {count}</span>
-                                                                                                                {brandCount > 0 && <span className="text-[9px] leading-[1.15] text-green-600/80 font-semibold">B: {brandCount}</span>}
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                        <span className="text-[8px] text-gray-500 font-medium whitespace-nowrap bg-neutral-100/80 px-1 py-0.5 rounded border border-gray-100">{dateStr}</span>
-                                                                                                    </div>
-                                                                                                ) : isAvailable ? (
-                                                                                                    <div className="inline-flex items-center px-1.5 py-0.5 bg-yellow-50 text-yellow-700 font-bold rounded-full text-[9px] border border-yellow-200">
-                                                                                                        N/A
-                                                                                                    </div>
-                                                                                                ) : (
-                                                                                                    <div className="inline-flex items-center px-1.5 py-0.5 bg-red-50 text-red-600 font-bold rounded-full text-[9px] border border-red-200">
-                                                                                                        U/S
-                                                                                                    </div>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        </td>
-                                                                                    );
-                                                                                })}
-                                                                                <td className="border-b border-gray-100 px-2 py-2 w-[40px] min-w-[40px]"></td>
-                                                                            </tr>
-                                                                        ))}
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                </tr>
+                                                <ExpandedCategoryMatrix 
+                                                    pincodeOption={pinOption}
+                                                    isLoading={isLoadingThisPincode}
+                                                    dataForPin={matrixDataByPincode[pinOption.value] || []}
+                                                />
                                             )}
                                         </React.Fragment>
                                     );

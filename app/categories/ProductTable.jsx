@@ -13,7 +13,7 @@ import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { cn } from '@/lib/utils';
-import { PLATFORMS, PLATFORM_SHORT_NAMES, PLATFORM_OPTIONS } from '@/app/constants/platforms';
+import { PLATFORMS, PLATFORM_SHORT_NAMES, PLATFORM_OPTIONS, UNSERVICEABLE_PINCODES } from '@/app/constants/platforms';
 import { parseProductName } from '@/app/utils/formatters';
 import { useNotification } from '@/app/hooks/useNotification';
 
@@ -37,27 +37,16 @@ const ProductTable = React.memo(function ProductTable({
     platformFilter,
     pincode,
     onRefresh,
-    showNewFirst,
-    onShowNewFirstChange,
-    showAdFirst = false,
-    onShowAdFirstChange,
-    showInStockFirst = false,
-    onShowInStockFirstChange,
-    showOutStockFirst = false,
-    onShowOutStockFirstChange,
-    showNonHyphenOnly = false,
-    onShowNonHyphenOnlyChange,
+    tableFilters,
+    setTableFilters,
     isAdmin = false, // Passed from parent
     onLocalUpdate,
+    onBulkUpdate,
     isBulkEditMode = false,
     selectedGroupIds = [],
     onSelectionChange,
     bulkBrands = [],
     isLiveMode = true, // NEW Prop
-    showDangerFirst = false, // NEW
-    onShowDangerFirstChange, // NEW
-    showPureNewFirst = false, // NEW
-    onShowPureNewFirstChange, // NEW
     scrapeIntervals,
     onInfoClick, // NEW: open ProductDetailsDialog for a product
 }) {
@@ -93,16 +82,17 @@ const ProductTable = React.memo(function ProductTable({
     // Notification management (toast)
     const { toastState, showToast, handleCloseToast } = useNotification();
 
-    // Custom Unserviceable Pincodes Mapping
-    const UNSERVICEABLE_PINCODES = useMemo(() => ({
-        dmart: ['122008', '122016', '122010', '201303', '201014'],
-        flipkartMinutes: ['400070', '401101'],
-        zepto: ['401101', '401202']
-    }), []);
-
     // Sort Menu State
     const [sortMenuAnchor, setSortMenuAnchor] = useState(null);
     const isSortMenuOpen = Boolean(sortMenuAnchor);
+
+    const getMenuItemStyle = (isActive) => ({
+        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        backgroundColor: isActive ? '#f9fafb' : 'transparent',
+        fontWeight: isActive ? 700 : 500,
+        color: isActive ? '#171717' : '#4b5563',
+        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+    });
 
     const handleSortMenuClick = (event) => {
         setSortMenuAnchor(event.currentTarget);
@@ -115,13 +105,13 @@ const ProductTable = React.memo(function ProductTable({
     };
 
     const handleNameSort = (direction) => {
-        resetOtherState();
+        clearFilters();
         onSort('name', direction);
         handleSortMenuClose();
     };
 
     const handleBrandSort = (direction) => {
-        resetOtherState();
+        clearFilters();
         onSort('brand', direction);
         handleSortMenuClose();
     };
@@ -141,7 +131,7 @@ const ProductTable = React.memo(function ProductTable({
     };
 
     const handlePlatformRankSort = (platform) => {
-        resetOtherState();
+        clearFilters();
         onSort(platform, rankSortDirection);
         handleRankSubMenuClose();
         handleSortMenuClose();
@@ -162,104 +152,99 @@ const ProductTable = React.memo(function ProductTable({
     const newlyAddedCount = useMemo(() => {
         const productsToCount = allFilteredProducts || products;
         if (!productsToCount) return 0;
-        const platforms = platformFilter && platformFilter !== 'all'
-            ? [platformFilter]
-            : ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-        let count = 0;
-        productsToCount.forEach(p => {
-            if (!p.isHeader) {
-                if (PLATFORMS.some(plat => p[plat]?.new === true)) {
-                    count++;
-                }
-            }
-        });
-        return count;
-    }, [allFilteredProducts, products, platformFilter]);
 
-    const resetOtherState = () => {
-        if (showNewFirst) onShowNewFirstChange(false);
-        if (showAdFirst) onShowAdFirstChange(false);
-        if (showInStockFirst) onShowInStockFirstChange(false);
-        if (showOutStockFirst) onShowOutStockFirstChange(false);
-        if (showNonHyphenOnly) onShowNonHyphenOnlyChange(false);
-        if (showDangerFirst && onShowDangerFirstChange) onShowDangerFirstChange(false);
-        if (showPureNewFirst && onShowPureNewFirstChange) onShowPureNewFirstChange(false);
+        return productsToCount.reduce((count, p) => {
+            if (!p.isHeader && PLATFORMS.some(plat => p[plat]?.new === true)) {
+                return count + 1;
+            }
+            return count;
+        }, 0);
+    }, [allFilteredProducts, products]);
+
+    const clearFilters = () => {
+        setTableFilters({
+            showNewFirst: false, showNonHyphenOnly: false, showDangerFirst: false,
+            showPureNewFirst: false, showAdFirst: false, showInStockFirst: false,
+            showOutStockFirst: false
+        });
+    };
+
+    const setExclusiveFilter = (filterKey, value) => {
+        setTableFilters({
+            showNewFirst: filterKey === 'showNewFirst' ? value : false,
+            showNonHyphenOnly: filterKey === 'showNonHyphenOnly' ? value : false,
+            showDangerFirst: filterKey === 'showDangerFirst' ? value : false,
+            showPureNewFirst: filterKey === 'showPureNewFirst' ? value : false,
+            showAdFirst: filterKey === 'showAdFirst' ? value : false,
+            showInStockFirst: filterKey === 'showInStockFirst' ? value : false,
+            showOutStockFirst: filterKey === 'showOutStockFirst' ? value : false,
+        });
     };
 
     const handleHighestProductCountSort = () => {
-        resetOtherState();
+        clearFilters();
         onSort('groupCount', 'desc');
         handleSortMenuClose();
     };
 
     const handleLowestProductCountSort = () => {
-        resetOtherState();
+        clearFilters();
         onSort('groupCount', 'asc');
         handleSortMenuClose();
     };
 
     const handlePriceSort = (direction) => {
-        resetOtherState();
+        clearFilters();
         onSort('averagePrice', direction);
         handleSortMenuClose();
     };
 
     const handleInStockSort = () => {
-        resetOtherState();
-        onShowInStockFirstChange(true);
+        setExclusiveFilter('showInStockFirst', true);
         onSort(null);
         handleSortSubSubMenuClose();
         handleSortMenuClose();
     };
 
     const handleOutStockSort = () => {
-        resetOtherState();
-        onShowOutStockFirstChange(true);
+        setExclusiveFilter('showOutStockFirst', true);
         onSort(null);
         handleSortSubSubMenuClose();
         handleSortMenuClose();
     };
 
     const handleAdSort = () => {
-        resetOtherState();
-        onShowAdFirstChange(true);
+        setExclusiveFilter('showAdFirst', true);
         onSort(null);
         handleSortSubSubMenuClose();
         handleSortMenuClose();
     };
 
     const handleNewlyAddedToggle = () => {
-        const next = !showNewFirst;
-        resetOtherState();
+        const next = !tableFilters?.tableFilters?.showNewFirst;
+        setExclusiveFilter('showNewFirst', next);
         onSort(null);
-        onShowNewFirstChange(next);
         handleSortMenuClose();
     };
 
     const handleNonHyphenToggle = () => {
-        resetOtherState();
-        if (onShowNonHyphenOnlyChange) onShowNonHyphenOnlyChange(true);
+        setExclusiveFilter('showNonHyphenOnly', true);
         onSort(null);
         handleSortMenuClose();
     };
 
     const handleDangerFirstToggle = () => {
-        const next = !showDangerFirst;
-        resetOtherState();
+        const next = !tableFilters?.tableFilters?.showDangerFirst;
+        setExclusiveFilter('showDangerFirst', next);
         onSort(null);
-        if (onShowDangerFirstChange) onShowDangerFirstChange(next);
         handleSortSubSubMenuClose();
         handleSortMenuClose();
     };
 
     const handlePureNewFirstToggle = () => {
-        const next = !showPureNewFirst;
-        resetOtherState();
+        const next = !tableFilters?.tableFilters?.showPureNewFirst;
+        setExclusiveFilter('showPureNewFirst', next);
         onSort(null);
-        if (onShowPureNewFirstChange) onShowPureNewFirstChange(true); // Toggle logic or set true? 
-        // User said "Danger filter" and "Pure & New filter" move into sort by.
-        // Usually these are toggles, but mutually exclusive.
-        if (onShowPureNewFirstChange) onShowPureNewFirstChange(next);
         handleSortSubSubMenuClose();
         handleSortMenuClose();
     };
@@ -307,51 +292,35 @@ const ProductTable = React.memo(function ProductTable({
         const brand = selectedBrand ? bulkBrands.find(b => b._id === selectedBrand) : null;
 
         setBulkUpdating(true);
-        let successCount = 0;
-        let failCount = 0;
 
-        for (const groupingId of selectedGroupIds) {
-            try {
-                const updates = {};
-                if (bulkName.trim()) updates.name = bulkName.trim();
-                if (bulkWeight.trim()) updates.weight = bulkWeight.trim();
-                if (brand) {
-                    updates.brand = brand.brandName;
-                    updates.brandId = brand._id;
-                }
-
-                const res = await fetch('/api/grouping/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        groupingId,
-                        updates
-                    })
-                });
-                if (res.ok) {
-                    successCount++;
-                    if (onLocalUpdate) {
-                        onLocalUpdate({ groupingId, ...updates });
-                    }
-                } else {
-                    failCount++;
-                }
-            } catch {
-                failCount++;
+        try {
+            const updates = {};
+            if (bulkName.trim()) updates.name = bulkName.trim();
+            if (bulkWeight.trim()) updates.weight = bulkWeight.trim();
+            if (brand) {
+                updates.brand = brand.brandName;
+                updates.brandId = brand._id;
             }
-        }
 
-        setBulkUpdating(false);
-        setSelectedBrand('');
-        setBulkName('');
-        setBulkWeight('');
-        if (onSelectionChange) onSelectionChange([]);
-        showToast(
-            failCount === 0
-                ? `Updated ${successCount} group(s)`
-                : `Updated ${successCount}, failed ${failCount}`,
-            failCount === 0 ? 'success' : 'warning'
-        );
+            const { successCount, total } = await onBulkUpdate(selectedGroupIds, updates);
+            const failCount = total - successCount;
+
+            showToast(
+                failCount === 0
+                    ? `Updated ${successCount} group(s)`
+                    : `Updated ${successCount}, failed ${failCount}`,
+                failCount === 0 ? 'success' : 'warning'
+            );
+        } catch (error) {
+            console.error('Error in bulk update:', error);
+            showToast('Failed to perform bulk update', 'error');
+        } finally {
+            setBulkUpdating(false);
+            setSelectedBrand('');
+            setBulkName('');
+            setBulkWeight('');
+            if (onSelectionChange) onSelectionChange([]);
+        }
     };
 
     const handleRegroup = async (product) => {
@@ -578,15 +547,15 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'asc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Product Name (A to Z)</span>
-                                                {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'asc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <MenuItem
@@ -598,15 +567,15 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'name' && sortConfig.direction === 'desc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Product Name (Z to A)</span>
-                                                {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'name' && sortConfig.direction === 'desc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -620,15 +589,15 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Brand Name (A to Z)</span>
-                                                {sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'asc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <MenuItem
@@ -640,15 +609,15 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? 700 : 500,
-                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? 700 : 500,
+                                                    color: sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
                                             >
                                                 <span>Brand Name (Z to A)</span>
-                                                {sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !showNewFirst && !showAdFirst && !showInStockFirst && !showOutStockFirst && !showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                {sortConfig.key === 'brand' && sortConfig.direction === 'desc' && !tableFilters?.tableFilters?.showNewFirst && !tableFilters?.showAdFirst && !tableFilters?.showInStockFirst && !tableFilters?.showOutStockFirst && !tableFilters?.tableFilters?.showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -662,9 +631,9 @@ const ProductTable = React.memo(function ProductTable({
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    backgroundColor: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst || ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) || showDangerFirst || showPureNewFirst || sortConfig.key === 'groupCount' ? '#f9fafb' : 'transparent',
-                                                    fontWeight: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst || ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) || showDangerFirst || showPureNewFirst || sortConfig.key === 'groupCount' ? 700 : 500,
-                                                    color: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || showInStockFirst || showOutStockFirst || showAdFirst || ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) || showDangerFirst || showPureNewFirst || sortConfig.key === 'groupCount' ? '#171717' : '#4b5563',
+                                                    backgroundColor: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || tableFilters?.showInStockFirst || tableFilters?.showOutStockFirst || tableFilters?.showAdFirst || ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) || tableFilters?.showDangerFirst || tableFilters?.showPureNewFirst || sortConfig.key === 'groupCount' ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || tableFilters?.showInStockFirst || tableFilters?.showOutStockFirst || tableFilters?.showAdFirst || ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) || tableFilters?.showDangerFirst || tableFilters?.showPureNewFirst || sortConfig.key === 'groupCount' ? 700 : 500,
+                                                    color: sortConfig.key === 'averageDiscount' || sortConfig.key === 'averagePrice' || tableFilters?.showInStockFirst || tableFilters?.showOutStockFirst || tableFilters?.showAdFirst || ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) || tableFilters?.showDangerFirst || tableFilters?.showPureNewFirst || sortConfig.key === 'groupCount' ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' },
                                                     cursor: 'pointer'
                                                 }}
@@ -771,9 +740,9 @@ const ProductTable = React.memo(function ProductTable({
                                                     onClick={handleDangerFirstToggle}
                                                     sx={{
                                                         px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                        backgroundColor: showDangerFirst ? '#f9fafb' : 'transparent',
-                                                        fontWeight: showDangerFirst ? 700 : 500,
-                                                        color: showDangerFirst ? '#171717' : '#4b5563',
+                                                        backgroundColor: tableFilters?.showDangerFirst ? '#f9fafb' : 'transparent',
+                                                        fontWeight: tableFilters?.showDangerFirst ? 700 : 500,
+                                                        color: tableFilters?.showDangerFirst ? '#171717' : '#4b5563',
                                                         '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
                                                     }}
                                                 >
@@ -781,16 +750,16 @@ const ProductTable = React.memo(function ProductTable({
                                                         <Skull size={14} className="text-rose-600" />
                                                         <span>Danger First</span>
                                                     </div>
-                                                    {showDangerFirst && <Check size={14} className="text-neutral-900" />}
+                                                    {tableFilters?.showDangerFirst && <Check size={14} className="text-neutral-900" />}
                                                 </MenuItem>
 
                                                 <MenuItem
                                                     onClick={handlePureNewFirstToggle}
                                                     sx={{
                                                         px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                        backgroundColor: showPureNewFirst ? '#f9fafb' : 'transparent',
-                                                        fontWeight: showPureNewFirst ? 700 : 500,
-                                                        color: showPureNewFirst ? '#171717' : '#4b5563',
+                                                        backgroundColor: tableFilters?.showPureNewFirst ? '#f9fafb' : 'transparent',
+                                                        fontWeight: tableFilters?.showPureNewFirst ? 700 : 500,
+                                                        color: tableFilters?.showPureNewFirst ? '#171717' : '#4b5563',
                                                         '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
                                                     }}
                                                 >
@@ -798,7 +767,7 @@ const ProductTable = React.memo(function ProductTable({
                                                         <LayoutGrid size={14} className="text-purple-600" />
                                                         <span>Pure & New (NG)</span>
                                                     </div>
-                                                    {showPureNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                    {tableFilters?.showPureNewFirst && <Check size={14} className="text-neutral-900" />}
                                                 </MenuItem>
 
                                                 <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
@@ -823,28 +792,28 @@ const ProductTable = React.memo(function ProductTable({
 
                                                 <MenuItem
                                                     onClick={handleInStockSort}
-                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: showInStockFirst ? '#f9fafb' : 'transparent', fontWeight: showInStockFirst ? 700 : 500, color: showInStockFirst ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
+                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: tableFilters?.showInStockFirst ? '#f9fafb' : 'transparent', fontWeight: tableFilters?.showInStockFirst ? 700 : 500, color: tableFilters?.showInStockFirst ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
                                                 >
                                                     <span>Stock In</span>
-                                                    {showInStockFirst && <Check size={14} />}
+                                                    {tableFilters?.showInStockFirst && <Check size={14} />}
                                                 </MenuItem>
 
                                                 <MenuItem
                                                     onClick={handleOutStockSort}
-                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: showOutStockFirst ? '#f9fafb' : 'transparent', fontWeight: showOutStockFirst ? 700 : 500, color: showOutStockFirst ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
+                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: tableFilters?.showOutStockFirst ? '#f9fafb' : 'transparent', fontWeight: tableFilters?.showOutStockFirst ? 700 : 500, color: tableFilters?.showOutStockFirst ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
                                                 >
                                                     <span>Stock Out</span>
-                                                    {showOutStockFirst && <Check size={14} />}
+                                                    {tableFilters?.showOutStockFirst && <Check size={14} />}
                                                 </MenuItem>
                                                 
                                                 <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
                                                 <MenuItem
                                                     onClick={handleAdSort}
-                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: showAdFirst ? '#f9fafb' : 'transparent', fontWeight: showAdFirst ? 700 : 500, color: showAdFirst ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
+                                                    sx={{ px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: tableFilters?.showAdFirst ? '#f9fafb' : 'transparent', fontWeight: tableFilters?.showAdFirst ? 700 : 500, color: tableFilters?.showAdFirst ? '#171717' : '#4b5563', '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer' }}
                                                 >
                                                     <span>Ads</span>
-                                                    {showAdFirst && <Check size={14} />}
+                                                    {tableFilters?.showAdFirst && <Check size={14} />}
                                                 </MenuItem>
                                             </Menu>
 
@@ -888,9 +857,9 @@ const ProductTable = React.memo(function ProductTable({
                                                 onClick={handleNewlyAddedToggle}
                                                 sx={{
                                                     px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                    backgroundColor: showNewFirst ? '#f9fafb' : 'transparent',
-                                                    fontWeight: showNewFirst ? 700 : 500,
-                                                    color: showNewFirst ? '#171717' : '#4b5563',
+                                                    backgroundColor: tableFilters?.showNewFirst ? '#f9fafb' : 'transparent',
+                                                    fontWeight: tableFilters?.showNewFirst ? 700 : 500,
+                                                    color: tableFilters?.showNewFirst ? '#171717' : '#4b5563',
                                                     '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
                                                 }}
                                             >
@@ -898,7 +867,7 @@ const ProductTable = React.memo(function ProductTable({
                                                     <TrendingUp size={14} className="text-blue-600" />
                                                     <span>Newly Added {newlyAddedCount > 0 && `(${newlyAddedCount})`}</span>
                                                 </div>
-                                                {showNewFirst && <Check size={14} className="text-neutral-900" />}
+                                                {tableFilters?.showNewFirst && <Check size={14} className="text-neutral-900" />}
                                             </MenuItem>
 
                                             {isAdmin && (
@@ -906,14 +875,14 @@ const ProductTable = React.memo(function ProductTable({
                                                     onClick={handleNonHyphenToggle}
                                                     sx={{
                                                         px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                        backgroundColor: showNonHyphenOnly ? '#f9fafb' : 'transparent',
-                                                        fontWeight: showNonHyphenOnly ? 700 : 500,
-                                                        color: showNonHyphenOnly ? '#171717' : '#4b5563',
+                                                        backgroundColor: tableFilters?.showNonHyphenOnly ? '#f9fafb' : 'transparent',
+                                                        fontWeight: tableFilters?.showNonHyphenOnly ? 700 : 500,
+                                                        color: tableFilters?.showNonHyphenOnly ? '#171717' : '#4b5563',
                                                         '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
                                                     }}
                                                 >
                                                     <span>Non Hyphen ( - ) ({platformCounts.nonHyphen || 0})</span>
-                                                    {showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
+                                                    {tableFilters?.showNonHyphenOnly && <Check size={14} className="text-neutral-900" />}
                                                 </MenuItem>
                                             )}
                                         </Menu>

@@ -8,18 +8,39 @@ export async function POST(request) {
 
         const adminUsername = process.env.ADMIN_USERNAME;
         const adminPassword = process.env.ADMIN_PASSWORD;
+        const userUsername = process.env.USER_USERNAME || 'user';
+        const userPassword = process.env.USER_PASSWORD || 'user';
+
+        let role = null;
+
+        console.log("LOGIN ATTEMPT:", {
+            reqUsername: username,
+            reqPassword: password,
+            envAdminUser: adminUsername,
+            envAdminPass: adminPassword,
+            envUserUser: userUsername,
+            envUserPass: userPassword,
+            adminPassMatch: password === adminPassword,
+            userPassMatch: password === userPassword
+        });
 
         if (username === adminUsername && password === adminPassword) {
+            role = 'admin';
+        } else if (username === userUsername && password === userPassword) {
+            role = 'user';
+        }
+
+        if (role) {
             // Sign JWT
             const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback_secret_keep_it_safe');
-            const token = await new SignJWT({ username })
+            const token = await new SignJWT({ username, role })
                 .setProtectedHeader({ alg: 'HS256' })
                 .setIssuedAt()
                 .setExpirationTime('7d')
                 .sign(secret);
 
             const response = NextResponse.json(
-                { message: 'Login successful' },
+                { message: 'Login successful', role },
                 { status: 200 }
             );
 

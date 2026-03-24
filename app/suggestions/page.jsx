@@ -4,18 +4,18 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { PINCODE_OPTIONS } from '@/app/constants/platforms';
 import categoriesData from '../utils/categories_with_urls.json';
 import CustomDropdown from '@/components/CustomDropdown';
-import { Loader2, Check, X, RefreshCw, MessageSquare, Info, AlertCircle, Clock, Upload } from 'lucide-react';
+import { Loader2, Check, X, RefreshCw, MessageSquare, Info, AlertCircle, Clock, Upload, ExternalLink } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Snackbar, Alert, Tooltip as MuiTooltip } from '@mui/material';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/components/SidebarContext';
+import { useAuth } from '@/components/AuthProvider'; // NEW Import
 import { SidebarOpenIcon } from '@/components/SidebarIcons';
 
 function SuggestionsContent() {
   const { isSidebarOpen, toggleSidebar } = useSidebar();
-  const searchParams = useSearchParams();
-  const isAdmin = searchParams.get('admin') === 'true';
-
+  const { isAdmin } = useAuth(); // Retrieve global auth state
+  
   // State
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -306,15 +306,15 @@ function SuggestionsContent() {
                 <tr>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Description</th>
-                  <th className="px-6 py-4">Context</th>
-                  <th className="px-6 py-4">Submitted</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-4 py-4 w-[180px]">Context</th>
+                  <th className="px-4 py-4">Submitted</th>
+                  {!isAdmin && <th className="px-6 py-4 text-right">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading && (
                   <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center text-gray-400">
+                    <td colSpan={!isAdmin ? 5 : 4} className="px-6 py-12 text-center text-gray-400">
                       <Loader2 size={32} className="animate-spin mx-auto mb-2 opacity-20" />
                       Loading suggestions...
                     </td>
@@ -322,7 +322,7 @@ function SuggestionsContent() {
                 )}
                 {!loading && suggestions.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center text-gray-400 italic">
+                    <td colSpan={!isAdmin ? 5 : 4} className="px-6 py-12 text-center text-gray-400 italic">
                       No suggestions found.
                     </td>
                   </tr>
@@ -351,57 +351,62 @@ function SuggestionsContent() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-xs space-y-1">
+                    <td className="px-4 py-4 max-w-[180px]">
+                      <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-gray-400 w-16">Pincode:</span>
-                          <span className="text-gray-900">{s.pincode}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-gray-400 w-16">Category:</span>
-                          <span className="text-gray-900">{s.category}</span>
+                           <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-bold border border-gray-200">{s.pincode}</span>
+                           <span className="text-xs text-gray-800 font-medium truncate" title={s.category}>{s.category}</span>
                         </div>
                         {(s.groupId || s.productId) && (
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-gray-400 w-16">IDs:</span>
-                            <span className="text-neutral-500 italic">
-                              {s.groupId && `Group: ${s.groupId}`}
-                              {s.groupId && s.productId && ' | '}
-                              {s.productId && `Product: ${s.productId}`}
-                            </span>
-                          </div>
+                           <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono">
+                               {s.groupId && <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100 truncate max-w-[85px]" title={`Group: ${s.groupId}`}>G:{s.groupId}</span>}
+                               {s.productId && <span className="bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-100 truncate max-w-[85px]" title={`Product: ${s.productId}`}>P:{s.productId}</span>}
+                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-400">
-                      {new Date(s.createdAt).toLocaleDateString('en-GB')}
-                      <br />
-                      {new Date(s.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                    <td className="px-4 py-4 whitespace-nowrap text-[11px] text-gray-500">
+                      {new Date(s.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      {!isAdmin && s.status === 'pending' ? (
-                        <div className="flex items-center justify-end gap-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => handleActionClick(e, s._id, 'completed')}
-                            className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg transition-all"
-                            title="Approve"
+                    {!isAdmin && (
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <a
+                            href={`/categories?pincode=${s.pincode}&category=${encodeURIComponent(s.category)}${s.groupId ? `&groupId=${s.groupId}` : ''}${s.productId ? `&productId=${s.productId}` : ''}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Search in Categories"
+                            className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 bg-white border border-gray-200 shadow-sm rounded-lg transition-all"
                           >
-                            <Check size={18} />
-                          </button>
-                          <button
-                            onClick={(e) => handleActionClick(e, s._id, 'rejected')}
-                            className="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition-all"
-                            title="Reject"
-                          >
-                            <X size={18} />
-                          </button>
+                            <ExternalLink size={16} />
+                          </a>
+
+                          {!isAdmin && s.status === 'pending' ? (
+                            <div className="flex items-center gap-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={(e) => handleActionClick(e, s._id, 'completed')}
+                                className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg transition-all"
+                                title="Approve"
+                              >
+                                <Check size={16} />
+                              </button>
+                              <button
+                                onClick={(e) => handleActionClick(e, s._id, 'rejected')}
+                                className="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition-all"
+                                title="Reject"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-300 italic ml-2">
+                              {s.status === 'pending' ? (!isAdmin ? '' : 'Needs User Action') : 'Handled'}
+                            </span>
+                          )}
                         </div>
-                      ) : (
-                        <span className="text-xs text-gray-300 italic">
-                          {s.status === 'pending' ? 'Needs User Action' : 'Handled'}
-                        </span>
-                      )}
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

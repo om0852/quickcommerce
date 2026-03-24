@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useMemo, Suspense, useRef } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, useRef, useDeferredValue } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 
@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { TrendingUp, TrendingDown, RefreshCw, Clock, Filter, Download, ExternalLink, ChevronsUpDown, ChevronUp, ChevronDown, Search, List, LayoutGrid, ArrowRight, Loader2, Info } from 'lucide-react';
 import { Snackbar, Alert, Tooltip as MuiTooltip } from '@mui/material'; // NEW Import
 import { useSidebar } from '@/components/SidebarContext';
+import { useAuth } from '@/components/AuthProvider'; // NEW Import
 import { SidebarOpenIcon, SidebarCloseIcon } from '@/components/SidebarIcons';
 import AnalyticsTab from './AnalyticsTab';
 import StockAnalysisTab from './StockAnalysisTab';
@@ -22,6 +23,7 @@ import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianG
 import { PLATFORMS, PLATFORM_OPTIONS, PINCODE_OPTIONS, PLATFORM_SHORT_NAMES } from '@/app/constants/platforms';
 import { createSortFunction, createPrioritySort } from '@/app/utils/sorting';
 import { fetchCategoryData as fetchCategoryDataAPI, fetchAvailableSnapshots } from '@/app/lib/api/category';
+import { clusterSimilarProducts } from '@/app/utils/clustering';
 
 import categoriesData from '../utils/categories_with_urls.json';
 
@@ -53,7 +55,7 @@ function CategoriesPageContent() {
   }, []);
 
   const searchParams = useSearchParams();
-  const isAdmin = searchParams.get('admin') === 'true';
+  const { isAdmin } = useAuth(); // NEW: Get global auth state
 
   const [category, setCategory] = useState(searchParams.get('category') || CATEGORY_OPTIONS[0]?.value || 'Fruits & Vegetables');
   const [pincode, setPincode] = useState(searchParams.get('pincode') || '201303');
@@ -109,13 +111,17 @@ function CategoriesPageContent() {
   const [platformFilter, setPlatformFilter] = useState('all');
   const [showMissing, setShowMissing] = useState(false);
   const [useFilterToggle, setUseFilterToggle] = useState(true);
-  const [showNewFirst, setShowNewFirst] = useState(false);
-  const [showNonHyphenOnly, setShowNonHyphenOnly] = useState(false);
-  const [showDangerFirst, setShowDangerFirst] = useState(false);
-  const [showPureNewFirst, setShowPureNewFirst] = useState(false);
-  const [showAdFirst, setShowAdFirst] = useState(false);
-  const [showInStockFirst, setShowInStockFirst] = useState(false);
-  const [showOutStockFirst, setShowOutStockFirst] = useState(false);
+
+  const [tableFilters, setTableFilters] = useState({
+    showNewFirst: false,
+    showNonHyphenOnly: false,
+    showDangerFirst: false,
+    showPureNewFirst: false,
+    showAdFirst: false,
+    showInStockFirst: false,
+    showOutStockFirst: false,
+  });
+
   const [activeTab, setActiveTab] = useState('products');
   const [isBulkEditMode, setIsBulkEditMode] = useState(false);
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
@@ -138,7 +144,7 @@ function CategoriesPageContent() {
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [baseSortConfig, setBaseSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('groupId') || searchParams.get('productId') || searchParams.get('search') || '');
   const ITEMS_PER_PAGE = 50;
   const lastActivePageRef = useRef(1);
   const abortControllerRef = useRef(null);
@@ -157,10 +163,12 @@ function CategoriesPageContent() {
 
 
 
-  const searchedProducts = useMemo(() => {
-    if (!searchQuery) return products;
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
-    const query = searchQuery.toLowerCase().trim();
+  const searchedProducts = useMemo(() => {
+    if (!deferredSearchQuery) return products;
+
+    const query = deferredSearchQuery.toLowerCase().trim();
     const tokens = query.split(/\s+/).filter(t => t.length > 0);
 
     // Detect search intent
@@ -193,7 +201,7 @@ function CategoriesPageContent() {
       // Mixed or fallback: Match either
       return searchMatch || idMatch;
     });
-  }, [products, searchQuery]);
+  }, [products, deferredSearchQuery]);
 
   const preFilteredProducts = useMemo(() => {
     let result = searchedProducts;
@@ -218,7 +226,7 @@ function CategoriesPageContent() {
     }
 
     // Non-Hyphen Filter (Strict) - Regex catches standard and unicode hyphens/dashes
-    if (showNonHyphenOnly) {
+    if (tableFilters.showNonHyphenOnly) {
       const hyphenRegex = /[-\u2010-\u2015\u2212]/;
       result = result.filter(product => {
         if (product.isHeader) return true;
@@ -230,7 +238,7 @@ function CategoriesPageContent() {
     // Danger Filter removed (now handled as a priority sort)
 
     // Pure & New Filter - show only groups created between last scrape date and next scrape time
-    if (showPureNewFirst) {
+    if (tableFilters.showPureNewFirst) {
       const { start, end } = scrapeIntervals;
       if (start && end) {
         result = result.filter(product => {
@@ -243,7 +251,7 @@ function CategoriesPageContent() {
     }
 
     // Prune empty headers globally (run if any filter was active)
-    if (platformFilter !== 'all' || showNonHyphenOnly || showPureNewFirst) {
+    if (platformFilter !== 'all' || tableFilters.showNonHyphenOnly || tableFilters.showPureNewFirst) {
       const pruned = [];
       for (let i = 0; i < result.length; i++) {
         if (result[i].isHeader) {
@@ -262,125 +270,12 @@ function CategoriesPageContent() {
     }
 
     return result;
-  }, [searchedProducts, platformFilter, showMissing, showNonHyphenOnly, showDangerFirst, showPureNewFirst]);
+  }, [searchedProducts, platformFilter, showMissing, tableFilters.showNonHyphenOnly, tableFilters.showDangerFirst, tableFilters.showPureNewFirst]);
 
   // Apply deduplication filter (Hide Similar — by base productId, same logic as ProductDetailsDialog)
   const deduplicatedProducts = useMemo(() => {
-    let result = preFilteredProducts;
-
-    if (useFilterToggle) {
-      // Strip __category-suffix and trailing -a/b to get the canonical base ID
-      const getBaseId = (productId) =>
-        productId.split('__')[0].replace(/-[a-z]$/i, '');
-
-      const n = result.length;
-
-      // Union-Find to cluster products sharing the same (platform, baseId)
-      const parent = Array.from({ length: n }, (_, i) => i);
-      const find = (i) => {
-        while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; }
-        return i;
-      };
-      const union = (i, j) => {
-        const pi = find(i), pj = find(j);
-        if (pi !== pj) parent[pi] = pj;
-      };
-
-      // Map "platform:baseId" -> first index seen; union when same base ID found
-      const baseIdMap = {};
-      result.forEach((p, i) => {
-        // Note: Could add debug logging here for specific products
-        if ((p.name || '').toLowerCase().includes('amla')) {
-          const ids = {};
-          PLATFORMS.forEach(plat => { if (p[plat]?.productId) ids[plat] = { raw: p[plat].productId, base: getBaseId(p[plat].productId) }; });
-          console.log('[HideSimilar DEBUG]', p.name, ids);
-        }
-        PLATFORMS.forEach(plat => {
-          const pid = p[plat]?.productId;
-          if (pid) {
-            const key = `${plat}:${getBaseId(pid)}`;
-            if (baseIdMap[key] !== undefined) {
-              union(i, baseIdMap[key]);
-            } else {
-              baseIdMap[key] = i;
-            }
-          }
-        });
-      });
-
-      // Group by Union-Find root
-      const groups = {};
-      result.forEach((p, i) => {
-        const root = find(i);
-        if (!groups[root]) groups[root] = [];
-        groups[root].push(p);
-      });
-
-      const getPlatformCount = (p) => PLATFORMS.filter(plat => p[plat]).length;
-      const getMinRank = (p) => {
-        let min = Infinity;
-        PLATFORMS.forEach(key => {
-          if (p[key]?.ranking !== undefined && p[key]?.ranking !== null) {
-            const num = Number(p[key].ranking);
-            if (!isNaN(num) && num < min) min = num;
-          }
-        });
-        return min;
-      };
-
-      const deduplicatedResult = [];
-      Object.values(groups).forEach(group => {
-        if (group.length === 1) {
-          deduplicatedResult.push(group[0]);
-          return;
-        }
-
-        // Criteria: 0. isHeader, 1. !isDuplicate, 2. Most platforms, 3. Lowest rank
-        let bestRow = group[0];
-        let maxPlatforms = getPlatformCount(group[0]);
-        let minRank = getMinRank(group[0]);
-
-        for (let i = 1; i < group.length; i++) {
-          const row = group[i];
-
-          // 0. isHeader takes absolute precedence
-          if (bestRow.isHeader && !row.isHeader) continue;
-          if (row.isHeader && !bestRow.isHeader) {
-            bestRow = row;
-            maxPlatforms = getPlatformCount(row);
-            minRank = getMinRank(row);
-            continue;
-          }
-
-          // 1. !isDuplicate takes precedence over isDuplicate (master group vs standalone)
-          if (!bestRow.isDuplicate && row.isDuplicate) continue;
-          if (!row.isDuplicate && bestRow.isDuplicate) {
-            bestRow = row;
-            maxPlatforms = getPlatformCount(row);
-            minRank = getMinRank(row);
-            continue;
-          }
-
-          const platforms = getPlatformCount(row);
-          const rank = getMinRank(row);
-
-          if (platforms > maxPlatforms) {
-            maxPlatforms = platforms;
-            minRank = rank;
-            bestRow = row;
-          } else if (platforms === maxPlatforms && rank < minRank) {
-            minRank = rank;
-            bestRow = row;
-          }
-        }
-
-        deduplicatedResult.push(bestRow);
-      });
-
-      result = deduplicatedResult;
-    }
-
-    return result;
+    if (!useFilterToggle) return preFilteredProducts;
+    return clusterSimilarProducts(preFilteredProducts);
   }, [preFilteredProducts, useFilterToggle]);
 
   const filteredProducts = deduplicatedProducts;
@@ -759,12 +654,12 @@ function CategoriesPageContent() {
   const sortedProducts = useMemo(() => {
     // Use the sorting utility functions instead of inline logic
     const prioritySort = createPrioritySort(
-      showInStockFirst,
-      showOutStockFirst,
-      showAdFirst,
-      showNewFirst,
-      showDangerFirst,
-      showPureNewFirst, // NEW
+      tableFilters.showInStockFirst,
+      tableFilters.showOutStockFirst,
+      tableFilters.showAdFirst,
+      tableFilters.showNewFirst,
+      tableFilters.showDangerFirst,
+      tableFilters.showPureNewFirst, // NEW
       platformFilter,
       scrapeIntervals
     );
@@ -795,7 +690,30 @@ function CategoriesPageContent() {
       flatList = flatList.concat([...group.items].sort(sortFunc));
     });
     return flatList;
-  }, [filteredProducts, sortConfig, showNewFirst, showDangerFirst, showPureNewFirst, showNonHyphenOnly, showAdFirst, showInStockFirst, showOutStockFirst, platformFilter]);
+  }, [filteredProducts, sortConfig, tableFilters, platformFilter, scrapeIntervals]);
+
+  // Handle concurrent bulk updates here instead of ProductTable.jsx 
+  const handleBulkUpdateData = async (selectedGroupIds, updates) => {
+    const updatePromises = selectedGroupIds.map(groupingId =>
+      fetch('/api/grouping/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groupingId, updates })
+      }).then(res => res.ok ? { success: true, groupingId } : { success: false })
+        .catch(() => ({ success: false }))
+    );
+
+    const results = await Promise.all(updatePromises);
+    const successCount = results.filter(r => r.success).length;
+
+    // Optimistically update local state for successful records
+    const successfulIds = results.filter(r => r.success).map(r => r.groupingId);
+    if (successfulIds.length > 0) {
+      successfulIds.forEach(id => handleLocalProductUpdate({ groupingId: id, ...updates }));
+    }
+
+    return { successCount, total: selectedGroupIds.length };
+  };
 
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -1330,16 +1248,9 @@ function CategoriesPageContent() {
                 platformFilter={platformFilter}
                 pincode={pincode}
                 onRefresh={fetchCategoryData}
-                showNewFirst={showNewFirst}
-                onShowNewFirstChange={setShowNewFirst}
-                showAdFirst={showAdFirst}
-                onShowAdFirstChange={setShowAdFirst}
-                showInStockFirst={showInStockFirst}
-                onShowInStockFirstChange={setShowInStockFirst}
-                showOutStockFirst={showOutStockFirst}
-                onShowOutStockFirstChange={setShowOutStockFirst}
-                showNonHyphenOnly={showNonHyphenOnly}
-                onShowNonHyphenOnlyChange={setShowNonHyphenOnly}
+                tableFilters={tableFilters}
+                setTableFilters={setTableFilters}
+                onBulkUpdate={handleBulkUpdateData}
                 isAdmin={isAdmin}
                 onLocalUpdate={handleLocalProductUpdate}
                 isBulkEditMode={isBulkEditMode}
@@ -1356,10 +1267,6 @@ function CategoriesPageContent() {
                     scrapeDate.getDate() === today.getDate()
                   );
                 })()}
-                showDangerFirst={showDangerFirst}
-                onShowDangerFirstChange={setShowDangerFirst}
-                showPureNewFirst={showPureNewFirst}
-                onShowPureNewFirstChange={setShowPureNewFirst}
                 scrapeIntervals={scrapeIntervals}
                 onInfoClick={(product) => {
                   setSelectedProduct(product);

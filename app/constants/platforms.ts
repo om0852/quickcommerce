@@ -47,6 +47,21 @@ export const PINCODE_OPTIONS = [
   { label: 'Mumbai — 401202', value: '401202' }
 ] as const;
 
+export const UNSERVICEABLE_PINCODES: Record<string, string[]> = {
+  dmart: ['122008', '122016', '122010', '201303', '201014'],
+  flipkartMinutes: ['400070', '401101'],
+  zepto: ['401101', '401202']
+};
+
+export const PINCODE_AVAILABILITY: Record<string, string[]> = {
+  zepto: PINCODE_OPTIONS.map(p => p.value).filter(val => !UNSERVICEABLE_PINCODES.zepto?.includes(val)),
+  jiomart: PINCODE_OPTIONS.map(p => p.value), // ALL
+  blinkit: PINCODE_OPTIONS.map(p => p.value), // ALL
+  dmart: PINCODE_OPTIONS.map(p => p.value).filter(val => !UNSERVICEABLE_PINCODES.dmart?.includes(val)), 
+  instamart: PINCODE_OPTIONS.map(p => p.value), // ALL
+  flipkartMinutes: PINCODE_OPTIONS.map(p => p.value).filter(val => !UNSERVICEABLE_PINCODES.flipkartMinutes?.includes(val)),
+};
+
 export const PLATFORM_COLOR_MAP = {
   zepto: 'text-purple-700',
   blinkit: 'text-yellow-700',

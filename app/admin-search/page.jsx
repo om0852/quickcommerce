@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Search, Loader2, Database, MapPin, Package, ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
+import { useSidebar } from '@/components/SidebarContext';
+import { SidebarOpenIcon } from '@/components/SidebarIcons';
 
 const PLATFORMS = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
 const PLATFORM_LABELS = {
@@ -344,6 +346,7 @@ function ProductResult({ data }) {
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 export default function AdminSearchPage() {
+  const { isSidebarOpen, toggleSidebar } = useSidebar();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -380,7 +383,15 @@ export default function AdminSearchPage() {
       <div className="sticky top-0 z-30 bg-white border-b border-neutral-200 shadow-sm px-4 py-3">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           {/* Title */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
+            {!isSidebarOpen && (
+              <button
+                onClick={toggleSidebar}
+                className="p-1.5 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors animate-in fade-in"
+              >
+                <SidebarOpenIcon size={20} />
+              </button>
+            )}
             <Database size={16} className="text-neutral-600" />
             <span className="text-sm font-bold text-neutral-900 whitespace-nowrap">Admin Search</span>
             <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded border border-amber-200 font-semibold">ADMIN</span>
