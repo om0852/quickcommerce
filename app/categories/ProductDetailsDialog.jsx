@@ -406,7 +406,7 @@ function ProductDetailsDialog({
                                     {/* Extra Details */}
                                     <div className="mt-3 pt-3 border-t border-neutral-100 space-y-2 text-xs">
                                         <div className="flex gap-2">
-                                            <span className="text-neutral-400 font-medium min-w-[70px]">Combo:</span>
+                                            <span className="text-neutral-400 font-medium min-w-[125px]">Combo:</span>
                                             <span className={`text-neutral-600 truncate ${!data.combo ? 'italic text-neutral-400' : ''}`} title={data.combo}>
                                                 {data.combo || 'No Combo'}
                                             </span>
@@ -414,27 +414,27 @@ function ProductDetailsDialog({
 
                                         <div className="space-y-1">
                                             <div className="flex gap-2">
-                                                <span className="text-neutral-400 font-medium min-w-[70px]">Category:</span>
+                                                <span className="text-neutral-400 font-medium min-w-[125px]">Category:</span>
                                                 <span className="text-neutral-700 truncate flex-1" title={data.officialCategory}>
                                                     {data.officialCategory || <span className="italic text-neutral-300">--</span>}
                                                 </span>
                                             </div>
                                             <div className="flex gap-2">
-                                                <span className="text-neutral-400 font-medium min-w-[70px]">Subcategory:</span>
+                                                <span className="text-neutral-400 font-medium min-w-[125px]">Subcategory:</span>
                                                 <span className="text-neutral-700 flex-1 break-words" title={data.officialSubCategory}>
                                                     {data.officialSubCategory || <span className="italic text-neutral-300">--</span>}
                                                 </span>
                                             </div>
                                             {platform === 'jiomart' && (
                                                 <div className="flex gap-2">
-                                                    <span className="text-neutral-400 font-medium min-w-[70px] leading-tight">Article<br />Category:</span>
+                                                    <span className="text-neutral-400 font-medium min-w-[125px] leading-tight">Article Category:</span>
                                                     <span className="text-neutral-700 flex-1 break-words" title="Extracted JioMart Article Category">
                                                         {extractArticleCategory(data.productName || data.name) !== '-' ? extractArticleCategory(data.productName || data.name) : <span className="italic text-neutral-300">--</span>}
                                                     </span>
                                                 </div>
                                             )}
                                             <div className="flex gap-2">
-                                                <span className="text-neutral-400 font-medium min-w-[70px] leading-tight mt-0.5">Other<br />Subcategories:</span>
+                                                <span className="text-neutral-400 font-medium min-w-[125px] leading-tight mt-0.5">Other Subcategories:</span>
                                                 <span className="text-neutral-500 flex-1 break-words text-[11px] leading-snug" title={(() => {
                                                     if (!products || products.length === 0) return '';
                                                     
