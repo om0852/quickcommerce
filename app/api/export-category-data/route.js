@@ -79,29 +79,29 @@ try {
 
 function extractPricePerUnit(price, weightStr) {
     if (!price || !weightStr || weightStr === 'N/A' || weightStr === '-') return '-';
-    
+
     const str = String(weightStr).toLowerCase().replace(/,/g, '').trim();
-    
+
     // 1. Check for multiplier (e.g. "4 x 100 g")
     const multiMatch = str.match(/(\d+)\s*(?:x|\*|×|-)\s*([\d.]+)\s*([a-z]+)/);
     let value = null;
     let unit = null;
 
     if (multiMatch) {
-       const multiplier = parseInt(multiMatch[1], 10);
-       value = parseFloat(multiMatch[2]) * multiplier;
-       unit = multiMatch[3];
+        const multiplier = parseInt(multiMatch[1], 10);
+        value = parseFloat(multiMatch[2]) * multiplier;
+        unit = multiMatch[3];
     } else {
-       // 2. Check for standard format (e.g. "500 g", "1.5 kg")
-       const standardMatch = str.match(/^([\d.]+)\s*([a-z]+)/);
-       if (standardMatch) {
-           value = parseFloat(standardMatch[1]);
-           unit = standardMatch[2];
-       } else {
-           // 3. Check for standalone pieces
-           if (str.includes('pc') || str.includes('piece')) return `₹${Number(price).toFixed(2)}/pc`;
-           return '-';
-       }
+        // 2. Check for standard format (e.g. "500 g", "1.5 kg")
+        const standardMatch = str.match(/^([\d.]+)\s*([a-z]+)/);
+        if (standardMatch) {
+            value = parseFloat(standardMatch[1]);
+            unit = standardMatch[2];
+        } else {
+            // 3. Check for standalone pieces
+            if (str.includes('pc') || str.includes('piece')) return `₹${Number(price).toFixed(2)}/pc`;
+            return '-';
+        }
     }
 
     if (isNaN(value) || value <= 0) return '-';
@@ -128,55 +128,55 @@ function extractPricePerUnit(price, weightStr) {
     }
 
     const pricePerUnit = price / value;
-    
+
     if (pricePerUnit < 0.01) {
-       return `₹${pricePerUnit.toFixed(4)}/${unit}`;
+        return `₹${pricePerUnit.toFixed(4)}/${unit}`;
     }
     return `₹${pricePerUnit.toFixed(2)}/${unit}`;
 }
 
 const JIO_ARTICLE_CATEGORIES = [
-  "APPLE FUJI", "APPLE RED DELICIOUS", "APPLE GRANNY SMITH", "APPLE GOLDEN IMPORTE", 
-  "APPLE ROYAL GALA", "APPLE INORED EPLI", "APPLE QUEEN", "APPLE KINNAUR", "APPLE SHIMLA", 
-  "MOSAMBI", "ORANGE INDIAN", "KINNOW", "CITRUS OTHERS", "IMPORTED OTHERS", "STRAWBERRY", 
-  "AVOCADO INDIAN", "LITCHI", "PLUM INDIAN", "MINOR FRUIT OTHERS", "EXOTIC FRUITS INDIAN", 
-  "CITRUS ORANGE IMPORT", "KIWI IMPORTED OTHERS", "PEARS IMPORTED", "PLUM IMPORTED", 
-  "GRAPES IMPORTED", "GRAPES INDIAN OTHERS", "GRAPES BLACK", "GRAPES SONAKA SEEDLE", 
-  "GRAPES THOMPSON SEED", "MANGO ALPHONSO", "MANGO TOTAPURI", "MANGO NEELAM", "MANGO CHAUSA", 
-  "MANGO BANGANAPALLI", "MUSKMELON", "WATERMELON", "MELON OTHERS", "BANANA NENDRAN", 
-  "BANANA OTHERS", "BANANA ROBUSTA", "BANANA YELLAKI", "PEARS INDIAN", "GUAVA", "PAPAYA", 
-  "PINEAPPLE", "CUSTARD APPLE", "POMEGRANATE", "SAPOTA", "TENDER COCONUT GREEN", "CUT FRUITS", 
-  "SWEET TAMARIND IMPOR", "APPLE IMPORTED INDIA", "APPLE KASHMIR", "APPLE INDIAN OTHERS", 
-  "MANGO SINDHURA", "CHERRY RED INDIAN", "BERRY INDIAN", "MANGO OTHERS", "MANGO LANGDA", 
-  "MANGO DASHERI", "MANGO KESAR", "PEACH INDIAN", "APPLE PINK LADY", "APPLE IMPORTED OTHER", 
-  "BERRIES IMPORTED", "DRAGON FRUIT INDIAN", "KIWI IMPORTED ZESPRI", "DATES IMPORTED FRESH", 
-  "CITRUS MANDARIN IMPO", "TENDER COCONUT GOLDE", "JUMBO GUAVA INDIAN", "AVOCADO IMPORTED", 
-  "DRAGON FRUIT IMPORTE", "CITRUS IMPORTED OTHE", "DATES IMPORTED", "GRAPES", "MANGO", 
-  "SEASONAL MINOR", "MELONS", "SEASONAL MAJOR", "APPLE", "PERENNIALS", "STONE FRUITS", 
-  "CHERRIES & BERRIES", "PEAR", "EXOTIC FRUITS", "CITRUS", "BANANA", "WET DATES", 
-  "VALUE ADDED", "GIFT PACKS", "DRIED DATES", "ONION RED", "GARLIC", "MUSHROOM", "COCONUT", 
-  "POTATO OTHERS", "POTATO REGULAR", "TOMATO COUNTRY", "TOMATO HYBRID", "TOMATO OTHERS", 
-  "POTATO BABY", "ONION SAMBAR", "ONION WHITE", "EXOTIC VEGETABLE OTH", "BABY CORN", "BROCCOLI", 
-  "SPROUTS", "TOMATO CHERRY", "CABBAGE CHINESE", "LETTUCE ICEBERG", "AMARANTHUS", "CORIANDER", 
-  "LEAFY OTHERS", "CURRY LEAVES", "METHI", "MINT LEAVES", "Spinach", "SPRING ONION", 
-  "VEG OTHERS", "DRUMSTICK", "BEET ROOT", "GINGER", "RADISH WHITE", "ROOTY OTHERS", 
-  "SWEET POTATO", "CABBAGE", "CAPSICUM GREEN", "CAPSICUM COLOURED", "CAULIFLOWER", 
-  "GREEN PEAS", "TEMPERATE VEG OTHERS", "BEANS OTHERS", "BEANS CLUSTER", "BEANS COWPEA", 
-  "BEANS FRENCH", "BRINJAL BLACK BIG", "BRINJAL OTHERS", "BRINJAL NAGPUR", "CUCUMBER WHITE", 
-  "CUCUMBER MADRAS", "GOURD OTHERS", "BITTER GOURD", "BOTTLE GOURD", "COCCINIA", 
-  "RIDGE GOURD", "TROPICAL VEG OTHERS", "BANANA RAW", "CARROT ORANGE", "CHILLI GREEN", 
-  "LEMON", "Okra", "Pumpkin", "SUGARCANE", "GROUNDNUT", "SWEET CORN", "CUCUMBER GREEN", 
-  "CUCUMBER FRENCH", "CARROT RED", "FLOWERS", "PAPAYA RAW", "SPONGE GOURD", "ONION OTHERS", 
-  "POTTED HERBS", "MICROGREENS", "POTATO LOW SUGAR"
+    "APPLE FUJI", "APPLE RED DELICIOUS", "APPLE GRANNY SMITH", "APPLE GOLDEN IMPORTE",
+    "APPLE ROYAL GALA", "APPLE INORED EPLI", "APPLE QUEEN", "APPLE KINNAUR", "APPLE SHIMLA",
+    "MOSAMBI", "ORANGE INDIAN", "KINNOW", "CITRUS OTHERS", "IMPORTED OTHERS", "STRAWBERRY",
+    "AVOCADO INDIAN", "LITCHI", "PLUM INDIAN", "MINOR FRUIT OTHERS", "EXOTIC FRUITS INDIAN",
+    "CITRUS ORANGE IMPORT", "KIWI IMPORTED OTHERS", "PEARS IMPORTED", "PLUM IMPORTED",
+    "GRAPES IMPORTED", "GRAPES INDIAN OTHERS", "GRAPES BLACK", "GRAPES SONAKA SEEDLE",
+    "GRAPES THOMPSON SEED", "MANGO ALPHONSO", "MANGO TOTAPURI", "MANGO NEELAM", "MANGO CHAUSA",
+    "MANGO BANGANAPALLI", "MUSKMELON", "WATERMELON", "MELON OTHERS", "BANANA NENDRAN",
+    "BANANA OTHERS", "BANANA ROBUSTA", "BANANA YELLAKI", "PEARS INDIAN", "GUAVA", "PAPAYA",
+    "PINEAPPLE", "CUSTARD APPLE", "POMEGRANATE", "SAPOTA", "TENDER COCONUT GREEN", "CUT FRUITS",
+    "SWEET TAMARIND IMPOR", "APPLE IMPORTED INDIA", "APPLE KASHMIR", "APPLE INDIAN OTHERS",
+    "MANGO SINDHURA", "CHERRY RED INDIAN", "BERRY INDIAN", "MANGO OTHERS", "MANGO LANGDA",
+    "MANGO DASHERI", "MANGO KESAR", "PEACH INDIAN", "APPLE PINK LADY", "APPLE IMPORTED OTHER",
+    "BERRIES IMPORTED", "DRAGON FRUIT INDIAN", "KIWI IMPORTED ZESPRI", "DATES IMPORTED FRESH",
+    "CITRUS MANDARIN IMPO", "TENDER COCONUT GOLDE", "JUMBO GUAVA INDIAN", "AVOCADO IMPORTED",
+    "DRAGON FRUIT IMPORTE", "CITRUS IMPORTED OTHE", "DATES IMPORTED", "GRAPES", "MANGO",
+    "SEASONAL MINOR", "MELONS", "SEASONAL MAJOR", "APPLE", "PERENNIALS", "STONE FRUITS",
+    "CHERRIES & BERRIES", "PEAR", "EXOTIC FRUITS", "CITRUS", "BANANA", "WET DATES",
+    "VALUE ADDED", "GIFT PACKS", "DRIED DATES", "ONION RED", "GARLIC", "MUSHROOM", "COCONUT",
+    "POTATO OTHERS", "POTATO REGULAR", "TOMATO COUNTRY", "TOMATO HYBRID", "TOMATO OTHERS",
+    "POTATO BABY", "ONION SAMBAR", "ONION WHITE", "EXOTIC VEGETABLE OTH", "BABY CORN", "BROCCOLI",
+    "SPROUTS", "TOMATO CHERRY", "CABBAGE CHINESE", "LETTUCE ICEBERG", "AMARANTHUS", "CORIANDER",
+    "LEAFY OTHERS", "CURRY LEAVES", "METHI", "MINT LEAVES", "Spinach", "SPRING ONION",
+    "VEG OTHERS", "DRUMSTICK", "BEET ROOT", "GINGER", "RADISH WHITE", "ROOTY OTHERS",
+    "SWEET POTATO", "CABBAGE", "CAPSICUM GREEN", "CAPSICUM COLOURED", "CAULIFLOWER",
+    "GREEN PEAS", "TEMPERATE VEG OTHERS", "BEANS OTHERS", "BEANS CLUSTER", "BEANS COWPEA",
+    "BEANS FRENCH", "BRINJAL BLACK BIG", "BRINJAL OTHERS", "BRINJAL NAGPUR", "CUCUMBER WHITE",
+    "CUCUMBER MADRAS", "GOURD OTHERS", "BITTER GOURD", "BOTTLE GOURD", "COCCINIA",
+    "RIDGE GOURD", "TROPICAL VEG OTHERS", "BANANA RAW", "CARROT ORANGE", "CHILLI GREEN",
+    "LEMON", "Okra", "Pumpkin", "SUGARCANE", "GROUNDNUT", "SWEET CORN", "CUCUMBER GREEN",
+    "CUCUMBER FRENCH", "CARROT RED", "FLOWERS", "PAPAYA RAW", "SPONGE GOURD", "ONION OTHERS",
+    "POTTED HERBS", "MICROGREENS", "POTATO LOW SUGAR"
 ];
 
 function extractArticleCategory(productName) {
     if (!productName) return '-';
     const normalizedName = productName.toUpperCase();
-    
+
     // Sort categories by length descending to match longest specific string first
     const sortedCategories = [...JIO_ARTICLE_CATEGORIES].sort((a, b) => b.length - a.length);
-    
+
     for (const cat of sortedCategories) {
         if (normalizedName.includes(cat.toUpperCase())) {
             return cat;
@@ -358,7 +358,8 @@ async function processExportInBackground(body) {
                             const pData = productRow[p];
                             if (pData) {
                                 excelRow[`${p}_name`] = pData.productName || pData.name || '-';
-                                excelRow[`${p}_productId`] = pData.productId || '-';
+                                excelRow[`${p}_productId`] = pData.productId ? String(pData.productId).split('__')[0] : '-';
+                                excelRow[`${p}_aid`] = pData.productId || '-';
                                 excelRow[`${p}_otherSubcategory`] = pData.subCategory || '-';
                                 if (p === 'jiomart') {
                                     excelRow[`${p}_articleCategory`] = extractArticleCategory(pData.productName || pData.name);
@@ -426,6 +427,7 @@ async function processExportInBackground(body) {
                                 // unavailable
                                 excelRow[`${p}_name`] = '-';
                                 excelRow[`${p}_productId`] = '-';
+                                excelRow[`${p}_aid`] = '-';
                                 excelRow[`${p}_otherSubcategory`] = '-';
                                 excelRow[`${p}_available`] = 'No';
                                 excelRow[`${p}_price`] = null;
@@ -626,6 +628,7 @@ async function processExportInBackground(body) {
             const pCols = [
                 { header: `${pName} Name`, key: `${platform}_name`, width: 30 },
                 { header: `${pName} Product ID`, key: `${platform}_productId`, width: 20 },
+                { header: `${pName} AID`, key: `${platform}_aid`, width: 20 },
                 { header: `${pName} Avail`, key: `${platform}_available`, width: 10 },
                 { header: `${pName} Price`, key: `${platform}_price`, width: 12, style: { numFmt: '₹#,##0.00' } },
                 { header: `${pName} Price/Unit`, key: `${platform}_pricePerUnit`, width: 15 },

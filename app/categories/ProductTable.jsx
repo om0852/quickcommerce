@@ -35,6 +35,7 @@ const ProductTable = React.memo(function ProductTable({
     platformCounts,
     totalPlatformCounts, // NEW Prop
     platformFilter,
+    category,
     pincode,
     onRefresh,
     tableFilters,
@@ -1122,13 +1123,21 @@ const ProductTable = React.memo(function ProductTable({
                                                                     ) : (
                                                                         <div className="block leading-tight break-words line-clamp-2 min-h-[32px]">
                                                                             {(() => {
-                                                                                const parsed = parseProductName(product.name);
+                                                                                const isFV = category === 'Fruits & Vegetables';
+                                                                                const parsed = isFV ? parseProductName(product.name) : null;
                                                                                 return parsed ? (
                                                                                   <>
                                                                                     <span className="font-extrabold text-neutral-900">{parsed.firstPart}</span>
                                                                                     {parsed.rest && <span className="text-neutral-600 font-medium">{parsed.delimiter}{parsed.rest}</span>}
                                                                                   </>
-                                                                                ) : <span className="font-extrabold text-neutral-900">{product.name}</span>;
+                                                                                ) : (
+                                                                                    <span className={cn(
+                                                                                        "text-neutral-900",
+                                                                                        isFV ? "font-extrabold" : "font-normal"
+                                                                                    )}>
+                                                                                        {product.name}
+                                                                                    </span>
+                                                                                );
                                                                             })()}
                                                                             {product.label && (
                                                                                 <span 

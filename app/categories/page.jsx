@@ -1246,6 +1246,7 @@ function CategoriesPageContent() {
                 platformCounts={platformCounts}
                 totalPlatformCounts={totalPlatformCounts}
                 platformFilter={platformFilter}
+                category={category}
                 pincode={pincode}
                 onRefresh={fetchCategoryData}
                 tableFilters={tableFilters}
