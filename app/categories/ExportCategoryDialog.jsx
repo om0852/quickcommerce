@@ -161,7 +161,7 @@ export default function ExportCategoryDialog({
             "fixed inset-0 bg-black/40 flex items-center justify-center z-[200] backdrop-blur-[4px] transition-all duration-300",
             isSidebarOpen ? "xl:ml-64" : "xl:ml-0"
         )} onClick={onClose}>
-            <div className="bg-white rounded-xl w-[90%] max-w-[480px] max-h-[90vh] flex flex-col shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-xl w-[90%] max-w-[600px] max-h-[90vh] flex flex-col shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
 
                 {/* Header */}
                 <div className="flex-none p-6 bg-white border-b border-neutral-200 flex items-start justify-between">
