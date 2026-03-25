@@ -77,6 +77,114 @@ try {
 }
 
 
+function extractPricePerUnit(price, weightStr) {
+    if (!price || !weightStr || weightStr === 'N/A' || weightStr === '-') return '-';
+    
+    const str = String(weightStr).toLowerCase().replace(/,/g, '').trim();
+    
+    // 1. Check for multiplier (e.g. "4 x 100 g")
+    const multiMatch = str.match(/(\d+)\s*(?:x|\*|×|-)\s*([\d.]+)\s*([a-z]+)/);
+    let value = null;
+    let unit = null;
+
+    if (multiMatch) {
+       const multiplier = parseInt(multiMatch[1], 10);
+       value = parseFloat(multiMatch[2]) * multiplier;
+       unit = multiMatch[3];
+    } else {
+       // 2. Check for standard format (e.g. "500 g", "1.5 kg")
+       const standardMatch = str.match(/^([\d.]+)\s*([a-z]+)/);
+       if (standardMatch) {
+           value = parseFloat(standardMatch[1]);
+           unit = standardMatch[2];
+       } else {
+           // 3. Check for standalone pieces
+           if (str.includes('pc') || str.includes('piece')) return `₹${Number(price).toFixed(2)}/pc`;
+           return '-';
+       }
+    }
+
+    if (isNaN(value) || value <= 0) return '-';
+
+    // Normalize units
+    if (unit === 'kg' || unit === 'kgs') {
+        value = value * 1000;
+        unit = 'g';
+    } else if (unit === 'l' || unit === 'lit' || unit === 'litre' || unit === 'litres') {
+        value = value * 1000;
+        unit = 'ml';
+    } else if (unit === 'gm' || unit === 'gms') {
+        unit = 'g';
+    } else if (unit === 'pc' || unit === 'pcs' || unit === 'piece' || unit === 'pieces') {
+        unit = 'pc';
+    } else if (unit === 'unit' || unit === 'units') {
+        unit = 'unit';
+    } else if (unit === 'pack' || unit === 'packs') {
+        unit = 'pack';
+    } else if (unit === 'ml') {
+        unit = 'ml';
+    } else if (unit === 'g') {
+        unit = 'g';
+    }
+
+    const pricePerUnit = price / value;
+    
+    if (pricePerUnit < 0.01) {
+       return `₹${pricePerUnit.toFixed(4)}/${unit}`;
+    }
+    return `₹${pricePerUnit.toFixed(2)}/${unit}`;
+}
+
+const JIO_ARTICLE_CATEGORIES = [
+  "APPLE FUJI", "APPLE RED DELICIOUS", "APPLE GRANNY SMITH", "APPLE GOLDEN IMPORTE", 
+  "APPLE ROYAL GALA", "APPLE INORED EPLI", "APPLE QUEEN", "APPLE KINNAUR", "APPLE SHIMLA", 
+  "MOSAMBI", "ORANGE INDIAN", "KINNOW", "CITRUS OTHERS", "IMPORTED OTHERS", "STRAWBERRY", 
+  "AVOCADO INDIAN", "LITCHI", "PLUM INDIAN", "MINOR FRUIT OTHERS", "EXOTIC FRUITS INDIAN", 
+  "CITRUS ORANGE IMPORT", "KIWI IMPORTED OTHERS", "PEARS IMPORTED", "PLUM IMPORTED", 
+  "GRAPES IMPORTED", "GRAPES INDIAN OTHERS", "GRAPES BLACK", "GRAPES SONAKA SEEDLE", 
+  "GRAPES THOMPSON SEED", "MANGO ALPHONSO", "MANGO TOTAPURI", "MANGO NEELAM", "MANGO CHAUSA", 
+  "MANGO BANGANAPALLI", "MUSKMELON", "WATERMELON", "MELON OTHERS", "BANANA NENDRAN", 
+  "BANANA OTHERS", "BANANA ROBUSTA", "BANANA YELLAKI", "PEARS INDIAN", "GUAVA", "PAPAYA", 
+  "PINEAPPLE", "CUSTARD APPLE", "POMEGRANATE", "SAPOTA", "TENDER COCONUT GREEN", "CUT FRUITS", 
+  "SWEET TAMARIND IMPOR", "APPLE IMPORTED INDIA", "APPLE KASHMIR", "APPLE INDIAN OTHERS", 
+  "MANGO SINDHURA", "CHERRY RED INDIAN", "BERRY INDIAN", "MANGO OTHERS", "MANGO LANGDA", 
+  "MANGO DASHERI", "MANGO KESAR", "PEACH INDIAN", "APPLE PINK LADY", "APPLE IMPORTED OTHER", 
+  "BERRIES IMPORTED", "DRAGON FRUIT INDIAN", "KIWI IMPORTED ZESPRI", "DATES IMPORTED FRESH", 
+  "CITRUS MANDARIN IMPO", "TENDER COCONUT GOLDE", "JUMBO GUAVA INDIAN", "AVOCADO IMPORTED", 
+  "DRAGON FRUIT IMPORTE", "CITRUS IMPORTED OTHE", "DATES IMPORTED", "GRAPES", "MANGO", 
+  "SEASONAL MINOR", "MELONS", "SEASONAL MAJOR", "APPLE", "PERENNIALS", "STONE FRUITS", 
+  "CHERRIES & BERRIES", "PEAR", "EXOTIC FRUITS", "CITRUS", "BANANA", "WET DATES", 
+  "VALUE ADDED", "GIFT PACKS", "DRIED DATES", "ONION RED", "GARLIC", "MUSHROOM", "COCONUT", 
+  "POTATO OTHERS", "POTATO REGULAR", "TOMATO COUNTRY", "TOMATO HYBRID", "TOMATO OTHERS", 
+  "POTATO BABY", "ONION SAMBAR", "ONION WHITE", "EXOTIC VEGETABLE OTH", "BABY CORN", "BROCCOLI", 
+  "SPROUTS", "TOMATO CHERRY", "CABBAGE CHINESE", "LETTUCE ICEBERG", "AMARANTHUS", "CORIANDER", 
+  "LEAFY OTHERS", "CURRY LEAVES", "METHI", "MINT LEAVES", "Spinach", "SPRING ONION", 
+  "VEG OTHERS", "DRUMSTICK", "BEET ROOT", "GINGER", "RADISH WHITE", "ROOTY OTHERS", 
+  "SWEET POTATO", "CABBAGE", "CAPSICUM GREEN", "CAPSICUM COLOURED", "CAULIFLOWER", 
+  "GREEN PEAS", "TEMPERATE VEG OTHERS", "BEANS OTHERS", "BEANS CLUSTER", "BEANS COWPEA", 
+  "BEANS FRENCH", "BRINJAL BLACK BIG", "BRINJAL OTHERS", "BRINJAL NAGPUR", "CUCUMBER WHITE", 
+  "CUCUMBER MADRAS", "GOURD OTHERS", "BITTER GOURD", "BOTTLE GOURD", "COCCINIA", 
+  "RIDGE GOURD", "TROPICAL VEG OTHERS", "BANANA RAW", "CARROT ORANGE", "CHILLI GREEN", 
+  "LEMON", "Okra", "Pumpkin", "SUGARCANE", "GROUNDNUT", "SWEET CORN", "CUCUMBER GREEN", 
+  "CUCUMBER FRENCH", "CARROT RED", "FLOWERS", "PAPAYA RAW", "SPONGE GOURD", "ONION OTHERS", 
+  "POTTED HERBS", "MICROGREENS", "POTATO LOW SUGAR"
+];
+
+function extractArticleCategory(productName) {
+    if (!productName) return '-';
+    const normalizedName = productName.toUpperCase();
+    
+    // Sort categories by length descending to match longest specific string first
+    const sortedCategories = [...JIO_ARTICLE_CATEGORIES].sort((a, b) => b.length - a.length);
+    
+    for (const cat of sortedCategories) {
+        if (normalizedName.includes(cat.toUpperCase())) {
+            return cat;
+        }
+    }
+    return '-';
+}
+
 // Background processing function
 async function processExportInBackground(body) {
     console.log('🚀 Starting background export process...');
@@ -185,6 +293,7 @@ async function processExportInBackground(body) {
                         name: group.primaryName, // Use Group Name as primary
                         image: group.primaryImage,
                         weight: group.primaryWeight,
+                        brand: group.brand || null,
                         zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null
                     };
 
@@ -194,6 +303,10 @@ async function processExportInBackground(body) {
                         if (snap) {
                             uniquePlatforms.add(p.platform);
                             hasData = true;
+
+                            if (!productRow.brand && snap.brand) {
+                                productRow.brand = snap.brand;
+                            }
 
                             // Map snapshot to platform key
                             // We construct the "platform object" equal to what we had before for the row generation
@@ -218,7 +331,8 @@ async function processExportInBackground(body) {
                                 rankingChange: snap.rankingChange || 0,
                                 categoryUrl: snap.categoryUrl,
                                 officialCategory: snap.officialCategory,
-                                officialSubCategory: snap.officialSubCategory
+                                officialSubCategory: snap.officialSubCategory,
+                                subCategory: snap.subCategory
                             };
                         }
                     });
@@ -229,10 +343,11 @@ async function processExportInBackground(body) {
 
                         const excelRow = {
                             date: dateObj.toLocaleDateString(),
-                            time: dateObj.toLocaleTimeString(),
                             pincode: pin,
                             category: cat,
                             productName: productRow.name,
+                            brand: productRow.brand || '-',
+                            groupId: group.groupingId || (group._id ? group._id.toString() : '-'),
                             productWeight: productRow.weight || 'N/A',
                             // Store productRow reference for hide-similar computation (removed before Excel write)
                             _productRowRef: productRow
@@ -242,6 +357,12 @@ async function processExportInBackground(body) {
                         ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].forEach(p => {
                             const pData = productRow[p];
                             if (pData) {
+                                excelRow[`${p}_name`] = pData.productName || pData.name || '-';
+                                excelRow[`${p}_productId`] = pData.productId || '-';
+                                excelRow[`${p}_otherSubcategory`] = pData.subCategory || '-';
+                                if (p === 'jiomart') {
+                                    excelRow[`${p}_articleCategory`] = extractArticleCategory(pData.productName || pData.name);
+                                }
                                 excelRow[`${p}_available`] = 'Yes';
                                 excelRow[`${p}_price`] = pData.currentPrice;
                                 excelRow[`${p}_originalPrice`] = pData.originalPrice || '-';
@@ -261,6 +382,7 @@ async function processExportInBackground(body) {
                                         : '-';
 
                                 excelRow[`${p}_quantity`] = displayQuantity;
+                                excelRow[`${p}_pricePerUnit`] = extractPricePerUnit(pData.currentPrice, displayQuantity);
 
                                 excelRow[`${p}_deliveryTime`] = pData.deliveryTime
                                     ? (pData.deliveryTime.match(/^\d+\s*mins?/i)?.[0] || pData.deliveryTime)
@@ -302,8 +424,12 @@ async function processExportInBackground(body) {
 
                             } else {
                                 // unavailable
+                                excelRow[`${p}_name`] = '-';
+                                excelRow[`${p}_productId`] = '-';
+                                excelRow[`${p}_otherSubcategory`] = '-';
                                 excelRow[`${p}_available`] = 'No';
                                 excelRow[`${p}_price`] = null;
+                                excelRow[`${p}_pricePerUnit`] = '-';
                                 excelRow[`${p}_originalPrice`] = '-';
                                 excelRow[`${p}_discount`] = '-';
                                 excelRow[`${p}_stock`] = '-';
@@ -437,9 +563,7 @@ async function processExportInBackground(body) {
         // NO EXTRA SORTING NEEDED to match UI Sequence.
 
 
-        // Sorting Logic: Sort by Match Count (High availability first)
-        const sortPlatforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
-
+        // Sorting Logic: Sort by Group Name (A-Z)
         allProcessedRows.sort((a, b) => {
             // 1. Primary Sort: Pincode (Ascending) - Group by Location
             if (a.pincode !== b.pincode) {
@@ -451,15 +575,7 @@ async function processExportInBackground(body) {
                 return (a.category || '').localeCompare(b.category || '');
             }
 
-            // 3. Tertiary Sort: Match Count (High availability first)
-            const countA = sortPlatforms.filter(p => a[`${p}_available`] === 'Yes').length;
-            const countB = sortPlatforms.filter(p => b[`${p}_available`] === 'Yes').length;
-
-            if (countA !== countB) {
-                return countB - countA; // Descending
-            }
-
-            // 4. Quaternary Sort: Product Name (Ascending)
+            // 3. Tertiary Sort: Product Name / Group Name (Ascending A-Z)
             return (a.productName || '').localeCompare(b.productName || '');
         });
 
@@ -495,10 +611,11 @@ async function processExportInBackground(body) {
         // Define Base Columns
         const columns = [
             { header: 'Date', key: 'date', width: 15 },
-            { header: 'Time', key: 'time', width: 12 },
             { header: 'Pincode', key: 'pincode', width: 10 },
+            { header: 'Group ID', key: 'groupId', width: 25 },
             { header: 'Category', key: 'category', width: 15 },
             { header: 'Product Name', key: 'productName', width: 30 },
+            { header: 'Brand', key: 'brand', width: 20 },
             { header: 'Weight', key: 'productWeight', width: 10 },
             { header: 'Hide Similar Status', key: 'hideSimilarStatus', width: 20 },
         ];
@@ -507,8 +624,11 @@ async function processExportInBackground(body) {
         allPlatforms.forEach(platform => {
             const pName = platform.charAt(0).toUpperCase() + platform.slice(1);
             const pCols = [
+                { header: `${pName} Name`, key: `${platform}_name`, width: 30 },
+                { header: `${pName} Product ID`, key: `${platform}_productId`, width: 20 },
                 { header: `${pName} Avail`, key: `${platform}_available`, width: 10 },
                 { header: `${pName} Price`, key: `${platform}_price`, width: 12, style: { numFmt: '₹#,##0.00' } },
+                { header: `${pName} Price/Unit`, key: `${platform}_pricePerUnit`, width: 15 },
                 { header: `${pName} Org Price`, key: `${platform}_originalPrice`, width: 12, style: { numFmt: '₹#,##0.00' } },
                 { header: `${pName} Disc %`, key: `${platform}_discount`, width: 10 },
                 { header: `${pName} Stock`, key: `${platform}_stock`, width: 12 },
@@ -527,8 +647,13 @@ async function processExportInBackground(body) {
             pCols.push(
                 { header: `${pName} Link`, key: `${platform}_link`, width: 15 },
                 { header: `${pName} Official Cat`, key: `${platform}_officialCategory`, width: 20 },
-                { header: `${pName} Official Sub-cat`, key: `${platform}_officialSubCategory`, width: 20 }
+                { header: `${pName} Official Sub-cat`, key: `${platform}_officialSubCategory`, width: 20 },
+                { header: `${pName} Other Subcategory`, key: `${platform}_otherSubcategory`, width: 20 }
             );
+
+            if (platform === 'jiomart') {
+                pCols.push({ header: `${pName} Article Category`, key: `${platform}_articleCategory`, width: 25 });
+            }
 
             columns.push(...pCols);
         });
