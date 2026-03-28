@@ -15,6 +15,17 @@ export default function MultiSelectDropdown({
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const ref = useRef(null);
+    const listRef = useRef(null);
+
+    // Auto-scroll to bottom when opened
+    useEffect(() => {
+        if (open && listRef.current) {
+            // Use a slightly longer timeout to ensure content is measured
+            setTimeout(() => {
+                listRef.current.scrollTop = listRef.current.scrollHeight;
+            }, 100);
+        }
+    }, [open]);
 
     // close on outside click
     useEffect(() => {
@@ -102,15 +113,27 @@ export default function MultiSelectDropdown({
                                 />
                             </div>
                         )}
-                        <div
-                            className="text-xs font-medium text-blue-600 cursor-pointer hover:underline px-1"
-                            onClick={() => selectAll()}
-                        >
-                            {value.length === options.length ? "Deselect All" : "Select All"}
+                        <div className="flex items-center justify-between px-1">
+                            <div
+                                className="text-xs font-medium text-blue-600 cursor-pointer hover:underline"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    selectAll();
+                                }}
+                            >
+                                {value.length === options.length ? "Deselect All" : "Select All"}
+                            </div>
+                            {value.length > 0 && (
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-100 rounded-full">
+                                    <span className="text-[10px] font-bold text-blue-600">
+                                        {value.length} Selected
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    <ul className="max-h-60 overflow-y-auto">
+                    <ul ref={listRef} className="max-h-60 overflow-y-auto">
                         {filteredOptions.length > 0 ? (
                             filteredOptions.map(opt => {
                                 const isSelected = value.includes(opt.value);

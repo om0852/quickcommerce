@@ -130,6 +130,7 @@ function ProductDetailsDialog({
     const [isEditOpen, setIsEditOpen] = React.useState(false); // State for edit dialog
     const [toast, setToast] = React.useState(null);
     const [copiedId, setCopiedId] = React.useState(null);
+    const [copiedArticle, setCopiedArticle] = React.useState(null);
 
     useEffect(() => {
         const handleEscape = (e) => {
@@ -426,11 +427,30 @@ function ProductDetailsDialog({
                                                 </span>
                                             </div>
                                             {platform === 'jiomart' && (
-                                                <div className="flex gap-2">
-                                                    <span className="text-neutral-400 font-medium min-w-[125px] leading-tight">Article Category:</span>
-                                                    <span className="text-neutral-700 flex-1 break-words" title="Extracted JioMart Article Category">
-                                                        {extractArticleCategory(data.productName || data.name) !== '-' ? extractArticleCategory(data.productName || data.name) : <span className="italic text-neutral-300">--</span>}
-                                                    </span>
+                                                <div className="flex gap-2 group/article relative">
+                                                    <span className="text-neutral-400 font-medium min-w-[125px]">Article Category:</span>
+                                                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                                        <span className="text-neutral-700 truncate" title="Extracted JioMart Article Category">
+                                                            {extractArticleCategory(data.productName || data.name) !== '-' ? extractArticleCategory(data.productName || data.name) : <span className="italic text-neutral-300">--</span>}
+                                                        </span>
+                                                        {(() => {
+                                                            const val = extractArticleCategory(data.productName || data.name);
+                                                            return val !== '-' && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        navigator.clipboard.writeText(val);
+                                                                        setCopiedArticle(val);
+                                                                        setTimeout(() => setCopiedArticle(null), 2000);
+                                                                    }}
+                                                                    className={`p-1 rounded-md transition-all flex-shrink-0 cursor-pointer ${copiedArticle === val ? 'text-green-600 bg-green-50' : 'text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100'}`}
+                                                                    title={copiedArticle === val ? "Copied!" : "Copy Article Category"}
+                                                                >
+                                                                    {copiedArticle === val ? <Check size={12} /> : <Copy size={12} />}
+                                                                </button>
+                                                            );
+                                                        })()}
+                                                    </div>
                                                 </div>
                                             )}
                                             <div className="flex gap-2">
