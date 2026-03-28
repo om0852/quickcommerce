@@ -280,10 +280,44 @@ function CategoriesPageContent() {
 
   const filteredProducts = deduplicatedProducts;
 
-  // Calculate platform counts from deduplicated products
+  const baseFilteredProducts = useMemo(() => {
+    let result = searchedProducts;
+
+    // Non-Hyphen Filter (Strict) - Regex catches standard and unicode hyphens/dashes
+    if (tableFilters.showNonHyphenOnly) {
+      const hyphenRegex = /[-\u2010-\u2015\u2212]/;
+      result = result.filter(product => {
+        if (product.isHeader) return true;
+        const name = product.name || '';
+        return !hyphenRegex.test(name);
+      });
+    }
+
+    // Pure & New Filter - show only groups created between last scrape date and next scrape time
+    if (tableFilters.showPureNewFirst) {
+      const { start, end } = scrapeIntervals;
+      if (start && end) {
+        result = result.filter(product => {
+          if (product.isHeader) return true;
+          if (!product.createdAt) return false;
+          const created = new Date(product.createdAt);
+          return created > start && created <= end;
+        });
+      }
+    }
+
+    return result;
+  }, [searchedProducts, tableFilters.showNonHyphenOnly, tableFilters.showPureNewFirst, scrapeIntervals]);
+
+  const deduplicatedBaseProducts = useMemo(() => {
+    if (!useFilterToggle) return baseFilteredProducts;
+    return clusterSimilarProducts(baseFilteredProducts);
+  }, [baseFilteredProducts, useFilterToggle]);
+
+  // Calculate platform counts from deduplicated base products (ignoring platform filter)
   const platformCounts = useMemo(() => {
     const counts = {
-      all: deduplicatedProducts.filter(p => !p.isHeader).length,
+      all: deduplicatedBaseProducts.filter(p => !p.isHeader).length,
       jiomart: 0,
       zepto: 0,
       blinkit: 0,
@@ -295,7 +329,7 @@ function CategoriesPageContent() {
 
     const hyphenRegex = /[-\u2010-\u2015\u2212]/;
 
-    deduplicatedProducts.forEach(product => {
+    deduplicatedBaseProducts.forEach(product => {
       // Check if product exists on ANY platform (to filter out complete ghosts, though unlikely)
       const existsSomewhere = PLATFORMS.some(p => product[p]);
 
@@ -326,7 +360,7 @@ function CategoriesPageContent() {
     });
 
     return counts;
-  }, [deduplicatedProducts, showMissing]);
+  }, [deduplicatedBaseProducts, showMissing]);
 
   // Calculate TOTAL platform counts (unfiltered by search) to distinguish "Not Found" vs "Unserviceable"
   const totalPlatformCounts = useMemo(() => {
