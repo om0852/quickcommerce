@@ -63,46 +63,54 @@ async function generateOverviewForPincode(pincode, groupMap) {
         }
     ];
 
-    const uniqueSnapsFromDb = await ProductSnapshot.aggregate(pipeline);
-
+    // Pass 1: Stream and determine max absolute time per category
     const maxTimePerCategory = new Map();
-    const snapCategoryInfo = [];
-
-    for (const snap of uniqueSnapsFromDb) {
-        const { platform, productId, scrapedAt } = snap._id;
-        const key = `${platform}:${productId}`;
+    const cursor1 = await ProductSnapshot.aggregate(pipeline).allowDiskUse(true).cursor({ batchSize: 2000 }).exec();
+    
+    for await (const doc of cursor1) {
+        const snap = doc._id;
+        const key = `${snap.platform}:${snap.productId}`;
         const groupInfo = groupMap.get(key);
         if (!groupInfo) continue;
 
         const { category } = groupInfo;
         const curMax = maxTimePerCategory.get(category);
-        if (!curMax || new Date(scrapedAt) > new Date(curMax)) {
-            maxTimePerCategory.set(category, scrapedAt);
+        if (!curMax || new Date(snap.scrapedAt) > new Date(curMax)) {
+            maxTimePerCategory.set(category, snap.scrapedAt);
         }
-        snapCategoryInfo.push({ ...snap._id, category, brandId: groupInfo.brandId });
     }
 
+    // Pass 2: Stream again, filter by maxTime, and build final aggregated counts
     const aggregated = {};
-    const seenBaseIds = new Set();
+    const seenBaseIds = new Set(); 
+    
+    // We execute a new cursor since the previous one was consumed
+    const cursor2 = await ProductSnapshot.aggregate(pipeline).allowDiskUse(true).cursor({ batchSize: 2000 }).exec();
 
-    for (const snap of snapCategoryInfo) {
-        const { platform, productId, scrapedAt, category, brandId } = snap;
+    for await (const doc of cursor2) {
+        const snap = doc._id;
+        const key = `${snap.platform}:${snap.productId}`;
+        const groupInfo = groupMap.get(key);
+        if (!groupInfo) continue;
 
-        if (scrapedAt.toString() !== maxTimePerCategory.get(category)?.toString()) {
+        const { category, brandId } = groupInfo;
+        
+        // Exact match for the globally determined latest time
+        if (snap.scrapedAt.toString() !== maxTimePerCategory.get(category)?.toString()) {
             continue;
         }
 
-        const baseId = productId.includes('__') ? productId.split('__')[0] : productId;
-        const aggKey = `${category}_${platform}`;
+        const baseId = snap.productId.includes('__') ? snap.productId.split('__')[0] : snap.productId;
+        const aggKey = `${category}_${snap.platform}`;
         const dedupKey = `${aggKey}_${baseId}`;
 
         if (!aggregated[aggKey]) {
             aggregated[aggKey] = {
                 category,
-                platform,
+                platform: snap.platform,
                 count: 0,
                 brands: new Set(),
-                latestScrapedAt: scrapedAt
+                latestScrapedAt: snap.scrapedAt
             };
         }
 
