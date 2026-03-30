@@ -100,9 +100,13 @@ export default function Sidebar({ isOpen, onClose, isAdmin = false }) {
               if (window.innerWidth < 1280 && onClose) onClose();
               setFeedbackOpen(true);
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-neutral-400 hover:bg-neutral-800 hover:text-white transition-all duration-200 text-left"
+            className="group w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-neutral-400 hover:bg-neutral-800 hover:text-white transition-all duration-200 text-left"
           >
-            <MessageSquare size={20} />
+            <img 
+              src="https://img.icons8.com/?size=100&id=11227&format=png&color=000000" 
+              alt="Review & Feedback" 
+              className="w-5 h-5 invert opacity-60 group-hover:opacity-100 transition-opacity" 
+            />
             <span>Review & Feedback</span>
           </button>
         </nav>
