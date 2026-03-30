@@ -11,7 +11,7 @@
 import cron from 'node-cron';
 
 const API_URL = 'http://localhost:3000/api/cron/generate-overview';
-const CRON_SCHEDULE = '0 3 * * *'; // Every day at 3:00 AM
+const CRON_SCHEDULE = '0 */6 * * *'; // Every 6 hours
 
 async function callOverviewAPI() {
     const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
@@ -44,7 +44,7 @@ cron.schedule(CRON_SCHEDULE, callOverviewAPI, {
     timezone: 'Asia/Kolkata'
 });
 
-console.log(`🕐 Overview cron scheduled: runs daily at 3:00 AM IST`);
+console.log(`🕐 Overview cron scheduled: runs every 6 hours`);
 console.log(`   API: ${API_URL}`);
 console.log(`   Press Ctrl+C to stop.\n`);
 

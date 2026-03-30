@@ -169,11 +169,7 @@ export const createPrioritySort = (
     if (showPureNewFirst) {
       const isPureNew = (p: Product) => {
         if (!p.createdAt) return false;
-        if (scrapeIntervals?.start && scrapeIntervals?.end) {
-          const created = new Date(p.createdAt);
-          return created > scrapeIntervals.start && created <= scrapeIntervals.end;
-        }
-        return p.groupingId?.startsWith('NG');
+        return new Date(p.createdAt).toDateString() === new Date().toDateString();
       };
       
       const aPure = isPureNew(a);

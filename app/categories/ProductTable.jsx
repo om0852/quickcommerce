@@ -1192,8 +1192,8 @@ const ProductTable = React.memo(function ProductTable({
                                                             </div>
                                                             <div className="text-xs text-orange-600 font-medium mt-0.5 min-h-[16px] flex items-center gap-2">
                                                                 <span>{product.brand || ""}</span>
-                                                                {product.createdAt && scrapeIntervals?.start && scrapeIntervals?.end && new Date(product.createdAt) > scrapeIntervals.start && new Date(product.createdAt) <= scrapeIntervals.end && (
-                                                                    <span className="text-[10px] font-bold px-1 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 animate-pulse" title="New Group (Created since last scrape)">NG</span>
+                                                                {product.createdAt && new Date(product.createdAt).toDateString() === new Date().toDateString() && (
+                                                                    <span className="text-[10px] font-bold px-1 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 animate-pulse" title="New Group (Created Today)">NG</span>
                                                                 )}
                                                             </div>
                                                             {isAdmin && !product.isDuplicate && (

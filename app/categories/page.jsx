@@ -237,17 +237,13 @@ function CategoriesPageContent() {
 
     // Danger Filter removed (now handled as a priority sort)
 
-    // Pure & New Filter - show only groups created between last scrape date and next scrape time
+    // Pure & New Filter - show only groups created today
     if (tableFilters.showPureNewFirst) {
-      const { start, end } = scrapeIntervals;
-      if (start && end) {
-        result = result.filter(product => {
-          if (product.isHeader) return true;
-          if (!product.createdAt) return false;
-          const created = new Date(product.createdAt);
-          return created > start && created <= end;
-        });
-      }
+      result = result.filter(product => {
+        if (product.isHeader) return true;
+        if (!product.createdAt) return false;
+        return new Date(product.createdAt).toDateString() === new Date().toDateString();
+      });
     }
 
     // Prune empty headers globally (run if any filter was active)
@@ -293,17 +289,13 @@ function CategoriesPageContent() {
       });
     }
 
-    // Pure & New Filter - show only groups created between last scrape date and next scrape time
+    // Pure & New Filter - show only groups created today
     if (tableFilters.showPureNewFirst) {
-      const { start, end } = scrapeIntervals;
-      if (start && end) {
-        result = result.filter(product => {
-          if (product.isHeader) return true;
-          if (!product.createdAt) return false;
-          const created = new Date(product.createdAt);
-          return created > start && created <= end;
-        });
-      }
+      result = result.filter(product => {
+        if (product.isHeader) return true;
+        if (!product.createdAt) return false;
+        return new Date(product.createdAt).toDateString() === new Date().toDateString();
+      });
     }
 
     return result;
