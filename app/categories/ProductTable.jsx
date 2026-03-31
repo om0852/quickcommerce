@@ -49,6 +49,7 @@ const ProductTable = React.memo(function ProductTable({
     bulkBrands = [],
     isLiveMode = true, // NEW Prop
     scrapeIntervals,
+    ngInterval,
     onInfoClick, // NEW: open ProductDetailsDialog for a product
 }) {
     const [manageGroup, setManageGroup] = useState(null);
@@ -1192,9 +1193,21 @@ const ProductTable = React.memo(function ProductTable({
                                                             </div>
                                                             <div className="text-xs text-orange-600 font-medium mt-0.5 min-h-[16px] flex items-center gap-2">
                                                                 <span>{product.brand || ""}</span>
-                                                                {product.createdAt && new Date(product.createdAt).toDateString() === new Date().toDateString() && (
-                                                                    <span className="text-[10px] font-bold px-1 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 animate-pulse" title="New Group (Created Today)">NG</span>
-                                                                )}
+                                                                {product.createdAt && (() => {
+                                                                    const created = new Date(product.createdAt);
+                                                                    const { start, end } = ngInterval || scrapeIntervals || {};
+                                                                    const isNew = (start && end)
+                                                                        ? (created > start && created <= end)
+                                                                        : (created.toDateString() === new Date().toDateString());
+                                                                    return isNew && (
+                                                                        <span 
+                                                                            className="text-[10px] font-bold px-1 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 animate-pulse" 
+                                                                            title="New Group"
+                                                                        >
+                                                                            NG
+                                                                        </span>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                             {isAdmin && !product.isDuplicate && (
                                                                 <div className="mt-2 flex flex-row items-center gap-2">

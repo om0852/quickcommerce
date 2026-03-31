@@ -161,6 +161,30 @@ function CategoriesPageContent() {
     };
   }, [availableSnapshots, snapshotTime]);
 
+  // NG (New Group) interval:
+  // - If selected snapshot is the LATEST → start=selected date, end=now
+  // - If selected is historical → start=selected date, end=next scrape date (the one just after it)
+  const ngInterval = useMemo(() => {
+    if (!availableSnapshots || availableSnapshots.length === 0 || !snapshotTime) {
+      // Fallback: treat today as the range
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return { start: startOfToday, end: now };
+    }
+    const sorted = [...availableSnapshots].sort((a, b) => new Date(b) - new Date(a)); // newest first
+    const currentIx = sorted.indexOf(snapshotTime);
+    const selectedDate = new Date(snapshotTime);
+
+    if (currentIx === 0) {
+      // Selected is the LATEST snapshot → NG range: selected date → now
+      return { start: selectedDate, end: new Date() };
+    } else {
+      // Historical → NG range: selected date → next scrape date (index currentIx - 1 in newest-first array)
+      const nextScrapeDate = new Date(sorted[currentIx - 1]);
+      return { start: selectedDate, end: nextScrapeDate };
+    }
+  }, [availableSnapshots, snapshotTime]);
+
 
 
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -237,12 +261,14 @@ function CategoriesPageContent() {
 
     // Danger Filter removed (now handled as a priority sort)
 
-    // Pure & New Filter - show only groups created today
+    // Pure & New Filter - show groups created in the NG interval
     if (tableFilters.showPureNewFirst) {
+      const { start, end } = ngInterval;
       result = result.filter(product => {
         if (product.isHeader) return true;
         if (!product.createdAt) return false;
-        return new Date(product.createdAt).toDateString() === new Date().toDateString();
+        const created = new Date(product.createdAt);
+        return created > start && created <= end;
       });
     }
 
@@ -289,17 +315,19 @@ function CategoriesPageContent() {
       });
     }
 
-    // Pure & New Filter - show only groups created today
+    // Pure & New Filter - show groups created in the NG interval
     if (tableFilters.showPureNewFirst) {
+      const { start, end } = ngInterval;
       result = result.filter(product => {
         if (product.isHeader) return true;
         if (!product.createdAt) return false;
-        return new Date(product.createdAt).toDateString() === new Date().toDateString();
+        const created = new Date(product.createdAt);
+        return created > start && created <= end;
       });
     }
 
     return result;
-  }, [searchedProducts, tableFilters.showNonHyphenOnly, tableFilters.showPureNewFirst, scrapeIntervals]);
+  }, [searchedProducts, tableFilters.showNonHyphenOnly, tableFilters.showPureNewFirst, ngInterval]);
 
   const deduplicatedBaseProducts = useMemo(() => {
     if (!useFilterToggle) return baseFilteredProducts;
@@ -1295,6 +1323,7 @@ function CategoriesPageContent() {
                   );
                 })()}
                 scrapeIntervals={scrapeIntervals}
+                ngInterval={ngInterval}
                 onInfoClick={(product) => {
                   setSelectedProduct(product);
                   setIsDetailsOpen(true);
