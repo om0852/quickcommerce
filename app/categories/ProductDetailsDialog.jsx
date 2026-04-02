@@ -223,6 +223,11 @@ function ProductDetailsDialog({
                                     </button>
                                 </div>
                             )}
+                            {isAdmin && selectedProduct.createdAt && (
+                                <span className="text-[10px] text-neutral-400">
+                                    Group created: {new Date(selectedProduct.createdAt).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date(selectedProduct.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            )}
                         </div>
                     </div>
                     <button

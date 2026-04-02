@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductGrouping from '@/models/ProductGrouping';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
     try {
@@ -13,8 +14,11 @@ export async function POST(request) {
         let deletedGroupCount = 0;
         let deletedSnapshotsCount = 0;
 
-        // 1. If groupingId is present, try to delete the group and its linked snapshots
+        // Save category BEFORE deletion so we can invalidate cache after
+        let groupCategory = null;
         if (groupingId && groupingId !== 'undefined' && groupingId !== 'null') {
+            const groupDoc = await ProductGrouping.findOne({ groupingId }).lean();
+            groupCategory = groupDoc?.category || null;
             const groupResult = await ProductGrouping.deleteOne({ groupingId });
             deletedGroupCount = groupResult.deletedCount;
 
@@ -41,6 +45,11 @@ export async function POST(request) {
                 const extraDelete = await ProductSnapshot.deleteMany({ $or: cleanupFilters });
                 deletedSnapshotsCount += extraDelete.deletedCount;
             }
+        }
+
+        // Invalidate Redis cache for this category
+        if (groupCategory) {
+            await invalidateCategoryCache(groupCategory);
         }
 
         return NextResponse.json({

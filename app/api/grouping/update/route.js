@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductGrouping from '@/models/ProductGrouping';
 import Brand from '@/models/Brand';
+import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
     try {
@@ -72,6 +73,11 @@ export async function POST(request) {
 
         if (!group) {
             return NextResponse.json({ error: 'Group not found' }, { status: 404 });
+        }
+
+        // Invalidate Redis cache so updated name/brand/weight reflects immediately
+        if (group.category) {
+            await invalidateCategoryCache(group.category);
         }
 
         return NextResponse.json({ success: true, group });

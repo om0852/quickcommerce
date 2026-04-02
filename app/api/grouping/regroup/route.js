@@ -5,6 +5,7 @@ import ProductGrouping from '@/models/ProductGrouping';
 import ProductSnapshot from '@/models/ProductSnapshot';
 import { ungroupProduct } from '@/lib/productGrouper';
 import { v4 as uuidv4 } from 'uuid';
+import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
     try {
@@ -69,6 +70,9 @@ export async function POST(request) {
             { platform: { $regex: `^${platform}$`, $options: 'i' }, productId: { $in: variantIds } },
             { groupingId: newGroupId }
         );
+
+        // Invalidate Redis cache for this category
+        await invalidateCategoryCache(category);
 
         return NextResponse.json({
             success: true,

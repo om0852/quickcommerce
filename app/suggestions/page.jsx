@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { PINCODE_OPTIONS } from '@/app/constants/platforms';
 import categoriesData from '../utils/categories_with_urls.json';
 import CustomDropdown from '@/components/CustomDropdown';
-import { Loader2, Check, X, RefreshCw, MessageSquare, Info, AlertCircle, Clock, Upload, ExternalLink } from 'lucide-react';
+import { Loader2, Check, X, RefreshCw, MessageSquare, Info, AlertCircle, Clock, Upload, ExternalLink, Trash2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Snackbar, Alert, Tooltip as MuiTooltip } from '@mui/material';
 import { cn } from '@/lib/utils';
@@ -29,9 +29,13 @@ function SuggestionsContent() {
     category: '',
     groupId: '',
     productId: '',
+    snapshotDate: '',
+    productUrl: '',
     description: '',
     images: []
   });
+  const [availableSnapshots, setAvailableSnapshots] = useState([]);
+  const [snapshotsLoading, setSnapshotsLoading] = useState(false);
 
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
@@ -69,6 +73,25 @@ function SuggestionsContent() {
   useEffect(() => {
     fetchSuggestions();
   }, []);
+
+  useEffect(() => {
+    if (!formData.category || !formData.pincode) return;
+    setSnapshotsLoading(true);
+    setFormData(prev => ({ ...prev, snapshotDate: '' }));
+    fetch(`/api/available-snapshots?category=${encodeURIComponent(formData.category)}&pincode=${formData.pincode}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          setAvailableSnapshots(data.snapshots);
+          // Auto-select the first (most recent) date
+          if (data.snapshots.length > 0) {
+            setFormData(prev => ({ ...prev, snapshotDate: data.snapshots[0] }));
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setSnapshotsLoading(false));
+  }, [formData.category, formData.pincode]);
 
   // Handle Image Upload
   const handleImageUpload = (e) => {
@@ -113,7 +136,7 @@ function SuggestionsContent() {
       const data = await res.json();
       if (data.success) {
         setToast({ open: true, message: 'Suggestion submitted successfully!', severity: 'success' });
-        setFormData(prev => ({ ...prev, groupId: '', productId: '', description: '', images: [] }));
+        setFormData(prev => ({ ...prev, groupId: '', productId: '', snapshotDate: availableSnapshots[0] || '', productUrl: '', description: '', images: [] }));
         fetchSuggestions();
       } else {
         setToast({ open: true, message: data.error || 'Failed to submit', severity: 'error' });
@@ -142,6 +165,24 @@ function SuggestionsContent() {
       }
     } catch (err) {
       setToast({ open: true, message: 'Error updating status', severity: 'error' });
+    }
+  };
+
+  // Handle Delete
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this suggestion? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/suggestions?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ open: true, message: 'Suggestion deleted', severity: 'success' });
+        setSelectedSuggestion(null);
+        fetchSuggestions();
+      } else {
+        setToast({ open: true, message: data.error || 'Delete failed', severity: 'error' });
+      }
+    } catch {
+      setToast({ open: true, message: 'Error deleting suggestion', severity: 'error' });
     }
   };
 
@@ -238,6 +279,37 @@ function SuggestionsContent() {
                   placeholder="e.g. zepto-4455"
                 />
               </div>
+              {/* Snapshot Date Dropdown */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                  Snapshot Date
+                  {snapshotsLoading && <Loader2 size={10} className="animate-spin text-gray-400" />}
+                </label>
+                <select
+                  value={formData.snapshotDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, snapshotDate: e.target.value }))}
+                  disabled={snapshotsLoading || availableSnapshots.length === 0}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-neutral-900 focus:outline-none transition-all disabled:opacity-50"
+                >
+                  <option value="">{snapshotsLoading ? 'Fetching...' : availableSnapshots.length === 0 ? 'No dates found' : 'Select date...'}</option>
+                  {availableSnapshots.map(ts => (
+                    <option key={ts} value={ts}>
+                      {new Date(ts).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Product URL */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Product URL (Optional)</label>
+                <input
+                  type="url"
+                  value={formData.productUrl}
+                  onChange={(e) => setFormData(prev => ({ ...prev, productUrl: e.target.value }))}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-neutral-900 focus:outline-none transition-all"
+                  placeholder="https://..."
+                />
+              </div>
               <div className="md:col-span-3 space-y-1 mt-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</label>
                 <textarea
@@ -308,13 +380,13 @@ function SuggestionsContent() {
                   <th className="px-6 py-4">Description</th>
                   <th className="px-4 py-4 w-[180px]">Context</th>
                   <th className="px-4 py-4">Submitted</th>
-                  {!isAdmin && <th className="px-6 py-4 text-right">Actions</th>}
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading && (
                   <tr>
-                    <td colSpan={!isAdmin ? 5 : 4} className="px-6 py-12 text-center text-gray-400">
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
                       <Loader2 size={32} className="animate-spin mx-auto mb-2 opacity-20" />
                       Loading suggestions...
                     </td>
@@ -322,7 +394,7 @@ function SuggestionsContent() {
                 )}
                 {!loading && suggestions.length === 0 && (
                   <tr>
-                    <td colSpan={!isAdmin ? 5 : 4} className="px-6 py-12 text-center text-gray-400 italic">
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400 italic">
                       No suggestions found.
                     </td>
                   </tr>
@@ -351,7 +423,7 @@ function SuggestionsContent() {
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-4 max-w-[180px]">
+                    <td className="px-4 py-4 max-w-[200px]">
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2">
                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-bold border border-gray-200">{s.pincode}</span>
@@ -363,26 +435,45 @@ function SuggestionsContent() {
                                {s.productId && <span className="bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-100 truncate max-w-[85px]" title={`Product: ${s.productId}`}>P:{s.productId}</span>}
                            </div>
                         )}
+                        {s.snapshotDate && (
+                          <span className="text-[10px] text-gray-400 font-mono">
+                            📅 {new Date(s.snapshotDate).toLocaleDateString([], { day: '2-digit', month: 'short' })}
+                          </span>
+                        )}
+                        {s.productUrl && (
+                          <a href={s.productUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[10px] text-blue-500 hover:underline truncate max-w-[160px] flex items-center gap-1">
+                            <ExternalLink size={10} /> URL
+                          </a>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-[11px] text-gray-500">
                       {new Date(s.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </td>
-                    {!isAdmin && (
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-2">
-                          <a
-                            href={`/categories?pincode=${s.pincode}&category=${encodeURIComponent(s.category)}${s.groupId ? `&groupId=${s.groupId}` : ''}${s.productId ? `&productId=${s.productId}` : ''}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            title="Search in Categories"
-                            className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 bg-white border border-gray-200 shadow-sm rounded-lg transition-all"
-                          >
-                            <ExternalLink size={16} />
-                          </a>
+                    {/* Actions column — always shown */}
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-2">
+                        <a
+                          href={`/categories?pincode=${s.pincode}&category=${encodeURIComponent(s.category)}${s.groupId ? `&groupId=${s.groupId}` : ''}${s.productId ? `&productId=${s.productId}` : ''}${s.snapshotDate ? `&timestamp=${encodeURIComponent(s.snapshotDate)}` : ''}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Open in Categories"
+                          className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 bg-white border border-gray-200 shadow-sm rounded-lg transition-all"
+                        >
+                          <ExternalLink size={16} />
+                        </a>
 
-                          {!isAdmin && s.status === 'pending' ? (
+                        {isAdmin ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }}
+                            className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 bg-white border border-gray-200 shadow-sm rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            title="Delete Suggestion"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        ) : (
+                          s.status === 'pending' && (
                             <div className="flex items-center gap-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={(e) => handleActionClick(e, s._id, 'completed')}
@@ -399,14 +490,10 @@ function SuggestionsContent() {
                                 <X size={16} />
                               </button>
                             </div>
-                          ) : (
-                            <span className="text-xs text-gray-300 italic ml-2">
-                              {s.status === 'pending' ? (!isAdmin ? '' : 'Needs User Action') : 'Handled'}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    )}
+                          )
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -476,6 +563,27 @@ function SuggestionsContent() {
                           <span className="text-gray-900 font-mono text-xs font-bold bg-white px-2 py-1 border border-gray-200 rounded">{selectedSuggestion.productId}</span>
                         </div>
                       )}
+                      {selectedSuggestion.snapshotDate && (
+                        <div>
+                          <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Snapshot Date</span>
+                          <span className="text-gray-900 font-mono text-xs font-bold bg-white px-2 py-1 border border-gray-200 rounded">
+                            {new Date(selectedSuggestion.snapshotDate).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date(selectedSuggestion.snapshotDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      )}
+                      {selectedSuggestion.productUrl && (
+                        <div>
+                          <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Product URL</span>
+                          <a
+                            href={selectedSuggestion.productUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-xs font-medium flex items-center gap-1 break-all"
+                          >
+                            <ExternalLink size={12} /> {selectedSuggestion.productUrl}
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )}
                </div>
@@ -502,23 +610,36 @@ function SuggestionsContent() {
             </div>
             
             {/* Modal Actions */}
-            {!isAdmin && selectedSuggestion.status === 'pending' && (
-              <div className="p-4 border-t border-gray-200 bg-white flex items-center justify-end gap-3 rounded-b-2xl">
+            <div className="p-4 border-t border-gray-200 bg-white flex items-center justify-between gap-3 rounded-b-2xl">
+              {/* Admin delete */}
+              {isAdmin && (
                 <button
-                  onClick={() => { handleUpdateStatus(selectedSuggestion._id, 'rejected'); setSelectedSuggestion(null); }}
-                  className="px-5 py-2 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg font-bold text-sm transition-all"
+                  onClick={() => handleDelete(selectedSuggestion._id)}
+                  className="px-4 py-2 bg-white border border-rose-200 text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
                 >
-                  Reject Suggestion
+                  <Trash2 size={14} />
+                  Delete
                 </button>
-                <button
-                  onClick={() => { handleUpdateStatus(selectedSuggestion._id, 'completed'); setSelectedSuggestion(null); }}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all shadow-md flex items-center gap-2"
-                >
-                  <Check size={16} />
-                  Approve Suggestion
-                </button>
-              </div>
-            )}
+              )}
+              {/* Non-admin approve/reject */}
+              {!isAdmin && selectedSuggestion.status === 'pending' && (
+                <div className="flex items-center gap-3 ml-auto">
+                  <button
+                    onClick={() => { handleUpdateStatus(selectedSuggestion._id, 'rejected'); setSelectedSuggestion(null); }}
+                    className="px-5 py-2 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg font-bold text-sm transition-all"
+                  >
+                    Reject Suggestion
+                  </button>
+                  <button
+                    onClick={() => { handleUpdateStatus(selectedSuggestion._id, 'completed'); setSelectedSuggestion(null); }}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all shadow-md flex items-center gap-2"
+                  >
+                    <Check size={16} />
+                    Approve Suggestion
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

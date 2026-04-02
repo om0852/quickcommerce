@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import { getGeneralRedis } from '@/lib/redis-pool';
 
 // Normalize product name for flexible matching
 function normalizeProductName(name = '') {
@@ -41,6 +42,28 @@ export async function POST(request) {
     }
 
     console.log('📊 Product History Request:', { pincode, productIds, productNames });
+
+    // Build a deterministic cache key from pincode + sorted platform:productId pairs
+    const idPairs = Object.entries(productIds || {})
+      .filter(([, v]) => v)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([platform, id]) => `${platform}:${id}`)
+      .join('|');
+    const cacheKey = `prod_history:${pincode}:${idPairs}`;
+    const redis = getGeneralRedis();
+
+    // Try cache first
+    if (idPairs) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          console.log(`[ProductHistory] 🚀 CACHE HIT: ${cacheKey}`);
+          return NextResponse.json({ history: cached, fromCache: true });
+        }
+      } catch (cacheErr) {
+        console.warn('[ProductHistory] Redis read error:', cacheErr.message);
+      }
+    }
 
     await dbConnect();
 
@@ -212,6 +235,16 @@ export async function POST(request) {
     const history = Array.from(historyMap.values()).sort((a, b) =>
       new Date(a.date) - new Date(b.date)
     );
+
+    // Store result in Redis (24h TTL — same as scrape cycle)
+    if (idPairs && history.length > 0) {
+      try {
+        await redis.set(cacheKey, history, { ex: 86400 });
+        console.log(`[ProductHistory] 💾 CACHED: ${cacheKey} (${history.length} data points)`);
+      } catch (cacheErr) {
+        console.warn('[ProductHistory] Redis write error:', cacheErr.message);
+      }
+    }
 
     return NextResponse.json({ history });
 

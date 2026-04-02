@@ -69,6 +69,7 @@ export async function GET(request) {
             success: true,
             groupingId,
             primaryName: group.primaryName,
+            createdAt: group.createdAt,
             products: productsWithPincodeData
         });
 

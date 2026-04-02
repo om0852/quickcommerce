@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import { invalidateAllCaches } from '@/lib/redis-pool';
 
 export async function POST(request) {
   try {
@@ -51,6 +52,9 @@ export async function POST(request) {
     }
 
     console.log(`✅ Successfully updated ${updatedCount} products with random stock status`);
+
+    // Invalidate all Redis shards — stock status affects every category
+    await invalidateAllCaches();
 
     return NextResponse.json({
       success: true,

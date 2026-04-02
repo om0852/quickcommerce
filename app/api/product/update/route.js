@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
     try {
@@ -62,6 +63,16 @@ export async function POST(request) {
             } catch (err) {
                 errors.push({ snapshotId, error: err.message });
             }
+        }
+
+        // Invalidate Redis cache for all affected categories
+        if (results.length > 0) {
+            const successIds = results.map(r => r.snapshotId);
+            const affectedSnaps = await ProductSnapshot.find(
+                { _id: { $in: successIds } }, 'category'
+            ).lean();
+            const uniqueCategories = [...new Set(affectedSnaps.map(s => s.category).filter(Boolean))];
+            await Promise.all(uniqueCategories.map(cat => invalidateCategoryCache(cat)));
         }
 
         return NextResponse.json({

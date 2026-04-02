@@ -4,10 +4,11 @@ import { ungroupProduct } from '@/lib/productGrouper';
 import ProductSnapshot from '@/models/ProductSnapshot';
 import ProductGrouping from '@/models/ProductGrouping';
 import { v4 as uuidv4 } from 'uuid';
+import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
     try {
-        const { groupingId, productId, platform } = await request.json();
+        const { groupingId, productId, platform, exactOnly = false } = await request.json();
 
         if (!groupingId || !productId || !platform) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -25,12 +26,18 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Source group not found' }, { status: 404 });
         }
 
-        // 2. Identify ALL variants of this product in this group (same base ID, same platform)
-        //    e.g. productId="abc123" also matches "abc123__fruits", "abc123__-a" etc.
-        const productsToMove = oldGroup.products.filter(p =>
-            p.platform === platform &&
-            getBaseId(p.productId) === targetBaseId
-        );
+        // 2. Identify which products to move out of the group.
+        //    exactOnly=true  (cross-pincode dialog): remove ONLY this specific productId
+        //    exactOnly=false (default): remove ALL variants sharing the same base ID
+        const productsToMove = exactOnly
+            ? oldGroup.products.filter(p =>
+                p.platform === platform &&
+                p.productId === productId          // exact match only
+            )
+            : oldGroup.products.filter(p =>
+                p.platform === platform &&
+                getBaseId(p.productId) === targetBaseId  // all variants
+            );
 
         if (productsToMove.length === 0) {
             return NextResponse.json({ error: 'No matching product found in the group' }, { status: 404 });
@@ -38,10 +45,13 @@ export async function POST(request) {
 
         const variantIdsToRemove = productsToMove.map(p => p.productId);
 
-        // 3. Remove ALL matching variants from the OLD group
-        const remainingCount = oldGroup.products.filter(p =>
-            !(p.platform === platform && getBaseId(p.productId) === targetBaseId)
-        ).length;
+        // 3. Compute remaining count using the SAME match predicate as productsToMove
+        //    so that exactOnly=true doesn't accidentally trigger full-group deletion
+        const shouldRemove = exactOnly
+            ? (p) => p.platform === platform && p.productId === productId
+            : (p) => p.platform === platform && getBaseId(p.productId) === targetBaseId;
+
+        const remainingCount = oldGroup.products.filter(p => !shouldRemove(p)).length;
 
         if (remainingCount === 0) {
             await ProductGrouping.deleteOne({ _id: oldGroup._id });
@@ -100,6 +110,9 @@ export async function POST(request) {
                 { $set: { groupingId: newGroupId } }
             );
         }
+
+        // Invalidate Redis cache for this category so next request fetches fresh data
+        await invalidateCategoryCache(oldGroup.category);
 
         return NextResponse.json({
             success: true,

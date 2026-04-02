@@ -20,7 +20,7 @@ export async function POST(request) {
         await connectToDatabase();
         const data = await request.json();
 
-        const { pincode, category, groupId, productId, description, images } = data;
+        const { pincode, category, groupId, productId, snapshotDate, productUrl, description, images } = data;
 
         if (!pincode || !category || !description) {
             return NextResponse.json({ success: false, error: 'Pincode, category, and description are required' }, { status: 400 });
@@ -31,6 +31,8 @@ export async function POST(request) {
             category,
             groupId,
             productId,
+            snapshotDate,
+            productUrl,
             description,
             images: images || [],
             status: 'pending'
@@ -66,6 +68,30 @@ export async function PATCH(request) {
         return NextResponse.json({ success: true, suggestion: updatedSuggestion });
     } catch (error) {
         console.error('Error updating suggestion status:', error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}
+
+// DELETE: Delete a suggestion (admin only)
+export async function DELETE(request) {
+    try {
+        await connectToDatabase();
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ success: false, error: 'Suggestion ID is required' }, { status: 400 });
+        }
+
+        const deleted = await Suggestion.findByIdAndDelete(id);
+
+        if (!deleted) {
+            return NextResponse.json({ success: false, error: 'Suggestion not found' }, { status: 404 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting suggestion:', error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }

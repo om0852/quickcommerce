@@ -3,12 +3,13 @@ import connectToDatabase from '@/lib/mongodb';
 import Brand from '@/models/Brand';
 import ProductSnapshot from '@/models/ProductSnapshot';
 import ProductGrouping from '@/models/ProductGrouping';
+import { invalidateBrandsCache, invalidateAllCaches } from '@/lib/redis-pool';
 
 // PUT: Rename a brand
 export async function PUT(request, { params }) {
     try {
         await connectToDatabase();
-        const { id } = await params; // This is the mongodb _id of the Brand document
+        const { id } = await params;
         const { newBrandName } = await request.json();
 
         if (!newBrandName || typeof newBrandName !== 'string' || !newBrandName.trim()) {
@@ -27,7 +28,6 @@ export async function PUT(request, { params }) {
 
         // Update the brand document
         existingBrand.brandName = trimmedName;
-        // Optionally update the brandId slug, but that might break existing refs if they depend on brandId. Let's update it anyway for consistency.
         existingBrand.brandId = newBrandIdSlug;
         await existingBrand.save();
 
@@ -39,14 +39,21 @@ export async function PUT(request, { params }) {
 
         // Cascade update to ProductGrouping
         await ProductGrouping.updateMany(
-            { brandId: oldBrandName }, // Fallback check
+            { brandId: oldBrandName },
             { $set: { brandId: newBrandIdSlug, brand: trimmedName } }
         );
-        // Also update if they are just linked by brand name
         await ProductGrouping.updateMany(
             { brand: oldBrandName },
             { $set: { brand: trimmedName, brandId: newBrandIdSlug } }
         );
+
+        // Invalidate: brands list cache + ALL category caches
+        // (brand name changes are embedded in every cached category response)
+        await Promise.all([
+            invalidateBrandsCache(),
+            invalidateAllCaches(),
+        ]);
+        console.log('[Brands] ♻️ Invalidated brands + all category caches after rename');
 
         return NextResponse.json({ success: true, brand: existingBrand });
     } catch (error) {
@@ -58,7 +65,7 @@ export async function PUT(request, { params }) {
     }
 }
 
-// DELETE: Delete a brand and cascade remove it from products/groups
+// DELETE: Delete a brand and cascade remove from products/groups
 export async function DELETE(request, { params }) {
     try {
         await connectToDatabase();
@@ -77,19 +84,25 @@ export async function DELETE(request, { params }) {
         // Cascade remove from ProductSnapshot
         await ProductSnapshot.updateMany(
             { brand: brandNameToRemove },
-            { $unset: { brand: "" } }
+            { $unset: { brand: '' } }
         );
 
         // Cascade remove from ProductGrouping
         await ProductGrouping.updateMany(
             { brand: brandNameToRemove },
-            { $set: { brand: "", brandId: "N/A" } }
+            { $set: { brand: '', brandId: 'N/A' } }
         );
-
         await ProductGrouping.updateMany(
             { brandId: brandNameToRemove },
-            { $set: { brand: "", brandId: "N/A" } }
+            { $set: { brand: '', brandId: 'N/A' } }
         );
+
+        // Invalidate: brands list cache + ALL category caches
+        await Promise.all([
+            invalidateBrandsCache(),
+            invalidateAllCaches(),
+        ]);
+        console.log('[Brands] ♻️ Invalidated brands + all category caches after delete');
 
         return NextResponse.json({ success: true, message: 'Brand deleted successfully' });
     } catch (error) {

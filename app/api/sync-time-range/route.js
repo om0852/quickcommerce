@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
   try {
@@ -80,6 +81,10 @@ export async function POST(request) {
     }
 
     console.log(`Updated ${successCount} products successfully, ${errorCount} errors`);
+
+    // Invalidate Redis cache for all affected categories
+    const affectedCategories = [...new Set(Object.values(breakdown).map(b => b.category).filter(Boolean))];
+    await Promise.all(affectedCategories.map(cat => invalidateCategoryCache(cat)));
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
   try {
@@ -29,6 +30,7 @@ export async function POST(request) {
     let insertedCount = 0;
     let skippedCount = 0;
     let updatedCount = 0;
+    const importedCategories = new Set();
 
     // Process each item
     for (let i = 0; i < items.length; i++) {
@@ -111,7 +113,13 @@ export async function POST(request) {
       });
 
       await newSnapshot.save();
+      importedCategories.add(category);
       insertedCount++;
+    }
+
+    // Invalidate Redis cache for all imported categories
+    if (importedCategories.size > 0) {
+      await Promise.all([...importedCategories].map(cat => invalidateCategoryCache(cat)));
     }
 
     return NextResponse.json({

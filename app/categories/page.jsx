@@ -137,10 +137,13 @@ function CategoriesPageContent() {
   const [error, setError] = useState(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [snapshotDate, setSnapshotDate] = useState('');
-  const [snapshotTime, setSnapshotTime] = useState('');
+  const _urlTimestamp = searchParams.get('timestamp');
+  const [snapshotDate, setSnapshotDate] = useState(() =>
+    _urlTimestamp ? new Date(_urlTimestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+  );
+  const [snapshotTime, setSnapshotTime] = useState(_urlTimestamp || '');
   const [availableSnapshots, setAvailableSnapshots] = useState([]);
-  const [isLiveMode, setIsLiveMode] = useState(true);
+  const [isLiveMode, setIsLiveMode] = useState(!_urlTimestamp);
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [baseSortConfig, setBaseSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
@@ -416,7 +419,7 @@ function CategoriesPageContent() {
     abortControllerRef.current = controller;
 
     setLoading(true);
-    setProducts([]);
+    setProducts([]); // Clear products so skeleton shows on every fetch (including refresh button)
     setError(null);
     setCurrentPage(1);
 
@@ -542,9 +545,10 @@ function CategoriesPageContent() {
     const fetchSnapshots = async () => {
       if (!isPreferencesLoaded) return;
 
-      // Clear previous data while loading new config
-      setLoading(true);
+      // Clear products when navigating via dropdowns so skeleton shows
+      // (Manual refresh button calls fetchCategoryData directly and keeps old products)
       setProducts([]);
+      setLoading(true);
       setError(null);
 
       try {
@@ -568,10 +572,8 @@ function CategoriesPageContent() {
               setSnapshotTime(snapshotsForSameDate[0]);
               fetchCategoryData(snapshotsForSameDate[0]);
             } else {
-              // If date not found for this pincode, reset to live
-              setIsLiveMode(true);
-              // Re-run for live mode (or just let the effect re-run if we depend on isLiveMode?)
-              // Better to just force fetch live data here
+              // Date not found for this pincode — fall back to live data without changing isLiveMode state
+              // (Avoids re-triggering this effect, which would cause a loader flash)
               const latestTS = snapshots[0];
               const dateObj = new Date(latestTS);
               setSnapshotDate(dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
@@ -603,7 +605,7 @@ function CategoriesPageContent() {
     return () => {
       controller.abort();
     };
-  }, [category, pincode, isLiveMode, isPreferencesLoaded]);
+  }, [category, pincode, isPreferencesLoaded]);
 
   useEffect(() => {
     if (selectedProduct) {
@@ -1095,6 +1097,7 @@ function CategoriesPageContent() {
                       timesForDate.sort((a, b) => new Date(b) - new Date(a));
                       const latestTime = timesForDate[0];
                       setSnapshotTime(latestTime);
+                      setProducts([]); // Clear products so skeleton shows during date change
                       fetchCategoryData(latestTime);
                     }
                   }}

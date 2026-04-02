@@ -1,9 +1,10 @@
 
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import ProductGrouping from '@/models/ProductGrouping'; // Assuming you have this model
+import ProductGrouping from '@/models/ProductGrouping';
 import ProductSnapshot from '@/models/ProductSnapshot';
 import { addProductToGroup } from '@/lib/productGrouper';
+import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
     try {
@@ -43,8 +44,14 @@ export async function POST(request) {
             // 3. Update all snapshots of this variant
             await ProductSnapshot.updateMany(
                 { platform, productId: variantId },
-                { groupingId: targetGroupId }
+                { $set: { groupingId: targetGroupId } }
             );
+        }
+
+        // Invalidate Redis cache for this category
+        const targetGroup = await ProductGrouping.findOne({ groupingId: targetGroupId }).lean();
+        if (targetGroup?.category) {
+            await invalidateCategoryCache(targetGroup.category);
         }
 
         return NextResponse.json({ 

@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import ProductGrouping from '@/models/ProductGrouping';
 import ProductSnapshot from '@/models/ProductSnapshot';
 import { v4 as uuidv4 } from 'uuid';
+import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
     try {
@@ -21,6 +22,7 @@ export async function POST(request) {
         }
 
         const productsToExplode = group.products || [];
+        const groupCategory = group.category; // Save before deletion
         console.log(`💥 Processing delete for group ${groupingId} with ${productsToExplode.length} products...`);
 
         // 2. Delete the Grouping
@@ -38,6 +40,7 @@ export async function POST(request) {
                     { $unset: { groupingId: "" } }
                 );
             }
+            await invalidateCategoryCache(groupCategory);
             return NextResponse.json({
                 success: true,
                 message: 'Group deleted. Product ungrouped (removed from view).',
@@ -101,6 +104,7 @@ export async function POST(request) {
             }
         }
 
+        await invalidateCategoryCache(groupCategory);
         return NextResponse.json({
             success: true,
             message: `Group exploded. Created ${newlyCreatedGroups} individual product groups.`,

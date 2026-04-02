@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import { invalidateAllCaches } from '@/lib/redis-pool';
 
 export async function POST(request) {
   try {
@@ -34,6 +35,9 @@ export async function POST(request) {
     );
 
     console.log(`Updated ${result.modifiedCount} products`);
+
+    // Invalidate all Redis shards — the old timestamp cache keys are now stale
+    await invalidateAllCaches();
 
     return NextResponse.json({
       success: true,

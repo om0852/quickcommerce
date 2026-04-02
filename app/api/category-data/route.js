@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import zlib from 'zlib';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
 import ProductGrouping from '@/models/ProductGrouping';
 import Brand from '@/models/Brand';
+import { getRedisForCategory } from '@/lib/redis-pool';
 
 export async function GET(request) {
   try {
@@ -18,21 +20,62 @@ export async function GET(request) {
     await dbConnect();
 
     const pincodeList = pincode.split(',').filter(p => p.trim() !== '');
+    const sortedPincodesStr = [...pincodeList].sort().join(',');
+
+    // ============================================================
+    // CACHING: Determine effective timestamp, then check Redis
+    // ============================================================
+    let effectiveTimestamp = requestedTimestamp;
+    if (!effectiveTimestamp) {
+      // Find the latest snapshot timestamp for this category (fast _id index scan)
+      const latestSnap = await ProductSnapshot.findOne(
+        { category: category },
+        { scrapedAt: 1 }
+      ).sort({ _id: -1 }).lean();
+      effectiveTimestamp = latestSnap?.scrapedAt
+        ? new Date(latestSnap.scrapedAt).toISOString()
+        : 'no-data';
+    }
+
+    const cacheKey = `cat_data:${category}:${sortedPincodesStr}:${effectiveTimestamp}`;
+    const redisClient = getRedisForCategory(category);
+    console.log(`[category-data] Cache key: ${cacheKey}`);
+
+    // Try Redis first
+    try {
+      const cachedBase64 = await redisClient.get(cacheKey);
+      if (cachedBase64) {
+        console.log(`[category-data] 🚀 CACHE HIT: ${cacheKey}`);
+        const buffer = Buffer.from(cachedBase64, 'base64');
+        const decompressed = zlib.gunzipSync(buffer);
+        const cached = JSON.parse(decompressed.toString());
+        return NextResponse.json({
+          success: true,
+          category,
+          pincode,
+          lastUpdated: cached.lastUpdated,
+          products: cached.products,
+          totalProducts: cached.products.filter(p => !p.isHeader).length,
+          platformCounts: cached.platformCounts,
+          fromCache: true
+        });
+      }
+    } catch (cacheErr) {
+      console.warn('[category-data] Redis read error (will fetch from DB):', cacheErr.message);
+    }
+
+    console.log(`[category-data] 🐢 CACHE MISS: ${cacheKey}. Fetching from MongoDB...`);
 
     // ============================================================
     // STEP 1: Fetch all groups for this category (category-level)
     // ============================================================
     const groups = await ProductGrouping.find({ category }).lean();
     console.log(`[category-data] Found ${groups.length} groups for ${category}`);
-    // Debug first few groups to see if label exists
-    groups.slice(0, 5).forEach(g => {
-      if (g.label) console.log(`[category-data] Group ${g.groupingId} has label: ${g.label}`);
-    });
+
     // Fetch all brands for lookup
     const allBrands = await Brand.find({}).lean();
     const brandMap = {};
     allBrands.forEach(b => { brandMap[b.brandId] = b.brandName; });
-    console.log('[category-data] Loaded', Object.keys(brandMap).length, 'brands');
 
     // Collect ALL product IDs present across all groups, keyed by platform
     // Structure: { platform -> Set<productId> }
@@ -102,6 +145,7 @@ export async function GET(request) {
       const snapshots = await ProductSnapshot.find({
         pincode: currentPincode,
         scrapedAt: targetScrapedAt,
+        category: category,
         productId: { $in: allGroupProductIds }
       }).lean();
 
@@ -444,7 +488,26 @@ export async function GET(request) {
         message: 'No data available for these pincodes'
       });
     }
-    console.log(allMergedProducts.length)
+
+    // ============================================================
+    // STORE in Redis (compressed) for future requests
+    // ============================================================
+    if (anyDataFound) {
+      try {
+        const payload = JSON.stringify({
+          products: allMergedProducts,
+          lastUpdated: lastUpdatedTimestamp,
+          platformCounts: aggregatedCounts
+        });
+        const compressed = zlib.gzipSync(Buffer.from(payload));
+        await redisClient.set(cacheKey, compressed.toString('base64'), { ex: 86400 }); // 24 hours TTL
+        console.log(`[category-data] 💾 CACHED: ${cacheKey} (${(compressed.length / 1024).toFixed(1)} KB)`);
+      } catch (cacheErr) {
+        console.warn('[category-data] Redis write error (result still returned):', cacheErr.message);
+      }
+    }
+
+    console.log(`[category-data] Total products: ${allMergedProducts.length}`);
     return NextResponse.json({
       success: true,
       category,
@@ -452,13 +515,8 @@ export async function GET(request) {
       lastUpdated: lastUpdatedTimestamp,
       products: allMergedProducts,
       totalProducts: allMergedProducts.filter(p => !p.isHeader).length,
-      platformCounts: aggregatedCounts
-    }, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      }
+      platformCounts: aggregatedCounts,
+      fromCache: false
     });
 
   } catch (error) {

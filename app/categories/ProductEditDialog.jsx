@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 // Removed: import { brands } from '@/app/utils/brandarray';
 
 // Searchable Brand Combobox Component
-function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand }) { // Added availableBrands, onAddNewBrand
+function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand, isLoading }) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState(brand || '');
     const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -149,7 +149,12 @@ function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand }) { //
                     ref={dropdownRef}
                     className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                 >
-                    {navigationOptions.length === 0 ? (
+                    {isLoading ? (
+                        <div className="px-3 py-3 flex items-center gap-2 text-sm text-gray-400">
+                            <Loader2 size={14} className="animate-spin flex-shrink-0" />
+                            Loading brands...
+                        </div>
+                    ) : navigationOptions.length === 0 ? (
                         <div className="px-3 py-2 text-sm text-gray-500">
                             No brands found.
                         </div>
@@ -206,6 +211,7 @@ export default function ProductEditDialog({
 
     // Access available brands from API
     const [availableBrands, setAvailableBrands] = useState([]);
+    const [brandsLoading, setBrandsLoading] = useState(false);
 
     // Platform Level State - Array of objects to track edits
     const [platformData, setPlatformData] = useState([]);
@@ -229,6 +235,7 @@ export default function ProductEditDialog({
     // Fetch brands on mount
     useEffect(() => {
         const fetchBrands = async () => {
+            setBrandsLoading(true);
             try {
                 const res = await fetch('/api/brands');
                 const data = await res.json();
@@ -237,6 +244,8 @@ export default function ProductEditDialog({
                 }
             } catch (err) {
                 console.error("Failed to fetch brands", err);
+            } finally {
+                setBrandsLoading(false);
             }
         };
         fetchBrands();
@@ -457,6 +466,7 @@ export default function ProductEditDialog({
                                     setBrand={setBrand}
                                     availableBrands={availableBrands}
                                     onAddNewBrand={handleAddNewBrand}
+                                    isLoading={brandsLoading}
                                 />
                             </div>
                             <div className="space-y-1">

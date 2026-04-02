@@ -918,7 +918,7 @@ const ProductTable = React.memo(function ProductTable({
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {loading ? (
+                            {loading && products.length === 0 ? (
                                 // Skeleton Loading Rows
                                 Array.from({ length: 8 }).map((_, rowIndex) => (
                                     <TableRow key={`skeleton-${rowIndex}`}>
@@ -1390,14 +1390,8 @@ const ProductTable = React.memo(function ProductTable({
                         groupingId={manageGroup.groupingId} // passed from merged data
                         productsInGroup={manageGroup} // passed full object to parse platforms
                         onUpdate={() => {
-                            // Ideally trigger a refresh of the table data
-                            // We don't have easy access to fetchCategoryData here unless we pass it down or use context.
-                            // User might need to manually refresh or we can try to pass a callback.
-                            // The simplest way for now is just close; user hits refresh button.
-                            // Or we can add a simple window reload or context trigger.
-                            // For now, let's just close dialog.
-                            // If we want auto-refresh, we can pass a callback from parent.
                             setManageGroup(null);
+                            if (onRefresh) onRefresh(); // Re-fetch fresh data from DB
                         }}
                         currentPincode={pincode} // Pass it down
                         showToast={showToast}
