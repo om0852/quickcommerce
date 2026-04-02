@@ -25,23 +25,34 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Source group not found' }, { status: 404 });
         }
 
-        // 2. Identify the SPECIFIC product in this group
-        const productsToMove = oldGroup.products.filter(p => p.productId === productId && p.platform === platform);
+        // 2. Identify ALL variants of this product in this group (same base ID, same platform)
+        //    e.g. productId="abc123" also matches "abc123__fruits", "abc123__-a" etc.
+        const productsToMove = oldGroup.products.filter(p =>
+            p.platform === platform &&
+            getBaseId(p.productId) === targetBaseId
+        );
 
         if (productsToMove.length === 0) {
             return NextResponse.json({ error: 'No matching product found in the group' }, { status: 404 });
         }
 
-        // 3. Update the OLD group: remove ONLY this product/platform combo
-        const updatedOldProducts = oldGroup.products.filter(p => !(p.productId === productId && p.platform === platform));
+        const variantIdsToRemove = productsToMove.map(p => p.productId);
 
-        if (updatedOldProducts.length === 0) {
-            // If group becomes empty, delete it
+        // 3. Remove ALL matching variants from the OLD group
+        const remainingCount = oldGroup.products.filter(p =>
+            !(p.platform === platform && getBaseId(p.productId) === targetBaseId)
+        ).length;
+
+        if (remainingCount === 0) {
             await ProductGrouping.deleteOne({ _id: oldGroup._id });
         } else {
-            oldGroup.products = updatedOldProducts;
-            oldGroup.totalProducts = updatedOldProducts.length;
-            await oldGroup.save();
+            await ProductGrouping.updateOne(
+                { _id: oldGroup._id },
+                {
+                    $pull: { products: { productId: { $in: variantIdsToRemove }, platform: platform } },
+                    $set: { totalProducts: remainingCount }
+                }
+            );
         }
 
         // 4. Try to create the NEW Group with metadata from the product itself
