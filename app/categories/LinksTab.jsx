@@ -39,8 +39,8 @@ const LinksTab = ({ data, selectedCategory, platformFilter }) => {
                 const query = searchQuery.toLowerCase();
                 return (
                     item.masterCategory?.toLowerCase().includes(query) ||
-                    item.officialCategory?.toLowerCase().includes(query) ||
-                    item.officialSubCategory?.toLowerCase().includes(query) ||
+                    item.officalCategory?.toLowerCase().includes(query) ||
+                    item.officalSubCategory?.toLowerCase().includes(query) ||
                     item.platform.toLowerCase().includes(query)
                 );
             }
@@ -98,10 +98,10 @@ const LinksTab = ({ data, selectedCategory, platformFilter }) => {
                                         {item.masterCategory}
                                     </td>
                                     <td className="px-6 py-3 text-gray-600">
-                                        {item.officialCategory || item.officialCategory || '-'}
+                                        {item.officalCategory || item.officialCategory || '-'}
                                     </td>
                                     <td className="px-6 py-3 text-gray-600">
-                                        {item.officialSubCategory || item.officialSubCategory || '-'}
+                                        {item.officalSubCategory || item.officialSubCategory || '-'}
                                     </td>
                                     <td className="px-6 py-3 text-right">
                                         <a
