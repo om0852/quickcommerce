@@ -7,10 +7,7 @@ const ProductSnapshotSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  subCategory: {
-    type: String,
-    required: false  // Some platforms may not have subcategories
-  },
+
   categoryUrl: {
     type: String,
     required: true
@@ -105,7 +102,14 @@ const ProductSnapshotSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-
+  isVarient: {
+    type: Boolean,
+    default: false
+  },
+  comboOf: {
+    type: [String],
+    default: []
+  },
   // Metadata
   productUrl: String,
   lastComparedWith: {

@@ -257,7 +257,8 @@ export async function GET(request) {
                 image: group.primaryImage,
                 groupImage: null,
                 weight: group.primaryWeight,
-                brand: brandMap[group.brandId] || group.brand || '',
+                brand: group.brand || brandMap[group.brandId] || '',
+
                 brandId: group.brandId || '',
                 label: group.label || '',
                 zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,

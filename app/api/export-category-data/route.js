@@ -279,267 +279,205 @@ async function processExportInBackground(body) {
 
                 const snapshotMap = {};
                 snapshots.forEach(snap => {
-                    snapshotMap[`${snap.platform}:${snap.productId}`] = snap;
+                    // IMPORTANT: key must be lowercased to match group.products[].platform lookup
+                    const key = `${snap.platform.toLowerCase()}:${snap.productId}`;
+                    // Keep best-ranked snapshot if multiple exist for same platform:productId
+                    if (!snapshotMap[key] || (snap.ranking && snap.ranking < (snapshotMap[key].ranking || Infinity))) {
+                        snapshotMap[key] = snap;
+                    }
                 });
 
                 // 3. Iterate GROUPS to build rows (Strict Sequence)
                 for (const group of groups) {
+                    const platformMatches = {
+                        zepto: [], blinkit: [], jiomart: [], dmart: [], flipkartMinutes: [], instamart: []
+                    };
+                    let maxVariants = 0;
                     let hasData = false;
 
-                    // Build the Product Object (Merged)
-                    // We match the group's product definitions to the fetched snapshots
-
-                    const productRow = {
-                        name: group.primaryName, // Use Group Name as primary
-                        image: group.primaryImage,
-                        weight: group.primaryWeight,
-                        brand: group.brand || null,
-                        zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null
-                    };
-
-                    // Check platforms in this group
+                    // Group snapshots by platform
                     group.products.forEach(p => {
-                        const snap = snapshotMap[`${p.platform}:${p.productId}`];
+                        const platformKey = p.platform.toLowerCase();
+                        const snap = snapshotMap[`${platformKey}:${p.productId}`];
                         if (snap) {
-                            uniquePlatforms.add(p.platform);
-                            hasData = true;
-
-                            if (!productRow.brand && snap.brand) {
-                                productRow.brand = snap.brand;
+                            const matchKey = Object.keys(platformMatches).find(k => k.toLowerCase() === platformKey);
+                            if (matchKey) {
+                                platformMatches[matchKey].push(snap);
+                                hasData = true;
+                                if (platformMatches[matchKey].length > maxVariants) {
+                                    maxVariants = platformMatches[matchKey].length;
+                                }
                             }
-
-                            // Map snapshot to platform key
-                            // We construct the "platform object" equal to what we had before for the row generation
-                            productRow[p.platform] = {
-                                ...snap,
-                                currentPrice: snap.currentPrice,
-                                originalPrice: snap.originalPrice,
-                                discountPercentage: snap.discountPercentage,
-                                isOutOfStock: snap.isOutOfStock,
-                                // Robust link handling: search for any field that might contain the URL
-                                productUrl: snap.productUrl || snap.url || snap.link || snap.productLink || '',
-                                isAd: snap.isAd,
-                                rating: snap.rating,
-                                ranking: snap.ranking,
-                                deliveryTime: snap.deliveryTime,
-                                // Capture quantity and weight for fallback
-                                quantity: snap.quantity || '',
-                                productWeight: snap.productWeight || snap.weight || '',
-                                combo: snap.combo,
-                                priceChange: snap.priceChange || 0,
-                                discountChange: snap.discountChange || 0,
-                                rankingChange: snap.rankingChange || 0,
-                                categoryUrl: snap.categoryUrl,
-                                officialCategory: snap.officialCategory,
-                                officialSubCategory: snap.officialSubCategory,
-                                subCategory: snap.subCategory
-                            };
                         }
                     });
 
                     if (hasData) {
-                        // Create Export Row
-                        const dateObj = new Date(targetScrapedAt);
-
-                        const excelRow = {
-                            date: dateObj.toLocaleDateString(),
-                            pincode: pin,
-                            category: cat,
-                            productName: productRow.name,
-                            brand: productRow.brand || '-',
-                            groupId: group.groupingId || (group._id ? group._id.toString() : '-'),
-                            productWeight: productRow.weight || 'N/A',
-                            // Store productRow reference for hide-similar computation (removed before Excel write)
-                            _productRowRef: productRow
-                        };
-
-                        // Fill Platform Columns
-                        ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].forEach(p => {
-                            const pData = productRow[p];
-                            if (pData) {
-                                excelRow[`${p}_name`] = pData.productName || pData.name || '-';
-                                excelRow[`${p}_productId`] = pData.productId ? String(pData.productId).split('__')[0] : '-';
-                                excelRow[`${p}_aid`] = pData.productId || '-';
-                                excelRow[`${p}_otherSubcategory`] = pData.subCategory || '-';
-                                if (p === 'jiomart') {
-                                    excelRow[`${p}_articleCategory`] = extractArticleCategory(pData.productName || pData.name);
-                                }
-                                excelRow[`${p}_available`] = 'Yes';
-                                excelRow[`${p}_price`] = pData.currentPrice;
-                                excelRow[`${p}_originalPrice`] = pData.originalPrice || '-';
-                                excelRow[`${p}_discount`] = pData.discountPercentage ? `${Math.round(pData.discountPercentage)}%` : '-';
-                                excelRow[`${p}_stock`] = pData.isOutOfStock ? 'Out of Stock' : 'In Stock';
-                                excelRow[`${p}_link`] = pData.productUrl || '';
-                                excelRow[`${p}_isAd`] = pData.isAd ? 'Yes' : 'No';
-                                excelRow[`${p}_rating`] = pData.rating || '-';
-                                excelRow[`${p}_rank`] = pData.ranking || '-';
-                                excelRow[`${p}_combo`] = pData.combo || '-';
-
-                                // Quantity fallback logic: Use quantity if present, otherwise use productWeight
-                                const displayQuantity = (pData.quantity && pData.quantity !== '')
-                                    ? pData.quantity
-                                    : (pData.productWeight && pData.productWeight !== '' && pData.productWeight !== 'N/A')
-                                        ? pData.productWeight
-                                        : '-';
-
-                                excelRow[`${p}_quantity`] = displayQuantity;
-                                excelRow[`${p}_pricePerUnit`] = extractPricePerUnit(pData.currentPrice, displayQuantity);
-
-                                excelRow[`${p}_deliveryTime`] = pData.deliveryTime
-                                    ? (pData.deliveryTime.match(/^\d+\s*mins?/i)?.[0] || pData.deliveryTime)
-                                    : '-';
-                                excelRow[`${p}_isNew`] = pData.new === true ? 'New' : 'Old';
-
-                                // Change fields
-                                excelRow[`${p}_priceChange`] = pData.priceChange;
-                                excelRow[`${p}_discountChange`] = pData.discountChange;
-                                excelRow[`${p}_rankingChange`] = pData.rankingChange;
-
-                                // Categories
-                                const officialCategory = pData.officialCategory;
-                                const officialSubCategory = pData.officialSubCategory;
-
-                                if (officialCategory && officialCategory !== '-') {
-                                    excelRow[`${p}_officialCategory`] = officialCategory;
-                                    excelRow[`${p}_officialSubCategory`] = officialSubCategory || '-';
-                                } else {
-                                    // Fallback
-                                    let lookupKey = `${p}|${(pData.categoryUrl || '').trim().toLowerCase()}`;
-                                    const fallback = urlToCategoryMap.get(lookupKey);
-                                    if (fallback) {
-                                        excelRow[`${p}_officialCategory`] = fallback.officialCategory || '-';
-                                        excelRow[`${p}_officialSubCategory`] = fallback.officialSubCategory || '-';
-                                    } else {
-                                        // Master Fallback
-                                        const masterKey = `${p}|${cat}`;
-                                        const masterFallback = masterCategoryMap.get(masterKey);
-                                        if (masterFallback) {
-                                            excelRow[`${p}_officialCategory`] = masterFallback.officialCategory || '-';
-                                            excelRow[`${p}_officialSubCategory`] = masterFallback.officialSubCategory || '-';
-                                        } else {
-                                            excelRow[`${p}_officialCategory`] = '-';
-                                            excelRow[`${p}_officialSubCategory`] = '-';
-                                        }
-                                    }
-                                }
-
-                            } else {
-                                // unavailable
-                                excelRow[`${p}_name`] = '-';
-                                excelRow[`${p}_productId`] = '-';
-                                excelRow[`${p}_aid`] = '-';
-                                excelRow[`${p}_otherSubcategory`] = '-';
-                                excelRow[`${p}_available`] = 'No';
-                                excelRow[`${p}_price`] = null;
-                                excelRow[`${p}_pricePerUnit`] = '-';
-                                excelRow[`${p}_originalPrice`] = '-';
-                                excelRow[`${p}_discount`] = '-';
-                                excelRow[`${p}_stock`] = '-';
-                                excelRow[`${p}_link`] = '';
-                                excelRow[`${p}_isAd`] = '-';
-                                excelRow[`${p}_rating`] = '-';
-                                excelRow[`${p}_rank`] = null;
-                                excelRow[`${p}_combo`] = '-';
-                                excelRow[`${p}_quantity`] = '-';
-                                excelRow[`${p}_deliveryTime`] = '-';
-                                excelRow[`${p}_priceChange`] = '-';
-                                excelRow[`${p}_discountChange`] = '-';
-                                excelRow[`${p}_rankingChange`] = '-';
-                                excelRow[`${p}_officialCategory`] = '-';
-                                excelRow[`${p}_officialSubCategory`] = '-';
-                                excelRow[`${p}_isNew`] = '-';
-                            }
+                        // Sort variants to match UI deteministic sequence
+                        Object.keys(platformMatches).forEach(platform => {
+                            platformMatches[platform].sort((a, b) => {
+                                const rA = a.ranking && !isNaN(a.ranking) ? a.ranking : Infinity;
+                                const rB = b.ranking && !isNaN(b.ranking) ? b.ranking : Infinity;
+                                if (rA !== rB) return rA - rB;
+                                return Number(a.currentPrice || 0) - Number(b.currentPrice || 0);
+                            });
                         });
 
-                        allProcessedRows.push(excelRow);
+                        const pushRowToExport = (platformDataMap, groupIdStr) => {
+                            const dateObj = new Date(targetScrapedAt);
+                            const excelRow = {
+                                date: dateObj.toLocaleDateString(),
+                                pincode: pin,
+                                category: cat,
+                                productName: group.primaryName,
+                                brand: group.brand || '-',
+                                groupId: groupIdStr,
+                                productWeight: group.primaryWeight || 'N/A',
+                                _productRowRef: platformDataMap
+                            };
+
+                            // Update brand from snapshots if needed
+                            Object.values(platformDataMap).forEach(snap => {
+                                if (snap && excelRow.brand === '-' && snap.brand) {
+                                    excelRow.brand = snap.brand;
+                                }
+                            });
+
+                            ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].forEach(p => {
+                                const pData = platformDataMap[p];
+                                if (pData) {
+                                    uniquePlatforms.add(p);
+                                    // Make pData compatible with existing export code format (it expects snap schema)
+                                    // snap has most fields at root level.
+                                    
+                                    excelRow[`${p}_name`] = pData.productName || pData.name || '-';
+                                    excelRow[`${p}_productId`] = pData.productId ? String(pData.productId).split('__')[0] : '-';
+                                    excelRow[`${p}_aid`] = pData.productId || '-';
+                                    excelRow[`${p}_otherSubcategory`] = pData.subCategory || '-';
+                                    if (p === 'jiomart') {
+                                        excelRow[`${p}_articleCategory`] = extractArticleCategory(pData.productName || pData.name);
+                                    }
+                                    excelRow[`${p}_available`] = 'Yes';
+                                    excelRow[`${p}_price`] = pData.currentPrice;
+                                    excelRow[`${p}_originalPrice`] = pData.originalPrice || '-';
+                                    excelRow[`${p}_discount`] = pData.discountPercentage ? `${Math.round(pData.discountPercentage)}%` : '-';
+                                    excelRow[`${p}_stock`] = pData.isOutOfStock ? 'Out of Stock' : 'In Stock';
+                                    excelRow[`${p}_link`] = pData.productUrl || pData.url || pData.link || pData.productLink || '';
+                                    excelRow[`${p}_isAd`] = pData.isAd ? 'Yes' : 'No';
+                                    excelRow[`${p}_rating`] = pData.rating || '-';
+                                    excelRow[`${p}_rank`] = pData.ranking || '-';
+                                    excelRow[`${p}_combo`] = pData.combo || '-';
+
+                                    // Quantity fallback logic
+                                    const displayQuantity = (pData.quantity && pData.quantity !== '')
+                                        ? pData.quantity
+                                        : (pData.productWeight && pData.productWeight !== '' && pData.productWeight !== 'N/A')
+                                            ? pData.productWeight
+                                            : '-';
+
+                                    excelRow[`${p}_quantity`] = displayQuantity;
+                                    excelRow[`${p}_pricePerUnit`] = extractPricePerUnit(pData.currentPrice, displayQuantity);
+
+                                    excelRow[`${p}_deliveryTime`] = pData.deliveryTime
+                                        ? (pData.deliveryTime.match(/^\d+\s*mins?/i)?.[0] || pData.deliveryTime)
+                                        : '-';
+                                    excelRow[`${p}_isNew`] = pData.new === true ? 'New' : 'Old';
+
+                                    excelRow[`${p}_priceChange`] = pData.priceChange || 0;
+                                    excelRow[`${p}_discountChange`] = pData.discountChange || 0;
+                                    excelRow[`${p}_rankingChange`] = pData.rankingChange || 0;
+
+                                    // Categories
+                                    const officialCategory = pData.officialCategory;
+                                    const officialSubCategory = pData.officialSubCategory;
+
+                                    if (officialCategory && officialCategory !== '-') {
+                                        excelRow[`${p}_officialCategory`] = officialCategory;
+                                        excelRow[`${p}_officialSubCategory`] = officialSubCategory || '-';
+                                    } else {
+                                        // Fallback
+                                        const pUrl = pData.productUrl || pData.url || pData.link || pData.productLink || '';
+                                        let lookupKey = `${p}|${(pData.categoryUrl || pUrl || '').trim().toLowerCase()}`;
+                                        const fallback = urlToCategoryMap.get(lookupKey);
+                                        if (fallback) {
+                                            excelRow[`${p}_officialCategory`] = fallback.officialCategory || '-';
+                                            excelRow[`${p}_officialSubCategory`] = fallback.officialSubCategory || '-';
+                                        } else {
+                                            // Master Fallback
+                                            const masterKey = `${p}|${cat}`;
+                                            const masterFallback = masterCategoryMap.get(masterKey);
+                                            if (masterFallback) {
+                                                excelRow[`${p}_officialCategory`] = masterFallback.officialCategory || '-';
+                                                excelRow[`${p}_officialSubCategory`] = masterFallback.officialSubCategory || '-';
+                                            } else {
+                                                excelRow[`${p}_officialCategory`] = '-';
+                                                excelRow[`${p}_officialSubCategory`] = '-';
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // unavailable
+                                    excelRow[`${p}_name`] = '-';
+                                    excelRow[`${p}_productId`] = '-';
+                                    excelRow[`${p}_aid`] = '-';
+                                    excelRow[`${p}_otherSubcategory`] = '-';
+                                    excelRow[`${p}_available`] = 'No';
+                                    excelRow[`${p}_price`] = null;
+                                    excelRow[`${p}_pricePerUnit`] = '-';
+                                    excelRow[`${p}_originalPrice`] = '-';
+                                    excelRow[`${p}_discount`] = '-';
+                                    excelRow[`${p}_stock`] = '-';
+                                    excelRow[`${p}_link`] = '';
+                                    excelRow[`${p}_isAd`] = '-';
+                                    excelRow[`${p}_rating`] = '-';
+                                    excelRow[`${p}_rank`] = null;
+                                    excelRow[`${p}_combo`] = '-';
+                                    excelRow[`${p}_quantity`] = '-';
+                                    excelRow[`${p}_deliveryTime`] = '-';
+                                    excelRow[`${p}_priceChange`] = '-';
+                                    excelRow[`${p}_discountChange`] = '-';
+                                    excelRow[`${p}_rankingChange`] = '-';
+                                    excelRow[`${p}_officialCategory`] = '-';
+                                    excelRow[`${p}_officialSubCategory`] = '-';
+                                    excelRow[`${p}_isNew`] = '-';
+                                }
+                            });
+
+                            allProcessedRows.push(excelRow);
+                        };
+
+                        let dupCounter = 1;
+                        for (let i = 0; i < maxVariants; i++) {
+                            if (i === 0) {
+                                // MASTER ROW
+                                const masterDataMap = { zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null };
+                                Object.keys(platformMatches).forEach(platform => {
+                                    if (platformMatches[platform][0]) {
+                                        masterDataMap[platform] = platformMatches[platform][0];
+                                    }
+                                });
+                                pushRowToExport(masterDataMap, group.groupingId || (group._id ? group._id.toString() : '-'));
+                            } else {
+                                // DUPLICATE ROWS (Separate row for each variant)
+                                Object.keys(platformMatches).forEach(platform => {
+                                    const snap = platformMatches[platform][i];
+                                    if (snap) {
+                                        const dupDataMap = { zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null };
+                                        dupDataMap[platform] = snap; // Only populate THIS platform
+                                        const dupGroupId = `${group.groupingId || (group._id ? group._id.toString() : '-')}_dup_${dupCounter++}`;
+                                        pushRowToExport(dupDataMap, dupGroupId);
+                                    }
+                                });
+                            }
+                        }
                     }
                 } // End Group Loop
 
                 // --- Compute Hide Similar Status for this pincode+category block ---
-                // Mirrors the UI's Union-Find deduplication ("Hide Similar" toggle)
                 const blockRows = allProcessedRows.filter(r => r.pincode === pin && r.category === cat);
-                const blockPlatforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'instamart', 'flipkartMinutes'];
 
-                const getBaseId = (productId) =>
-                    productId.split('__')[0].replace(/-[a-z]$/i, '');
-
-                const nBlock = blockRows.length;
-                const parent = Array.from({ length: nBlock }, (_, i) => i);
-                const find = (i) => {
-                    while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; }
-                    return i;
-                };
-                const union = (i, j) => {
-                    const pi = find(i), pj = find(j);
-                    if (pi !== pj) parent[pi] = pj;
-                };
-
-                const baseIdMap = {};
-                blockRows.forEach((row, i) => {
-                    const pr = row._productRowRef;
-                    if (!pr) return;
-                    blockPlatforms.forEach(plat => {
-                        const pid = pr[plat]?.productId;
-                        if (pid) {
-                            const key = `${plat}:${getBaseId(pid)}`;
-                            if (baseIdMap[key] !== undefined) {
-                                union(i, baseIdMap[key]);
-                            } else {
-                                baseIdMap[key] = i;
-                            }
-                        }
-                    });
-                });
-
-                // Group indices by Union-Find root
-                const ufGroups = {};
-                blockRows.forEach((_, i) => {
-                    const root = find(i);
-                    if (!ufGroups[root]) ufGroups[root] = [];
-                    ufGroups[root].push(i);
-                });
-
-                const getPlatformCount = (pr) => blockPlatforms.filter(p => pr[p]).length;
-                const getMinRank = (pr) => {
-                    let min = Infinity;
-                    blockPlatforms.forEach(key => {
-                        if (pr[key]?.ranking !== undefined && pr[key]?.ranking !== null) {
-                            const num = Number(pr[key].ranking);
-                            if (!isNaN(num) && num < min) min = num;
-                        }
-                    });
-                    return min;
-                };
-
-                // Determine which indices are "Present" (kept) vs "Hide" (filtered out)
-                const presentIndices = new Set();
-                Object.values(ufGroups).forEach(group => {
-                    if (group.length === 1) {
-                        presentIndices.add(group[0]);
-                        return;
-                    }
-                    const multiPlatform = group.filter(i => {
-                        const pr = blockRows[i]._productRowRef;
-                        return pr && getPlatformCount(pr) > 1;
-                    });
-                    if (multiPlatform.length > 0) {
-                        multiPlatform.forEach(i => presentIndices.add(i));
-                    } else {
-                        // All single-platform: keep only lowest-rank one
-                        let bestIdx = group[0];
-                        let bestRank = getMinRank(blockRows[group[0]]._productRowRef || {});
-                        for (let k = 1; k < group.length; k++) {
-                            const pr = blockRows[group[k]]._productRowRef || {};
-                            const r = getMinRank(pr);
-                            if (r < bestRank) { bestRank = r; bestIdx = group[k]; }
-                        }
-                        presentIndices.add(bestIdx);
-                    }
-                });
-
-                // Annotate each row
-                blockRows.forEach((row, i) => {
-                    row.hideSimilarStatus = presentIndices.has(i) ? 'Present' : 'Hide';
+                // User requested: "Present" for Master Group row, "Hide" for Duplicate groups
+                blockRows.forEach(row => {
+                    row.hideSimilarStatus = String(row.groupId).includes('_dup_') ? 'Hide' : 'Present';
                 });
 
             } // End Pincode Loop

@@ -73,17 +73,26 @@ function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand, isLoad
 
     const handleSelect = async (selectedBrand) => {
         setIsOpen(false);
-        setSearch(selectedBrand);
+
+        // If the user typed something that's just a case variant of the selected brand,
+        // preserve the user's casing (e.g. typed "Kyari", clicked "KYARI" → keep "Kyari").
+        // This ensures a case-change like KYARI→Kyari is detected as a change on save.
+        const finalValue =
+            search && search.toLowerCase() === selectedBrand.toLowerCase()
+                ? search          // preserve what user typed
+                : selectedBrand;  // use the stored value for a different selection
+
+        setSearch(finalValue);
 
         // Check if it's a new brand
-        const isNew = availableBrands && !availableBrands.some(b => b.toLowerCase() === selectedBrand.toLowerCase());
+        const isNew = availableBrands && !availableBrands.some(b => b.toLowerCase() === finalValue.toLowerCase());
 
         if (isNew && onAddNewBrand) {
             // Optimistically update parent
-            setBrand(selectedBrand);
-            await onAddNewBrand(selectedBrand);
+            setBrand(finalValue);
+            await onAddNewBrand(finalValue);
         } else {
-            setBrand(selectedBrand);
+            setBrand(finalValue);
         }
     };
 

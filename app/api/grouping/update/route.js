@@ -26,19 +26,15 @@ export async function POST(request) {
         if (typeof updates.brand !== 'undefined') {
             allowedUpdates.brand = updates.brand;
             
-            // Helper to escape regex special characters
-            const escapeRegExp = (string) => {
-                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            };
-
-            // Sync brandId
+            // Sync brandId — case-sensitive: "Kyari" only matches "Kyari", not "KYARI"
             try {
-                // Find existing brand (case-insensitive)
                 const brandDoc = await Brand.findOne({
-                    brandName: { $regex: new RegExp(`^${escapeRegExp(updates.brand)}$`, 'i') }
+                    brandName: updates.brand.trim()
                 });
 
                 if (brandDoc) {
+                    // Only sync the brandId to the group — do NOT touch the Brand collection.
+                    // Each group can store its own brand display name (group.brand) independently.
                     allowedUpdates.brandId = brandDoc.brandId;
                 } else {
                     // Generate slug for new/unmatched brand

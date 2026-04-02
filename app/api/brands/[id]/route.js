@@ -65,6 +65,47 @@ export async function PUT(request, { params }) {
     }
 }
 
+// PATCH: Update ONLY the Brand collection (no cascade to groups/snapshots).
+// Use this to correct casing in the Brand master record without resetting per-group brand overrides.
+export async function PATCH(request, { params }) {
+    try {
+        await connectToDatabase();
+        const { id } = await params;
+        const { newBrandName } = await request.json();
+
+        if (!newBrandName || typeof newBrandName !== 'string' || !newBrandName.trim()) {
+            return NextResponse.json({ success: false, error: 'New brand name is required' }, { status: 400 });
+        }
+
+        const trimmedName = newBrandName.trim();
+        const newBrandIdSlug = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+        const brand = await Brand.findByIdAndUpdate(
+            id,
+            { $set: { brandName: trimmedName, brandId: newBrandIdSlug } },
+            { new: true }
+        );
+
+        if (!brand) {
+            return NextResponse.json({ success: false, error: 'Brand not found' }, { status: 404 });
+        }
+
+        // Only invalidate brands list cache — no category cache reset needed since
+        // per-group brand overrides (group.brand) take precedence in category-data.
+        await invalidateBrandsCache().catch(() => {});
+
+        console.log(`[Brands] Brand collection corrected (no cascade): "${brand.brandName}" brandId="${brand.brandId}"`);
+        return NextResponse.json({ success: true, brand });
+    } catch (error) {
+        if (error.code === 11000) {
+            return NextResponse.json({ success: false, error: 'A brand with that name already exists' }, { status: 409 });
+        }
+        console.error('Error patching brand:', error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}
+
+
 // DELETE: Delete a brand and cascade remove from products/groups
 export async function DELETE(request, { params }) {
     try {

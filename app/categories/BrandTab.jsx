@@ -56,7 +56,7 @@ const CustomBrandDialog = ({ isOpen, mode, brand, onClose, onSubmit }) => {
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={!isSubmitting ? onClose : undefined} />
-            <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200 bg-white">
                     <h3 className="text-lg font-bold text-neutral-900">
                         {mode === 'add' ? 'Add New Brand' : mode === 'edit' ? 'Rename Brand' : 'Delete Brand'}
