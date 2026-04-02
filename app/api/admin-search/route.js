@@ -14,66 +14,44 @@ export async function GET(request) {
   try {
     await dbConnect();
 
-    // ── 1. Try Group ID search first ────────────────────────────────────────
+    // ── 1. Try exact Group ID search ─────────────────────────────────────────
     const group = await ProductGrouping.findOne({ groupingId: q }).lean();
 
     if (group) {
-      // Collect all productIds in this group
       const productIds = group.products.map(p => p.productId);
 
-      // Fetch ALL snapshots for these products across ALL pincodes (latest per pincode+platform+productId)
       const snapshots = await ProductSnapshot.find(
         { productId: { $in: productIds } },
         {
-          productId: 1,
-          productName: 1,
-          productWeight: 1,
-          currentPrice: 1,
-          originalPrice: 1,
-          discountPercentage: 1,
-          platform: 1,
-          pincode: 1,
-          scrapedAt: 1,
-          isOutOfStock: 1,
-          ranking: 1
+          productId: 1, productName: 1, productWeight: 1,
+          currentPrice: 1, originalPrice: 1, discountPercentage: 1,
+          platform: 1, pincode: 1, scrapedAt: 1, isOutOfStock: 1, ranking: 1,
         }
-      )
-        .sort({ scrapedAt: -1 })
-        .lean();
+      ).sort({ scrapedAt: -1 }).lean();
 
-      // Group by pincode → platform → latest snapshot per productId
       const byPincode = {};
-      const seen = new Set(); // dedupe: pincode:platform:productId
+      const seen = new Set();
 
       for (const snap of snapshots) {
         const key = `${snap.pincode}:${snap.platform}:${snap.productId}`;
-        if (seen.has(key)) continue; // keep only the latest (already sorted desc)
+        if (seen.has(key)) continue;
         seen.add(key);
-
         if (!byPincode[snap.pincode]) byPincode[snap.pincode] = {};
         if (!byPincode[snap.pincode][snap.platform]) byPincode[snap.pincode][snap.platform] = [];
         byPincode[snap.pincode][snap.platform].push({
-          productId: snap.productId,
-          productName: snap.productName,
-          productWeight: snap.productWeight,
-          currentPrice: snap.currentPrice,
-          originalPrice: snap.originalPrice,
-          discountPercentage: snap.discountPercentage,
-          isOutOfStock: snap.isOutOfStock,
-          ranking: snap.ranking,
-          scrapedAt: snap.scrapedAt,
+          productId: snap.productId, productName: snap.productName,
+          productWeight: snap.productWeight, currentPrice: snap.currentPrice,
+          originalPrice: snap.originalPrice, discountPercentage: snap.discountPercentage,
+          isOutOfStock: snap.isOutOfStock, ranking: snap.ranking, scrapedAt: snap.scrapedAt,
         });
       }
 
       return NextResponse.json({
         type: 'group',
         group: {
-          groupingId: group.groupingId,
-          name: group.primaryName,
-          weight: group.primaryWeight,
-          brand: group.brand,
-          totalProducts: group.totalProducts,
-          category: group.category,
+          groupingId: group.groupingId, name: group.primaryName,
+          weight: group.primaryWeight, brand: group.brand,
+          totalProducts: group.totalProducts, category: group.category,
         },
         results: byPincode,
         totalPincodes: Object.keys(byPincode).length,
@@ -81,65 +59,75 @@ export async function GET(request) {
       });
     }
 
-    // ── 2. Fall back: Product ID search ─────────────────────────────────────
+    // ── 2. Try exact Product ID search ───────────────────────────────────────
     const snapshots = await ProductSnapshot.find(
       { productId: q },
       {
-        productId: 1,
-        productName: 1,
-        productWeight: 1,
-        currentPrice: 1,
-        originalPrice: 1,
-        platform: 1,
-        pincode: 1,
-        scrapedAt: 1,
-        isOutOfStock: 1,
-        ranking: 1,
-        category: 1,
+        productId: 1, productName: 1, productWeight: 1,
+        currentPrice: 1, originalPrice: 1, platform: 1,
+        pincode: 1, scrapedAt: 1, isOutOfStock: 1, ranking: 1, category: 1,
       }
-    )
-      .sort({ platform: 1, pincode: 1, scrapedAt: -1 })
-      .lean();
+    ).sort({ platform: 1, pincode: 1, scrapedAt: -1 }).lean();
 
-    if (snapshots.length === 0) {
+    if (snapshots.length > 0) {
+      const byPlatform = {};
+      const seen2 = new Set();
+
+      for (const snap of snapshots) {
+        const key = `${snap.platform}:${snap.pincode}`;
+        if (seen2.has(key)) continue;
+        seen2.add(key);
+        if (!byPlatform[snap.platform]) byPlatform[snap.platform] = [];
+        byPlatform[snap.platform].push({
+          pincode: snap.pincode, productName: snap.productName,
+          productWeight: snap.productWeight, currentPrice: snap.currentPrice,
+          originalPrice: snap.originalPrice, isOutOfStock: snap.isOutOfStock,
+          ranking: snap.ranking, category: snap.category, scrapedAt: snap.scrapedAt,
+        });
+      }
+
       return NextResponse.json({
-        type: 'notfound',
-        query: q,
-        message: 'No group or product found with this ID',
-      }, { status: 404 });
-    }
-
-    // Group by platform → pincode → latest snapshot
-    const byPlatform = {};
-    const seen2 = new Set();
-
-    for (const snap of snapshots) {
-      const key = `${snap.platform}:${snap.pincode}`;
-      if (seen2.has(key)) continue; // latest already first (sorted desc scrapedAt)
-      seen2.add(key);
-
-      if (!byPlatform[snap.platform]) byPlatform[snap.platform] = [];
-      byPlatform[snap.platform].push({
-        pincode: snap.pincode,
-        productName: snap.productName,
-        productWeight: snap.productWeight,
-        currentPrice: snap.currentPrice,
-        originalPrice: snap.originalPrice,
-        isOutOfStock: snap.isOutOfStock,
-        ranking: snap.ranking,
-        category: snap.category,
-        scrapedAt: snap.scrapedAt,
+        type: 'product',
+        productId: q,
+        productName: snapshots[0]?.productName || '',
+        results: byPlatform,
+        totalPlatforms: Object.keys(byPlatform).length,
+        totalSnapshots: seen2.size,
       });
     }
 
+    // ── 3. Fall back: Group Name fuzzy search (case-insensitive regex) ────────
+    const matchingGroups = await ProductGrouping.find(
+      { primaryName: { $regex: q, $options: 'i' } },
+      {
+        groupingId: 1, primaryName: 1, primaryWeight: 1,
+        brand: 1, category: 1, totalProducts: 1, primaryImage: 1,
+      }
+    ).limit(30).lean();
+
+    if (matchingGroups.length > 0) {
+      return NextResponse.json({
+        type: 'groups',
+        query: q,
+        total: matchingGroups.length,
+        groups: matchingGroups.map(g => ({
+          groupingId: g.groupingId,
+          name: g.primaryName,
+          weight: g.primaryWeight,
+          brand: g.brand,
+          category: g.category,
+          totalProducts: g.totalProducts,
+          image: g.primaryImage,
+        })),
+      });
+    }
+
+    // Nothing found
     return NextResponse.json({
-      type: 'product',
-      productId: q,
-      productName: snapshots[0]?.productName || '',
-      results: byPlatform,
-      totalPlatforms: Object.keys(byPlatform).length,
-      totalSnapshots: seen2.size,
-    });
+      type: 'notfound',
+      query: q,
+      message: 'No group or product found matching this query',
+    }, { status: 404 });
 
   } catch (err) {
     console.error('[admin-search] Error:', err);

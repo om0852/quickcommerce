@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Loader2, Database, MapPin, Package, ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Search, Loader2, Database, MapPin, Package, ChevronDown, ChevronRight, AlertTriangle, List } from 'lucide-react';
 import { useSidebar } from '@/components/SidebarContext';
 import { SidebarOpenIcon } from '@/components/SidebarIcons';
 
@@ -344,6 +344,173 @@ function ProductResult({ data }) {
   );
 }
 
+
+// ─── Groups Result: list of name-matched groups with inline accordion ──────────
+function GroupsResult({ data }) {
+  const { groups, total, query } = data;
+  // Map of groupingId → { open, loading, data, error }
+  const [expanded, setExpanded] = useState({});
+
+  const toggleGroup = async (groupingId) => {
+    const current = expanded[groupingId];
+
+    // Already loaded — just toggle open/closed
+    if (current?.data || current?.error) {
+      setExpanded(prev => ({
+        ...prev,
+        [groupingId]: { ...prev[groupingId], open: !prev[groupingId].open },
+      }));
+      return;
+    }
+
+    // Start fetch
+    setExpanded(prev => ({
+      ...prev,
+      [groupingId]: { open: true, loading: true, data: null, error: null },
+    }));
+
+    try {
+      const res = await fetch(`/api/admin-search?q=${encodeURIComponent(groupingId)}`);
+      const result = await res.json();
+      setExpanded(prev => ({
+        ...prev,
+        [groupingId]: { open: true, loading: false, data: result, error: null },
+      }));
+    } catch {
+      setExpanded(prev => ({
+        ...prev,
+        [groupingId]: { open: true, loading: false, data: null, error: 'Failed to load data' },
+      }));
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-1">
+        <List size={14} className="text-neutral-500" />
+        <span className="text-sm font-semibold text-neutral-700">
+          {total} group{total !== 1 ? 's' : ''} matching
+        </span>
+        <span className="text-sm text-neutral-400">"<em>{query}</em>"</span>
+        {total === 30 && <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">Top 30 shown</span>}
+      </div>
+
+      {/* Group list */}
+      <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-neutral-50 border-b border-neutral-200">
+              <th className="text-left px-4 py-3 font-semibold text-neutral-500 text-xs">Group Name</th>
+              <th className="text-left px-4 py-3 font-semibold text-neutral-500 text-xs">Brand</th>
+              <th className="text-left px-4 py-3 font-semibold text-neutral-500 text-xs">Category</th>
+              <th className="text-center px-4 py-3 font-semibold text-neutral-500 text-xs">Products</th>
+              <th className="text-left px-4 py-3 font-semibold text-neutral-500 text-xs hidden sm:table-cell">Group ID</th>
+              <th className="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {groups.map((g) => {
+              const state = expanded[g.groupingId] || {};
+              const isOpen = !!state.open;
+              const isLoading = !!state.loading;
+              const groupData = state.data;
+              const groupError = state.error;
+              const colSpan = 6;
+
+              return (
+                <>
+                  {/* Group summary row */}
+                  <tr
+                    key={g.groupingId}
+                    className={`border-t border-neutral-100 transition-colors cursor-pointer select-none ${
+                      isOpen ? 'bg-blue-50' : 'hover:bg-neutral-50'
+                    }`}
+                    onClick={() => toggleGroup(g.groupingId)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {isOpen
+                          ? <ChevronDown size={13} className="text-blue-500 shrink-0" />
+                          : <ChevronRight size={13} className="text-neutral-400 shrink-0" />}
+                        {g.image && (
+                          <img src={g.image} alt="" className="w-7 h-7 object-contain rounded border border-neutral-100 shrink-0"
+                            onError={e => e.target.style.display = 'none'} />
+                        )}
+                        <div>
+                          <div className="font-medium text-neutral-900 text-xs leading-snug line-clamp-2">{g.name}</div>
+                          {g.weight && <div className="text-[11px] text-neutral-400 mt-0.5">{g.weight}</div>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {g.brand
+                        ? <span className="text-xs text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded">{g.brand}</span>
+                        : <span className="text-neutral-300 text-xs">—</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-neutral-500">{g.category || '—'}</span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="text-xs font-bold text-neutral-700">{g.totalProducts ?? '—'}</span>
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      <span className="text-[10px] font-mono text-neutral-400 truncate max-w-[140px] block">{g.groupingId}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => toggleGroup(g.groupingId)}
+                        className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg border transition-colors whitespace-nowrap ${
+                          isOpen
+                            ? 'bg-blue-100 text-blue-700 border-blue-200'
+                            : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200'
+                        }`}
+                      >
+                        {isLoading
+                          ? <><Loader2 size={11} className="animate-spin" /> Loading…</>
+                          : isOpen
+                            ? <><ChevronDown size={11} /> Hide</>
+                            : <><ChevronRight size={11} /> View</>}
+                      </button>
+                    </td>
+                  </tr>
+
+                  {/* Accordion row — inline snapshot detail */}
+                  {isOpen && (
+                    <tr key={`${g.groupingId}-accordion`}>
+                      <td colSpan={colSpan} className="p-0 bg-blue-50/40 border-t border-blue-100">
+                        <div className="px-4 pb-4 pt-2">
+                          {isLoading && (
+                            <div className="flex items-center gap-2 py-6 justify-center text-neutral-400 text-xs">
+                              <Loader2 size={14} className="animate-spin" />
+                              Loading snapshot data…
+                            </div>
+                          )}
+                          {groupError && (
+                            <div className="flex items-center gap-2 py-4 text-rose-600 text-xs">
+                              <AlertTriangle size={13} />
+                              {groupError}
+                            </div>
+                          )}
+                          {groupData?.type === 'group' && (
+                            <div className="mt-1">
+                              <GroupResult data={groupData} />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main page ───────────────────────────────────────────────────────────────
 export default function AdminSearchPage() {
   const { isSidebarOpen, toggleSidebar } = useSidebar();
@@ -352,10 +519,13 @@ export default function AdminSearchPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
-  const handleSearch = async (e) => {
+  const handleSearch = async (e, overrideQuery) => {
     e?.preventDefault();
-    const q = query.trim();
+    const q = (overrideQuery ?? query).trim();
     if (!q) return;
+
+    // If clicking a group from the list, update the input field too
+    if (overrideQuery) setQuery(overrideQuery);
 
     setLoading(true);
     setResult(null);
@@ -405,7 +575,7 @@ export default function AdminSearchPage() {
                 type="text"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Group ID or Product ID…"
+                placeholder="Group ID, Product ID, or Group Name…"
                 className="w-full pl-9 pr-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:bg-white transition-all placeholder:text-neutral-400 placeholder:font-sans"
                 disabled={loading}
               />
@@ -435,12 +605,13 @@ export default function AdminSearchPage() {
         {/* Results */}
         {result?.type === 'group' && <GroupResult data={result} />}
         {result?.type === 'product' && <ProductResult data={result} />}
+        {result?.type === 'groups' && <GroupsResult data={result} />}
 
         {/* Empty state */}
         {!result && !error && !loading && (
           <div className="text-center py-20 text-neutral-400">
             <Database size={32} className="mx-auto mb-2 opacity-25" />
-            <p className="text-xs">Enter a Group ID or Product ID above to begin</p>
+            <p className="text-xs">Enter a Group ID, Product ID, or Group Name to begin</p>
           </div>
         )}
       </div>
