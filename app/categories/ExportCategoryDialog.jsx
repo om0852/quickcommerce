@@ -42,6 +42,14 @@ export default function ExportCategoryDialog({
         return () => window.removeEventListener('keydown', handleEscape);
     }, [isOpen, onClose]);
 
+    // Sync state with current page selections when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            if (currentCategory) setSelectedCategory(currentCategory);
+            if (currentPincode) setSelectedPincodes([currentPincode]);
+        }
+    }, [isOpen, currentCategory, currentPincode]);
+
     if (!isOpen) return null;
 
     const handleAction = async (actionType) => {
@@ -270,6 +278,7 @@ export default function ExportCategoryDialog({
                                         }}
                                         options={pincodeOptions}
                                         placeholder="Select Pincodes"
+                                        position="top"
                                     />
                                     {selectedPincodes.length > 5 && <p className="text-xs text-red-500 mt-1">Maximum 5 pincodes allowed.</p>}
                                 </div>

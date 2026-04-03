@@ -10,7 +10,8 @@ export default function MultiSelectDropdown({
     placeholder = "Select",
     disabled = false,
     className,
-    searchable = false
+    searchable = false,
+    position = "bottom" // "top" or "bottom"
 }) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -97,7 +98,10 @@ export default function MultiSelectDropdown({
             </div>
 
             {open && !disabled && (
-                <div className="absolute top-full left-0 w-full mt-1 bg-white border border-neutral-200 rounded-md shadow-lg z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                <div className={cn(
+                    "absolute left-0 w-full bg-white border border-neutral-200 rounded-md shadow-lg z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100",
+                    position === "top" ? "bottom-full mb-1" : "top-full mt-1"
+                )}>
                     <div className="p-2 border-b border-gray-100 bg-gray-50/50 space-y-2">
                         {searchable && (
                             <div className="relative">
