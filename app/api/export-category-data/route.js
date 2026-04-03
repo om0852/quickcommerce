@@ -255,7 +255,6 @@ async function processExportInBackground(body) {
                     pincode: pin,
                     $or: [
                         { category: cat },
-                        { officialCategory: cat }
                     ]
                 }).sort({ scrapedAt: -1 }).select('scrapedAt');
 
@@ -274,6 +273,7 @@ async function processExportInBackground(body) {
                 const snapshots = await ProductSnapshot.find({
                     pincode: pin,
                     scrapedAt: targetScrapedAt,
+                    category: cat,
                     productId: { $in: Array.from(allProductIds) }
                 }).lean();
 
@@ -311,6 +311,26 @@ async function processExportInBackground(body) {
                         }
                     });
 
+                    // --- Danger (Skull) Logic: Global group definition ---
+                    const globalPlatformConflicts = {};
+                    const groupDefinedProducts = {};
+
+                    group.products.forEach(p => {
+                        const plat = p.platform.toLowerCase();
+                        if (!groupDefinedProducts[plat]) groupDefinedProducts[plat] = new Set();
+                        const pid = p.productId || '';
+                        const baseId = pid.includes('__') ? pid.split('__')[0] : pid;
+                        groupDefinedProducts[plat].add(baseId);
+                    });
+
+                    Object.keys(groupDefinedProducts).forEach(platform => {
+                        if (groupDefinedProducts[platform].size > 1) {
+                            globalPlatformConflicts[platform] = true;
+                        }
+                    });
+
+                    const hasGroupConflict = Object.values(globalPlatformConflicts).some(c => c === true);
+
                     if (hasData) {
                         // Sort variants to match UI deteministic sequence
                         Object.keys(platformMatches).forEach(platform => {
@@ -322,7 +342,7 @@ async function processExportInBackground(body) {
                             });
                         });
 
-                        const pushRowToExport = (platformDataMap, groupIdStr) => {
+                        const pushRowToExport = (platformDataMap, groupIdStr, isDuplicate) => {
                             const dateObj = new Date(targetScrapedAt);
                             const excelRow = {
                                 date: dateObj.toLocaleDateString(),
@@ -346,9 +366,7 @@ async function processExportInBackground(body) {
                                 const pData = platformDataMap[p];
                                 if (pData) {
                                     uniquePlatforms.add(p);
-                                    // Make pData compatible with existing export code format (it expects snap schema)
-                                    // snap has most fields at root level.
-                                    
+
                                     excelRow[`${p}_name`] = pData.productName || pData.name || '-';
                                     excelRow[`${p}_productId`] = pData.productId ? String(pData.productId).split('__')[0] : '-';
                                     excelRow[`${p}_aid`] = pData.productId || '-';
@@ -367,7 +385,6 @@ async function processExportInBackground(body) {
                                     excelRow[`${p}_rank`] = pData.ranking || '-';
                                     excelRow[`${p}_combo`] = pData.combo || '-';
 
-                                    // Quantity fallback logic
                                     const displayQuantity = (pData.quantity && pData.quantity !== '')
                                         ? pData.quantity
                                         : (pData.productWeight && pData.productWeight !== '' && pData.productWeight !== 'N/A')
@@ -386,7 +403,6 @@ async function processExportInBackground(body) {
                                     excelRow[`${p}_discountChange`] = pData.discountChange || 0;
                                     excelRow[`${p}_rankingChange`] = pData.rankingChange || 0;
 
-                                    // Categories
                                     const officialCategory = pData.officialCategory;
                                     const officialSubCategory = pData.officialSubCategory;
 
@@ -394,7 +410,6 @@ async function processExportInBackground(body) {
                                         excelRow[`${p}_officialCategory`] = officialCategory;
                                         excelRow[`${p}_officialSubCategory`] = officialSubCategory || '-';
                                     } else {
-                                        // Fallback
                                         const pUrl = pData.productUrl || pData.url || pData.link || pData.productLink || '';
                                         let lookupKey = `${p}|${(pData.categoryUrl || pUrl || '').trim().toLowerCase()}`;
                                         const fallback = urlToCategoryMap.get(lookupKey);
@@ -402,7 +417,6 @@ async function processExportInBackground(body) {
                                             excelRow[`${p}_officialCategory`] = fallback.officialCategory || '-';
                                             excelRow[`${p}_officialSubCategory`] = fallback.officialSubCategory || '-';
                                         } else {
-                                            // Master Fallback
                                             const masterKey = `${p}|${cat}`;
                                             const masterFallback = masterCategoryMap.get(masterKey);
                                             if (masterFallback) {
@@ -415,7 +429,6 @@ async function processExportInBackground(body) {
                                         }
                                     }
                                 } else {
-                                    // unavailable
                                     excelRow[`${p}_name`] = '-';
                                     excelRow[`${p}_productId`] = '-';
                                     excelRow[`${p}_aid`] = '-';
@@ -448,7 +461,6 @@ async function processExportInBackground(body) {
                         let dupCounter = 1;
                         for (let i = 0; i < maxVariants; i++) {
                             if (i === 0) {
-                                // MASTER ROW
                                 const masterDataMap = { zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null };
                                 Object.keys(platformMatches).forEach(platform => {
                                     if (platformMatches[platform][0]) {
@@ -457,12 +469,11 @@ async function processExportInBackground(body) {
                                 });
                                 pushRowToExport(masterDataMap, group.groupingId || (group._id ? group._id.toString() : '-'));
                             } else {
-                                // DUPLICATE ROWS (Separate row for each variant)
                                 Object.keys(platformMatches).forEach(platform => {
                                     const snap = platformMatches[platform][i];
                                     if (snap) {
                                         const dupDataMap = { zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null };
-                                        dupDataMap[platform] = snap; // Only populate THIS platform
+                                        dupDataMap[platform] = snap;
                                         const dupGroupId = `${group.groupingId || (group._id ? group._id.toString() : '-')}_dup_${dupCounter++}`;
                                         pushRowToExport(dupDataMap, dupGroupId);
                                     }
