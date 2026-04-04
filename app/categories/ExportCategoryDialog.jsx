@@ -169,10 +169,10 @@ export default function ExportCategoryDialog({
             "fixed inset-0 bg-black/40 flex items-center justify-center z-[200] backdrop-blur-[4px] transition-all duration-300",
             isSidebarOpen ? "xl:ml-64" : "xl:ml-0"
         )} onClick={onClose}>
-            <div className="bg-white rounded-xl w-[90%] max-w-[600px] max-h-[90vh] flex flex-col shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-xl overflow-hidden w-[90%] max-w-[600px] max-h-[90vh] flex flex-col shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
 
                 {/* Header */}
-                <div className="flex-none p-6 bg-white border-b border-neutral-200 flex items-start justify-between">
+                <div className="flex-none p-5 bg-white border-b border-neutral-200 flex items-start justify-between">
                     <div>
                         <h2 className="text-xl font-bold text-neutral-900 mb-1">Export Data</h2>
                         <p className="text-sm text-neutral-500">
@@ -181,39 +181,39 @@ export default function ExportCategoryDialog({
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-1 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-full transition-colors"
+                        className="p-1 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-full transition-colors cursor-pointer"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <div className="flex-1 overflow-y-auto p-5 bg-gray-50">
 
-                    <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm mb-6">
+                    <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm mb-4">
                         {/* Email Input */}
                         <div className="mb-0">
-                        <label className="block mb-2 text-sm font-semibold text-neutral-900">
-                            Email Address <span className="text-neutral-400 font-normal">(Required for Email)</span>
-                        </label>
-                        <div className="relative">
-                            <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-                            <input
-                                type="email"
-                                placeholder="name@company.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 rounded-md border border-neutral-200 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors placeholder:text-neutral-400"
-                            />
-                        </div>
+                            <label className="block mb-2 text-sm font-semibold text-neutral-900">
+                                Email Address <span className="text-neutral-400 font-normal">(Required for Email)</span>
+                            </label>
+                            <div className="relative">
+                                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                                <input
+                                    type="email"
+                                    placeholder="name@company.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-md border border-neutral-200 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 transition-colors placeholder:text-neutral-400"
+                                />
+                            </div>
                         </div>
                     </div>
 
                     {/* Filters Container */}
-                    <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm mb-6">
+                    <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm mb-4">
 
                         {/* Grid for Dropdowns */}
-                        <div className="grid gap-4">
-                        {/* Export Type */}
+                        <div className="grid gap-3">
+                            {/* Export Type */}
                             <div>
                                 <label className="block mb-1.5 text-sm font-medium text-neutral-600">Export Type</label>
                                 <div className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-neutral-50 text-neutral-700 flex items-center justify-between">
@@ -234,9 +234,9 @@ export default function ExportCategoryDialog({
                                 <select
                                     value={selectedPlatform}
                                     onChange={(e) => setSelectedPlatform(e.target.value)}
-                                    className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
+                                    className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 cursor-pointer"
                                 >
-                                    <option value="all">All Platforms</option>
+                                    {/* <option value="all">All Platforms</option> */}
                                     {availablePlatforms.map(p => (
                                         <option key={p.value} value={p.value}>{p.label}</option>
                                     ))}
@@ -244,13 +244,13 @@ export default function ExportCategoryDialog({
                             </div>
 
                             {/* Category & Pincode Row */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block mb-1.5 text-sm font-medium text-neutral-600">Category</label>
                                     <select
                                         value={selectedCategory}
                                         onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900"
+                                        className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 cursor-pointer"
                                     >
                                         {/* Remove All option as per request */}
                                         {categoryOptions.map(c => (
@@ -304,67 +304,67 @@ export default function ExportCategoryDialog({
 
                     {/* Footer actions */}
                 </div>
-                <div className="flex-none flex gap-3 p-6 bg-white border-t border-neutral-200">
-                        {/* Cancel */}
+                <div className="flex-none flex gap-3 p-5 bg-white border-t border-neutral-200">
+                    {/* Cancel */}
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-600 text-sm font-medium hover:bg-neutral-50 hover:text-neutral-900 transition-colors cursor-pointer"
+                    >
+                        Cancel
+                    </button>
+
+                    <div className="flex-1 flex gap-2">
+                        {/* Email Button */}
                         <button
                             type="button"
-                            onClick={onClose}
-                            className="px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-600 text-sm font-medium hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
+                            onClick={() => handleAction('email')}
+                            disabled={loading}
+                            className={cn(
+                                "flex-1 px-4 py-2.5 rounded-md border border-neutral-900 bg-neutral-900 text-white text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-black hover:shadow-md cursor-pointer",
+                                loading && "opacity-70 cursor-not-allowed"
+                            )}
                         >
-                            Cancel
+                            {loading && (email) ? ( // Crude loading check logic? Better to maybe separate loading states or just generic spinner
+                                'Sending...'
+                            ) : (
+                                <>
+                                    <Mail size={16} /> Email
+                                </>
+                            )}
                         </button>
 
-                        <div className="flex-1 flex gap-2">
-                            {/* Download Button */}
-                            <button
-                                type="button"
-                                onClick={() => handleAction('download')}
-                                disabled={loading}
-                                className={cn(
-                                    "flex-1 px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-900 text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-gray-50 hover:border-neutral-300",
-                                    loading && "opacity-50 cursor-not-allowed"
-                                )}
-                            >
-                                <Download size={16} /> Download
-                            </button>
+                        {/* Download Button */}
+                        <button
+                            type="button"
+                            onClick={() => handleAction('download')}
+                            disabled={loading}
+                            className={cn(
+                                "flex-1 px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-900 text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-gray-50 hover:border-neutral-300 cursor-pointer",
+                                loading && "opacity-50 cursor-not-allowed"
+                            )}
+                        >
+                            <Download size={16} /> Download
+                        </button>
+                    </div>
+                </div>
 
-                            {/* Email Button */}
-                            <button
-                                type="button"
-                                onClick={() => handleAction('email')}
-                                disabled={loading}
-                                className={cn(
-                                    "flex-1 px-4 py-2.5 rounded-md border border-neutral-900 bg-neutral-900 text-white text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-black hover:shadow-md",
-                                    loading && "opacity-70 cursor-not-allowed"
-                                )}
-                            >
-                                {loading && (email) ? ( // Crude loading check logic? Better to maybe separate loading states or just generic spinner
-                                    'Sending...'
-                                ) : (
-                                    <>
-                                        <Mail size={16} /> Email
-                                    </>
-                                )}
-                            </button>
+                {/* Floating Notifications */}
+                <div className="fixed top-10 right-10 z-[250] flex flex-col gap-3">
+                    {success && (
+                        <div className="p-3 bg-green-50 text-green-700 rounded-lg shadow-lg text-sm flex items-center gap-2 border border-green-200 animate-in fade-in slide-in-from-top-2">
+                            <CheckCircle size={16} />
+                            {success}
                         </div>
-                    </div>
+                    )}
 
-                    {/* Floating Notifications */}
-                    <div className="fixed top-10 right-10 z-[250] flex flex-col gap-3">
-                        {success && (
-                            <div className="p-3 bg-green-50 text-green-700 rounded-lg shadow-lg text-sm flex items-center gap-2 border border-green-200 animate-in fade-in slide-in-from-top-2">
-                                <CheckCircle size={16} />
-                                {success}
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="p-3 bg-red-50 text-red-700 rounded-lg shadow-lg text-sm flex items-center gap-2 border border-red-200 animate-in fade-in slide-in-from-top-2">
-                                <AlertCircle size={16} />
-                                {error}
-                            </div>
-                        )}
-                    </div>
+                    {error && (
+                        <div className="p-3 bg-red-50 text-red-700 rounded-lg shadow-lg text-sm flex items-center gap-2 border border-red-200 animate-in fade-in slide-in-from-top-2">
+                            <AlertCircle size={16} />
+                            {error}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

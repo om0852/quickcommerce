@@ -404,7 +404,6 @@ function GroupsResult({ data }) {
               <th className="text-left px-4 py-3 font-semibold text-neutral-500 text-xs">Group Name</th>
               <th className="text-left px-4 py-3 font-semibold text-neutral-500 text-xs">Brand</th>
               <th className="text-left px-4 py-3 font-semibold text-neutral-500 text-xs">Category</th>
-              <th className="text-center px-4 py-3 font-semibold text-neutral-500 text-xs">Products</th>
               <th className="text-left px-4 py-3 font-semibold text-neutral-500 text-xs hidden sm:table-cell">Group ID</th>
               <th className="px-4 py-3"></th>
             </tr>
@@ -416,7 +415,7 @@ function GroupsResult({ data }) {
               const isLoading = !!state.loading;
               const groupData = state.data;
               const groupError = state.error;
-              const colSpan = 6;
+              const colSpan = 5;
 
               return (
                 <>
@@ -450,9 +449,6 @@ function GroupsResult({ data }) {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-neutral-500">{g.category || '—'}</span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="text-xs font-bold text-neutral-700">{g.totalProducts ?? '—'}</span>
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
                       <span className="text-[10px] font-mono text-neutral-400 truncate max-w-[140px] block">{g.groupingId}</span>

@@ -18,15 +18,7 @@ export default function MultiSelectDropdown({
     const ref = useRef(null);
     const listRef = useRef(null);
 
-    // Auto-scroll to bottom when opened
-    useEffect(() => {
-        if (open && listRef.current) {
-            // Use a slightly longer timeout to ensure content is measured
-            setTimeout(() => {
-                listRef.current.scrollTop = listRef.current.scrollHeight;
-            }, 100);
-        }
-    }, [open]);
+
 
     // close on outside click
     useEffect(() => {
