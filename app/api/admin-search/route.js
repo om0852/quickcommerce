@@ -21,7 +21,13 @@ export async function GET(request) {
       const productIds = group.products.map(p => p.productId);
 
       const snapshots = await ProductSnapshot.find(
-        { productId: { $in: productIds } },
+        { 
+          productId: { $in: productIds },
+          $or: [
+            { platform: { $ne: 'jiomart' } },
+            { platform: 'jiomart', isQuick: { $ne: false } }
+          ]
+        },
         {
           productId: 1, productName: 1, productWeight: 1,
           currentPrice: 1, originalPrice: 1, discountPercentage: 1,
@@ -61,7 +67,13 @@ export async function GET(request) {
 
     // ── 2. Try exact Product ID search ───────────────────────────────────────
     const snapshots = await ProductSnapshot.find(
-      { productId: q },
+      { 
+        productId: q,
+        $or: [
+          { platform: { $ne: 'jiomart' } },
+          { platform: 'jiomart', isQuick: { $ne: false } }
+        ]
+      },
       {
         productId: 1, productName: 1, productWeight: 1,
         currentPrice: 1, originalPrice: 1, platform: 1,

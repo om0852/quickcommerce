@@ -29,7 +29,13 @@ export async function GET(request) {
     if (!effectiveTimestamp) {
       // Find the latest snapshot timestamp for this category (fast _id index scan)
       const latestSnap = await ProductSnapshot.findOne(
-        { category: category },
+        { 
+          category: category,
+          $or: [
+            { platform: { $ne: 'jiomart' } },
+            { platform: 'jiomart', isQuick: { $ne: false } }
+          ]
+        },
         { scrapedAt: 1 }
       ).sort({ _id: -1 }).lean();
       effectiveTimestamp = latestSnap?.scrapedAt
@@ -105,7 +111,15 @@ export async function GET(request) {
         const exactBatch = await ProductSnapshot.findOne({
           pincode: currentPincode,
           scrapedAt: searchDate,
-          $or: [{ category: category }, { officialCategory: category }]
+          $and: [
+            { $or: [{ category: category }, { officialCategory: category }] },
+            { 
+              $or: [
+                { platform: { $ne: 'jiomart' } },
+                { platform: 'jiomart', isQuick: { $ne: false } }
+              ]
+            }
+          ]
         }).select('scrapedAt').lean();
 
         if (exactBatch) {
@@ -117,7 +131,15 @@ export async function GET(request) {
         // LIVE MODE: find the most recent scrape for this pincode
         const latestSnapshot = await ProductSnapshot.findOne({
           pincode: currentPincode,
-          $or: [{ category: category }, { officialCategory: category }]
+          $and: [
+            { $or: [{ category: category }, { officialCategory: category }] },
+            {
+              $or: [
+                { platform: { $ne: 'jiomart' } },
+                { platform: 'jiomart', isQuick: { $ne: false } }
+              ]
+            }
+          ]
         }).sort({ scrapedAt: -1 }).select('scrapedAt').lean();
 
         if (latestSnapshot) {
@@ -146,7 +168,11 @@ export async function GET(request) {
         pincode: currentPincode,
         scrapedAt: targetScrapedAt,
         category: category,
-        productId: { $in: allGroupProductIds }
+        productId: { $in: allGroupProductIds },
+        $or: [
+          { platform: { $ne: 'jiomart' } },
+          { platform: 'jiomart', isQuick: { $ne: false } }
+        ]
       }).lean();
 
       console.log(`[category-data] Pincode ${currentPincode}: fetched ${snapshots.length} snapshots for ${allGroupProductIds.length} group product IDs`);

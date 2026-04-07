@@ -73,7 +73,7 @@ export async function POST(request) {
     if (productIds) {
       if (productIds.zepto) criteria.push({ platform: 'zepto', productId: productIds.zepto, pincode });
       if (productIds.blinkit) criteria.push({ platform: 'blinkit', productId: productIds.blinkit, pincode });
-      if (productIds.jiomart) criteria.push({ platform: 'jiomart', productId: productIds.jiomart, pincode });
+      if (productIds.jiomart) criteria.push({ platform: 'jiomart', productId: productIds.jiomart, pincode, isQuick: { $ne: false } });
       if (productIds.flipkartMinutes) criteria.push({ platform: 'flipkartMinutes', productId: productIds.flipkartMinutes, pincode });
     }
 
@@ -86,7 +86,7 @@ export async function POST(request) {
         criteria.push({ platform: 'blinkit', productName: productNames.blinkit, pincode });
       }
       if (productNames.jiomart && !productIds?.jiomart) {
-        criteria.push({ platform: 'jiomart', productName: productNames.jiomart, pincode });
+        criteria.push({ platform: 'jiomart', productName: productNames.jiomart, pincode, isQuick: { $ne: false } });
       }
       if (productNames.flipkartMinutes && !productIds?.flipkartMinutes) {
         criteria.push({ platform: 'flipkartMinutes', productName: productNames.flipkartMinutes, pincode });
@@ -138,7 +138,11 @@ export async function POST(request) {
         // Fetch all products for this pincode and filter by normalized name
         const allSnapshots = await ProductSnapshot.find({
           pincode,
-          platform: { $in: platformsNeedingNormalizedMatch }
+          platform: { $in: platformsNeedingNormalizedMatch },
+          $or: [
+            { platform: { $ne: 'jiomart' } },
+            { platform: 'jiomart', isQuick: { $ne: false } }
+          ]
         })
           .sort({ scrapedAt: 1 })
           .select('platform productName productId currentPrice ranking scrapedAt isOutOfStock');

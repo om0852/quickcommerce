@@ -16,13 +16,27 @@ export async function GET(request) {
     await dbConnect();
 
     // 1. Get the latest 2 snapshot timestamps for this category/pincode
-    const recentSnapshots = await ProductSnapshot.find({ category, pincode })
+    const recentSnapshots = await ProductSnapshot.find({ 
+      category, 
+      pincode,
+      $or: [
+        { platform: { $ne: 'jiomart' } },
+        { platform: 'jiomart', isQuick: { $ne: false } }
+      ]
+    })
       .sort({ scrapedAt: -1 })
       .select('scrapedAt')
       .limit(2000); // Fetch enough to find distinct dates, or use aggregate
 
     // Better way to get distinct sorted timestamps
-    const distinctTimestamps = await ProductSnapshot.distinct('scrapedAt', { category, pincode });
+    const distinctTimestamps = await ProductSnapshot.distinct('scrapedAt', { 
+      category, 
+      pincode,
+      $or: [
+        { platform: { $ne: 'jiomart' } },
+        { platform: 'jiomart', isQuick: { $ne: false } }
+      ]
+    });
     // Sort desc
     distinctTimestamps.sort((a, b) => b - a);
 
@@ -45,7 +59,11 @@ export async function GET(request) {
     const query = {
       category,
       pincode,
-      scrapedAt: { $in: timesToFetch }
+      scrapedAt: { $in: timesToFetch },
+      $or: [
+        { platform: { $ne: 'jiomart' } },
+        { platform: 'jiomart', isQuick: { $ne: false } }
+      ]
     };
 
     // Add platform filter if specified and not 'all'

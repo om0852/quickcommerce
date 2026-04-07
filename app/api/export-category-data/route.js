@@ -205,7 +205,14 @@ async function processExportInBackground(body) {
 
         // Helper to get distinct values if 'all' is selected
         const getDistinctValues = async (field, filters = {}) => {
-            return await ProductSnapshot.distinct(field, filters);
+            const combinedFilters = {
+                ...filters,
+                $or: [
+                    { platform: { $ne: 'jiomart' } },
+                    { platform: 'jiomart', isQuick: { $ne: false } }
+                ]
+            };
+            return await ProductSnapshot.distinct(field, combinedFilters);
         };
 
         let targetCategories = categories;
@@ -274,7 +281,11 @@ async function processExportInBackground(body) {
                     pincode: pin,
                     scrapedAt: targetScrapedAt,
                     category: cat,
-                    productId: { $in: Array.from(allProductIds) }
+                    productId: { $in: Array.from(allProductIds) },
+                    $or: [
+                        { platform: { $ne: 'jiomart' } },
+                        { platform: 'jiomart', isQuick: { $ne: false } }
+                    ]
                 }).lean();
 
                 const snapshotMap = {};
