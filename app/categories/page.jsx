@@ -153,6 +153,16 @@ function CategoriesPageContent() {
   const lastActivePageRef = useRef(1);
   const abortControllerRef = useRef(null);
 
+  const scrapeIntervals = useMemo(() => {
+    if (!availableSnapshots || availableSnapshots.length === 0) return { start: null, end: null };
+    const sorted = [...availableSnapshots].sort((a, b) => new Date(b) - new Date(a));
+    const currentIx = snapshotTime ? sorted.indexOf(snapshotTime) : 0;
+    const current = currentIx !== -1 ? sorted[currentIx] : sorted[0];
+    const prev = currentIx + 1 < sorted.length ? sorted[currentIx + 1] : null;
+    return {
+      end: new Date(current),
+      start: prev ? new Date(prev) : new Date(new Date(current).getTime() - 24 * 60 * 60 * 1000)
+    };
   }, [availableSnapshots, snapshotTime]);
 
   const fetchBrands = async () => {
