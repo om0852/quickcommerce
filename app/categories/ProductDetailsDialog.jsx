@@ -269,7 +269,9 @@ function ProductDetailsDialog({
                                         </div>
                                         {data.productUrl ? (
                                             <a
-                                                href={data.productUrl}
+                                                href={platform === 'flipkartMinutes' && !data.productUrl.includes('marketplace=HYPERLOCAL') 
+                                                    ? `${data.productUrl}${data.productUrl.includes('?') ? '&' : '?'}marketplace=HYPERLOCAL` 
+                                                    : data.productUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 px-2 py-1 rounded-full"

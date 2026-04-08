@@ -44,7 +44,10 @@ const ProductSnapshotSchema = new mongoose.Schema({
   // DMart-specific fields
   skuId: String,
   variant: String,
-  brand: String,
+  brand: {
+    type: String,
+    index: true
+  },
   availability: String,
   savings: Number,
 
@@ -58,6 +61,10 @@ const ProductSnapshotSchema = new mongoose.Schema({
   combo: String,
   deliveryTime: String,
   isAd: {
+    type: Boolean,
+    default: false
+  },
+  isQuick: {
     type: Boolean,
     default: false
   },
@@ -102,7 +109,7 @@ const ProductSnapshotSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  isVarient: {
+  isVariant: {
     type: Boolean,
     default: false
   },

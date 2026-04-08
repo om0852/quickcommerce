@@ -82,6 +82,8 @@ const ProductGroupingSchema = new mongoose.Schema({
 
 // Index for fast lookup of a specific product to find its group
 ProductGroupingSchema.index({ 'products.platform': 1, 'products.productId': 1 });
+ProductGroupingSchema.index({ category: 1, 'products.productId': 1 });
+ProductGroupingSchema.index({ 'products.platform': 1, 'products.productId': 1, category: 1 });
 ProductGroupingSchema.index({ primaryName: 'text' }); // Text index for candidate search
 ProductGroupingSchema.index({ totalProducts: -1 }); // Index for sorting by popularity/count
 

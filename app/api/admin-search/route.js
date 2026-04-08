@@ -29,9 +29,7 @@ export async function GET(request) {
           ]
         },
         {
-          productId: 1, productName: 1, productWeight: 1,
-          currentPrice: 1, originalPrice: 1, discountPercentage: 1,
-          platform: 1, pincode: 1, scrapedAt: 1, isOutOfStock: 1, ranking: 1,
+          platform: 1, pincode: 1, scrapedAt: 1, isOutOfStock: 1, ranking: 1, productUrl: 1,
         }
       ).sort({ scrapedAt: -1 }).lean();
 
@@ -49,6 +47,9 @@ export async function GET(request) {
           productWeight: snap.productWeight, currentPrice: snap.currentPrice,
           originalPrice: snap.originalPrice, discountPercentage: snap.discountPercentage,
           isOutOfStock: snap.isOutOfStock, ranking: snap.ranking, scrapedAt: snap.scrapedAt,
+          productUrl: (snap.productUrl && snap.platform.toLowerCase() === 'flipkartminutes' && !snap.productUrl.includes('marketplace=HYPERLOCAL'))
+            ? `${snap.productUrl}${snap.productUrl.includes('?') ? '&' : '?'}marketplace=HYPERLOCAL`
+            : snap.productUrl,
         });
       }
 
@@ -75,9 +76,7 @@ export async function GET(request) {
         ]
       },
       {
-        productId: 1, productName: 1, productWeight: 1,
-        currentPrice: 1, originalPrice: 1, platform: 1,
-        pincode: 1, scrapedAt: 1, isOutOfStock: 1, ranking: 1, category: 1,
+        pincode: 1, scrapedAt: 1, isOutOfStock: 1, ranking: 1, category: 1, productUrl: 1,
       }
     ).sort({ platform: 1, pincode: 1, scrapedAt: -1 }).lean();
 
@@ -95,6 +94,9 @@ export async function GET(request) {
           productWeight: snap.productWeight, currentPrice: snap.currentPrice,
           originalPrice: snap.originalPrice, isOutOfStock: snap.isOutOfStock,
           ranking: snap.ranking, category: snap.category, scrapedAt: snap.scrapedAt,
+          productUrl: (snap.productUrl && snap.platform.toLowerCase() === 'flipkartminutes' && !snap.productUrl.includes('marketplace=HYPERLOCAL'))
+            ? `${snap.productUrl}${snap.productUrl.includes('?') ? '&' : '?'}marketplace=HYPERLOCAL`
+            : snap.productUrl,
         });
       }
 

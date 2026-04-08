@@ -125,7 +125,8 @@ function CategoriesPageContent() {
   const [activeTab, setActiveTab] = useState('products');
   const [isBulkEditMode, setIsBulkEditMode] = useState(false);
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
-  const [bulkBrands, setBulkBrands] = useState([]);
+  const [availableBrands, setAvailableBrands] = useState([]);
+  const [brandsLoading, setBrandsLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [historyData, setHistoryData] = useState([]);
@@ -152,17 +153,29 @@ function CategoriesPageContent() {
   const lastActivePageRef = useRef(1);
   const abortControllerRef = useRef(null);
 
-  const scrapeIntervals = useMemo(() => {
-    if (!availableSnapshots || availableSnapshots.length === 0) return { start: null, end: null };
-    const sorted = [...availableSnapshots].sort((a, b) => new Date(b) - new Date(a));
-    const currentIx = snapshotTime ? sorted.indexOf(snapshotTime) : 0;
-    const current = currentIx !== -1 ? sorted[currentIx] : sorted[0];
-    const prev = currentIx + 1 < sorted.length ? sorted[currentIx + 1] : null;
-    return {
-      end: new Date(current),
-      start: prev ? new Date(prev) : new Date(new Date(current).getTime() - 24 * 60 * 60 * 1000)
-    };
   }, [availableSnapshots, snapshotTime]);
+
+  const fetchBrands = async () => {
+    if (!isAdmin) return;
+    setBrandsLoading(true);
+    try {
+      const res = await fetch('/api/brands?all=true');
+      const data = await res.json();
+      if (data.success) {
+        setAvailableBrands(data.brands || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch brands', e);
+    } finally {
+      setBrandsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchBrands();
+    }
+  }, [isAdmin]);
 
   // NG (New Group) interval:
   // - If selected snapshot is the LATEST → start=selected date, end=now
@@ -1243,17 +1256,7 @@ function CategoriesPageContent() {
             </div>
             {isAdmin && activeTab === 'products' && (
               <button
-                onClick={async () => {
-                  if (!isBulkEditMode && bulkBrands.length === 0) {
-                    // Fetch brands when entering bulk edit mode
-                    try {
-                      const res = await fetch('/api/brands');
-                      if (res.ok) {
-                        const data = await res.json();
-                        setBulkBrands(Array.isArray(data) ? data : (data.brands || []));
-                      }
-                    } catch (e) { console.error('Failed to fetch brands', e); }
-                  }
+                onClick={() => {
                   setIsBulkEditMode(prev => !prev);
                   setSelectedGroupIds([]);
                 }}
@@ -1314,7 +1317,9 @@ function CategoriesPageContent() {
                 isBulkEditMode={isBulkEditMode}
                 selectedGroupIds={selectedGroupIds}
                 onSelectionChange={setSelectedGroupIds}
-                bulkBrands={bulkBrands}
+                availableBrands={availableBrands}
+                brandsLoading={brandsLoading}
+                refreshBrands={fetchBrands}
                 isLiveMode={(() => {
                   if (!isLiveMode || !snapshotTime) return false;
                   const scrapeDate = new Date(snapshotTime);
@@ -1370,6 +1375,9 @@ function CategoriesPageContent() {
               pincode={pincode}
               snapshotDate={snapshotDate}
               isAdmin={isAdmin}
+              availableBrands={availableBrands}
+              brandsLoading={brandsLoading}
+              refreshBrands={fetchBrands}
             />
           )}
 

@@ -323,7 +323,9 @@ export async function GET(request) {
                     discountPercentage: snap.discountPercentage,
                     ranking: snap.ranking,
                     isOutOfStock: snap.isOutOfStock,
-                    productUrl: snap.productUrl,
+                    productUrl: (snap.productUrl && snap.platform.toLowerCase() === 'flipkartminutes' && !snap.productUrl.includes('marketplace=HYPERLOCAL'))
+                      ? `${snap.productUrl}${snap.productUrl.includes('?') ? '&' : '?'}marketplace=HYPERLOCAL`
+                      : snap.productUrl,
                     quantity: snap.quantity,
                     deliveryTime: snap.deliveryTime,
                     isAd: snap.isAd,
@@ -411,7 +413,9 @@ export async function GET(request) {
                     discountPercentage: snap.discountPercentage,
                     ranking: snap.ranking,
                     isOutOfStock: snap.isOutOfStock,
-                    productUrl: snap.productUrl,
+                    productUrl: (snap.productUrl && snap.platform.toLowerCase() === 'flipkartminutes' && !snap.productUrl.includes('marketplace=HYPERLOCAL'))
+                      ? `${snap.productUrl}${snap.productUrl.includes('?') ? '&' : '?'}marketplace=HYPERLOCAL`
+                      : snap.productUrl,
                     quantity: snap.quantity,
                     deliveryTime: snap.deliveryTime,
                     isAd: snap.isAd,
