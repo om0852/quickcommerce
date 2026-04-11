@@ -268,6 +268,10 @@ async function processExportInBackground(body) {
                 if (!latestSnapshot) continue; // No data for this pincode/cat
                 targetScrapedAt = latestSnapshot.scrapedAt;
 
+                // --- Calculate NG Interval (Same as UI page.jsx) ---
+                // For latest export, start = targetScrapedAt, end = now
+                const ngInterval = { start: new Date(targetScrapedAt), end: new Date() };
+
                 // 2. Fetch Snapshots for this specific time slice
                 // Optimization: Filter by the Product IDs in our groups to ensure we match even if snapshot category differs
                 const allProductIds = new Set();
@@ -365,6 +369,11 @@ async function processExportInBackground(body) {
                                 productWeight: group.primaryWeight || 'N/A',
                                 _productRowRef: platformDataMap
                             };
+
+                            // --- NG Logic ---
+                            const groupCreated = group.createdAt ? new Date(group.createdAt) : null;
+                            const isNG = groupCreated && groupCreated > ngInterval.start && groupCreated <= ngInterval.end;
+                            excelRow.ngStatus = isNG ? 'NG' : '-';
 
                             // Update brand from snapshots if needed
                             Object.values(platformDataMap).forEach(snap => {
@@ -579,6 +588,7 @@ async function processExportInBackground(body) {
             { header: 'Product Name', key: 'productName', width: 30 },
             { header: 'Brand', key: 'brand', width: 20 },
             { header: 'Weight', key: 'productWeight', width: 10 },
+            { header: 'NG', key: 'ngStatus', width: 8 },
             { header: 'Hide Similar Status', key: 'hideSimilarStatus', width: 20 },
         ];
 
@@ -644,6 +654,13 @@ async function processExportInBackground(body) {
             } else if (hideCell.value === 'Present') {
                 hideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } }; // Light Green
                 hideCell.font = { color: { argb: 'FF166534' }, bold: true }; // Dark Green
+            }
+
+            // NG Status column styling
+            const ngCell = excelRow.getCell('ngStatus');
+            if (ngCell.value === 'NG') {
+                ngCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEDD5' } }; // Light Orange (Orange 100)
+                ngCell.font = { color: { argb: 'FF9A3412' }, bold: true }; // Dark Orange (Orange 900)
             }
 
             // Conditional Formatting

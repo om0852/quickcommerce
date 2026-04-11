@@ -74,13 +74,9 @@ function BrandCombobox({ brand, setBrand, availableBrands, onAddNewBrand, isLoad
     const handleSelect = async (selectedBrand) => {
         setIsOpen(false);
 
-        // If the user typed something that's just a case variant of the selected brand,
-        // preserve the user's casing (e.g. typed "Kyari", clicked "KYARI" → keep "Kyari").
-        // This ensures a case-change like KYARI→Kyari is detected as a change on save.
-        const finalValue =
-            search && search.toLowerCase() === selectedBrand.toLowerCase()
-                ? search          // preserve what user typed
-                : selectedBrand;  // use the stored value for a different selection
+        // Always use the selected brand's casing when an explicit dropdown selection is made
+        // If the user wants their typed case, they can just click away without selecting an option
+        const finalValue = selectedBrand;
 
         setSearch(finalValue);
 
