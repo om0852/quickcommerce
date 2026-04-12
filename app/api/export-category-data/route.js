@@ -508,7 +508,8 @@ async function processExportInBackground(body) {
                                     excelRow[`${p}_productId`] = '-';
                                     excelRow[`${p}_aid`] = '-';
                                     excelRow[`${p}_otherSubcategory`] = '-';
-                                    excelRow[`${p}_available`] = 'No';
+                                    excelRow[`${p}_available`] = 'U/S';
+
                                     excelRow[`${p}_price`] = null;
                                     excelRow[`${p}_pricePerUnit`] = '-';
                                     excelRow[`${p}_originalPrice`] = '-';
