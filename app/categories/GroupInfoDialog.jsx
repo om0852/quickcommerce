@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { X, Search, Loader2, Database, MapPin, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 
 const PLATFORMS = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
@@ -111,7 +111,7 @@ function GroupResult({ data }) {
                                     const hasVariants = activePlatforms.some(p => (results[pincode]?.[p]?.length || 0) > 1);
 
                                     return (
-                                        <>
+                                        <Fragment key={pincode}>
                                             <tr
                                                 key={pincode}
                                                 onClick={() => togglePin(pincode)}
@@ -215,7 +215,7 @@ function GroupResult({ data }) {
                                                     </td>
                                                 </tr>
                                             )}
-                                        </>
+                                        </Fragment>
                                     );
                                 })}
                             </tbody>

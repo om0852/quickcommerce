@@ -30,6 +30,8 @@ export async function GET(request) {
         },
         {
           platform: 1, pincode: 1, scrapedAt: 1, isOutOfStock: 1, ranking: 1, productUrl: 1,
+          productId: 1, productName: 1, productWeight: 1, currentPrice: 1, originalPrice: 1,
+          discountPercentage: 1,
         }
       ).sort({ scrapedAt: -1 }).lean();
 
@@ -76,7 +78,8 @@ export async function GET(request) {
         ]
       },
       {
-        pincode: 1, scrapedAt: 1, isOutOfStock: 1, ranking: 1, category: 1, productUrl: 1,
+        platform: 1, pincode: 1, scrapedAt: 1, isOutOfStock: 1, ranking: 1, category: 1, productUrl: 1,
+        productName: 1, productWeight: 1, currentPrice: 1, originalPrice: 1,
       }
     ).sort({ platform: 1, pincode: 1, scrapedAt: -1 }).lean();
 
