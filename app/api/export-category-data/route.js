@@ -585,13 +585,17 @@ async function processExportInBackground(body) {
         const allPlatforms = activePlatforms;
 
 
-        try {
-            const debugPath = path.join(process.cwd(), 'debug_export_data.json');
-            fs.writeFileSync(debugPath, JSON.stringify(allProcessedRows, null, 2));
-            console.log(`✅ Debug data dumped to ${debugPath}`);
-        } catch (err) {
-            console.error('❌ Failed to dump debug data:', err);
+        // Optional Debug Dump: Only in development or if explicitly enabled
+        if (process.env.NODE_ENV === 'development') {
+            try {
+                const debugPath = path.join(os.tmpdir(), 'debug_export_data.json');
+                fs.writeFileSync(debugPath, JSON.stringify(allProcessedRows, null, 2));
+                console.log(`✅ Debug data dumped to ${debugPath}`);
+            } catch (err) {
+                console.error('❌ Failed to dump debug data:', err);
+            }
         }
+
 
         // Generate Excel using Streaming to avoid Out of Memory (OOM) on 100k+ rows
         const tempFilePath = path.join(os.tmpdir(), `export_${Date.now()}_${Math.random().toString(36).substring(7)}.xlsx`);

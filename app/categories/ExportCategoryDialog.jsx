@@ -30,7 +30,8 @@ export default function ExportCategoryDialog({
     const [email, setEmail] = useState('');
 
     // Dropdown States - defaulting to first option or specific values if needed
-    const [selectedPlatform, setSelectedPlatform] = useState('all');
+    const [selectedPlatforms, setSelectedPlatforms] = useState(['all']);
+
     // Default to currentCategory or first available option in an ARRAY.
     const [selectedCategories, setSelectedCategories] = useState(
         currentCategory ? [currentCategory] : (categoryOptions[0]?.value ? [categoryOptions[0].value] : [])
@@ -129,7 +130,8 @@ export default function ExportCategoryDialog({
                 body: JSON.stringify({
                     email: payloadEmail,
                     exportType,
-                    platforms: selectedPlatform === 'all' ? ['all'] : [selectedPlatform],
+                    platforms: selectedPlatforms.length > 0 ? selectedPlatforms : ['all'],
+
                     categories: selectedCategories.length > 0 ? selectedCategories : ['all'],
                     pincodes: selectedPincodes.length > 0 ? selectedPincodes : ['all'],
                     products: ['all']
@@ -251,20 +253,17 @@ export default function ExportCategoryDialog({
                                 </div>
                             </div>
 
-                            {/* Platform */}
                             <div>
                                 <label className="block mb-1.5 text-sm font-medium text-neutral-600">Platform</label>
-                                <select
-                                    value={selectedPlatform}
-                                    onChange={(e) => setSelectedPlatform(e.target.value)}
-                                    className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 cursor-pointer"
-                                >
-                                    {/* <option value="all">All Platforms</option> */}
-                                    {availablePlatforms.map(p => (
-                                        <option key={p.value} value={p.value}>{p.label}</option>
-                                    ))}
-                                </select>
+                                <MultiSelectDropdown
+                                    value={selectedPlatforms}
+                                    onChange={(newValues) => setSelectedPlatforms(newValues)}
+                                    options={availablePlatforms}
+                                    placeholder="Select Platforms"
+                                    position="bottom"
+                                />
                             </div>
+
 
                             {/* Category & Pincode Row */}
                             <div className="grid grid-cols-2 gap-3">
@@ -350,11 +349,11 @@ export default function ExportCategoryDialog({
                             onClick={() => handleAction('email')}
                             disabled={loading}
                             className={cn(
-                                "flex-1 px-4 py-2.5 rounded-md border border-neutral-900 bg-neutral-900 text-white text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-black hover:shadow-md cursor-pointer",
-                                loading && "opacity-70 cursor-not-allowed"
+                                "flex-1 px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-900 text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-gray-50 hover:border-neutral-300 cursor-pointer",
+                                loading && "opacity-50 cursor-not-allowed"
                             )}
                         >
-                            {loading && (email) ? ( // Crude loading check logic? Better to maybe separate loading states or just generic spinner
+                            {loading && (email) ? (
                                 'Sending...'
                             ) : (
                                 <>
@@ -369,13 +368,14 @@ export default function ExportCategoryDialog({
                             onClick={() => handleAction('download')}
                             disabled={loading}
                             className={cn(
-                                "flex-1 px-4 py-2.5 rounded-md border border-neutral-200 bg-white text-neutral-900 text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-gray-50 hover:border-neutral-300 cursor-pointer",
-                                loading && "opacity-50 cursor-not-allowed"
+                                "flex-1 px-4 py-2.5 rounded-md border border-neutral-900 bg-neutral-900 text-white text-sm font-medium flex items-center justify-center gap-2 transition-all hover:bg-black hover:shadow-md cursor-pointer",
+                                loading && "opacity-70 cursor-not-allowed"
                             )}
                         >
                             <Download size={16} /> Download
                         </button>
                     </div>
+
                 </div>
 
                 {/* Floating Notifications */}
