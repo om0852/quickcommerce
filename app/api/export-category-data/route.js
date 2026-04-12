@@ -11,6 +11,8 @@ import path from 'path';
 import os from 'os';
 import { mergeProductsAcrossPlatforms } from '@/lib/productMatching';
 import categoryData from '@/app/utils/categories_with_urls.json';
+import { redis, clients } from '@/lib/redis';
+import uniqid from 'uniqid';
 
 // Build a quick lookup map for URL -> Official Category info
 const urlToCategoryMap = new Map();
@@ -76,6 +78,12 @@ try {
     console.error('❌ Failed to build category lookup map:', err);
 }
 
+const extractComboFromQuantity = (qty) => {
+    if (!qty || typeof qty !== 'string') return 1;
+    // Look for patterns like "2 x 500g", "2x500g", "2 Units x 100g"
+    const match = qty.match(/(\d+)\s*(?:Units?\s*)?x/i);
+    return match ? parseInt(match[1], 10) : 1;
+};
 
 function extractPricePerUnit(price, weightStr) {
     if (!price || !weightStr || weightStr === 'N/A' || weightStr === '-') return '-';
@@ -185,673 +193,480 @@ function extractArticleCategory(productName) {
     return '-';
 }
 
-// Background processing function
-async function processExportInBackground(body) {
-    console.log('🚀 Starting background export process...');
-    try {
-        await dbConnect();
+// Helper to get distinct values
+const getDistinctValues = async (field, filters = {}) => {
+    const combinedFilters = {
+        ...filters,
+        $or: [
+            { platform: { $ne: 'jiomart' } },
+            { platform: 'jiomart', isQuick: { $ne: false } }
+        ]
+    };
+    return await ProductSnapshot.distinct(field, combinedFilters);
+};
 
-        const {
-            startDate,
-            endDate,
-            email,
-            platforms = [],
-            products = [],
-            categories = [],
-            pincodes = []
-        } = body;
+// Core logic to generate rows for a single category
+async function generateRowsForCategory(params) {
+    const { cat, targetPincodes, activePlatforms, exportType, ngIntervalStart } = params;
+    const allProcessedRows = [];
 
-        console.log('Export request details:', { startDate, endDate, email, platforms, categories, pincodes });
+    // Fetch Groups ONCE for this category
+    const groups = await ProductGrouping.find({ category: cat }).lean();
+    if (!groups.length) return [];
 
-        // Define available platforms for consistency
-        const AVAILABLE_PLATFORMS = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
+    const ngInterval = { start: new Date(ngIntervalStart), end: new Date() };
 
-        // Determine active platforms based on selection
-        let activePlatforms = platforms;
-        if (!platforms.length || platforms.includes('all')) {
-            activePlatforms = AVAILABLE_PLATFORMS;
-        } else {
-            // Ensure we strictly only use valid platforms from our list and normalize to lowercase
-            activePlatforms = platforms
-                .map(p => p.toLowerCase().trim())
-                .filter(p => AVAILABLE_PLATFORMS.includes(p));
-            
-            // If filtering resulted in no valid platforms (shouldn't happen with GUI), fallback to all
-            if (activePlatforms.length === 0) activePlatforms = AVAILABLE_PLATFORMS;
-        }
+    for (const pin of targetPincodes) {
+        // Find latest snapshot for this pincode/category
+        const latestSnapshot = await ProductSnapshot.findOne({
+            pincode: pin,
+            $or: [{ category: cat }]
+        }).sort({ scrapedAt: -1 }).select('scrapedAt');
 
+        if (!latestSnapshot) continue;
+        const targetScrapedAt = latestSnapshot.scrapedAt;
 
-        // Helper to get distinct values if 'all' is selected
-        const getDistinctValues = async (field, filters = {}) => {
-            const combinedFilters = {
-                ...filters,
-                $or: [
-                    { platform: { $ne: 'jiomart' } },
-                    { platform: 'jiomart', isQuick: { $ne: false } }
-                ]
-            };
-            return await ProductSnapshot.distinct(field, combinedFilters);
-        };
-
-        let targetCategories = categories;
-        if (!categories.length || categories.includes('all')) {
-            targetCategories = await getDistinctValues('category');
-        }
-
-        let targetPincodes = pincodes;
-        if (!pincodes.length) { // Assuming empty means all valid pincodes need to be fetched, or handled by loop
-            targetPincodes = await getDistinctValues('pincode');
-        }
-
-
-
-        const allProcessedRows = [];
-        const uniquePlatforms = new Set();
-
-        // Loop by Category -> Pincode -> Groups (Strict Hierarchy like UI)
-        for (const cat of targetCategories) {
-
-            // Fetch Groups ONCE for this category (Shared across pincodes usually)
-            // But UI fetches inside the loop? No, usually groups are category specific.
-            const groups = await ProductGrouping.find({ category: cat }).lean();
-            // Sort groups if they have a specific order? UI doesn't seem to sort explicitly, implies DB order / Insertion order.
-            // We'll trust the array order from DB matches UI default.
-
-            for (const pin of targetPincodes) {
-
-                // 1. Determine Timestamp (LIVE MODE logic mainly, as per UI)
-                // We default to 'live' (latest) unless specific time is requested, but Export usually implies 'latest' or 'unique' history.
-                // The User wants "Same sequence which is shown on category page". Category Page shows LATEST.
-
-                let targetScrapedAt = null;
-
-                if (body.exportType === 'unique') {
-                    // Unique logic is tricky with Groups because Groups are "Live". 
-                    // If we want historical unique items, we can't easily use Groups which are static definitions of NOW.
-                    // However, user complaint is about "Ginger" which is likely a current product.
-                    // Let's assume for now ExportType 'latest' is the primary usage for this match.
-                    // If 'unique' is requested, we might have to fallback to the old logic OR iterate history.
-                    // BUT: The user asked for "Same sequence as UI". UI is LIVE. 
-                    // So we focus on fixing the Live/Latest export first.
-                }
-
-                // Find latest snapshot for this pincode/category to establish "Now"
-                const latestSnapshot = await ProductSnapshot.findOne({
-                    pincode: pin,
-                    $or: [
-                        { category: cat },
-                    ]
-                }).sort({ scrapedAt: -1 }).select('scrapedAt');
-
-                if (!latestSnapshot) continue; // No data for this pincode/cat
-                targetScrapedAt = latestSnapshot.scrapedAt;
-
-                // --- Calculate NG Interval (Same as UI page.jsx) ---
-                // For latest export, start = targetScrapedAt, end = now
-                const ngInterval = { start: new Date(targetScrapedAt), end: new Date() };
-
-                // 2. Fetch Snapshots for this specific time slice
-                // Optimization: Filter by the Product IDs in our groups to ensure we match even if snapshot category differs
-                const allProductIds = new Set();
-                groups.forEach(g => {
-                    g.products.forEach(p => {
-                        if (p.productId) allProductIds.add(p.productId);
-                    });
-                });
-
-                const snapshots = await ProductSnapshot.find({
-                    pincode: pin,
-                    scrapedAt: targetScrapedAt,
-                    category: cat,
-                    productId: { $in: Array.from(allProductIds) },
-                    platform: { $in: activePlatforms }, // 🚀 Fix: Only fetch snapshots for selected platforms
-                    $or: [
-                        { platform: { $ne: 'jiomart' } },
-                        { platform: 'jiomart', isQuick: { $ne: false } }
-                    ]
-                }).lean();
-
-
-                const snapshotMap = {};
-                snapshots.forEach(snap => {
-                    // IMPORTANT: key must be lowercased to match group.products[].platform lookup
-                    const key = `${snap.platform.toLowerCase()}:${snap.productId}`;
-                    // Keep best-ranked snapshot if multiple exist for same platform:productId
-                    if (!snapshotMap[key] || (snap.ranking && snap.ranking < (snapshotMap[key].ranking || Infinity))) {
-                        snapshotMap[key] = snap;
-                    }
-                });
-
-                // 3. Iterate GROUPS to build rows (Strict Sequence)
-                for (const group of groups) {
-                    const platformMatches = {};
-                    activePlatforms.forEach(p => { platformMatches[p] = []; });
-                    
-                    let maxVariants = 0;
-                    let hasData = false;
-
-
-                    // Group snapshots by platform
-                    group.products.forEach(p => {
-                        const platformKey = p.platform.toLowerCase();
-                        const snap = snapshotMap[`${platformKey}:${p.productId}`];
-                        if (snap) {
-                            const matchKey = Object.keys(platformMatches).find(k => k.toLowerCase() === platformKey);
-                            if (matchKey) {
-                                platformMatches[matchKey].push(snap);
-                                hasData = true;
-                                if (platformMatches[matchKey].length > maxVariants) {
-                                    maxVariants = platformMatches[matchKey].length;
-                                }
-                            }
-                        }
-                    });
-
-                    // --- Danger (Skull) Logic: Global group definition ---
-                    const globalPlatformConflicts = {};
-                    const groupDefinedProducts = {};
-
-                    group.products.forEach(p => {
-                        const plat = p.platform.toLowerCase();
-                        if (!groupDefinedProducts[plat]) groupDefinedProducts[plat] = new Set();
-                        const pid = p.productId || '';
-                        const baseId = pid.includes('__') ? pid.split('__')[0] : pid;
-                        groupDefinedProducts[plat].add(baseId);
-                    });
-
-                    Object.keys(groupDefinedProducts).forEach(platform => {
-                        if (groupDefinedProducts[platform].size > 1) {
-                            globalPlatformConflicts[platform] = true;
-                        }
-                    });
-
-                    const hasGroupConflict = Object.values(globalPlatformConflicts).some(c => c === true);
-
-                    if (hasData) {
-                        // Sort variants to match UI deteministic sequence
-                        Object.keys(platformMatches).forEach(platform => {
-                            platformMatches[platform].sort((a, b) => {
-                                const rA = a.ranking && !isNaN(a.ranking) ? a.ranking : Infinity;
-                                const rB = b.ranking && !isNaN(b.ranking) ? b.ranking : Infinity;
-                                if (rA !== rB) return rA - rB;
-                                return Number(a.currentPrice || 0) - Number(b.currentPrice || 0);
-                            });
-                        });
-
-                        const pushRowToExport = (platformDataMap, groupIdStr, isDuplicate) => {
-                            const dateObj = new Date(targetScrapedAt);
-                            const excelRow = {
-                                date: dateObj.toLocaleDateString(),
-                                pincode: pin,
-                                category: cat,
-                                productName: group.primaryName,
-                                brand: group.brand || '-',
-                                groupId: groupIdStr,
-                                productWeight: group.primaryWeight || 'N/A',
-                                _productRowRef: platformDataMap
-                            };
-
-                            // --- NG Logic ---
-                            const groupCreated = group.createdAt ? new Date(group.createdAt) : null;
-                            const isNG = groupCreated && groupCreated > ngInterval.start && groupCreated <= ngInterval.end;
-                            excelRow.ngStatus = isNG ? 'NG' : '-';
-
-                            // Update brand from snapshots if needed
-                            Object.values(platformDataMap).forEach(snap => {
-                                if (snap && excelRow.brand === '-' && snap.brand) {
-                                    excelRow.brand = snap.brand;
-                                }
-                            });
-
-                            activePlatforms.forEach(p => {
-
-                                const pData = platformDataMap[p];
-                                if (pData) {
-                                    uniquePlatforms.add(p);
-
-                                    excelRow[`${p}_name`] = pData.productName || pData.name || '-';
-                                    excelRow[`${p}_productId`] = pData.productId ? String(pData.productId).split('__')[0] : '-';
-                                    excelRow[`${p}_aid`] = pData.productId || '-';
-                                    excelRow[`${p}_otherSubcategory`] = pData.subCategory || '-';
-                                    if (p === 'jiomart') {
-                                        excelRow[`${p}_articleCategory`] = extractArticleCategory(pData.productName || pData.name);
-                                    }
-                                    excelRow[`${p}_available`] = 'Yes';
-                                    excelRow[`${p}_price`] = pData.currentPrice;
-                                    excelRow[`${p}_originalPrice`] = pData.originalPrice || '-';
-                                    excelRow[`${p}_discount`] = pData.discountPercentage ? `${Math.round(pData.discountPercentage)}%` : '-';
-                                    excelRow[`${p}_stock`] = pData.isOutOfStock ? 'Out of Stock' : 'In Stock';
-                                    excelRow[`${p}_link`] = pData.productUrl || pData.url || pData.link || pData.productLink || '';
-                                    excelRow[`${p}_isAd`] = pData.isAd ? 'Yes' : 'No';
-                                    excelRow[`${p}_rating`] = pData.rating || '-';
-                                    excelRow[`${p}_rank`] = pData.ranking || '-';
-                                    excelRow[`${p}_combo`] = pData.combo || '-';
-
-                                    const displayQuantity = (pData.quantity && pData.quantity !== '')
-                                        ? pData.quantity
-                                        : (pData.productWeight && pData.productWeight !== '' && pData.productWeight !== 'N/A')
-                                            ? pData.productWeight
-                                            : '-';
-
-                                    excelRow[`${p}_quantity`] = displayQuantity;
-                                    excelRow[`${p}_pricePerUnit`] = extractPricePerUnit(pData.currentPrice, displayQuantity);
-
-                                    excelRow[`${p}_deliveryTime`] = pData.deliveryTime
-                                        ? (pData.deliveryTime.match(/^\d+\s*mins?/i)?.[0] || pData.deliveryTime)
-                                        : '-';
-                                    excelRow[`${p}_isNew`] = pData.new === true ? 'New' : 'Old';
-
-                                    excelRow[`${p}_priceChange`] = pData.priceChange || 0;
-                                    excelRow[`${p}_discountChange`] = pData.discountChange || 0;
-                                    excelRow[`${p}_rankingChange`] = pData.rankingChange || 0;
-
-                                    const officialCategory = pData.officialCategory;
-                                    const officialSubCategory = pData.officialSubCategory;
-
-                                    if (officialCategory && officialCategory !== '-') {
-                                        excelRow[`${p}_officialCategory`] = officialCategory;
-                                        excelRow[`${p}_officialSubCategory`] = officialSubCategory || '-';
-                                    } else {
-                                        const pUrl = pData.productUrl || pData.url || pData.link || pData.productLink || '';
-                                        let lookupKey = `${p}|${(pData.categoryUrl || pUrl || '').trim().toLowerCase()}`;
-                                        const fallback = urlToCategoryMap.get(lookupKey);
-                                        if (fallback) {
-                                            excelRow[`${p}_officialCategory`] = fallback.officialCategory || '-';
-                                            excelRow[`${p}_officialSubCategory`] = fallback.officialSubCategory || '-';
-                                        } else {
-                                            const masterKey = `${p}|${cat}`;
-                                            const masterFallback = masterCategoryMap.get(masterKey);
-                                            if (masterFallback) {
-                                                excelRow[`${p}_officialCategory`] = masterFallback.officialCategory || '-';
-                                                excelRow[`${p}_officialSubCategory`] = masterFallback.officialSubCategory || '-';
-                                            } else {
-                                                excelRow[`${p}_officialCategory`] = '-';
-                                                excelRow[`${p}_officialSubCategory`] = '-';
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    excelRow[`${p}_name`] = '-';
-                                    excelRow[`${p}_productId`] = '-';
-                                    excelRow[`${p}_aid`] = '-';
-                                    excelRow[`${p}_otherSubcategory`] = '-';
-                                    excelRow[`${p}_available`] = 'No';
-                                    excelRow[`${p}_price`] = null;
-                                    excelRow[`${p}_pricePerUnit`] = '-';
-                                    excelRow[`${p}_originalPrice`] = '-';
-                                    excelRow[`${p}_discount`] = '-';
-                                    excelRow[`${p}_stock`] = '-';
-                                    excelRow[`${p}_link`] = '';
-                                    excelRow[`${p}_isAd`] = '-';
-                                    excelRow[`${p}_rating`] = '-';
-                                    excelRow[`${p}_rank`] = null;
-                                    excelRow[`${p}_combo`] = '-';
-                                    excelRow[`${p}_quantity`] = '-';
-                                    excelRow[`${p}_deliveryTime`] = '-';
-                                    excelRow[`${p}_priceChange`] = '-';
-                                    excelRow[`${p}_discountChange`] = '-';
-                                    excelRow[`${p}_rankingChange`] = '-';
-                                    excelRow[`${p}_officialCategory`] = '-';
-                                    excelRow[`${p}_officialSubCategory`] = '-';
-                                    excelRow[`${p}_isNew`] = '-';
-                                }
-                            });
-
-                            allProcessedRows.push(excelRow);
-                        };
-
-                        let dupCounter = 1;
-                        for (let i = 0; i < maxVariants; i++) {
-                            if (i === 0) {
-                                const masterDataMap = {};
-                                activePlatforms.forEach(p => { masterDataMap[p] = null; });
-
-                                Object.keys(platformMatches).forEach(platform => {
-
-                                    if (platformMatches[platform][0]) {
-                                        masterDataMap[platform] = platformMatches[platform][0];
-                                    }
-                                });
-                                pushRowToExport(masterDataMap, group.groupingId || (group._id ? group._id.toString() : '-'));
-                            } else {
-                                Object.keys(platformMatches).forEach(platform => {
-                                    const snap = platformMatches[platform][i];
-                                    if (snap) {
-                                        const dupDataMap = {};
-                                        activePlatforms.forEach(p => { dupDataMap[p] = null; });
-
-                                        dupDataMap[platform] = snap;
-
-                                        const dupGroupId = `${group.groupingId || (group._id ? group._id.toString() : '-')}_dup_${dupCounter++}`;
-                                        pushRowToExport(dupDataMap, dupGroupId);
-                                    }
-                                });
-                            }
-                        }
-                    }
-                } // End Group Loop
-
-                // --- Compute Hide Similar Status for this pincode+category block ---
-                const blockRows = allProcessedRows.filter(r => r.pincode === pin && r.category === cat);
-
-                // User requested: "Present" for Master Group row, "Hide" for Duplicate groups
-                blockRows.forEach(row => {
-                    row.hideSimilarStatus = String(row.groupId).includes('_dup_') ? 'Hide' : 'Present';
-                });
-
-            } // End Pincode Loop
-        } // End Category Loop
-
-        // Remove temporary _productRowRef before writing to Excel
-        allProcessedRows.forEach(row => { delete row._productRowRef; });
-
-        if (allProcessedRows.length === 0) {
-            console.warn('⚠️ Background Export: No data found for the selected filters');
-            return;
-        }
-
-        // Sorting Logic: 
-        // With Group-based iteration, the order is ALREADY defined by the user intent (Category > Pincode > Group Order).
-        // The user specifically asked for "Same sequence". 
-        // So we SHOULD NOT re-sort by name or availability, because that destroys the group order.
-        // However, we might need to handle the case where multiple pincodes are selected.
-        // Our loop order is Category -> Pincode -> Group.
-        // This effectively groups by Pincode blocks, then Group order within that.
-        // This matches the UI (which iterates pincodes and shows blocks).
-
-        // NO EXTRA SORTING NEEDED to match UI Sequence.
-
-
-        // Sorting Logic: Sort by Group Name (A-Z)
-        allProcessedRows.sort((a, b) => {
-            // 1. Primary Sort: Pincode (Ascending) - Group by Location
-            if (a.pincode !== b.pincode) {
-                return (a.pincode || '').toString().localeCompare((b.pincode || '').toString());
-            }
-
-            // 2. Secondary Sort: Category (Ascending) - Group by Category within Pincode
-            if (a.category !== b.category) {
-                return (a.category || '').localeCompare(b.category || '');
-            }
-
-            // 3. Tertiary Sort: Product Name / Group Name (Ascending A-Z)
-            return (a.productName || '').localeCompare(b.productName || '');
+        // Fetch Snapshots for this specific time slice
+        const allProductIds = new Set();
+        groups.forEach(g => {
+            g.products.forEach(p => { if (p.productId) allProductIds.add(p.productId); });
         });
 
-        // Use collected unique platforms for columns BUT enforce specific order
-        // User Request: "even they are no have nay product still show there columns"
-        // So we strictly use ONE fixed list of all platforms, regardless of what data was found.
-        // Use active platforms for columns to respect the user selection
-        const allPlatforms = activePlatforms;
-
-
-        // Optional Debug Dump: Only in development or if explicitly enabled
-        if (process.env.NODE_ENV === 'development') {
-            try {
-                const debugPath = path.join(os.tmpdir(), 'debug_export_data.json');
-                fs.writeFileSync(debugPath, JSON.stringify(allProcessedRows, null, 2));
-                console.log(`✅ Debug data dumped to ${debugPath}`);
-            } catch (err) {
-                console.error('❌ Failed to dump debug data:', err);
-            }
-        }
-
-
-        // Generate Excel using Streaming to avoid Out of Memory (OOM) on 100k+ rows
-        const tempFilePath = path.join(os.tmpdir(), `export_${Date.now()}_${Math.random().toString(36).substring(7)}.xlsx`);
-        console.log(`🚀 Streaming Excel to temporary file: ${tempFilePath}`);
-
-        const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-            filename: tempFilePath,
-            useStyles: true,
-            useSharedStrings: true
-        });
-
-        const worksheet = workbook.addWorksheet('Comparison Data', {
-            views: [
-                { state: 'frozen', xSplit: 0, ySplit: 1 }
+        const snapshots = await ProductSnapshot.find({
+            pincode: pin,
+            scrapedAt: targetScrapedAt,
+            category: cat,
+            productId: { $in: Array.from(allProductIds) },
+            platform: { $in: activePlatforms },
+            $or: [
+                { platform: { $ne: 'jiomart' } },
+                { platform: 'jiomart', isQuick: { $ne: false } }
             ]
+        }).lean();
+
+        const snapshotMap = {};
+        snapshots.forEach(snap => {
+            const key = `${snap.platform.toLowerCase()}:${snap.productId}`;
+            if (!snapshotMap[key] || (snap.ranking && snap.ranking < (snapshotMap[key].ranking || Infinity))) {
+                snapshotMap[key] = snap;
+            }
         });
 
-        // Define Base Columns
-        const columns = [
-            { header: 'Date', key: 'date', width: 15 },
-            { header: 'Pincode', key: 'pincode', width: 10 },
-            { header: 'Group ID', key: 'groupId', width: 25 },
-            { header: 'Category', key: 'category', width: 15 },
-            { header: 'Product Name', key: 'productName', width: 30 },
-            { header: 'Brand', key: 'brand', width: 20 },
-            { header: 'Weight', key: 'productWeight', width: 10 },
-            { header: 'NG', key: 'ngStatus', width: 8 },
-            { header: 'Hide Similar Status', key: 'hideSimilarStatus', width: 20 },
-        ];
+        for (const group of groups) {
+            const platformMatches = {};
+            activePlatforms.forEach(p => { platformMatches[p] = []; });
+            let maxVariants = 0;
+            let hasData = false;
 
-        // Add Dynamic Columns for each Platform
-        allPlatforms.forEach(platform => {
-            const pName = platform.charAt(0).toUpperCase() + platform.slice(1);
-            const pCols = [
-                { header: `${pName} Name`, key: `${platform}_name`, width: 30 },
-                { header: `${pName} Product ID`, key: `${platform}_productId`, width: 20 },
-                { header: `${pName} AID`, key: `${platform}_aid`, width: 20 },
-                { header: `${pName} Avail`, key: `${platform}_available`, width: 10 },
-                { header: `${pName} Price`, key: `${platform}_price`, width: 12, style: { numFmt: '₹#,##0.00' } },
-                { header: `${pName} Price/Unit`, key: `${platform}_pricePerUnit`, width: 15 },
-                { header: `${pName} Org Price`, key: `${platform}_originalPrice`, width: 12, style: { numFmt: '₹#,##0.00' } },
-                { header: `${pName} Disc %`, key: `${platform}_discount`, width: 10 },
-                { header: `${pName} Stock`, key: `${platform}_stock`, width: 12 },
-                { header: `${pName} Rank`, key: `${platform}_rank`, width: 8 },
-                { header: `${pName} Ad`, key: `${platform}_isAd`, width: 8 },
-                { header: `${pName} Rating`, key: `${platform}_rating`, width: 8 },
-                { header: `${pName} Delivery`, key: `${platform}_deliveryTime`, width: 15 },
-                { header: `${pName} Quantity`, key: `${platform}_quantity`, width: 12 },
-                { header: `${pName} Combo`, key: `${platform}_combo`, width: 12 }
-            ];
-
-            pCols.push({ header: `${pName} Is New`, key: `${platform}_isNew`, width: 10 });
-
-
-            pCols.push(
-                { header: `${pName} Link`, key: `${platform}_link`, width: 15 },
-                { header: `${pName} Official Cat`, key: `${platform}_officialCategory`, width: 20 },
-                { header: `${pName} Official Sub-cat`, key: `${platform}_officialSubCategory`, width: 20 },
-                { header: `${pName} Other Subcategory`, key: `${platform}_otherSubcategory`, width: 20 }
-            );
-
-            if (platform === 'jiomart') {
-                pCols.push({ header: `${pName} Article Category`, key: `${platform}_articleCategory`, width: 25 });
-            }
-
-            columns.push(...pCols);
-        });
-
-        worksheet.columns = columns;
-
-        // Header Styling
-        const headerRow = worksheet.getRow(1);
-        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        headerRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF4F46E5' }
-        };
-
-        // Populate Rows
-        allProcessedRows.forEach(row => {
-            const excelRow = worksheet.addRow(row);
-
-            // Hide Similar Status column styling
-            const hideCell = excelRow.getCell('hideSimilarStatus');
-            if (hideCell.value === 'Hide') {
-                hideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } }; // Light Red
-                hideCell.font = { color: { argb: 'FF991B1B' }, bold: true }; // Dark Red
-            } else if (hideCell.value === 'Present') {
-                hideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } }; // Light Green
-                hideCell.font = { color: { argb: 'FF166534' }, bold: true }; // Dark Green
-            }
-
-            // NG Status column styling
-            const ngCell = excelRow.getCell('ngStatus');
-            if (ngCell.value === 'NG') {
-                ngCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEDD5' } }; // Light Orange (Orange 100)
-                ngCell.font = { color: { argb: 'FF9A3412' }, bold: true }; // Dark Orange (Orange 900)
-            }
-
-            // Conditional Formatting
-            allPlatforms.forEach(platform => {
-                const availCell = excelRow.getCell(`${platform}_available`);
-                if (availCell.value === 'Yes') {
-                    availCell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFDCFCE7' } // Light Green
-                    };
-                    availCell.font = { color: { argb: 'FF166534' } }; // Dark Green Text
-                } else {
-                    availCell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFFEE2E2' } // Light Red
-                    };
-                    availCell.font = { color: { argb: 'FF991B1B' } }; // Dark Red Text
-                }
-
-                const stockCell = excelRow.getCell(`${platform}_stock`);
-                if (stockCell.value === 'In Stock') {
-                    stockCell.font = { color: { argb: 'FF166534' } };
-                } else if (stockCell.value === 'Out of Stock') {
-                    stockCell.font = { color: { argb: 'FFDC2626' } };
-                }
-
-                // Is New column styling
-                const isNewCell = excelRow.getCell(`${platform}_isNew`);
-                if (isNewCell && isNewCell.value === 'New') {
-                    isNewCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }; // Light Blue
-                    isNewCell.font = { color: { argb: 'FF1E40AF' }, bold: true }; // Dark Blue
-                }
-
-
-                // Format link cells as hyperlinks
-                const linkCell = excelRow.getCell(`${platform}_link`);
-                if (linkCell.value && linkCell.value !== '') {
-                    linkCell.value = {
-                        text: 'View',
-                        hyperlink: linkCell.value
-                    };
-                    linkCell.font = {
-                        color: { argb: 'FF0000FF' }, // Blue
-                        underline: true
-                    };
+            group.products.forEach(p => {
+                const platformKey = p.platform.toLowerCase();
+                const snap = snapshotMap[`${platformKey}:${p.productId}`];
+                if (snap) {
+                    const matchKey = Object.keys(platformMatches).find(k => k.toLowerCase() === platformKey);
+                    if (matchKey) {
+                        platformMatches[matchKey].push(snap);
+                        hasData = true;
+                        if (platformMatches[matchKey].length > maxVariants) maxVariants = platformMatches[matchKey].length;
+                    }
                 }
             });
 
-            // Commit row to free memory immediately
-            excelRow.commit();
-        });
+            if (hasData) {
+                // Sort variants
+                Object.keys(platformMatches).forEach(platform => {
+                    platformMatches[platform].sort((a, b) => {
+                        const rA = a.ranking && !isNaN(a.ranking) ? a.ranking : Infinity;
+                        const rB = b.ranking && !isNaN(b.ranking) ? b.ranking : Infinity;
+                        if (rA !== rB) return rA - rB;
+                        return Number(a.currentPrice || 0) - Number(b.currentPrice || 0);
+                    });
+                });
 
-        // Using the latest date found across all rows for the filename/email subject
-        const latestDate = new Date(); // Current export time
+                const pushRowToExport = (platformDataMap, groupIdStr) => {
+                    const dateObj = new Date(targetScrapedAt);
+                    const excelRow = {
+                        date: dateObj.toLocaleDateString(),
+                        pincode: pin,
+                        category: cat,
+                        productName: group.primaryName,
+                        brand: group.brand || '-',
+                        groupId: groupIdStr,
+                        productWeight: group.primaryWeight || 'N/A'
+                    };
 
-        // Commit worksheet and workbook to finish writing the file
-        worksheet.commit();
-        await workbook.commit();
+                    const groupCreated = group.createdAt ? new Date(group.createdAt) : null;
+                    const isNG = groupCreated && groupCreated >= ngInterval.start;
+                    excelRow.ngStatus = isNG ? 'NG' : '-';
 
-        console.log(`✅ Excel writing completed. Reading back into buffer for response/email...`);
+                    activePlatforms.forEach(p => {
+                        const pData = platformDataMap[p];
+                        if (pData) {
+                            excelRow[`${p}_name`] = pData.productName || pData.name || '-';
+                            excelRow[`${p}_productId`] = pData.productId ? String(pData.productId).split('__')[0] : '-';
+                            excelRow[`${p}_aid`] = pData.productId || '-';
+                            excelRow[`${p}_otherSubcategory`] = pData.subCategory || '-';
+                            if (p === 'jiomart') excelRow[`${p}_articleCategory`] = extractArticleCategory(pData.productName || pData.name);
+                            excelRow[`${p}_available`] = 'Yes';
+                            excelRow[`${p}_price`] = pData.currentPrice;
+                            excelRow[`${p}_originalPrice`] = pData.originalPrice || '-';
+                            excelRow[`${p}_discount`] = pData.discountPercentage ? `${Math.round(pData.discountPercentage)}%` : '-';
+                            excelRow[`${p}_stock`] = pData.isOutOfStock ? 'Out of Stock' : 'In Stock';
+                            const pUrl = pData.productUrl || pData.url || pData.link || pData.productLink;
+                            excelRow[`${p}_link`] = pUrl ? { text: 'Link', hyperlink: pUrl } : '-';
+                            excelRow[`${p}_isAd`] = pData.isAd ? 'Yes' : 'No';
+                            excelRow[`${p}_rating`] = pData.rating || '-';
+                            excelRow[`${p}_rank`] = pData.ranking || '-';
+                            
+                            const displayQty = (pData.quantity && pData.quantity !== '') ? pData.quantity : (pData.productWeight || '-');
+                            excelRow[`${p}_quantity`] = displayQty;
+                            
+                            const apiComboValue = (pData.combo === null || pData.combo === undefined || pData.combo === 'N/A') ? 1 : pData.combo;
+                            
+                            if (p === 'zepto') {
+                                excelRow[`zepto_combo_api`] = apiComboValue;
+                                excelRow[`zepto_combo`] = extractComboFromQuantity(String(displayQty));
+                            } else {
+                                excelRow[`${p}_combo`] = apiComboValue;
+                            }
+                            
+                            excelRow[`${p}_pricePerUnit`] = extractPricePerUnit(pData.currentPrice, displayQty);
+                            excelRow[`${p}_deliveryTime`] = pData.deliveryTime || '-';
+                            excelRow[`${p}_isNew`] = pData.new === true ? 'New' : 'Old';
 
-        // Read the temp Excel file into a buffer
-        const buffer = await fs.promises.readFile(tempFilePath);
+                            const officialCat = pData.officialCategory;
+                            if (officialCat && officialCat !== '-') {
+                                excelRow[`${p}_officialCategory`] = officialCat;
+                                excelRow[`${p}_officialSubCategory`] = pData.officialSubCategory || '-';
+                            } else {
+                                let lookupKey = `${p}|${(pData.categoryUrl || pData.productUrl || '').trim().toLowerCase()}`;
+                                const fallback = urlToCategoryMap.get(lookupKey);
+                                if (fallback) {
+                                    excelRow[`${p}_officialCategory`] = fallback.officialCategory || '-';
+                                    excelRow[`${p}_officialSubCategory`] = fallback.officialSubCategory || '-';
+                                } else {
+                                    const masterKey = `${p}|${cat}`;
+                                    const masterFallback = masterCategoryMap.get(masterKey);
+                                    excelRow[`${p}_officialCategory`] = masterFallback?.officialCategory || '-';
+                                    excelRow[`${p}_officialSubCategory`] = masterFallback?.officialSubCategory || '-';
+                                }
+                            }
+                        } else {
+                            excelRow[`${p}_name`] = '-';
+                            excelRow[`${p}_available`] = 'No';
+                            excelRow[`${p}_price`] = null;
+                            excelRow[`${p}_stock`] = '-';
+                            excelRow[`${p}_officialCategory`] = '-';
+                            excelRow[`${p}_officialSubCategory`] = '-';
+                        }
+                    });
+                    allProcessedRows.push(excelRow);
+                };
 
-        // Clean up temp file
-        try {
-            await fs.promises.unlink(tempFilePath);
-            console.log(`✅ Cleaned up temporary file: ${tempFilePath}`);
-        } catch (cleanupErr) {
-            console.error(`⚠️ Failed to clean up temporary file: ${tempFilePath}`, cleanupErr);
-        }
-
-        // Send Email
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        if (email && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
-            console.warn('⚠️ EMAIL_USER or EMAIL_PASS not set. Cannot send email.');
-            // Even if email fails/is skipped, we return buffer
-            return buffer;
-        }
-
-        // Skip email if not provided
-        if (!email) {
-            return buffer;
-        }
-
-        const dateRangeStr = latestDate.toLocaleString('en-IN', {
-            dateStyle: 'medium',
-            timeStyle: 'short'
-        });
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: `Latest Scrape Data - ${dateRangeStr}`,
-            text: `Please find attached the requested category export.\n\nFilters:\nData Timestamp: ${dateRangeStr}\nPlatforms: ${platforms.length ? platforms.join(', ') : 'All'}\nCategories: ${categories.length ? categories.join(', ') : 'All'}\nPincodes: ${pincodes.length ? pincodes.join(', ') : 'All'}`,
-            attachments: [
-                {
-                    filename: `product_status_${Date.now()}.xlsx`,
-                    content: buffer
+                for (let i = 0; i < maxVariants; i++) {
+                    const dataMap = {};
+                    activePlatforms.forEach(p => {
+                        dataMap[p] = platformMatches[p][i] || (i === 0 ? null : null);
+                    });
+                    // For variants beyond the first, we only want rows where THAT platform has data
+                    if (i === 0) {
+                        pushRowToExport(dataMap, group.groupingId || group._id.toString());
+                    } else {
+                        Object.keys(platformMatches).forEach(p => {
+                            if (platformMatches[p][i]) {
+                                const singleMap = {};
+                                activePlatforms.forEach(plat => { singleMap[plat] = plat === p ? platformMatches[p][i] : null; });
+                                pushRowToExport(singleMap, `${group.groupingId || group._id.toString()}_dup_${i}`);
+                            }
+                        });
+                    }
                 }
-            ]
-        };
-
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ Email sent successfully to ${email}`);
-
-        return buffer;
-
-    } catch (error) {
-        console.error('❌ Background Export Status: FAILED', error);
-        throw error;
+            }
+        }
     }
+    // Set Hide/Present status
+    allProcessedRows.forEach(row => {
+        row.hideSimilarStatus = String(row.groupId).includes('_dup_') ? 'Hide' : 'Present';
+    });
+    return allProcessedRows;
 }
 
 export async function POST(req) {
     try {
         await dbConnect();
-
         const body = await req.json();
-        const { email } = body;
+        const { stage, jobId, category, email, platforms = [], categories = [], pincodes = [], exportType } = body;
 
-        // Validation
-        // Email is optional now (for direct download only)
-        // if (!email) {
-        //    return NextResponse.json({ error: 'Email is required' }, { status: 400 });
-        // }
+        const AVAILABLE_PLATFORMS = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
 
-        console.log('🚀 Starting export process...');
+        // --- STAGE: INIT ---
+        if (stage === 'init') {
+            const newJobId = uniqid('exp_');
+            const activePlatforms = ((!platforms.length || platforms.includes('all')) 
+                ? AVAILABLE_PLATFORMS 
+                : platforms.map(p => p.toLowerCase().trim()).filter(p => AVAILABLE_PLATFORMS.includes(p)))
+                .sort((a, b) => AVAILABLE_PLATFORMS.indexOf(a) - AVAILABLE_PLATFORMS.indexOf(b));
 
-        // Execute the export synchronously to ensure it completes
-        const buffer = await processExportInBackground(body);
+            let targetCategories = categories;
+            if (!categories.length || categories.includes('all')) {
+                targetCategories = await getDistinctValues('category');
+            }
 
-        if (!buffer) {
-            return NextResponse.json({ error: 'No data found to export' }, { status: 404 });
+            let targetPincodes = pincodes;
+            if (!pincodes.length) targetPincodes = await getDistinctValues('pincode');
+
+            // Find a common ScrapedAt to establish NG interval
+            // NG Logic: Use the second most recent scrape as the start, or current scrape minus small buffer
+            const recentScrapes = await ProductSnapshot.distinct('scrapedAt');
+            recentScrapes.sort((a, b) => new Date(b) - new Date(a));
+            let ngIntervalStart = recentScrapes.length > 1 ? recentScrapes[1] : (recentScrapes[0] || new Date());
+            
+            // Subtract 1ms to be inclusive of products created at the exact timestamp
+            ngIntervalStart = new Date(new Date(ngIntervalStart).getTime() - 1);
+
+            const jobMeta = {
+                activePlatforms,
+                targetPincodes,
+                exportType,
+                ngIntervalStart: ngIntervalStart.toISOString(),
+                email: email || '',
+                categoryList: targetCategories
+            };
+
+            await redis.hmset(`job:${newJobId}:meta`, jobMeta);
+            await redis.expire(`job:${newJobId}:meta`, 14400); // 4 hours
+
+            return NextResponse.json({ jobId: newJobId, categories: targetCategories });
         }
 
-        console.log('✅ Export completed, email sent, returning file.');
+        // --- STAGE: PROCESS ---
+        if (stage === 'process') {
+            if (!jobId || !category) return NextResponse.json({ error: 'Missing jobId or category' }, { status: 400 });
 
-        // Return file response
-        return new NextResponse(buffer, {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Disposition': `attachment; filename="category_export_${Date.now()}.xlsx"`
+            const meta = await redis.hgetall(`job:${jobId}:meta`);
+            if (!meta) return NextResponse.json({ error: 'Job not found or expired' }, { status: 404 });
+
+            const rows = await generateRowsForCategory({
+                cat: category,
+                targetPincodes: meta.targetPincodes,
+                activePlatforms: meta.activePlatforms,
+                exportType: meta.exportType,
+                ngIntervalStart: meta.ngIntervalStart
+            });
+
+            if (rows.length > 0) {
+                // Sharding: Choose client based on category index in the original list
+                const catList = meta.categoryList || [];
+                const catIndex = catList.indexOf(category);
+                const client = clients[(catIndex >= 0 ? catIndex : 0) % clients.length];
+
+                // Store in batches
+                const chunkSize = 100;
+                for (let i = 0; i < rows.length; i += chunkSize) {
+                    const chunk = rows.slice(i, i + chunkSize);
+                    await client.rpush(`job:${jobId}:rows`, ...chunk);
+                }
+                await client.expire(`job:${jobId}:rows`, 14400);
             }
-        });
+
+            return NextResponse.json({ success: true, rowCount: rows.length });
+        }
+
+        // --- STAGE: FINALIZE ---
+        if (stage === 'finalize') {
+            if (!jobId) return NextResponse.json({ error: 'Missing jobId' }, { status: 400 });
+
+            const meta = await redis.hgetall(`job:${jobId}:meta`);
+            if (!meta) return NextResponse.json({ error: 'Job not found or expired' }, { status: 404 });
+
+            const activePlatforms = meta.activePlatforms;
+            
+            // AGGREGATE FROM ALL SHARDS WITH PAGINATION
+            const allProcessedRows = [];
+            for (const client of clients) {
+                let cursor = 0;
+                const batchSize = 1000;
+                while (true) {
+                    const chunk = await client.lrange(`job:${jobId}:rows`, cursor, cursor + batchSize - 1);
+                    if (!chunk || chunk.length === 0) break;
+                    
+                    allProcessedRows.push(...chunk);
+                    cursor += batchSize;
+                    if (chunk.length < batchSize) break;
+                }
+            }
+
+            if (allProcessedRows.length === 0) {
+                return NextResponse.json({ error: 'No data found' }, { status: 404 });
+            }
+
+            // --- SCAN FOR SERVICEABILITY ---
+            const platformServiceability = {};
+            activePlatforms.forEach(platform => {
+                platformServiceability[platform] = allProcessedRows.some(row => row[`${platform}_available`] === 'Yes');
+            });
+
+            // Sorting
+            allProcessedRows.sort((a, b) => {
+                if (a.pincode !== b.pincode) return String(a.pincode).localeCompare(String(b.pincode));
+                if (a.category !== b.category) return String(a.category).localeCompare(String(b.category));
+                return String(a.productName).localeCompare(String(b.productName));
+            });
+
+            const tempFilePath = path.join(os.tmpdir(), `${jobId}.xlsx`);
+            const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: tempFilePath, useStyles: true, useSharedStrings: true });
+            const worksheet = workbook.addWorksheet('Comparison Data', { views: [{ state: 'frozen', xSplit: 0, ySplit: 1 }] });
+
+            const columns = [
+                { header: 'Date', key: 'date', width: 15 },
+                { header: 'Pincode', key: 'pincode', width: 10 },
+                { header: 'Group ID', key: 'groupId', width: 25 },
+                { header: 'Category', key: 'category', width: 15 },
+                { header: 'Product Name', key: 'productName', width: 30 },
+                { header: 'Brand', key: 'brand', width: 20 },
+                { header: 'Weight', key: 'productWeight', width: 10 },
+                { header: 'NG', key: 'ngStatus', width: 8 },
+                { header: 'Hide Similar Status', key: 'hideSimilarStatus', width: 20 },
+            ];
+
+            const usStatusColumns = [];
+
+            activePlatforms.forEach(platform => {
+                const pName = platform.charAt(0).toUpperCase() + platform.slice(1);
+                
+                if (platformServiceability[platform]) {
+                    columns.push(
+                        { header: `${pName} Name`, key: `${platform}_name`, width: 30 },
+                        { header: `${pName} Product ID`, key: `${platform}_productId`, width: 15 },
+                        { header: `${pName} AID`, key: `${platform}_aid`, width: 20 },
+                        { header: `${pName} Avail`, key: `${platform}_available`, width: 10 },
+                        { header: `${pName} Price`, key: `${platform}_price`, width: 12, style: { numFmt: '₹#,##0.00' } },
+                        { header: `${pName} Original Price`, key: `${platform}_originalPrice`, width: 15 },
+                        { header: `${pName} Discount`, key: `${platform}_discount`, width: 12 },
+                        { header: `${pName} Price/Unit`, key: `${platform}_pricePerUnit`, width: 15 },
+                        { header: `${pName} Quantity`, key: `${platform}_quantity`, width: 12 }
+                    );
+
+                    if (platform === 'zepto') {
+                        columns.push(
+                            { header: `${pName} Combo API Response`, key: `zepto_combo_api`, width: 20 },
+                            { header: `${pName} Combo`, key: `zepto_combo`, width: 10 }
+                        );
+                    } else {
+                        columns.push({ header: `${pName} Combo`, key: `${platform}_combo`, width: 10 });
+                    }
+
+                    columns.push(
+                        { header: `${pName} Stock`, key: `${platform}_stock`, width: 12 },
+                        { header: `${pName} Link`, key: `${platform}_link`, width: 15, style: { font: { color: { argb: 'FF0000FF' }, underline: true } } },
+                        { header: `${pName} Is Ad`, key: `${platform}_isAd`, width: 10 },
+                        { header: `${pName} Rating`, key: `${platform}_rating`, width: 10 },
+                        { header: `${pName} Rank`, key: `${platform}_rank`, width: 10 },
+                        { header: `${pName} Is New Status`, key: `${platform}_isNew`, width: 15 },
+                        { header: `${pName} Delivery Time`, key: `${platform}_deliveryTime`, width: 20 },
+                        { header: `${pName} Article Category`, key: `${platform}_articleCategory`, width: 20 },
+                        { header: `${pName} Platform Subcategory`, key: `${platform}_otherSubcategory`, width: 25 },
+                        { header: `${pName} Official Category`, key: `${platform}_officialCategory`, width: 20 },
+                        { header: `${pName} Official Sub-cat`, key: `${platform}_officialSubCategory`, width: 20 }
+                    );
+                } else {
+                    const usKey = `${platform}_usStatus`;
+                    columns.push({ header: pName, key: usKey, width: 15 });
+                    usStatusColumns.push(usKey);
+                }
+            });
+
+            worksheet.columns = columns;
+            const headerRow = worksheet.getRow(1);
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+
+            allProcessedRows.forEach(row => {
+                activePlatforms.forEach(platform => {
+                    if (!platformServiceability[platform]) {
+                        row[`${platform}_usStatus`] = 'U/S';
+                    }
+                });
+
+                const excelRow = worksheet.addRow(row);
+                
+                // Color NG Status
+                const ngCell = excelRow.getCell('ngStatus');
+                if (ngCell.value === 'NG') {
+                    ngCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBBF7D0' } }; // Light Green
+                    ngCell.font = { color: { argb: 'FF166534' }, bold: true };
+                }
+
+                const hideCell = excelRow.getCell('hideSimilarStatus');
+                if (hideCell.value === 'Hide') {
+                    hideCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+                    hideCell.font = { color: { argb: 'FF991B1B' }, bold: true };
+                }
+
+                activePlatforms.forEach(platform => {
+                    if (platformServiceability[platform]) {
+                        // Stock Color
+                        const stockCell = excelRow.getCell(`${platform}_stock`);
+                        if (stockCell.value === 'In Stock') stockCell.font = { color: { argb: 'FF16A34A' } }; // Green
+                        else if (stockCell.value === 'Out of Stock') stockCell.font = { color: { argb: 'FFDC2626' } }; // Red
+
+                        // Available Color
+                        const availCell = excelRow.getCell(`${platform}_available`);
+                        if (availCell.value === 'Yes') availCell.font = { color: { argb: 'FF16A34A' } }; // Green
+                        else if (availCell.value === 'No') availCell.font = { color: { argb: 'FFDC2626' } }; // Red
+                    }
+                });
+
+                usStatusColumns.forEach(key => {
+                    const cell = excelRow.getCell(key);
+                    cell.font = { color: { argb: 'FFFF0000' }, bold: true };
+                    cell.alignment = { horizontal: 'center' };
+                });
+
+                excelRow.commit();
+            });
+
+            await workbook.commit();
+
+            const fileBuffer = fs.readFileSync(tempFilePath);
+            fs.unlinkSync(tempFilePath);
+
+            // Cleanup all Redis shards
+            const cleanupKeys = [`job:${jobId}:meta`, `job:${jobId}:rows`];
+            for (const client of clients) {
+                for (const k of cleanupKeys) {
+                    try { await client.del(k); } catch (e) {}
+                }
+            }
+
+            if (meta.email) {
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+                });
+
+                await transporter.sendMail({
+                    from: `"Quick Commerce Export" <${process.env.EMAIL_USER}>`,
+                    to: meta.email,
+                    subject: 'Category Comparison Export',
+                    text: 'Please find the attached export file.',
+                    attachments: [{ filename: 'comparison_data.xlsx', content: fileBuffer }]
+                });
+
+                return NextResponse.json({ success: true, message: 'Email sent' });
+            }
+
+            return new NextResponse(fileBuffer, {
+                headers: {
+                    'Content-Disposition': `attachment; filename="comparison_data_${Date.now()}.xlsx"`,
+                    'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                },
+            });
+        }
+
+        return NextResponse.json({ error: 'Invalid stage' }, { status: 400 });
 
     } catch (error) {
-        console.error('❌ Export request error:', error);
-        return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+        console.error('❌ Export error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

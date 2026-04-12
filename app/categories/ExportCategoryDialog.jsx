@@ -75,7 +75,6 @@ export default function ExportCategoryDialog({
             return;
         }
 
-
         if (actionType === 'email' && !email) {
             setError("Email address is required for sending email.");
             return;
@@ -90,75 +89,89 @@ export default function ExportCategoryDialog({
         }
 
         setLoading(true);
-        setStatusText("Requesting data...");
+        setStatusText("Initializing export...");
         setError(null);
         setSuccess(false);
         setProgress(0);
 
-
-        // Simulate progress for UX
-        const duration = 2000; // Estimated time
-        const interval = 100;
-        const steps = duration / interval;
-        const increment = 90 / steps;
-
-        const progressInterval = setInterval(() => {
-            setProgress(prev => {
-                if (prev >= 90) {
-                    clearInterval(progressInterval);
-                    setStatusText("Processing on server...");
-                    return 90;
-                }
-                if (prev > 45 && statusText === "Requesting data...") {
-                    setStatusText("Filing reports...");
-                }
-                return prev + increment;
-            });
-        }, interval);
-
-
         try {
-            // Logic:
-            // Download -> Send no email
-            // Email button -> Sends email. 
-
             const payloadEmail = actionType === 'email' ? email : '';
-
-            const response = await fetch('/api/export-category-data', {
+            
+            // --- STAGE 1: INIT ---
+            const initResponse = await fetch('/api/export-category-data', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    stage: 'init',
                     email: payloadEmail,
                     exportType,
                     platforms: selectedPlatforms.length > 0 ? selectedPlatforms : ['all'],
-
                     categories: selectedCategories.length > 0 ? selectedCategories : ['all'],
                     pincodes: selectedPincodes.length > 0 ? selectedPincodes : ['all'],
-                    products: ['all']
-
                 })
             });
 
-            clearInterval(progressInterval); // Stop simulation
+            if (!initResponse.ok) {
+                const data = await initResponse.json().catch(() => ({}));
+                throw new Error(data.error || 'Initialization failed');
+            }
 
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({}));
-                throw new Error(data.error || 'Export failed');
+            const { jobId, categories: catsToProcess } = await initResponse.json();
+            
+            if (!catsToProcess || catsToProcess.length === 0) {
+                throw new Error("No categories found to process.");
+            }
+
+            // --- STAGE 2: PROCESS ---
+            for (let i = 0; i < catsToProcess.length; i++) {
+                const cat = catsToProcess[i];
+                setStatusText(`Processing ${cat}...`);
+                
+                const processResponse = await fetch('/api/export-category-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        stage: 'process',
+                        jobId,
+                        category: cat
+                    })
+                });
+
+                if (!processResponse.ok) {
+                    const data = await processResponse.json().catch(() => ({}));
+                    throw new Error(data.error || `Failed to process category: ${cat}`);
+                }
+
+                // Update progress: 0% to 95%
+                setProgress(Math.round(((i + 1) / catsToProcess.length) * 95));
+            }
+
+            // --- STAGE 3: FINALIZE ---
+            setStatusText("Generating reports...");
+            const finalResponse = await fetch('/api/export-category-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    stage: 'finalize',
+                    jobId
+                })
+            });
+
+            if (!finalResponse.ok) {
+                const data = await finalResponse.json().catch(() => ({}));
+                throw new Error(data.error || 'Finalization failed');
             }
 
             setProgress(100);
             setStatusText(actionType === 'download' ? "Downloading file..." : "Finalizing...");
 
-            // If Download Action, process the blob
             if (actionType === 'download') {
-                // Show success sooner for better UX during large downloads
                 setSuccess("Export successful! Download starting...");
-                
-                const blob = await response.blob();
+                const blob = await finalResponse.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                const disposition = response.headers.get('Content-Disposition');
+                const disposition = finalResponse.headers.get('Content-Disposition');
                 let filename = `category_export_${Date.now()}.xlsx`;
                 if (disposition && disposition.indexOf('attachment') !== -1) {
                     const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
@@ -180,9 +193,8 @@ export default function ExportCategoryDialog({
                 setStatusText("");
             }, 3000);
 
-
         } catch (err) {
-            clearInterval(progressInterval);
+            console.error("Export Trace:", err);
             setProgress(0);
             setError(err.message);
         } finally {
@@ -260,7 +272,7 @@ export default function ExportCategoryDialog({
                                     onChange={(newValues) => setSelectedPlatforms(newValues)}
                                     options={availablePlatforms}
                                     placeholder="Select Platforms"
-                                    position="bottom"
+                                    position="top"
                                 />
                             </div>
 
