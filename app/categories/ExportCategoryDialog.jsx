@@ -123,10 +123,9 @@ export default function ExportCategoryDialog({
                 else if (prev < 85) setStatusText("Generating export rows...");
                 else setStatusText("Finalizing file...");
 
-                return Math.min(95, prev + increment);
+                return prev + increment;
             });
         }, interval);
-
 
 
 

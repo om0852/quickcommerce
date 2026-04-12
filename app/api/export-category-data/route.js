@@ -508,7 +508,8 @@ async function processExportInBackground(body) {
                                     excelRow[`${p}_productId`] = '-';
                                     excelRow[`${p}_aid`] = '-';
                                     excelRow[`${p}_otherSubcategory`] = '-';
-                                    excelRow[`${p}_available`] = 'U/S';
+                                    excelRow[`${p}_available`] = 'No';
+
 
                                     excelRow[`${p}_price`] = null;
                                     excelRow[`${p}_pricePerUnit`] = '-';
@@ -662,16 +663,20 @@ async function processExportInBackground(body) {
 
 
         
-        // --- Global Platform Check ---
-        // Identify which platforms actually have products in this export
+        // --- Global & Category Platform Check ---
+        // Identify which platforms have products in the entire export AND per category
         const platformsWithData = new Set();
+        const categoryPlatformPresence = new Set(); 
+        
         allProcessedRows.forEach(row => {
             allPlatforms.forEach(p => {
                 if (row[`${p}_available`] === 'Yes') {
                     platformsWithData.add(p);
+                    categoryPlatformPresence.add(`${row.category}|${p}`);
                 }
             });
         });
+
 
         // Add Dynamic Columns for each Platform
         allPlatforms.forEach(platform => {
@@ -734,7 +739,19 @@ async function processExportInBackground(body) {
 
         // Populate Rows
         allProcessedRows.forEach(row => {
+            // Apply U/S logic for platforms missing in this specific category
+            allPlatforms.forEach(p => {
+                const categoryPlatformKey = `${row.category}|${p}`;
+                // If platform has data globally but NOT for this specific category
+                if (platformsWithData.has(p) && !categoryPlatformPresence.has(categoryPlatformKey)) {
+                    row[`${p}_name`] = 'U/S';
+                    row[`${p}_available`] = 'U/S';
+                }
+
+            });
+
             const excelRow = worksheet.addRow(row);
+
 
             // Hide Similar Status column styling
             const hideCell = excelRow.getCell('hideSimilarStatus');
