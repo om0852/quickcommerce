@@ -754,49 +754,37 @@ async function processExportInBackground(body) {
 
             // Conditional Formatting
             allPlatforms.forEach(platform => {
-                const availCell = excelRow.getCell(`${platform}_available`);
+                const availKey = `${platform}_available`;
+                const availCell = excelRow.getCell(availKey);
+                
                 if (availCell.value === 'Yes') {
-                    availCell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFDCFCE7' } // Light Green
-                    };
-                    availCell.font = { color: { argb: 'FF166534' } }; // Dark Green Text
+                    availCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
+                    availCell.font = { color: { argb: 'FF166534' } };
                 } else {
-                    availCell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFFEE2E2' } // Light Red
-                    };
-                    availCell.font = { color: { argb: 'FF991B1B' } }; // Dark Red Text
+                    availCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+                    availCell.font = { color: { argb: 'FF991B1B' } };
                 }
 
-                const stockCell = excelRow.getCell(`${platform}_stock`);
-                if (stockCell.value === 'In Stock') {
-                    stockCell.font = { color: { argb: 'FF166534' } };
-                } else if (stockCell.value === 'Out of Stock') {
-                    stockCell.font = { color: { argb: 'FFDC2626' } };
-                }
+                // Only styling other columns if the platform has data (and thus columns exist)
+                if (platformsWithData.has(platform)) {
+                    const stockCell = excelRow.getCell(`${platform}_stock`);
+                    if (stockCell.value === 'In Stock') {
+                        stockCell.font = { color: { argb: 'FF166534' } };
+                    } else if (stockCell.value === 'Out of Stock') {
+                        stockCell.font = { color: { argb: 'FFDC2626' } };
+                    }
 
-                // Is New column styling
-                const isNewCell = excelRow.getCell(`${platform}_isNew`);
-                if (isNewCell && isNewCell.value === 'New') {
-                    isNewCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }; // Light Blue
-                    isNewCell.font = { color: { argb: 'FF1E40AF' }, bold: true }; // Dark Blue
-                }
+                    const isNewCell = excelRow.getCell(`${platform}_isNew`);
+                    if (isNewCell && isNewCell.value === 'New') {
+                        isNewCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+                        isNewCell.font = { color: { argb: 'FF1E40AF' }, bold: true };
+                    }
 
-
-                // Format link cells as hyperlinks
-                const linkCell = excelRow.getCell(`${platform}_link`);
-                if (linkCell.value && linkCell.value !== '') {
-                    linkCell.value = {
-                        text: 'View',
-                        hyperlink: linkCell.value
-                    };
-                    linkCell.font = {
-                        color: { argb: 'FF0000FF' }, // Blue
-                        underline: true
-                    };
+                    const linkCell = excelRow.getCell(`${platform}_link`);
+                    if (linkCell.value && linkCell.value !== '') {
+                        linkCell.value = { text: 'View', hyperlink: linkCell.value };
+                        linkCell.font = { color: { argb: 'FF0000FF' }, underline: true };
+                    }
                 }
             });
 
