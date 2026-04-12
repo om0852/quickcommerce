@@ -273,6 +273,7 @@ export default function ExportCategoryDialog({
                                     options={availablePlatforms}
                                     placeholder="Select Platforms"
                                     position="top"
+                                    maxHeight="max-h-40"
                                 />
                             </div>
 
@@ -290,6 +291,7 @@ export default function ExportCategoryDialog({
                                         placeholder="Select Categories"
                                         position="top"
                                         searchable={true}
+                                        maxHeight="max-h-52"
                                     />
                                 </div>
 
@@ -314,6 +316,7 @@ export default function ExportCategoryDialog({
                                         options={pincodeOptions}
                                         placeholder="Select Pincodes"
                                         position="top"
+                                        maxHeight="max-h-52"
                                     />
                                     {selectedPincodes.length > 5 && <p className="text-xs text-red-500 mt-1">Maximum 5 pincodes allowed.</p>}
                                 </div>

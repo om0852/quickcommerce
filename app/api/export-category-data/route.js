@@ -400,6 +400,18 @@ export async function POST(req) {
 
         // --- STAGE: INIT ---
         if (stage === 'init') {
+            // FORCE CLEAN: Remove all old job data from all shards before starting to free up space
+            for (const client of clients) {
+                try {
+                    const keys = await client.keys('job:*');
+                    if (keys && keys.length > 0) {
+                        await client.del(...keys);
+                    }
+                } catch (e) {
+                    console.error('[Redis Cleanup Error]', e);
+                }
+            }
+
             const newJobId = uniqid('exp_');
             const activePlatforms = ((!platforms.length || platforms.includes('all')) 
                 ? AVAILABLE_PLATFORMS 
@@ -423,7 +435,7 @@ export async function POST(req) {
             };
 
             await redis.hmset(`job:${newJobId}:meta`, jobMeta);
-            await redis.expire(`job:${newJobId}:meta`, 14400); // 4 hours
+            await redis.expire(`job:${newJobId}:meta`, 7200); // 2 hours
 
             return NextResponse.json({ jobId: newJobId, categories: targetCategories });
         }
@@ -454,7 +466,7 @@ export async function POST(req) {
                     const chunk = rows.slice(i, i + chunkSize);
                     await client.rpush(`job:${jobId}:rows`, ...chunk);
                 }
-                await client.expire(`job:${jobId}:rows`, 14400);
+                await client.expire(`job:${jobId}:rows`, 7200);
             }
 
             return NextResponse.json({ success: true, rowCount: rows.length });

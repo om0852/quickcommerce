@@ -11,7 +11,8 @@ export default function MultiSelectDropdown({
     disabled = false,
     className,
     searchable = false,
-    position = "bottom" // "top" or "bottom"
+    position = "bottom", // "top" or "bottom"
+    maxHeight = "max-h-60"
 }) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -129,7 +130,7 @@ export default function MultiSelectDropdown({
                         </div>
                     </div>
 
-                    <ul ref={listRef} className="max-h-60 overflow-y-auto">
+                    <ul ref={listRef} className={cn("overflow-y-auto", maxHeight)}>
                         {filteredOptions.length > 0 ? (
                             filteredOptions.map(opt => {
                                 const isSelected = value.includes(opt.value);
