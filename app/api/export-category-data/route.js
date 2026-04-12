@@ -203,6 +203,24 @@ async function processExportInBackground(body) {
 
         console.log('Export request details:', { startDate, endDate, email, platforms, categories, pincodes });
 
+        // Define available platforms for consistency
+        const AVAILABLE_PLATFORMS = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
+
+        // Determine active platforms based on selection
+        let activePlatforms = platforms;
+        if (!platforms.length || platforms.includes('all')) {
+            activePlatforms = AVAILABLE_PLATFORMS;
+        } else {
+            // Ensure we strictly only use valid platforms from our list and normalize to lowercase
+            activePlatforms = platforms
+                .map(p => p.toLowerCase().trim())
+                .filter(p => AVAILABLE_PLATFORMS.includes(p));
+            
+            // If filtering resulted in no valid platforms (shouldn't happen with GUI), fallback to all
+            if (activePlatforms.length === 0) activePlatforms = AVAILABLE_PLATFORMS;
+        }
+
+
         // Helper to get distinct values if 'all' is selected
         const getDistinctValues = async (field, filters = {}) => {
             const combinedFilters = {
@@ -286,11 +304,13 @@ async function processExportInBackground(body) {
                     scrapedAt: targetScrapedAt,
                     category: cat,
                     productId: { $in: Array.from(allProductIds) },
+                    platform: { $in: activePlatforms }, // 🚀 Fix: Only fetch snapshots for selected platforms
                     $or: [
                         { platform: { $ne: 'jiomart' } },
                         { platform: 'jiomart', isQuick: { $ne: false } }
                     ]
                 }).lean();
+
 
                 const snapshotMap = {};
                 snapshots.forEach(snap => {
@@ -304,11 +324,12 @@ async function processExportInBackground(body) {
 
                 // 3. Iterate GROUPS to build rows (Strict Sequence)
                 for (const group of groups) {
-                    const platformMatches = {
-                        zepto: [], blinkit: [], jiomart: [], dmart: [], flipkartMinutes: [], instamart: []
-                    };
+                    const platformMatches = {};
+                    activePlatforms.forEach(p => { platformMatches[p] = []; });
+                    
                     let maxVariants = 0;
                     let hasData = false;
+
 
                     // Group snapshots by platform
                     group.products.forEach(p => {
@@ -382,7 +403,8 @@ async function processExportInBackground(body) {
                                 }
                             });
 
-                            ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].forEach(p => {
+                            activePlatforms.forEach(p => {
+
                                 const pData = platformDataMap[p];
                                 if (pData) {
                                     uniquePlatforms.add(p);
@@ -481,8 +503,11 @@ async function processExportInBackground(body) {
                         let dupCounter = 1;
                         for (let i = 0; i < maxVariants; i++) {
                             if (i === 0) {
-                                const masterDataMap = { zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null };
+                                const masterDataMap = {};
+                                activePlatforms.forEach(p => { masterDataMap[p] = null; });
+
                                 Object.keys(platformMatches).forEach(platform => {
+
                                     if (platformMatches[platform][0]) {
                                         masterDataMap[platform] = platformMatches[platform][0];
                                     }
@@ -492,8 +517,11 @@ async function processExportInBackground(body) {
                                 Object.keys(platformMatches).forEach(platform => {
                                     const snap = platformMatches[platform][i];
                                     if (snap) {
-                                        const dupDataMap = { zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null };
+                                        const dupDataMap = {};
+                                        activePlatforms.forEach(p => { dupDataMap[p] = null; });
+
                                         dupDataMap[platform] = snap;
+
                                         const dupGroupId = `${group.groupingId || (group._id ? group._id.toString() : '-')}_dup_${dupCounter++}`;
                                         pushRowToExport(dupDataMap, dupGroupId);
                                     }
@@ -553,7 +581,9 @@ async function processExportInBackground(body) {
         // Use collected unique platforms for columns BUT enforce specific order
         // User Request: "even they are no have nay product still show there columns"
         // So we strictly use ONE fixed list of all platforms, regardless of what data was found.
-        const allPlatforms = ['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'];
+        // Use active platforms for columns to respect the user selection
+        const allPlatforms = activePlatforms;
+
 
         try {
             const debugPath = path.join(process.cwd(), 'debug_export_data.json');
@@ -613,9 +643,8 @@ async function processExportInBackground(body) {
                 { header: `${pName} Combo`, key: `${platform}_combo`, width: 12 }
             ];
 
-            if (platform !== 'jiomart') {
-                pCols.push({ header: `${pName} Is New`, key: `${platform}_isNew`, width: 10 });
-            }
+            pCols.push({ header: `${pName} Is New`, key: `${platform}_isNew`, width: 10 });
+
 
             pCols.push(
                 { header: `${pName} Link`, key: `${platform}_link`, width: 15 },
@@ -690,13 +719,12 @@ async function processExportInBackground(body) {
                 }
 
                 // Is New column styling
-                if (platform !== 'jiomart') {
-                    const isNewCell = excelRow.getCell(`${platform}_isNew`);
-                    if (isNewCell && isNewCell.value === 'New') {
-                        isNewCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }; // Light Blue
-                        isNewCell.font = { color: { argb: 'FF1E40AF' }, bold: true }; // Dark Blue
-                    }
+                const isNewCell = excelRow.getCell(`${platform}_isNew`);
+                if (isNewCell && isNewCell.value === 'New') {
+                    isNewCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }; // Light Blue
+                    isNewCell.font = { color: { argb: 'FF1E40AF' }, bold: true }; // Dark Blue
                 }
+
 
                 // Format link cells as hyperlinks
                 const linkCell = excelRow.getCell(`${platform}_link`);

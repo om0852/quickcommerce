@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { Download, X, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download, X, Mail, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/components/SidebarContext';
 import MultiSelectDropdown from '@/components/MultiSelectDropdown';
@@ -19,19 +20,24 @@ export default function ExportCategoryDialog({
 }) {
     const { isSidebarOpen } = useSidebar();
     const [loading, setLoading] = useState(false);
+    const [statusText, setStatusText] = useState("");
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
     const [progress, setProgress] = useState(0);
+
 
     // Form State
     const [email, setEmail] = useState('');
 
     // Dropdown States - defaulting to first option or specific values if needed
     const [selectedPlatform, setSelectedPlatform] = useState('all');
-    // Default to currentCategory or first available option. Remove 'all' fallback.
-    const [selectedCategory, setSelectedCategory] = useState(currentCategory || categoryOptions[0]?.value || '');
+    // Default to currentCategory or first available option in an ARRAY.
+    const [selectedCategories, setSelectedCategories] = useState(
+        currentCategory ? [currentCategory] : (categoryOptions[0]?.value ? [categoryOptions[0].value] : [])
+    );
     // Initialize with current pincode as array, or empty/first option
     const [selectedPincodes, setSelectedPincodes] = useState(currentPincode ? [currentPincode] : (pincodeOptions[0]?.value ? [pincodeOptions[0].value] : []));
+
     const [exportType, setExportType] = useState('latest');
 
     useEffect(() => {
@@ -45,15 +51,20 @@ export default function ExportCategoryDialog({
     // Sync state with current page selections when modal opens
     useEffect(() => {
         if (isOpen) {
-            if (currentCategory) setSelectedCategory(currentCategory);
+            if (currentCategory) setSelectedCategories([currentCategory]);
             if (currentPincode) setSelectedPincodes([currentPincode]);
         }
     }, [isOpen, currentCategory, currentPincode]);
+
 
     if (!isOpen) return null;
 
     const handleAction = async (actionType) => {
         // Validation
+        if (selectedCategories.length === 0) {
+            setError("Please select at least 1 category.");
+            return;
+        }
         if (selectedPincodes.length === 0) {
             setError("Please select at least 1 pincode.");
             return;
@@ -62,6 +73,7 @@ export default function ExportCategoryDialog({
             setError("Maximum 5 pincodes allowed.");
             return;
         }
+
 
         if (actionType === 'email' && !email) {
             setError("Email address is required for sending email.");
@@ -77,9 +89,11 @@ export default function ExportCategoryDialog({
         }
 
         setLoading(true);
+        setStatusText("Requesting data...");
         setError(null);
         setSuccess(false);
         setProgress(0);
+
 
         // Simulate progress for UX
         const duration = 2000; // Estimated time
@@ -91,11 +105,16 @@ export default function ExportCategoryDialog({
             setProgress(prev => {
                 if (prev >= 90) {
                     clearInterval(progressInterval);
+                    setStatusText("Processing on server...");
                     return 90;
+                }
+                if (prev > 45 && statusText === "Requesting data...") {
+                    setStatusText("Filing reports...");
                 }
                 return prev + increment;
             });
         }, interval);
+
 
         try {
             // Logic:
@@ -111,9 +130,10 @@ export default function ExportCategoryDialog({
                     email: payloadEmail,
                     exportType,
                     platforms: selectedPlatform === 'all' ? ['all'] : [selectedPlatform],
-                    categories: selectedCategory === 'all' ? ['all'] : [selectedCategory],
+                    categories: selectedCategories.length > 0 ? selectedCategories : ['all'],
                     pincodes: selectedPincodes.length > 0 ? selectedPincodes : ['all'],
                     products: ['all']
+
                 })
             });
 
@@ -125,9 +145,13 @@ export default function ExportCategoryDialog({
             }
 
             setProgress(100);
+            setStatusText(actionType === 'download' ? "Downloading file..." : "Finalizing...");
 
             // If Download Action, process the blob
             if (actionType === 'download') {
+                // Show success sooner for better UX during large downloads
+                setSuccess("Export successful! Download starting...");
+                
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -143,8 +167,6 @@ export default function ExportCategoryDialog({
                 a.click();
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
-
-                setSuccess("Download started!");
             } else {
                 setSuccess("Email sent successfully!");
             }
@@ -153,7 +175,9 @@ export default function ExportCategoryDialog({
                 if (actionType === 'email') onClose();
                 setSuccess(false);
                 setProgress(0);
+                setStatusText("");
             }, 3000);
+
 
         } catch (err) {
             clearInterval(progressInterval);
@@ -220,11 +244,10 @@ export default function ExportCategoryDialog({
                                     <span className="font-medium">Latest Snapshot</span>
                                     {latestSnapshotTime && (
                                         <span className="text-xs text-neutral-400 ml-2">
-                                            {new Date(latestSnapshotTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                            {' · '}
-                                            {new Date(latestSnapshotTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                            {new Date(latestSnapshotTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}
                                         </span>
                                     )}
+
                                 </div>
                             </div>
 
@@ -247,17 +270,18 @@ export default function ExportCategoryDialog({
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block mb-1.5 text-sm font-medium text-neutral-600">Category</label>
-                                    <select
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="w-full px-3 py-2.5 rounded-md border border-neutral-200 text-sm bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 cursor-pointer"
-                                    >
-                                        {/* Remove All option as per request */}
-                                        {categoryOptions.map(c => (
-                                            <option key={c.value} value={c.value}>{c.label}</option>
-                                        ))}
-                                    </select>
+                                    <MultiSelectDropdown
+                                        value={selectedCategories}
+                                        onChange={(newValues) => {
+                                            setSelectedCategories(newValues);
+                                        }}
+                                        options={categoryOptions}
+                                        placeholder="Select Categories"
+                                        position="top"
+                                        searchable={true}
+                                    />
                                 </div>
+
 
                                 <div>
                                     <label className="block mb-1.5 text-sm font-medium text-neutral-600">
@@ -290,9 +314,14 @@ export default function ExportCategoryDialog({
                     {loading && (
                         <div className="mb-6">
                             <div className="flex justify-between text-xs font-medium text-neutral-500 mb-2">
-                                <span>Exporting...</span>
-                                <span>{Math.round(progress)}%</span>
+                                <span>{statusText || "Exporting..."}</span>
+                                <span className="flex items-center gap-1.5">
+                                    <Loader2 size={12} className="animate-spin text-neutral-400" />
+                                    <span>{Math.round(progress)}%</span>
+                                </span>
+
                             </div>
+
                             <div className="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-neutral-900 transition-all duration-300 ease-out"
