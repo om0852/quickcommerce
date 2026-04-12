@@ -12,8 +12,10 @@ export default function MultiSelectDropdown({
     className,
     searchable = false,
     position = "bottom", // "top" or "bottom"
-    maxHeight = "max-h-60"
+    maxHeight = "max-h-60",
+    showSelectAll = true
 }) {
+
 
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -111,24 +113,27 @@ export default function MultiSelectDropdown({
                                 />
                             </div>
                         )}
-                        <div className="flex items-center justify-between px-1">
-                            <div
-                                className="text-xs font-medium text-blue-600 cursor-pointer hover:underline"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    selectAll();
-                                }}
-                            >
-                                {value.length === options.length ? "Deselect All" : "Select All"}
-                            </div>
-                            {value.length > 0 && (
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-100 rounded-full">
-                                    <span className="text-[10px] font-bold text-blue-600">
-                                        {value.length} Selected
-                                    </span>
+                        {showSelectAll && (
+                            <div className="flex items-center justify-between px-1">
+                                <div
+                                    className="text-xs font-medium text-blue-600 cursor-pointer hover:underline"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        selectAll();
+                                    }}
+                                >
+                                    {value.length === options.length ? "Deselect All" : "Select All"}
                                 </div>
-                            )}
-                        </div>
+                                {value.length > 0 && (
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-100 rounded-full">
+                                        <span className="text-[10px] font-bold text-blue-600">
+                                            {value.length} Selected
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                     </div>
 
                     <ul ref={listRef} className={cn("overflow-y-auto", maxHeight)}>

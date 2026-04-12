@@ -742,11 +742,16 @@ async function processExportInBackground(body) {
             // Apply U/S logic for platforms missing in this specific category
             allPlatforms.forEach(p => {
                 const categoryPlatformKey = `${row.category}|${p}`;
-                // If platform has data globally but NOT for this specific category
-                if (platformsWithData.has(p) && !categoryPlatformPresence.has(categoryPlatformKey)) {
+                
+                if (!platformsWithData.has(p)) {
+                    // Entirely missing from export
+                    row[`${p}_available`] = 'U/S';
+                } else if (!categoryPlatformPresence.has(categoryPlatformKey)) {
+                    // Missing from this specific category
                     row[`${p}_name`] = 'U/S';
                     row[`${p}_available`] = 'U/S';
                 }
+
 
             });
 

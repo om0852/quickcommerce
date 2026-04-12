@@ -90,7 +90,8 @@ export default function ExportCategoryDialog({
         }
 
         setLoading(true);
-        setStatusText("Requesting data...");
+        setStatusText("Processing...");
+
         setError(null);
         setSuccess(false);
         setProgress(0);
@@ -113,19 +114,16 @@ export default function ExportCategoryDialog({
             setProgress(prev => {
                 if (prev >= 95) {
                     clearInterval(progressInterval);
-                    setStatusText("Processing on server...");
+                    setStatusText("Processing...");
                     return 95;
                 }
                 
-                // Dynamic Status Text
-                if (prev < 30) setStatusText("Collecting data...");
-                else if (prev < 60) setStatusText("Analyzing snapshots...");
-                else if (prev < 85) setStatusText("Generating export rows...");
-                else setStatusText("Finalizing file...");
+                setStatusText("Processing...");
 
                 return prev + increment;
             });
         }, interval);
+
 
 
 
@@ -298,26 +296,26 @@ export default function ExportCategoryDialog({
 
                                 <div>
                                     <label className="block mb-1.5 text-sm font-medium text-neutral-600">
-                                        Pincode <span className="text-xs text-neutral-400 font-normal">(Max 5)</span>
+                                        Pincode <span className="text-xs text-neutral-400 font-normal">(Max 1)</span>
                                     </label>
                                     <MultiSelectDropdown
                                         value={selectedPincodes}
                                         onChange={(newValues) => {
-                                            if (newValues.length <= 5) {
+                                            if (newValues.length <= 1) {
                                                 setSelectedPincodes(newValues);
                                             } else {
-                                                // Ideally show toast, but for now just block
-                                                // We can use the existing error state or a temporary toast if available in this scope?
-                                                // We don't have a toast function passed here except internal error? 
-                                                // Actually we can set error temporarily or just ignore.
-                                                // Let's just ignore the addition if > 5.
+                                                // If more than 1, replace with the latest selected instead of blocking
+                                                setSelectedPincodes([newValues[newValues.length - 1]]);
                                             }
                                         }}
                                         options={pincodeOptions}
-                                        placeholder="Select Pincodes"
+                                        placeholder="Select Pincode"
                                         position="top"
+                                        showSelectAll={false}
                                     />
-                                    {selectedPincodes.length > 5 && <p className="text-xs text-red-500 mt-1">Maximum 5 pincodes allowed.</p>}
+
+                                    {selectedPincodes.length > 1 && <p className="text-xs text-red-500 mt-1">Maximum 1 pincode allowed.</p>}
+
                                 </div>
                             </div>
                         </div>
