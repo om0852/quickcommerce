@@ -75,6 +75,7 @@ export default function ExportCategoryDialog({
             return;
         }
 
+
         if (actionType === 'email' && !email) {
             setError("Email address is required for sending email.");
             return;
@@ -89,89 +90,87 @@ export default function ExportCategoryDialog({
         }
 
         setLoading(true);
-        setStatusText("Initializing export...");
+        setStatusText("Requesting data...");
         setError(null);
         setSuccess(false);
         setProgress(0);
 
+
+        // Calculate dynamic progress scaling based on selections
+        const catCount = selectedCategories.length > 0 ? selectedCategories.length : 20; // Default estimate
+        const pinCount = selectedPincodes.length > 0 ? selectedPincodes.length : 1;
+        const platCount = selectedPlatforms.length > 0 ? selectedPlatforms.length : 6;
+        
+        // Base work units for duration estimation
+        const workUnits = catCount * pinCount * platCount;
+        const duration = Math.max(5000, workUnits * 150); // Minimum 5s, scales with volume
+        
+        const interval = 200; // Slower tick for smoother feeling
+        const totalSteps = duration / interval;
+        const increment = 95 / totalSteps;
+
+        const progressInterval = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 95) {
+                    clearInterval(progressInterval);
+                    setStatusText("Processing on server...");
+                    return 95;
+                }
+                
+                // Dynamic Status Text
+                if (prev < 30) setStatusText("Collecting data...");
+                else if (prev < 60) setStatusText("Analyzing snapshots...");
+                else if (prev < 85) setStatusText("Generating export rows...");
+                else setStatusText("Finalizing file...");
+
+                return prev + increment;
+            });
+        }, interval);
+
+
+
         try {
+            // Logic:
+            // Download -> Send no email
+            // Email button -> Sends email. 
+
             const payloadEmail = actionType === 'email' ? email : '';
-            
-            // --- STAGE 1: INIT ---
-            const initResponse = await fetch('/api/export-category-data', {
+
+            const response = await fetch('/api/export-category-data', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    stage: 'init',
                     email: payloadEmail,
                     exportType,
                     platforms: selectedPlatforms.length > 0 ? selectedPlatforms : ['all'],
+
                     categories: selectedCategories.length > 0 ? selectedCategories : ['all'],
                     pincodes: selectedPincodes.length > 0 ? selectedPincodes : ['all'],
+                    products: ['all']
+
                 })
             });
 
-            if (!initResponse.ok) {
-                const data = await initResponse.json().catch(() => ({}));
-                throw new Error(data.error || 'Initialization failed');
-            }
+            clearInterval(progressInterval); // Stop simulation
 
-            const { jobId, categories: catsToProcess } = await initResponse.json();
-            
-            if (!catsToProcess || catsToProcess.length === 0) {
-                throw new Error("No categories found to process.");
-            }
-
-            // --- STAGE 2: PROCESS ---
-            for (let i = 0; i < catsToProcess.length; i++) {
-                const cat = catsToProcess[i];
-                setStatusText(`Processing ${cat}...`);
-                
-                const processResponse = await fetch('/api/export-category-data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        stage: 'process',
-                        jobId,
-                        category: cat
-                    })
-                });
-
-                if (!processResponse.ok) {
-                    const data = await processResponse.json().catch(() => ({}));
-                    throw new Error(data.error || `Failed to process category: ${cat}`);
-                }
-
-                // Update progress: 0% to 95%
-                setProgress(Math.round(((i + 1) / catsToProcess.length) * 95));
-            }
-
-            // --- STAGE 3: FINALIZE ---
-            setStatusText("Generating reports...");
-            const finalResponse = await fetch('/api/export-category-data', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    stage: 'finalize',
-                    jobId
-                })
-            });
-
-            if (!finalResponse.ok) {
-                const data = await finalResponse.json().catch(() => ({}));
-                throw new Error(data.error || 'Finalization failed');
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || 'Export failed');
             }
 
             setProgress(100);
             setStatusText(actionType === 'download' ? "Downloading file..." : "Finalizing...");
 
+            // If Download Action, process the blob
             if (actionType === 'download') {
+                // Show success sooner for better UX during large downloads
                 setSuccess("Export successful! Download starting...");
-                const blob = await finalResponse.blob();
+                
+                const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                const disposition = finalResponse.headers.get('Content-Disposition');
+                const disposition = response.headers.get('Content-Disposition');
                 let filename = `category_export_${Date.now()}.xlsx`;
                 if (disposition && disposition.indexOf('attachment') !== -1) {
                     const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
@@ -193,8 +192,9 @@ export default function ExportCategoryDialog({
                 setStatusText("");
             }, 3000);
 
+
         } catch (err) {
-            console.error("Export Trace:", err);
+            clearInterval(progressInterval);
             setProgress(0);
             setError(err.message);
         } finally {
@@ -273,8 +273,9 @@ export default function ExportCategoryDialog({
                                     options={availablePlatforms}
                                     placeholder="Select Platforms"
                                     position="top"
-                                    maxHeight="max-h-40"
+                                    maxHeight="max-h-44"
                                 />
+
                             </div>
 
 
@@ -291,7 +292,6 @@ export default function ExportCategoryDialog({
                                         placeholder="Select Categories"
                                         position="top"
                                         searchable={true}
-                                        maxHeight="max-h-52"
                                     />
                                 </div>
 
@@ -316,7 +316,6 @@ export default function ExportCategoryDialog({
                                         options={pincodeOptions}
                                         placeholder="Select Pincodes"
                                         position="top"
-                                        maxHeight="max-h-52"
                                     />
                                     {selectedPincodes.length > 5 && <p className="text-xs text-red-500 mt-1">Maximum 5 pincodes allowed.</p>}
                                 </div>
