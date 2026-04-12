@@ -207,14 +207,13 @@ const getDistinctValues = async (field, filters = {}) => {
 
 // Core logic to generate rows for a single category
 async function generateRowsForCategory(params) {
-    const { cat, targetPincodes, activePlatforms, exportType, ngIntervalStart } = params;
+    const { cat, targetPincodes, activePlatforms, exportType } = params;
     const allProcessedRows = [];
 
     // Fetch Groups ONCE for this category
     const groups = await ProductGrouping.find({ category: cat }).lean();
     if (!groups.length) return [];
 
-    const ngInterval = { start: new Date(ngIntervalStart), end: new Date() };
 
     for (const pin of targetPincodes) {
         // Find latest snapshot for this pincode/category
@@ -295,7 +294,8 @@ async function generateRowsForCategory(params) {
                     };
 
                     const groupCreated = group.createdAt ? new Date(group.createdAt) : null;
-                    const isNG = groupCreated && groupCreated >= ngInterval.start;
+                    // NG Logic: Group created at or after the latest scrape time for this category
+                    const isNG = groupCreated && groupCreated >= new Date(targetScrapedAt);
                     excelRow.ngStatus = isNG ? 'NG' : '-';
 
                     activePlatforms.forEach(p => {
@@ -414,20 +414,10 @@ export async function POST(req) {
             let targetPincodes = pincodes;
             if (!pincodes.length) targetPincodes = await getDistinctValues('pincode');
 
-            // Find a common ScrapedAt to establish NG interval
-            // NG Logic: Use the second most recent scrape as the start, or current scrape minus small buffer
-            const recentScrapes = await ProductSnapshot.distinct('scrapedAt');
-            recentScrapes.sort((a, b) => new Date(b) - new Date(a));
-            let ngIntervalStart = recentScrapes.length > 1 ? recentScrapes[1] : (recentScrapes[0] || new Date());
-            
-            // Subtract 1ms to be inclusive of products created at the exact timestamp
-            ngIntervalStart = new Date(new Date(ngIntervalStart).getTime() - 1);
-
             const jobMeta = {
                 activePlatforms,
                 targetPincodes,
                 exportType,
-                ngIntervalStart: ngIntervalStart.toISOString(),
                 email: email || '',
                 categoryList: targetCategories
             };
@@ -449,8 +439,7 @@ export async function POST(req) {
                 cat: category,
                 targetPincodes: meta.targetPincodes,
                 activePlatforms: meta.activePlatforms,
-                exportType: meta.exportType,
-                ngIntervalStart: meta.ngIntervalStart
+                exportType: meta.exportType
             });
 
             if (rows.length > 0) {
@@ -562,9 +551,14 @@ export async function POST(req) {
                         { header: `${pName} Rating`, key: `${platform}_rating`, width: 10 },
                         { header: `${pName} Rank`, key: `${platform}_rank`, width: 10 },
                         { header: `${pName} Is New Status`, key: `${platform}_isNew`, width: 15 },
-                        { header: `${pName} Delivery Time`, key: `${platform}_deliveryTime`, width: 20 },
-                        { header: `${pName} Article Category`, key: `${platform}_articleCategory`, width: 20 },
-                        { header: `${pName} Platform Subcategory`, key: `${platform}_otherSubcategory`, width: 25 },
+                        { header: `${pName} Delivery Time`, key: `${platform}_deliveryTime`, width: 20 }
+                    );
+
+                    if (platform === 'jiomart') {
+                        columns.push({ header: `${pName} Article Category`, key: `${platform}_articleCategory`, width: 20 });
+                    }
+
+                    columns.push(
                         { header: `${pName} Official Category`, key: `${platform}_officialCategory`, width: 20 },
                         { header: `${pName} Official Sub-cat`, key: `${platform}_officialSubCategory`, width: 20 }
                     );
