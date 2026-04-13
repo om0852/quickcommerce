@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Search, X, Package, Menu as MenuIcon, TrendingUp, TrendingDown, Check, ChevronUp, ChevronDown, ChevronsUpDown, Filter, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Search, X, Package, Menu as MenuIcon, TrendingUp, TrendingDown, Check, ChevronUp, ChevronDown, ChevronsUpDown, Filter, Plus, Edit2, Trash2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BrandProductsDialog from './BrandProductsDialog';
 import Paper from '@mui/material/Paper';
@@ -132,7 +132,7 @@ const CustomBrandDialog = ({ isOpen, mode, brand, onClose, onSubmit }) => {
 // Extracted Momoized Table to prevent re-renders when Dialog state changes
 const MemoizedBrandsTable = React.memo(({
     searchQuery, setSearchQuery, sortConfig, setSortConfig, handleSortMenuClick, handleSortMenuClose, sortMenuAnchor, isSortMenuOpen,
-    isAdmin, openBrandDialog, filteredBrands, totals, platforms, platformLabels, loading, handleSort, handleInteraction,
+    isAdmin, openBrandDialog, filteredBrands, paginatedBrands, totals, platforms, platformLabels, loading, handleSort, handleInteraction,
     products, platformFilter // For empty state
 }) => {
     return (
@@ -422,7 +422,7 @@ const MemoizedBrandsTable = React.memo(({
                             ))
                         ) : (
                             <>
-                                {filteredBrands.map((brand, index) => (
+                                {paginatedBrands.map((brand, index) => (
                                     <TableRow
                                         key={`${brand.name}-${index}`}
                                         hover
@@ -561,6 +561,8 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' }); // key: 'name' | 'total' | platform, direction: 'asc' | 'desc'
     const [sortMenuAnchor, setSortMenuAnchor] = useState(null);
     const isSortMenuOpen = Boolean(sortMenuAnchor);
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 50;
 
     const [apiBrands, setApiBrands] = useState([]);
     const [isFetchingBrands, setIsFetchingBrands] = useState(false);
@@ -770,6 +772,16 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
         return result;
     }, [filteredBrands]);
 
+    const paginatedBrands = useMemo(() => {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredBrands.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredBrands, currentPage]);
+
+    // Reset pagination when dependencies change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, sortConfig, platformFilter]);
+
 
     // Interaction State
     const [selectedBrandInteraction, setSelectedBrandInteraction] = useState(null);
@@ -813,6 +825,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                 isAdmin={isAdmin}
                 openBrandDialog={openBrandDialog}
                 filteredBrands={filteredBrands}
+                paginatedBrands={paginatedBrands}
                 totals={totals}
                 platforms={platforms}
                 platformLabels={platformLabels}
@@ -822,6 +835,47 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                 products={products}
                 platformFilter={platformFilter}
             />
+
+            {/* Pagination Controls */}
+            {!loading && filteredBrands.length > 0 && (
+                <div className="flex-none flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm mt-2">
+                    <span className="text-sm text-gray-600 font-medium whitespace-nowrap mr-4">
+                        Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filteredBrands.length)} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredBrands.length)} of {filteredBrands.length} brands
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(c => c - 1)}
+                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                            <ArrowRight size={18} className="rotate-180" />
+                        </button>
+                        <div className="flex items-center gap-1.5 text-sm font-semibold relative flex-none">
+                            <span>Page</span>
+                            <div className="relative flex items-center">
+                                <select
+                                    value={currentPage}
+                                    onChange={(e) => setCurrentPage(Number(e.target.value))}
+                                    className="bg-transparent appearance-none rounded pl-2 pr-6 py-1 min-w-[50px] text-center focus:outline-none focus:ring-1 focus:ring-neutral-300 cursor-pointer hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
+                                >
+                                    {Array.from({ length: Math.ceil(filteredBrands.length / ITEMS_PER_PAGE) || 1 }, (_, i) => i + 1).map(pageNum => (
+                                        <option key={pageNum} value={pageNum}>{pageNum}</option>
+                                    ))}
+                                </select>
+                                <ChevronDown size={14} className="absolute right-1.5 pointer-events-none text-gray-500" />
+                            </div>
+                            <span>/ {Math.ceil(filteredBrands.length / ITEMS_PER_PAGE) || 1}</span>
+                        </div>
+                        <button
+                            disabled={currentPage >= Math.ceil(filteredBrands.length / ITEMS_PER_PAGE)}
+                            onClick={() => setCurrentPage(c => c + 1)}
+                            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                            <ArrowRight size={18} />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Brand Products Dialog */}
             {

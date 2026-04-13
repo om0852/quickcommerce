@@ -31,21 +31,8 @@ export async function PUT(request, { params }) {
         existingBrand.brandId = newBrandIdSlug;
         await existingBrand.save();
 
-        // Cascade update to ProductSnapshot
-        await ProductSnapshot.updateMany(
-            { brand: oldBrandName },
-            { $set: { brand: trimmedName } }
-        );
-
-        // Cascade update to ProductGrouping
-        await ProductGrouping.updateMany(
-            { brandId: oldBrandName },
-            { $set: { brandId: newBrandIdSlug, brand: trimmedName } }
-        );
-        await ProductGrouping.updateMany(
-            { brand: oldBrandName },
-            { $set: { brand: trimmedName, brandId: newBrandIdSlug } }
-        );
+        // User requested removing cascading updates to ProductSnapshot and ProductGrouping 
+        // to speed up the renaming process. It will now only update the Brand collection.
 
         // Invalidate: brands list cache + ALL category caches
         // (brand name changes are embedded in every cached category response)
@@ -122,21 +109,8 @@ export async function DELETE(request, { params }) {
         // Delete the brand document
         await Brand.findByIdAndDelete(id);
 
-        // Cascade remove from ProductSnapshot
-        await ProductSnapshot.updateMany(
-            { brand: brandNameToRemove },
-            { $unset: { brand: '' } }
-        );
-
-        // Cascade remove from ProductGrouping
-        await ProductGrouping.updateMany(
-            { brand: brandNameToRemove },
-            { $set: { brand: '', brandId: 'N/A' } }
-        );
-        await ProductGrouping.updateMany(
-            { brandId: brandNameToRemove },
-            { $set: { brand: '', brandId: 'N/A' } }
-        );
+        // User requested removing cascading updates to ProductSnapshot and ProductGrouping
+        // to speed up the deletion process. It will now only operate on the Brand collection.
 
         // Invalidate: brands list cache + ALL category caches
         await Promise.all([

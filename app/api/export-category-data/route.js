@@ -1,3 +1,9 @@
+// Suppress Buffer() deprecation warning from transitive dependencies
+// (safe-buffer@5.1.2 used by archiver/jszip inside ExcelJS)
+if (typeof process !== 'undefined') {
+    process.noDeprecation = true;
+}
+
 import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
@@ -237,7 +243,7 @@ async function processExportInBackground(body) {
             // Ensure we strictly only use valid platforms from our list and normalize to lowercase
             const selectedSet = new Set(platforms.map(p => p.toLowerCase().trim()));
             activePlatforms = AVAILABLE_PLATFORMS.filter(p => selectedSet.has(p.toLowerCase()));
-            
+
             // If filtering resulted in no valid platforms (shouldn't happen with GUI), fallback to all
             if (activePlatforms.length === 0) activePlatforms = AVAILABLE_PLATFORMS;
         }
@@ -276,6 +282,7 @@ async function processExportInBackground(body) {
 
             // Fetch Groups ONCE for this category (Shared across pincodes usually)
             // But UI fetches inside the loop? No, usually groups are category specific.
+            var start = +new Date();  // log start timestamp
             const groups = await ProductGrouping.find({ category: cat }).lean();
             // Sort groups if they have a specific order? UI doesn't seem to sort explicitly, implies DB order / Insertion order.
             // We'll trust the array order from DB matches UI default.
@@ -349,7 +356,7 @@ async function processExportInBackground(body) {
                 for (const group of groups) {
                     const platformMatches = {};
                     activePlatforms.forEach(p => { platformMatches[p] = []; });
-                    
+
                     let maxVariants = 0;
                     let hasData = false;
 
@@ -662,12 +669,12 @@ async function processExportInBackground(body) {
         ];
 
 
-        
+
         // --- Global & Category Platform Check ---
         // Identify which platforms have products in the entire export AND per category
         const platformsWithData = new Set();
-        const categoryPlatformPresence = new Set(); 
-        
+        const categoryPlatformPresence = new Set();
+
         allProcessedRows.forEach(row => {
             allPlatforms.forEach(p => {
                 if (row[`${p}_available`] === 'Yes') {
@@ -681,7 +688,7 @@ async function processExportInBackground(body) {
         // Add Dynamic Columns for each Platform
         allPlatforms.forEach(platform => {
             const pName = platform.charAt(0).toUpperCase() + platform.slice(1);
-            
+
             if (!platformsWithData.has(platform)) {
                 // If platform has ZERO data, only show one single column
                 columns.push({ header: `${pName} Avail (No Data)`, key: `${platform}_available`, width: 20 });
@@ -742,7 +749,7 @@ async function processExportInBackground(body) {
             // Apply U/S logic for platforms missing in this specific category
             allPlatforms.forEach(p => {
                 const categoryPlatformKey = `${row.category}|${p}`;
-                
+
                 if (!platformsWithData.has(p)) {
                     // Entirely missing from export
                     row[`${p}_available`] = 'U/S';
@@ -779,7 +786,7 @@ async function processExportInBackground(body) {
             allPlatforms.forEach(platform => {
                 const availKey = `${platform}_available`;
                 const availCell = excelRow.getCell(availKey);
-                
+
                 if (availCell.value === 'Yes') {
                     availCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
                     availCell.font = { color: { argb: 'FF166534' } };
@@ -886,6 +893,7 @@ async function processExportInBackground(body) {
 
 export async function POST(req) {
     try {
+
         await dbConnect();
 
         const body = await req.json();

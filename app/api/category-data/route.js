@@ -282,8 +282,7 @@ export async function GET(request) {
                 name: group.primaryName,
                 image: group.primaryImage,
                 groupImage: null,
-                weight: group.primaryWeight,
-                brand: group.brand || brandMap[group.brandId] || '',
+                brand: brandMap[group.brandId] || group.brand || '',
 
                 brandId: group.brandId || '',
                 label: group.label || '',
