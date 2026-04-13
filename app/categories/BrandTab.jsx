@@ -568,10 +568,8 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
     const [isFetchingBrands, setIsFetchingBrands] = useState(false);
 
     useEffect(() => {
-        if (isAdmin) {
-            fetchBrands();
-        }
-    }, [isAdmin]);
+        fetchBrands();
+    }, []);
 
     const fetchBrands = async () => {
         setIsFetchingBrands(true);
@@ -668,49 +666,32 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
     const sortedBrands = useMemo(() => {
         const brandMap = {};
 
-        products.forEach(product => {
-            const rawBrand = product.brand ? String(product.brand).trim() : '';
-            const brandName = rawBrand !== '' ? rawBrand : 'Other';
-
-            // ... (keep mapping logic same)
-            if (!brandMap[brandName]) {
-                brandMap[brandName] = {
-                    name: brandName,
-                    total: 0,
-                    jiomart: 0,
-                    zepto: 0,
-                    blinkit: 0,
-                    dmart: 0,
-                    flipkartMinutes: 0,
-                    instamart: 0
-                };
-            }
-
-            platforms.forEach(p => {
-                if (product[p]) {
-                    brandMap[brandName][p]++;
-                    brandMap[brandName].total++;
-                }
-            });
+        // 1. Initialize brandMap ONLY with official apiBrands (Database records)
+        apiBrands.forEach(apiBrand => {
+            brandMap[apiBrand.brandName] = {
+                name: apiBrand.brandName,
+                total: 0,
+                jiomart: 0,
+                zepto: 0,
+                blinkit: 0,
+                dmart: 0,
+                flipkartMinutes: 0,
+                instamart: 0
+            };
         });
 
-        // Merge apiBrands if isAdmin
-        if (isAdmin) {
-            apiBrands.forEach(apiBrand => {
-                if (!brandMap[apiBrand.brandName]) {
-                    brandMap[apiBrand.brandName] = {
-                        name: apiBrand.brandName,
-                        total: 0,
-                        jiomart: 0,
-                        zepto: 0,
-                        blinkit: 0,
-                        dmart: 0,
-                        flipkartMinutes: 0,
-                        instamart: 0
-                    };
-                }
-            });
-        }
+        // 2. Iterate products and count occurrences if they match an official brand
+        products.forEach(product => {
+            const rawBrand = product.brand ? String(product.brand).trim() : '';
+            if (rawBrand && brandMap[rawBrand]) {
+                platforms.forEach(p => {
+                    if (product[p]) {
+                        brandMap[rawBrand][p]++;
+                        brandMap[rawBrand].total++;
+                    }
+                });
+            }
+        });
 
         const brandList = Object.values(brandMap).sort((a, b) => {
             const aEmpty = a.total === 0;

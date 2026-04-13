@@ -17,7 +17,6 @@ export async function PUT(request, { params }) {
         }
 
         const trimmedName = newBrandName.trim();
-        const newBrandIdSlug = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
         const existingBrand = await Brand.findById(id);
         if (!existingBrand) {
@@ -28,7 +27,6 @@ export async function PUT(request, { params }) {
 
         // Update the brand document
         existingBrand.brandName = trimmedName;
-        existingBrand.brandId = newBrandIdSlug;
         await existingBrand.save();
 
         // User requested removing cascading updates to ProductSnapshot and ProductGrouping 
@@ -65,11 +63,10 @@ export async function PATCH(request, { params }) {
         }
 
         const trimmedName = newBrandName.trim();
-        const newBrandIdSlug = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
         const brand = await Brand.findByIdAndUpdate(
             id,
-            { $set: { brandName: trimmedName, brandId: newBrandIdSlug } },
+            { $set: { brandName: trimmedName } },
             { new: true }
         );
 
