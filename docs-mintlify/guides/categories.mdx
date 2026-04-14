@@ -1,0 +1,192 @@
+---
+title: Categories
+description: Product categories and organization
+---
+
+# Product Categories
+
+Products are organized into **categories** for easy filtering, tracking, and analysis.
+
+## Main Categories
+
+### Fruits & Vegetables
+Fresh produce available across platforms:
+- **Fruits:** Bananas, Apples, Oranges, Mangoes, Grapes
+- **Leafy Greens:** Spinach, Lettuce, Cabbage
+- **Root Vegetables:** Carrots, Potatoes, Onions, Garlic
+- **Other Vegetables:** Tomatoes, Cucumbers, Bell Peppers
+
+### Bakery & Breads
+Fresh baked goods:
+- **Breads:** White, Brown, Multigrain
+- **Buns:** Dinner rolls, Burger buns, Pav
+- **Pastries:** Croissants, Muffins, Cakes
+- **Cookies & Biscuits:** Various brands
+
+### Dairy & Eggs
+Milk products and eggs:
+- **Milk:** Full cream, Toned, Double-toned
+- **Yogurt:** Plain, Flavored, Greek yogurt
+- **Cheese:** Mozzarella, Cheddar, Paneer
+- **Butter & Ghee:** Various brands
+- **Eggs:** White, Brown, Organic variants
+
+## Working with Categories via API
+
+### Query Products by Category
+
+Get all products in a category for a pincode:
+
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  "http://localhost:3000/api/category-data?category=fruits&pincode=400706"
+```
+
+**Response includes:**
+- All products from all 6 platforms
+- Current price per product
+- Stock status (in_stock, out_of_stock, limited)
+- Ranking information
+- Platform counts
+
+### Get Category Analytics
+
+See price distribution, stock levels, rankings:
+
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  "http://localhost:3000/api/analytics?category=fruits&pincode=400706"
+```
+
+**Response includes:**
+- Price distribution (buckets like 0-50, 50-100, etc)
+- Stock overview (count of in_stock vs out_of_stock)
+- Ranking data
+- Platform-wise availability
+
+### Export Category Data
+
+Download full category data as Excel file:
+
+```bash
+GET /api/export-category-data?category=fruits&pincode=400706
+```
+
+Excel includes:
+- All products with prices per platform
+- Stock status
+- Rankings
+- Availability metrics
+
+## Product Data Structure
+
+### Product Object
+
+```json
+{
+  "productId": "zepto_SKU001",
+  "platform": "zepto",
+  "category": "fruits",
+  "name": "Banana",
+  "price": 120,
+  "rank": 1,
+  "stock": "in_stock",
+  "pincode": "400706",
+  "timestamp": "2026-03-17T15:30:00Z"
+}
+```
+
+### Getting Historical Data
+
+Get price trends for products in a category:
+
+```bash
+curl -X POST http://localhost:3000/api/product-history \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pincode": "400706",
+    "productNames": { "zepto": ["Banana", "Apple"] }
+  }'
+```
+
+Returns all historical snapshots with prices and rankings.
+
+## Product Snapshots
+
+A **snapshot** is a point-in-time capture of all products in a category:
+
+```
+Category: Fruits, Pincode: 400706, Timestamp: 2026-03-17T15:30:00Z
+├─ 150 products from Zepto
+├─ 145 products from Blinkit  
+├─ 155 products from JioMart
+├─ 140 products from DMart
+├─ 142 products from Flipkart
+└─ 138 products from Instamart
+```
+
+### Available Snapshots
+
+View all available timestamps for a category/pincode:
+
+```bash
+GET /api/available-snapshots?category=fruits&pincode=400706
+```
+
+Returns list of timestamps sorted newest first.
+
+## Data Management
+
+### Product Grouping
+
+Similar products across platforms are grouped:
+
+```
+Group: Organic Banana
+├─ Zepto: zepto_SKU001 (Organic Banana 1kg) ₹120
+├─ Blinkit: blinkit_BLN456 (Fresh Organic Banana) ₹125
+├─ JioMart: jiomart_JIO789 (Banana - Organic) ₹120
+└─ DMart: dmart_DMT012 (Organic Banana Bunch) ₹118
+```
+
+### Managing Groups
+
+- **View:** Get cross-pincode availability of a group
+- **Update:** Change group name, brand, image
+- **Remove:** Remove product from group
+- **Regroup:** Split product into new group
+- **Delete:** Delete entire group
+
+See [Product Grouping](/api/endpoints/grouping) for API details.
+
+## Category Statistics
+
+### Products Per Category
+- **Fruits & Vegetables:** 150-200 items
+- **Bakery:** 50-80 items  
+- **Dairy & Eggs:** 40-60 items
+
+### Daily Snapshots
+- Per platform: 150-300 snapshots
+- All platforms: 1000+ total snapshots
+
+### Coverage
+- 10 pincodes across India
+- 6 platforms per pincode
+- 3-5 categories tracked
+
+## Best Practices
+
+✓ **DO:**
+- Filter by category before querying
+- Use pincode + category for precision
+- Cache category analytics  
+- Monitor trends per category
+
+✗ **DON'T:**
+- Query all products without category filter
+- Assume product names are identical across platforms
+- Ignore platform-specific variations
+- Treat prices as always accurate (refresh often)
+

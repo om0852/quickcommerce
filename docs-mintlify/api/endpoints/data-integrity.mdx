@@ -1,0 +1,106 @@
+---
+title: Data Integrity
+description: Maintain data consistency and correctness
+---
+
+# Data Integrity Endpoints
+
+Sync timestamps, update records, and populate missing data.
+
+## Sync Time Range
+
+Sync all timestamps in a time range to a target timestamp.
+
+```
+POST /api/sync-time-range
+```
+
+### Request Body
+
+```json
+{
+  "startTime": "2026-03-17T12:00:00Z",
+  "endTime": "2026-03-17T15:00:00Z",
+  "targetTime": "2026-03-17T15:00:00Z"
+}
+```
+
+### Parameters
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `startTime` | ISO 8601 | Yes |
+| `endTime` | ISO 8601 | Yes |
+| `targetTime` | ISO 8601 | No |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Sync completed",
+  "productsUpdated": 500,
+  "errors": []
+}
+```
+
+---
+
+## Update Timestamp
+
+Update all products from old timestamp to new timestamp.
+
+```
+POST /api/update-timestamp
+```
+
+### Request Body
+
+```json
+{
+  "oldTimestamp": "2026-03-17T12:00:00Z",
+  "newTimestamp": "2026-03-17T13:00:00Z"
+}
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Timestamps updated",
+  "productsFound": 500,
+  "productsUpdated": 500
+}
+```
+
+---
+
+## Populate Stock Status
+
+Generate random stock status (30% out-of-stock).
+
+```
+POST /api/populate-stock-status
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Stock status populated",
+  "totalProducts": 500,
+  "productGroups": 150,
+  "updatedCount": 500
+}
+```
+
+---
+
+## Important Notes
+
+- These operations affect live data
+- Use sparingly in production
+- Always backup before bulk operations
+- Monitor for adverse effects

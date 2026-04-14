@@ -195,7 +195,6 @@ cron.schedule('0 */6 * * *', () => {
     console.log(`[Cron] Scheduled overview generation started at ${new Date().toISOString()}`);
     runGenerations().catch(console.error);
 }, { timezone: 'Asia/Kolkata' });
-
 // Keep-Alive Ping every 20 seconds
 cron.schedule('*/20 * * * * *', async () => {
     const url = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;

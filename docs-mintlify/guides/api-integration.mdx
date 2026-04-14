@@ -1,0 +1,348 @@
+---
+title: API Integration
+description: Integrate QuickCommerce Tracker with your applications
+---
+
+# API Integration Guide
+
+## Getting Started with the API
+
+Connect your applications to QuickCommerce Tracker for real-time pricing data.
+
+### Prerequisites
+
+- API key (generate from Dashboard)
+- Basic understanding of REST APIs
+- HTTP client library (curl, axios, node-fetch, etc.)
+
+### Getting Your API Key
+
+1. Go to **Settings** → **API & Integrations**
+2. Click **Generate New API Key**
+3. Copy your key (keep it secure!)
+4. Use in your applications
+
+## Authentication
+
+Include your API key in request headers:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://api.tracker.creatosaurus.in/v1/products
+```
+
+Or in your code:
+
+```javascript
+const headers = {
+  'Authorization': `Bearer ${API_KEY}`,
+  'Content-Type': 'application/json'
+};
+```
+
+## API Endpoints
+
+### Get Products
+
+```
+GET /api/v1/products
+```
+
+Get list of tracked products with current prices.
+
+**Parameters:**
+- `category` - Filter by category
+- `region` - Filter by region code
+- `platform` - Filter by platform
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 50, max: 100)
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "sku": "SKU001",
+      "name": "Organic Banana",
+      "category": "Fruits & Vegetables",
+      "prices": {
+        "zepto": 120,
+        "blinkit": 115,
+        "jiomart": 110
+      },
+      "availability": {
+        "zepto": "in_stock",
+        "blinkit": "in_stock",
+        "jiomart": "limited"
+      },
+      "lastUpdated": "2025-03-17T10:30:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 250
+  }
+}
+```
+
+### Get Product Details
+
+```
+GET /api/v1/products/{sku}
+```
+
+Get detailed information for a single product.
+
+**Response:**
+```json
+{
+  "sku": "SKU001",
+  "name": "Organic Banana",
+  "image": "https://cdn.tracker.creatosaurus.in/...",
+  "priceHistory": [
+    {
+      "date": "2025-03-17",
+      "prices": {
+        "zepto": 120,
+        "blinkit": 115
+      }
+    }
+  ]
+}
+```
+
+### Get Price History
+
+```
+GET /api/v1/products/{sku}/history
+```
+
+Get historical price data for trend analysis.
+
+**Parameters:**
+- `from` - Start date (YYYY-MM-DD)
+- `to` - End date (YYYY-MM-DD)
+- `platform` - Specific platform (optional)
+
+**Response:**
+```json
+{
+  "history": [
+    {
+      "date": "2025-03-17",
+      "platform": "zepto",
+      "price": 120,
+      "stock": "in_stock"
+    }
+  ]
+}
+```
+
+### Create Alert
+
+```
+POST /api/v1/alerts
+```
+
+Programmatically create price alerts.
+
+**Request:**
+```json
+{
+  "sku": "SKU001",
+  "trigger": "price_below",
+  "targetPrice": 100,
+  "platforms": ["zepto", "blinkit"],
+  "notification": "webhook",
+  "webhookUrl": "https://yourapp.com/webhook"
+}
+```
+
+**Response:**
+```json
+{
+  "alertId": "ALERT_123",
+  "status": "active",
+  "createdAt": "2025-03-17T10:30:00Z"
+}
+```
+
+### Get Alerts
+
+```
+GET /api/v1/alerts
+```
+
+List all alerts for your account.
+
+**Response:**
+```json
+{
+  "alerts": [
+    {
+      "alertId": "ALERT_123",
+      "sku": "SKU001",
+      "trigger": "price_below",
+      "targetPrice": 100,
+      "status": "active",
+      "lastTriggered": "2025-03-17T09:00:00Z"
+    }
+  ]
+}
+```
+
+### Delete Alert
+
+```
+DELETE /api/v1/alerts/{alertId}
+```
+
+Remove an alert.
+
+## Webhooks
+
+Receive real-time notifications via webhooks.
+
+### Webhook Events
+
+**Price Alert Triggered**
+```json
+{
+  "event": "price_alert_triggered",
+  "alertId": "ALERT_123",
+  "sku": "SKU001",
+  "product": "Organic Banana",
+  "platform": "zepto",
+  "newPrice": 99,
+  "targetPrice": 100,
+  "timestamp": "2025-03-17T10:30:00Z"
+}
+```
+
+**Product Availability Changed**
+```json
+{
+  "event": "availability_changed",
+  "sku": "SKU001",
+  "platform": "blinkit",
+  "oldStatus": "out_of_stock",
+  "newStatus": "in_stock",
+  "timestamp": "2025-03-17T10:30:00Z"
+}
+```
+
+### Setting up Webhooks
+
+1. Go to **Settings** → **Webhooks**
+2. Click **Add Webhook**
+3. Enter your webhook URL
+4. Select events to receive
+5. Save
+
+## Code Examples
+
+### JavaScript/Node.js
+
+```javascript
+const API_KEY = 'your-api-key';
+const BASE_URL = 'https://api.tracker.creatosaurus.in/v1';
+
+async function getProducts(category) {
+  const response = await fetch(
+    `${BASE_URL}/products?category=${category}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`
+      }
+    }
+  );
+  
+  return response.json();
+}
+
+// Get products
+const products = await getProducts('Fruits & Vegetables');
+console.log(products);
+```
+
+### Python
+
+```python
+import requests
+
+API_KEY = 'your-api-key'
+BASE_URL = 'https://api.tracker.creatosaurus.in/v1'
+
+headers = {
+    'Authorization': f'Bearer {API_KEY}'
+}
+
+# Get products
+response = requests.get(
+    f'{BASE_URL}/products',
+    headers=headers,
+    params={'category': 'Fruits & Vegetables'}
+)
+
+products = response.json()
+print(products)
+```
+
+### cURL
+
+```bash
+curl -X GET 'https://api.tracker.creatosaurus.in/v1/products' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json'
+```
+
+## Error Handling
+
+### Error Responses
+
+```json
+{
+  "error": {
+    "code": "INVALID_API_KEY",
+    "message": "The API key provided is invalid",
+    "timestamp": "2025-03-17T10:30:00Z"
+  }
+}
+```
+
+### Common Error Codes
+
+| Code | Status | Meaning |
+|------|--------|---------|
+| `INVALID_API_KEY` | 401 | API key is missing or invalid |
+| `RATE_LIMITED` | 429 | Too many requests |
+| `NOT_FOUND` | 404 | Resource not found |
+| `BAD_REQUEST` | 400 | Invalid parameters |
+| `SERVER_ERROR` | 500 | Server error |
+
+## Rate Limiting
+
+API rate limits by plan:
+
+| Plan | Requests/min | Requests/day |
+|------|---|---|
+| Free | 60 | 10,000 |
+| Pro | 600 | 100,000 |
+| Enterprise | Custom | Custom |
+
+## Best Practices
+
+✓ **Do:**
+- Cache API responses
+- Use pagination for large datasets
+- Implement exponential backoff for retries
+- Monitor your rate limit usage
+- Keep API keys secure
+
+✗ **Don't:**
+- Hardcode API keys in public code
+- Make unnecessary API calls
+- Ignore rate limit headers
+- Poll API too frequently
+- Share API keys

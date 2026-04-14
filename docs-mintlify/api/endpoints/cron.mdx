@@ -1,0 +1,108 @@
+---
+title: Cron & Scheduling
+description: Schedule automated tasks
+---
+
+# Cron & Scheduling
+
+Run cron jobs and manage the scheduler.
+
+## Execute Cron
+
+Execute a cron job.
+
+```
+GET /api/cron
+```
+
+### Response (200)
+
+```
+Cron job executed
+```
+
+---
+
+## Generate Overview Cache
+
+Generate/update overview cache for all pincodes.
+
+```
+GET /api/cron/generate-overview
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "results": [
+    {
+      "pincode": "400706",
+      "status": "created"
+    },
+    {
+      "pincode": "400101",
+      "status": "updated"
+    }
+  ]
+}
+```
+
+---
+
+## Get Scheduler Status
+
+Check scheduler status.
+
+```
+GET /api/scheduler
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "status": "running",
+  "isRunning": true
+}
+```
+
+---
+
+## Start/Stop Scheduler
+
+Control the scheduler.
+
+```
+POST /api/scheduler
+```
+
+### Request Body
+
+```json
+{
+  "action": "start"
+}
+```
+
+Valid actions: `start`, `stop`
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Scheduler started"
+}
+```
+
+---
+
+## Common Cron Tasks
+
+- Generate overview cache (hourly)
+- Check API key health (daily)
+- Sync timestamps (as needed)
+- Retry failed scrapes (every 4 hours)

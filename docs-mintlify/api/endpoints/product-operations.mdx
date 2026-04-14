@@ -1,0 +1,115 @@
+---
+title: Product Operations
+description: Update and delete products
+---
+
+# Product Operations
+
+Batch update and delete product data.
+
+## Update Products
+
+Batch update product snapshot fields.
+
+```
+POST /api/product/update
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/product/update \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "updates": [
+      {
+        "snapshotId": "snap_123",
+        "name": "Updated Name",
+        "price": 150,
+        "stock": "in_stock"
+      }
+    ]
+  }'
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `updates` | array | Yes | Array of update objects |
+| `snapshotId` | string | Yes (in each update) | Product snapshot ID |
+| Other fields | any | No | Fields to update |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "processed": 1,
+  "errors": []
+}
+```
+
+---
+
+## Delete Products
+
+Batch delete products by ID and platform.
+
+```
+POST /api/product/delete
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/product/delete \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "products": [
+      {
+        "productId": "blinkit_sku_001",
+        "platform": "blinkit",
+        "pincode": "400706"
+      }
+    ]
+  }'
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `products` | array | Yes | Array of products to delete |
+| `productId` | string | Yes | Product identifier |
+| `platform` | string | Yes | Platform name |
+| `pincode` | string | No | Specific pincode |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Products deleted successfully",
+  "deletedCount": 1
+}
+```
+
+### JavaScript Example
+
+```javascript
+async function deleteProducts(products, token) {
+  const response = await fetch('http://localhost:3000/api/product/delete', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ products })
+  });
+  
+  return response.json();
+}
+```

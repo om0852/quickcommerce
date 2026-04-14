@@ -1,0 +1,111 @@
+---
+title: Utilities
+description: Utility endpoints for feedback and health
+---
+
+# Utilities
+
+Miscellaneous utility endpoints.
+
+## Submit Feedback
+
+Submit user feedback via email.
+
+```
+POST /api/feedback
+```
+
+### Request Body
+
+```json
+{
+  "email": "user@example.com",
+  "contactNumber": "+91-9876543210",
+  "message": "Feature request: add price comparison"
+}
+```
+
+### Parameters
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `email` | string | Yes |
+| `contactNumber` | string | Yes |
+| `message` | string | Yes |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Feedback submitted successfully"
+}
+```
+
+### Response (400 - Invalid)
+
+```json
+{
+  "error": "Invalid email format",
+  "status": 400
+}
+```
+
+### Response (500 - Server Error)
+
+```json
+{
+  "error": "Failed to send email",
+  "status": 500
+}
+```
+
+---
+
+## JavaScript Example
+
+```javascript
+async function submitFeedback(email, phone, message, token) {
+  const response = await fetch('http://localhost:3000/api/feedback', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      contactNumber: phone,
+      message
+    })
+  });
+  
+  return response.json();
+}
+```
+
+---
+
+## Python Example
+
+```python
+def submit_feedback(email, phone, message, token):
+    response = requests.post(
+        'http://localhost:3000/api/feedback',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'email': email,
+            'contactNumber': phone,
+            'message': message
+        }
+    )
+    return response.json()
+```
+
+---
+
+## Feedback Best Practices
+
+- Be specific in your message
+- Include valid contact information
+- ​One issue per feedback submission
+- Follow up if needed

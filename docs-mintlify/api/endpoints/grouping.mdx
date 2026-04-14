@@ -1,0 +1,299 @@
+---
+title: Product Grouping
+description: Manage product variants and groupings
+---
+
+# Product Grouping
+
+Manage product groups for unified tracking of product variants.
+
+## Add to Group
+
+Add product variants to an existing group.
+
+```
+POST /api/grouping/add
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/grouping/add \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "targetGroupId": "group_123",
+    "productId": "zepto_SKU001",
+    "pincode": "400706",
+    "platform": "zepto"
+  }'
+```
+
+### Request Body
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `targetGroupId` | string | Yes |
+| `productId` | string | Yes |
+| `pincode` | string | Yes |
+| `platform` | string | Yes |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "groupingId": "group_123",
+  "count": 5,
+  "message": "Product added to group"
+}
+```
+
+---
+
+## Update Group
+
+Update group metadata.
+
+```
+POST /api/grouping/update
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/grouping/update \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "groupingId": "group_123",
+    "updates": {
+      "name": "Organic Banana",
+      "brand": "FreshFarm",
+      "weight": "1kg",
+      "groupImage": "banana.jpg",
+      "label": "Certified Organic"
+    }
+  }'
+```
+
+### Request Body
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `groupingId` | string | Yes |
+| `updates` | object | Yes |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "group": {
+    "_id": "group_123",
+    "name": "Organic Banana",
+    "brand": "FreshFarm"
+  }
+}
+```
+
+---
+
+## Remove from Group
+
+Remove product from group.
+
+```
+POST /api/grouping/remove
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/grouping/remove \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "groupingId": "group_123",
+    "productId": "zepto_SKU001",
+    "platform": "zepto",
+    "exactOnly": false
+  }'
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Product removed from group"
+}
+```
+
+---
+
+## Regroup Product
+
+Split product into new group.
+
+```
+POST /api/grouping/regroup
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/grouping/regroup \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "zepto_SKU001",
+    "platform": "zepto",
+    "category": "fruits",
+    "pincode": "400706"
+  }'
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "groupingId": "group_456",
+  "message": "Product regrouped"
+}
+```
+
+---
+
+## Delete Group
+
+Delete group and ungroup its products.
+
+```
+POST /api/grouping/delete-group
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/grouping/delete-group \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "groupingId": "group_123"
+  }'
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Group deleted",
+  "stats": {
+    "deletedGroup": 1,
+    "createdGroups": 3
+  }
+}
+```
+
+---
+
+## Delete Recursive
+
+Delete group and specific products.
+
+```
+POST /api/grouping/delete-recursive
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/grouping/delete-recursive \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "groupingId": "group_123",
+    "products": [
+      {
+        "productId": "zepto_SKU001",
+        "platform": "zepto",
+        "pincode": "400706"
+      }
+    ]
+  }'
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "stats": {
+    "deletedGroup": 1,
+    "deletedSnapshots": 5
+  }
+}
+```
+
+---
+
+## Cross-Pincode Analysis
+
+Get product availability across pincodes.
+
+```
+GET /api/grouping/cross-pincode?groupingId=group_123
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "groupingId": "group_123",
+  "primaryName": "Organic Banana",
+  "products": [
+    {
+      "productId": "zepto_SKU001",
+      "platform": "zepto",
+      "productName": "Organic Banana 1kg",
+      "pincodes": ["400706", "400101"],
+      "pincodeDetails": {
+        "400706": {
+          "price": 120,
+          "stock": "in_stock"
+        }
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Problematic Groups
+
+Get groups flagged as problematic.
+
+```
+GET /api/grouping/problematic
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "count": 5,
+  "groups": [
+    {
+      "_id": "group_999",
+      "name": "Unclear Product",
+      "products": [...]
+    }
+  ]
+}
+```

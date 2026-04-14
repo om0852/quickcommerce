@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
-const nextConfig = {
+const nextConfig: NextConfig = {
   experimental: {
     // instrumentationHook: true, // Deprecated
   },
-} as NextConfig;
+};
 
 export default nextConfig;

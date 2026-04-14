@@ -1,0 +1,184 @@
+---
+title: Search & Suggestions
+description: Search products and manage suggestions
+---
+
+# Search & Suggestions
+
+Search for products/groups and manage user suggestions.
+
+## Hybrid Search
+
+Search by group ID or product ID.
+
+```
+GET /api/search?q=banana
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `q` | string | Yes | Search query |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "type": "group",
+  "group": {
+    "_id": "group_123",
+    "name": "Banana",
+    "products": [...]
+  },
+  "totalPincodes": 8,
+  "totalSnapshots": 24
+}
+```
+
+---
+
+## Admin Search
+
+Advanced search with similarity matching.
+
+```
+GET /api/admin-search?q=banana
+```
+
+Uses Jaccard + Levenshtein similarity for fuzzy matching.
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "results": [...]
+}
+```
+
+---
+
+## Get Suggestions
+
+Get all user suggestions.
+
+```
+GET /api/suggestions
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "suggestions": [
+    {
+      "_id": "sugg_123",
+      "pincode": "400706",
+      "category": "fruits",
+      "description": "Missing organic banana",
+      "status": "pending",
+      "createdAt": "2026-03-17T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Create Suggestion
+
+Submit a new suggestion.
+
+```
+POST /api/suggestions
+```
+
+### Request Body
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `pincode` | string | Yes |
+| `category` | string | Yes |
+| `description` | string | Yes |
+| `groupId` | string | No |
+| `productId` | string | No |
+| `productUrl` | string | No |
+| `images` | array | No |
+
+### Response (201)
+
+```json
+{
+  "success": true,
+  "suggestion": {
+    "_id": "sugg_123",
+    "pincode": "400706",
+    "category": "fruits",
+    "description": "Missing organic banana",
+    "status": "pending"
+  }
+}
+```
+
+---
+
+## Update Suggestion
+
+Update suggestion status.
+
+```
+PATCH /api/suggestions
+```
+
+### Request Body
+
+```json
+{
+  "id": "sugg_123",
+  "status": "completed"
+}
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "suggestion": {
+    "_id": "sugg_123",
+    "status": "completed"
+  }
+}
+```
+
+---
+
+## Delete Suggestion
+
+Delete a suggestion.
+
+```
+DELETE /api/suggestions?id=sugg_123
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Suggestion deleted"
+}
+```
+
+---
+
+## Suggestion Statuses
+
+| Status | Meaning |
+|--------|---------|
+| pending | New suggestion, not reviewed |
+| completed | Suggestion implemented |
+| rejected | Suggestion not accepted |

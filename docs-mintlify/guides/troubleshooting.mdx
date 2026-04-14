@@ -1,0 +1,307 @@
+---
+title: Troubleshooting
+description: Common issues and solutions
+---
+
+# Troubleshooting Guide
+
+## Dashboard Issues
+
+### Dashboard Not Loading
+
+**Problem:** Page is blank or shows error message
+
+**Solutions:**
+1. **Clear browser cache**
+   - Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)
+   - Select all time periods
+   - Clear cache and cookies
+
+2. **Try different browser**
+   - Try Chrome, Firefox, Safari, or Edge
+   - Check browser compatibility (Chrome 90+)
+
+3. **Check internet connection**
+   - Verify stable internet
+   - Try mobile hotspot if possible
+   - Disable VPN temporarily
+
+4. **Disable browser extensions**
+   - Ad blockers sometimes interfere
+   - Temporarily disable all extensions
+   - Re-enable one by one
+
+### Data Not Updating
+
+**Problem:** Prices show as stale (old timestamp)
+
+**Check:**
+- Click ↻ refresh button manually
+- Wait 2-4 hours for automatic update
+- Verify platform is available
+- Check [Status Page](/status) for platform outages
+
+**If persists:**
+- Clear cache and reload
+- Try incognito/private mode
+- Contact [support@creatosaurus.in](mailto:support@creatosaurus.in)
+
+### Search Not Working
+
+**Problem:** Search returns no results or errors
+
+**Try:**
+1. **Clear search filters**
+   - Click "Clear All Filters"
+   - Try again with fewer criteria
+
+2. **Check spelling**
+   - Typos cause no matches
+   - Try partial name
+
+3. **Verify category selected**
+   - Make sure category exists
+   - Check date range
+
+4. **Try different keywords**
+   - Use simpler terms
+   - Include variations
+
+### Export Not Starting
+
+**Problem:** Export button doesn't work or file never arrives
+
+**Solutions:**
+1. **Reduce export size**
+   - Use smaller date range
+   - Filter by platform
+   - Export by category separately
+
+2. **Check email**
+   - Look in spam/promotions folder
+   - Verify email address in settings
+   - Add noreply@creatosaurus.in to contacts
+
+3. **Try different format**
+   - CSV sometimes works when JSON doesn't
+   - Excel requires larger export
+
+## Alerts & Notifications
+
+### Alerts Not Triggering
+
+**Checklist:**
+- ✓ Alert is Active (not paused)
+- ✓ Price target is realistic
+- ✓ Product still tracked
+- ✓ Platform is available
+- ✓ Notification method enabled
+- ✓ Email not in spam
+
+**If still not working:**
+- Temporarily increase price range
+- Check alert history
+- Try recreating alert
+
+### Not Receiving Alert Emails
+
+**Try:**
+1. **Check spam folder**
+   - Add support@creatosaurus.in to safe senders
+   - Move emails to primary inbox
+
+2. **Verify email in settings**
+   - Go to Settings → Account
+   - Confirm correct email
+   - Add additional email if needed
+
+3. **Check notification settings**
+   - Settings → Notifications
+   - Enable "Email Alerts"
+   - Verify frequency (instant or digest)
+
+4. **Test alert**
+   - Create low-target test alert
+   - Should trigger within hours
+   - Check email immediately
+
+### Too Many Alert Notifications
+
+**Solutions:**
+- Increase alert price threshold
+- Use daily digest instead of instant
+- Pause non-critical alerts
+- Combine similar alerts into one
+
+## Authentication Issues
+
+### Can't Login
+
+**Problem:** Incorrect password error
+
+**Solutions:**
+1. **Reset password**
+   - Click "Forgot Password"
+   - Check email for reset link
+   - Create new password
+
+2. **Check caps lock**
+   - Ensure it's off
+
+3. **Try different browser**
+   - Try Chrome, Firefox, Safari
+   - Clear cookies
+
+4. **Account locked**
+   - Wait 15 minutes
+   - Try again
+   - Contact support if still locked
+
+### API Key Not Working
+
+**Problem:** API returns 401 Unauthorized
+
+**Verify:**
+- API key is correct (copy/paste, no spaces)
+- Key hasn't expired
+- Using correct format: `Bearer YOUR_KEY`
+- Authorization header is exact case
+
+**If correct but still fails:**
+- Regenerate new key
+- Revoke old key
+- Update code with new key
+
+## Data Quality Issues
+
+### Prices Look Incorrect
+
+**Verify:**
+1. Check timestamp - is it recent? (< 2 hours old)
+2. Confirm on actual platform
+3. Check for special pricing/promos
+4. Verify personal account pricing (Zepto, Blinkit use location-based pricing)
+
+**If definitely wrong:**
+- Report via **Report Issue** button
+- Include screenshot and timestamp
+- Support will investigate
+
+### Missing Platform Data
+
+**Why it happens:**
+- Platform temporarily unavailable
+- Platform structure changed
+- Too many requests (rate limited)
+
+**Solutions:**
+- Wait 24 hours for recovery
+- Try manual export from platform directly
+- Check [Status Page](/status)
+- Contact support
+
+### Duplicate Products
+
+**Happens when:**
+- Same product added multiple times
+- Platform lists multiple variants
+
+**Solutions:**
+- Report duplicate to support
+- Filter to single product temporarily
+- Use "Link Products" feature
+
+## Performance Issues
+
+### Dashboard Slow/Laggy
+
+**Try:**
+1. **Reduce data size**
+   - Use shorter date range
+   - Filter by category
+   - Select fewer platforms
+
+2. **Check internet**
+   - Run speed test
+   - Close other tabs
+   - Restart router
+
+3. **Clear cache**
+   - Clear browser cache
+   - Log out and back in
+   - Close and reopen browser
+
+### Large Export Taking Forever
+
+**Solutions:**
+- Split into smaller exports
+- Export by category separately
+- Export by platform separately
+- Use API for programmatic access
+
+## Billing & Subscription
+
+### Can't Upgrade Plan
+
+**Problem:** Upgrade button disabled or error
+
+**Check:**
+1. Payment method valid?
+2. No pending invoices?
+3. Not already on plan?
+
+**If persists:**
+- Contact support
+- Payment provider might be issuing
+
+### Charged Twice
+
+**What to do:**
+1. Check billing history
+2. Verify charges (look for description)
+3. Contact support with:
+   - Order IDs
+   - Transaction dates
+   - Screenshots
+
+**Refund process:**
+- Support will investigate within 48 hours
+- Refund issued to original payment method if error
+- Takes 3-5 business days
+
+## Getting Help
+
+### Contact Support
+
+**Email:** support@creatosaurus.in
+- Response time: < 4 hours
+- Include screenshots and error messages
+
+**In-app Chat:**
+- Click help icon (?)
+- Chat with support team
+- Response time: < 1 hour during business hours
+
+**Community Forum:**
+- [community.creatosaurus.in](/community)
+- Ask other users
+- Share workarounds
+
+### Report a Bug
+
+**Use in-app bug report:**
+1. Settings → Report Bug
+2. Describe issue
+3. Include screenshot
+4. Submit
+
+**Or email:** bugs@creatosaurus.in
+
+## Still Need Help?
+
+- Check [FAQ](/guides/faq) section
+- Review [Documentation](/docs)
+- Watch [Video Tutorials](/tutorials)
+- Join [Community Forum](/community)
+
+We're here to help! Don't hesitate to reach out.

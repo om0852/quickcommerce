@@ -1,0 +1,115 @@
+---
+title: Scraping
+description: Trigger scraping operations
+---
+
+# Scraping Endpoints
+
+Trigger platform scraping and category data collection.
+
+## Scrape Blinkit
+
+Scrape Blinkit for category data.
+
+```
+POST /api/scrape-blinkit
+```
+
+### Request Body
+
+```json
+{
+  "category": "fruits",
+  "pincodes": ["400706", "400101"],
+  "scrapedAt": "2026-03-17T15:30:00Z"
+}
+```
+
+### Parameters
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `category` | string | Yes |
+| `pincodes` | array | Yes |
+| `scrapedAt` | string | No |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Blinkit scrape initiated",
+  "results": {
+    "category": "fruits",
+    "pincodes": ["400706", "400101"],
+    "scrapedAt": "2026-03-17T15:30:00Z",
+    "blinkit": {
+      "collected": 150,
+      "errors": 0
+    }
+  }
+}
+```
+
+---
+
+## Scrape Categories
+
+Scrape categories with custom URLs.
+
+```
+POST /api/scrape-categories
+```
+
+### Request Body - Single Category
+
+```json
+{
+  "category": "fruits",
+  "pincodes": ["400706"]
+}
+```
+
+### Request Body - Batch
+
+```json
+{
+  "categories": [
+    {
+      "name": "fruits",
+      "urls": {
+        "zepto": "https://...",
+        "blinkit": "https://..."
+      }
+    }
+  ],
+  "pincodes": ["400706"]
+}
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Categories scrape completed",
+  "results": [
+    {
+      "success": true,
+      "category": "fruits",
+      "result": {
+        "collected": 200
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Scraping Best Practices
+
+- Limit concurrent scrapes to 2-3
+- Space out requests to avoid rate limiting
+- Monitor failed scrapes and retry
+- Use custom URLs for faster scraping

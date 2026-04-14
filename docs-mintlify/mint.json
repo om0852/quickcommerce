@@ -1,0 +1,163 @@
+{
+  "name": "QuickCommerce Tracker",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#000000",
+    "light": "#f5f5f5",
+    "dark": "#000000",
+    "ultraLight": "#fafafa",
+    "ultraDark": "#0a0a0a",
+    "background": {
+      "dark": "#000000"
+    },
+    "anchors": {
+      "from": "#0066cc",
+      "to": "#0052a3"
+    }
+  },
+  "modeToggle": {
+    "default": "dark",
+    "isHidden": false
+  },
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://github.com"
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:support@creatosaurus.in"
+    }
+  ],
+  "tabs": [
+    {
+      "name": "Guides",
+      "url": "guides"
+    },
+    {
+      "name": "API Reference",
+      "url": "api"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "index",
+        "quickstart",
+        "installation"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "guides/overview",
+        "guides/categories",
+        "guides/platforms",
+        "guides/pricing"
+      ]
+    },
+    {
+      "group": "Features",
+      "pages": [
+        "guides/analytics",
+        "guides/alerts",
+        "guides/export",
+        "guides/search"
+      ]
+    },
+    {
+      "group": "Advanced",
+      "pages": [
+        "guides/api-integration",
+        "guides/data-sync"
+      ]
+    },
+    {
+      "group": "Troubleshooting",
+      "pages": [
+        "guides/faq",
+        "guides/troubleshooting"
+      ]
+    },
+    {
+      "group": "API Basics",
+      "pages": [
+        "api/overview",
+        "api/authentication",
+        "api/error-handling"
+      ]
+    },
+    {
+      "group": "Authentication",
+      "pages": [
+        "api/endpoints/auth"
+      ]
+    },
+    {
+      "group": "Products",
+      "pages": [
+        "api/endpoints/products",
+        "api/endpoints/product-operations"
+      ]
+    },
+    {
+      "group": "Product Grouping",
+      "pages": [
+        "api/endpoints/grouping"
+      ]
+    },
+    {
+      "group": "Search & Suggestions",
+      "pages": [
+        "api/endpoints/search",
+        "api/endpoints/suggestions"
+      ]
+    },
+    {
+      "group": "Analytics",
+      "pages": [
+        "api/endpoints/analytics"
+      ]
+    },
+    {
+      "group": "Data Management",
+      "pages": [
+        "api/endpoints/brands",
+        "api/endpoints/data-management"
+      ]
+    },
+    {
+      "group": "Scraping",
+      "pages": [
+        "api/endpoints/scraping"
+      ]
+    },
+    {
+      "group": "Data Integrity",
+      "pages": [
+        "api/endpoints/data-integrity"
+      ]
+    },
+    {
+      "group": "Cron & Scheduling",
+      "pages": [
+        "api/endpoints/cron"
+      ]
+    },
+    {
+      "group": "Utilities",
+      "pages": [
+        "api/endpoints/utilities"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "twitter": "https://twitter.com",
+    "github": "https://github.com"
+  }
+}

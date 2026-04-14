@@ -1,0 +1,324 @@
+---
+title: Suggestions & Feedback
+description: Contribute and manage product suggestions
+---
+
+# Suggestions & Feedback
+
+## About Suggestions
+
+The Suggestions system allows users to:
+- Report missing products
+- Flag data quality issues
+- Suggest new categories
+- Provide feedback on pricing
+
+## Creating Suggestions
+
+### Via API
+
+Create a new suggestion:
+
+```bash
+curl -X POST http://localhost:3000/api/suggestions \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pincode": "400706",
+    "category": "fruits",
+    "description": "Missing organic banana from Zepto",
+    "productUrl": "https://...",
+    "images": []
+  }'
+```
+
+### Suggestion Types
+
+- **Missing Product:** Product not in our database
+- **Data Issue:** Incorrect pricing or stock
+- **Category Request:** New category to track
+- **Platform Issue:** Data accuracy on specific platform
+
+## Managing Suggestions
+
+### Get All Suggestions
+
+View all submitted suggestions:
+
+```bash
+GET /api/suggestions
+```
+
+### Update Status
+
+Update suggestion status:
+
+```bash
+curl -X PATCH http://localhost:3000/api/suggestions \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "sugg_123",
+    "status": "completed"
+  }'
+```
+
+Valid statuses:
+- `pending` - New suggestion
+- `completed` - Implemented
+- `rejected` - Not accepted
+
+### Delete Suggestion
+
+```bash
+DELETE /api/suggestions?id=sugg_123 \
+  -H "Authorization: Bearer TOKEN"
+```
+
+## Feedback Process
+
+Submit feedback:
+
+```bash
+curl -X POST http://localhost:3000/api/feedback \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "contactNumber": "+91-9876543210",
+    "message": "Pricing seems inaccurate for Blinkit bananas"
+  }'
+```
+
+## Best Practices
+
+✓ **DO:**
+- Be specific about the issue
+- Include URLs if possible
+- Attach screenshots
+- Include product names and platforms
+
+✗ **DON'T:**
+- Submit duplicate suggestions
+- Include personal information
+- Use offensive language
+- Make general complaints
+
+## Alert Types
+
+### Price Drop Alerts
+
+Triggered when price falls below your target:
+
+```
+Alert: "Notify me when <= ₹50"
+Current Price: ₹60
+If price drops to ₹49 → Alert triggered ✓
+```
+
+**Best for:**
+- Shopping optimization
+- Budget shopping
+- Deal hunting
+
+### Price Increase Alerts
+
+Monitor when prices rise above threshold:
+
+```
+Alert: "Notify me when >= ₹150"
+Current Price: ₹120
+If price increases to ₹151 → Alert triggered ✓
+```
+
+**Best for:**
+- Supplier monitoring
+- Price negotiation prep
+- Market analysis
+
+### Availability Alerts
+
+Get notified when product stock changes:
+
+```
+Alert: "Notify when: Back in Stock"
+Status: Out of Stock
+If status changes to In Stock → Alert triggered ✓
+```
+
+**Best for:**
+- Popular items
+- Pre-order items
+- Seasonal products
+
+### Platform Alerts
+
+Track when product appears on new platforms:
+
+```
+Alert: "Notify when available on: Zepto"
+Currently available on: Blinkit, JioMart
+If you add on Zepto → Alert triggered ✓
+```
+
+## Alert Management
+
+### View Active Alerts
+
+1. Go to **My Alerts** from sidebar
+2. See all active alerts
+3. Monitor trigger status
+4. Edit or delete as needed
+
+### Alert Dashboard
+
+| Column | Shows |
+|--------|-------|
+| Product | Product name & image |
+| Current Price | Latest price |
+| Target | Alert trigger price |
+| Platform(s) | Monitored platforms |
+| Status | Active/Paused/Triggered |
+| Created | Alert creation date |
+| Last Triggered | Last time alert fired |
+
+### Editing Alerts
+
+Modify any alert anytime:
+
+1. Click on alert row
+2. Click ✏️ Edit
+3. Change parameters
+4. Save changes
+
+Changes take effect immediately.
+
+### Pausing Alerts
+
+Temporarily disable without deleting:
+
+1. Click alert
+2. Click ⏸️ Pause
+3. Click ▶️ Resume when ready
+
+Paused alerts won't trigger but can be reactivated.
+
+### Deleting Alerts
+
+Remove alerts you no longer need:
+
+1. Select alert
+2. Click 🗑️ Delete
+3. Confirm deletion
+
+Deleted alerts cannot be recovered.
+
+## Notification Preferences
+
+### Email Notifications
+
+Configure email alert delivery:
+
+1. Go to **Settings** → **Notifications**
+2. Enable "Email Alerts"
+3. Choose frequency:
+   - Instant delivery
+   - Hourly digest
+   - Daily summary
+4. Select recipient email(s)
+
+### In-App Notifications
+
+See notifications in your dashboard:
+- Bell icon (🔔) shows alert count
+- Notification center shows history
+- Click to dismiss or act on alert
+
+### SMS Notifications
+
+Get alerts via text message (if enabled):
+
+1. **Settings** → **Notifications**
+2. Enable "SMS Alerts"
+3. Add phone number
+4. Verify phone number
+5. Choose alert types for SMS
+
+### Webhook Integration
+
+For API users - send alerts to your system:
+
+```json
+{
+  "event": "price_alert_triggered",
+  "product": "SKU001",
+  "price": 49.99,
+  "platform": "Zepto",
+  "timestamp": "2025-03-17T10:30:00Z"
+}
+```
+
+See [API Integration Guide](/guides/api-integration) for details.
+
+## Alert History
+
+### View History
+
+Access triggered alerts:
+
+1. Click **Alerts** → **History**
+2. Filter by:
+   - Date range
+   - Product
+   - Alert type
+   - Status
+
+### Export Alert Log
+
+Download alert history for records:
+
+1. Select date range
+2. Click **Export**
+3. Choose format (CSV or JSON)
+
+## Best Practices
+
+✓ **Do:**
+- Set realistic price targets
+- Enable multiple notification methods
+- Review alert effectiveness periodically
+- Use daily digests to reduce notification fatigue
+- Delete obsolete alerts
+
+✗ **Don't:**
+- Set price targets too low (unlikely to trigger)
+- Create too many similar alerts
+- Ignore alerts after receiving them
+- Forget to verify triggers worked
+- Enable all notification methods simultaneously
+
+## Troubleshooting Alerts
+
+### Alert Not Triggering
+
+**Check:**
+- Trigger price is realistic
+- Alert is still active (not paused)
+- Price data is updating
+- Platform is currently tracking the product
+
+### Too Many Alerts
+
+**Solutions:**
+- Increase price threshold
+- Pause non-essential alerts
+- Use daily digest instead of instant
+- Combine similar alerts
+
+### Missing Notifications
+
+**Verify:**
+- Email not in spam folder
+- SMS enabled and phone verified
+- In-app notifications enabled
+- Webhook URL is active

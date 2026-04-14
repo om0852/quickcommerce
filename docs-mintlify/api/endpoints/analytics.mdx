@@ -1,0 +1,129 @@
+---
+title: Analytics
+description: Category analytics and insights
+---
+
+# Analytics Endpoints
+
+Get analytics, insights, and distribution data for categories.
+
+## Category Analytics
+
+Get price distribution, stock, ranking, and availability analytics.
+
+```
+GET /api/analytics
+```
+
+### Query Parameters
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `category` | string | Yes |
+| `pincode` | string | Yes |
+| `platform` | string | No |
+
+### Request
+
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:3000/api/analytics?category=fruits&pincode=400706"
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "analytics": {
+    "priceDistribution": [
+      {
+        "range": "0-50",
+        "count": 10,
+        "percentage": 7.4
+      },
+      {
+        "range": "50-100",
+        "count": 85,
+        "percentage": 62.9
+      },
+      {
+        "range": "100-200",
+        "count": 40,
+        "percentage": 29.6
+      }
+    ],
+    "stockOverview": {
+      "in_stock": 120,
+      "out_of_stock": 10,
+      "limited": 5
+    },
+    "rankingData": {
+      "top_rank_avg": 2.5,
+      "bottom_rank_avg": 45.2
+    },
+    "stockAvailability": [
+      {
+        "platform": "zepto",
+        "available": 98,
+        "unavailable": 12
+      },
+      {
+        "platform": "blinkit",
+        "available": 95,
+        "unavailable": 15
+      }
+    ]
+  }
+}
+```
+
+### JavaScript Example
+
+```javascript
+async function getCategoryAnalytics(category, pincode, token) {
+  const response = await fetch(
+    `http://localhost:3000/api/analytics?category=${category}&pincode=${pincode}`,
+    { headers: { 'Authorization': `Bearer ${token}` } }
+  );
+  
+  const data = await response.json();
+  console.log(`${category} price distribution:`, data.analytics.priceDistribution);
+  return data;
+}
+```
+
+### Python Example
+
+```python
+def get_analytics(category, pincode, token):
+    response = requests.get(
+        'http://localhost:3000/api/analytics',
+        params={'category': category, 'pincode': pincode},
+        headers={'Authorization': f'Bearer {token}'}
+    )
+    return response.json()
+```
+
+---
+
+## Analytics Fields
+
+### Price Distribution
+- `range`: Price brackets (0-50, 50-100, etc)
+- `count`: Number of products in range
+- `percentage`: Percentage of total
+
+### Stock Overview
+- `in_stock`: Count of in-stock products
+- `out_of_stock`: Count of out-of-stock products
+- `limited`: Count of limited availability
+
+### Ranking Data
+- `top_rank_avg`: Average rank for top products
+- `bottom_rank_avg`: Average rank for bottom products
+
+### Stock Availability
+- `platform`: Platform name
+- `available`: Number of available products
+- `unavailable`: Number of unavailable products

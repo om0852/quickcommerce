@@ -1,0 +1,264 @@
+---
+title: Analytics
+description: Analyze pricing data and market trends
+---
+
+# Analytics
+
+## Category Analytics
+
+Get insights into pricing, stock levels, and market dynamics.
+
+### Query Analytics
+
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  "http://localhost:3000/api/analytics?category=fruits&pincode=400706"
+```
+
+### Analytics Data
+
+Returns comprehensive analytics:
+
+**Price Distribution**
+```json
+{
+  "range": "50-100",
+  "count": 85,
+  "percentage": 62.9
+}
+```
+
+Shows how many products fall in each price bracket.
+
+**Stock Overview**
+```json
+{
+  "in_stock": 120,
+  "out_of_stock": 10,
+  "limited": 5
+}
+```
+
+Total product availability status.
+
+**Ranking Data**
+```json
+{
+  "top_rank_avg": 2.5,
+  "bottom_rank_avg": 45.2
+}
+```
+
+Average ranking positions.
+
+**Platform Availability**
+```json
+{
+  "platform": "zepto",
+  "available": 98,
+  "unavailable": 12
+}
+```
+
+Availability per platform.
+
+## Key Metrics
+
+### Price Metrics
+
+- **Average Price:** Mean price across all products
+- **Min Price:** Lowest priced product
+- **Max Price:** Highest priced product
+- **Price Range:** Max - Min
+- **Standard Deviation:** Price variation
+
+### Stock Metrics
+
+- **In Stock:** Count of available products
+- **Out of Stock:** Count of unavailable products
+- **Limited Stock:** Count of limited availability
+- **Availability Rate:** % of in-stock products
+
+### Platform Metrics
+
+- **Product Count:** Total products per platform
+- **Availability Rate:** % available per platform
+- **Price Range:** Min-Max per platform
+- **Average Rank:** Typical position in results
+- Platform comparison
+- Action items
+
+**Monthly Summary**
+- Monthly trend analysis
+- Category insights
+- Seasonal patterns
+- Forecasts
+
+### Custom Reports
+
+Create reports for specific needs:
+
+1. **Select Period**: Daily, Weekly, Monthly, Custom
+2. **Choose Metrics**: Price, Stock, Availability, etc.
+3. **Filter Data**: By category, platform, region
+4. **Add Comparisons**: Year-over-year, platform vs platform
+5. **Schedule**: One-time or recurring
+
+## Charts & Visualizations
+
+### Line Chart
+
+Best for: Trend analysis over time
+- Shows price progression
+- Multiple platforms comparison
+- Identify patterns
+
+### Bar Chart
+
+Best for: Category or platform comparison
+- Compare prices across platforms
+- Category-wise metrics
+- Time period comparison
+
+### Heatmap
+
+Best for: Price variance visualization
+- Identify outliers
+- Region-wise analysis
+- Time-based patterns
+
+### Pie Chart
+
+Best for: Distribution analysis
+- Stock availability distribution
+- Category breakdown
+- Platform market share
+
+## Metrics Explained
+
+### Price Volatility
+
+Measures how much prices change:
+
+```
+Low Volatility (₹1-₹5 change): Stable products
+Medium Volatility (₹5-₹15 change): Normal variance
+High Volatility (₹15+ change): Fluctuating products
+```
+
+**Calculation**: Standard deviation of prices over period
+
+### Price Index
+
+Normalized price indicator (Base = 100):
+
+```
+Index 100 = baseline price
+Index 110 = 10% above baseline
+Index 90 = 10% below baseline
+```
+
+### Market Share
+
+Estimated based on pricing strategy:
+
+```
+Price Leader: 25% market influence
+Premium Tier: 20% market influence
+Budget Tier: 30% market influence
+```
+
+### Stock Index
+
+Availability percentage:
+
+```
+100% = In stock everywhere
+75% = In stock at 75% of platforms
+0% = Out of stock everywhere
+```
+
+## Advanced Analytics
+
+### Correlation Analysis
+
+Find related price movements:
+- Product X price ↑ → Product Y price ↑
+- Supplier A pricing ↑ → Competitor B pricing ↑
+
+### Forecasting
+
+Predict future prices based on trends:
+- Linear regression for stable products
+- Seasonal decomposition for cyclical items
+- Anomaly detection for unusual prices
+
+### Competitive Positioning
+
+Understand your position relative to competitors:
+- Price rank among platforms
+- Price sensitivity analysis
+- Market gap identification
+
+## Performance Metrics
+
+### Key Performance Indicators (KPIs)
+
+| KPI | Target | Frequency |
+|-----|--------|-----------|
+| Price Accuracy | 99%+ | Daily |
+| Data Update | &lt;2hrs | Real-time |
+| Platform Coverage | 100% | Daily |
+| Alert Accuracy | 95%+ | Per alert |
+
+## Exporting Reports
+
+### PDF Report
+
+Professional formatted report:
+- Include charts and tables
+- Add company branding
+- Schedule automated delivery
+
+### Email Report
+
+Automated report delivery:
+1. Navigate to **Reports**
+2. Click **Schedule**
+3. Set frequency (Daily/Weekly/Monthly)
+4. Add recipients
+5. Customize content
+
+### Integration
+
+Export to external tools:
+- Google Sheets
+- Tableau
+- Power BI
+- Salesforce CRM
+
+## Tips for Better Analysis
+
+✓ **Segment your data:**
+- By category
+- By time period
+- By platform
+- By region
+
+✓ **Compare baselines:**
+- Same date last year
+- Month-over-month
+- Quarter-over-quarter
+
+✓ **Look for patterns:**
+- Weekly cycles
+- Seasonal trends
+- Platform strategies
+- External events
+
+✗ **Avoid:**
+- Single data points as conclusions
+- Ignoring outliers without investigation
+- Comparing unrelated periods
+- Over-interpreting noise

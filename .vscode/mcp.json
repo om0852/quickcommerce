@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"my-mcp-server-a3afdc53": {
+			"url": "https://creatosaurus-ef73c03e.mintlify.app/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

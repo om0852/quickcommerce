@@ -1,0 +1,277 @@
+---
+title: Error Handling
+description: Common errors and how to handle them
+---
+
+# Error Handling
+
+Understand and troubleshoot API errors.
+
+## Error Response Format
+
+All errors return in this format:
+
+```json
+{
+  "error": "Description of what went wrong",
+  "status": 400
+}
+```
+
+## HTTP Status Codes
+
+| Code | Meaning | When It Occurs |
+|------|---------|---|
+| 400 | Bad Request | Invalid parameters or malformed request |
+| 401 | Unauthorized | Missing or invalid authentication token |
+| 404 | Not Found | Resource doesn't exist |
+| 409 | Conflict | Duplicate or conflicting data |
+| 500 | Server Error | Internal server error |
+
+## Common Errors
+
+### 400 Bad Request
+
+**Problem:** Missing required parameters or invalid data
+
+```json
+{
+  "error": "Missing required field: category",
+  "status": 400
+}
+```
+
+**Solution:**
+- Check all required parameters are included
+- Verify data types (string, number, array)
+- Check parameter spelling
+- Validate JSON format for POST requests
+
+### 401 Unauthorized
+
+**Problem:** Invalid or missing authentication token
+
+```json
+{
+  "error": "Invalid or expired token",
+  "status": 401
+}
+```
+
+**Solution:**
+- Provide valid JWT token in Authorization header
+- Format: `Authorization: Bearer YOUR_TOKEN`
+- Get new token via `/api/auth/login`
+- Check token hasn't expired (7 days)
+
+### 404 Not Found
+
+**Problem:** Resource doesn't exist
+
+```json
+{
+  "error": "Product not found",
+  "status": 404
+}
+```
+
+**Solution:**
+- Verify the ID/SKU is correct
+- Check spelling of parameters
+- Ensure resource hasn't been deleted
+- Try with different parameters
+
+### 409 Conflict
+
+**Problem:** Duplicate or conflicting data
+
+```json
+{
+  "error": "Brand with this name already exists",
+  "status": 409
+}
+```
+
+**Solution:**
+- Use different name/identifier
+- Update existing resource instead
+- Delete conflicting resource first
+- Check for uniqueness constraints
+
+### 500 Server Error
+
+**Problem:** Unexpected server error
+
+```json
+{
+  "error": "Internal server error",
+  "status": 500
+}
+```
+
+**Solution:**
+- Try request again
+- Check server logs
+- Verify request is valid
+- Contact support if persistent
+
+## Error Handling Strategy
+
+### Basic Error Handling
+
+```javascript
+try {
+  const response = await fetch('http://localhost:3000/api/endpoint', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    console.error(error.error);
+  }
+  
+  const data = await response.json();
+} catch (error) {
+  console.error('Network error:', error);
+}
+```
+
+### Advanced Error Handling
+
+```javascript
+async function apiCall(endpoint, options = {}) {
+  const maxRetries = 3;
+  let attempt = 0;
+  
+  while (attempt < maxRetries) {
+    try {
+      const response = await fetch(
+        `http://localhost:3000${endpoint}`,
+        {
+          ...options,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            ...options.headers
+          }
+        }
+      );
+      
+      if (response.ok) return response.json();
+      
+      if (response.status === 401) {
+        // Need to re-authenticate
+        throw new Error('Unauthorized - need to re-login');
+      }
+      
+      if (response.status === 500 && attempt < maxRetries - 1) {
+        // Retry on server error
+        attempt++;
+        continue;
+      }
+      
+      const error = await response.json();
+      throw new Error(error.error);
+      
+    } catch (error) {
+      if (attempt === maxRetries - 1) throw error;
+      attempt++;
+      await new Promise(r => setTimeout(r, 1000 * attempt));
+    }
+  }
+}
+```
+
+### Python Error Handling
+
+```python
+import requests
+
+def api_call(endpoint, method='GET', data=None):
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+    
+    try:
+        response = requests.request(
+            method,
+            f'http://localhost:3000{endpoint}',
+            json=data,
+            headers=headers
+        )
+        
+        if response.status_code == 200 or response.status_code == 201:
+            return response.json()
+        
+        elif response.status_code == 401:
+            raise Exception('Unauthorized - token expired or invalid')
+        
+        elif response.status_code in [400, 404]:
+            error_data = response.json()
+            raise Exception(error_data.get('error', 'Request failed'))
+        
+        else:
+            response.raise_for_status()
+            
+    except requests.exceptions.RequestException as e:
+        print(f'Request error: {e}')
+        raise
+```
+
+## Debugging Tips
+
+### 1. Check Request Format
+
+```bash
+# Test with verbose output
+curl -v -X GET \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:3000/api/endpoint
+```
+
+### 2. Validate Parameters
+
+```bash
+# Check if parameter names are correct
+# Common mistakes:
+# - category vs categories  
+# - pincode vs pin
+# - productId vs product_id
+```
+
+### 3. Check Authentication
+
+```bash
+# Verify token works
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:3000/api/category-data?category=fruits&pincode=400706
+```
+
+### 4. Enable Logging
+
+Log all API calls:
+
+```javascript
+async function apiCallWithLogging(endpoint, options) {
+  console.log(`[API] ${options.method || 'GET'} ${endpoint}`);
+  console.log(`[Params]`, options);
+  
+  const response = await fetch(
+    `http://localhost:3000${endpoint}`,
+    options
+  );
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    console.error(`[Error] ${response.status}:`, data);
+  } else {
+    console.log(`[Success] ${response.status}`);
+  }
+  
+  return data;
+}
+```
+
+## Rate Limiting
+
+This API is self-hosted with no rate limiting. However, implement rate limiting on client side for best practices.

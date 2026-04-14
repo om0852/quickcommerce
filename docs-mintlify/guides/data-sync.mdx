@@ -1,0 +1,271 @@
+---
+title: Advanced Features
+description: Webhooks and advanced data syncing
+---
+
+# Advanced Features
+
+## Webhooks
+
+### Overview
+
+Webhooks allow your application to receive real-time notifications when events happen in QuickCommerce Tracker.
+
+### Webhook URL Requirements
+
+Your webhook URL must:
+- Be publicly accessible (HTTPS required)
+- Accept POST requests
+- Return 200 OK status within 5 seconds
+- Handle duplicate events
+
+### Configuring Webhooks
+
+1. **Settings** → **Webhooks**
+2. Click **Add Webhook**
+3. Enter your webhook URL
+4. Select events:
+   - Price alerts triggered
+   - Availability changes
+   - Price updates
+5. Save
+
+### Webhook Events
+
+#### Price Alert Triggered
+
+```json
+{
+  "event": "price_alert_triggered",
+  "alertId": "ALERT_ABC123",
+  "sku": "SKU001",
+  "product": "Organic Banana",
+  "platform": "zepto",
+  "currentPrice": 99,
+  "alertPrice": 100,
+  "timestamp": "2025-03-17T10:30:00Z",
+  "deliveryTime": "10-15 mins"
+}
+```
+
+#### Availability Changed
+
+```json
+{
+  "event": "availability_changed",
+  "sku": "SKU001",
+  "product": "Organic Banana",
+  "platform": "blinkit",
+  "previousStatus": "out_of_stock",
+  "currentStatus": "in_stock",
+  "price": 115,
+  "timestamp": "2025-03-17T10:30:00Z"
+}
+```
+
+#### Price Updated
+
+```json
+{
+  "event": "price_updated",
+  "sku": "SKU001",
+  "product": "Organic Banana",
+  "platform": "zepto",
+  "previousPrice": 125,
+  "currentPrice": 120,
+  "timestamp": "2025-03-17T10:30:00Z"
+}
+```
+
+### Webhook Best Practices
+
+✓ **Do:**
+- Respond quickly (within 2 seconds)
+- Process asynchronously
+- Verify webhook signature
+- Log all webhooks
+- Implement retry logic
+
+✗ **Don't:**
+- Make external API calls in handler
+- Process synchronously
+- Ignore duplicate events
+- Use webhooks for polling
+- Share webhook URL publicly
+
+## Data Sync
+
+### Automatic Sync
+
+QuickCommerce Tracker automatically syncs with platforms:
+
+```
+Data Collection → Processing → Deduplication → Storage
+        ↓              ↓              ↓             ↓
+    Every 4-6hrs  Standardization  Matching    Database
+```
+
+### Manual Sync Trigger
+
+For Premium users, manually trigger sync:
+
+1. **Settings** → **Data Sync**
+2. Click **Sync Now**
+3. Select platforms
+4. Confirm
+5. Wait for completion
+
+### Sync Status
+
+Check status from **Settings** → **Sync History**:
+
+| Status | Meaning |
+|--------|---------|
+| In Progress | Currently syncing |
+| Completed | Successfully synced |
+| Partial | Some platforms succeeded |
+| Failed | Sync error occurred |
+
+### Handling Sync Conflicts
+
+When same product appears with different prices:
+
+1. **Automatic**: Uses most recent data
+2. **Manual**: You choose which to keep
+3. **Merged**: Combines for trend analysis
+
+## Data Import
+
+### Import Custom Data
+
+Upload your own price data (CSV):
+
+1. **Settings** → **Data Import**
+2. Click **Upload CSV**
+3. Select file
+4. Map columns to fields
+5. Preview and confirm
+6. Import
+
+### CSV Format
+
+```csv
+sku,name,platform,price,date,stock
+SKU001,Organic Banana,custom_store,₹80,2025-03-17,in_stock
+SKU002,Fresh Tomato,custom_store,₹35,2025-03-17,in_stock
+```
+
+### Import History
+
+View all imports:
+- Date and time
+- Record count
+- Status
+- Errors (if any)
+- Re-import option
+
+## Advanced Filtering
+
+### Complex Queries
+
+Combine multiple filters:
+
+```
+(category = "Fruits & Vegetables")
+AND (price < 100)
+AND (platform IN [zepto, blinkit])
+AND (date >= 2025-03-01)
+AND (stock = "in_stock")
+```
+
+### Saved Filters
+
+Save complex filter combinations:
+
+1. Apply filters
+2. Click **Save Filter**
+3. Name it
+4. Reuse anytime
+
+## Scheduled Tasks
+
+### Scheduled Operations
+
+Automate recurring tasks:
+
+**Daily Price Report**
+```
+Every: Day at 9:00 AM
+Action: Generate report
+Sent to: email@example.com
+Format: PDF with charts
+```
+
+**Weekly Export**
+```
+Every: Friday at 5:00 PM
+Action: Export data
+Format: CSV
+Recipients: team@example.com
+```
+
+**Monthly Backup**
+```
+Every: Last day of month
+Action: Full data backup
+Format: JSON
+Storage: Cloud backup
+```
+
+### Setting Up Scheduled Tasks
+
+1. **Settings** → **Scheduled Tasks**
+2. Click **New Task**
+3. Choose action
+4. Set schedule (cron expression supported)
+5. Configure recipients
+6. Save
+
+## Advanced Export
+
+### Export with Custom Transformations
+
+Transform data during export:
+
+**Pivot by Platform:**
+```
+Date | Zepto | Blinkit | JioMart | DMart
+-----|-------|---------|---------|------
+2025-03-17|₹120|₹115|₹110|₹108
+```
+
+**Calculate Statistics:**
+```
+Product | Avg Price | Min | Max | Std Dev | CV
+--------|-----------|-----|-----|---------|-----
+Banana  | ₹116.60 | ₹108 | ₹120 | 4.88 | 4.2%
+```
+
+**Time Series:**
+```
+Date | Product | Platform | Price | Availability
+-----|---------|----------|-------|----------------
+2025-03-17 | Banana | Zepto | ₹120 | In Stock
+```
+
+### Export Scheduling
+
+Automate exports:
+
+1. Select data and filters
+2. Click **Schedule Export**
+3. Set frequency
+4. Choose delivery method
+5. Save
+
+---
+
+**Next Steps:**
+- Learn about [API Integration](/guides/api-integration)
+- Set up your first webhook
+- Configure automated exports

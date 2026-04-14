@@ -1,0 +1,20 @@
+name: Generate Overview Cron
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Every 6 hours
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  hit-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Timezone
+        run: sudo cp /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
+
+      - name: Trigger Overview API
+        run: |
+          # Replace "your-project.vercel.app" with your actual Vercel domain
+          curl -f -s \
+            --user-agent "GitHub-Actions-Cron" \
+            https://your-project.vercel.app/api/cron/generate-overview

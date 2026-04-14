@@ -1,0 +1,254 @@
+---
+title: Products Endpoint
+description: API endpoints for product data
+---
+
+# Products Endpoint
+
+## List Products
+
+Get a list of tracked products with current prices across all platforms.
+
+```http
+GET /products
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `category` | string | Filter by category (fruits, bakery, dairy) |
+| `region` | string | Filter by region code (e.g., 400706) |
+| `platform` | string | Filter by platform (zepto, blinkit, jiomart, dmart, flipkart, instamart) |
+| `minPrice` | number | Filter by minimum price |
+| `maxPrice` | number | Filter by maximum price |
+| `stock` | string | Filter by stock status (in_stock, out_of_stock, limited) |
+| `page` | integer | Page number for pagination (default: 1) |
+| `limit` | integer | Items per page (default: 50, max: 100) |
+| `sort` | string | Sort field (price_asc, price_desc, updated_desc) |
+| `search` | string | Search by product name or SKU |
+
+### Example Request
+
+```bash
+curl -X GET 'https://api.tracker.creatosaurus.in/v1/products?category=fruits&platform=zepto&limit=10' \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+```
+
+### Example Response
+
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "sku": "SKU001",
+      "name": "Organic Banana",
+      "category": "Fruits & Vegetables",
+      "image": "https://cdn.tracker.creatosaurus.in/products/SKU001.jpg",
+      "prices": {
+        "zepto": {
+          "price": 120,
+          "currency": "INR",
+          "stock": "in_stock",
+          "url": "https://zepto.in/...",
+          "lastUpdated": "2025-03-17T10:30:00Z"
+        },
+        "blinkit": {
+          "price": 115,
+          "currency": "INR",
+          "stock": "in_stock",
+          "url": "https://blinkit.com/...",
+          "lastUpdated": "2025-03-17T10:25:00Z"
+        }
+      },
+      "avgPrice": 116.60,
+      "minPrice": 108,
+      "maxPrice": 120,
+      "tracked": true
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 250,
+    "pages": 25
+  }
+}
+```
+
+## Get Product Details
+
+Get detailed information for a specific product.
+
+```http
+GET /products/{sku}
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sku` | string | Product SKU (required) |
+| `includeHistory` | boolean | Include price history (default: false) |
+| `historyDays` | integer | Number of days of history (default: 30) |
+
+### Example Request
+
+```bash
+curl -X GET 'https://api.tracker.creatosaurus.in/v1/products/SKU001' \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+```
+
+### Example Response
+
+```json
+{
+  "status": "success",
+  "data": {
+    "sku": "SKU001",
+    "name": "Organic Banana",
+    "description": "Fresh organic bananas from local farms",
+    "category": "Fruits & Vegetables",
+    "image": "https://cdn.tracker.creatosaurus.in/products/SKU001.jpg",
+    "unit": "kg",
+    "prices": {
+      "zepto": {
+        "price": 120,
+        "stock": "in_stock",
+        "deliveryTime": "10-15 mins",
+        "url": "https://zepto.in/..."
+      },
+      "blinkit": {
+        "price": 115,
+        "stock": "in_stock",
+        "deliveryTime": "12-18 mins",
+        "url": "https://blinkit.com/..."
+      }
+    },
+    "statistics": {
+      "avgPrice": 116.60,
+      "minPrice": 108,
+      "maxPrice": 120,
+      "stdDev": 4.88,
+      "priceVariance": 12,
+      "platformsTracking": 6
+    }
+  }
+}
+```
+
+## Get Price History
+
+Get historical price data for trend analysis.
+
+```http
+GET /products/{sku}/history
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sku` | string | Product SKU (required) |
+| `from` | string | Start date (YYYY-MM-DD) |
+| `to` | string | End date (YYYY-MM-DD) |
+| `platform` | string | Specific platform (optional) |
+| `interval` | string | Aggregation interval (daily, hourly) |
+
+### Example Request
+
+```bash
+curl -X GET 'https://api.tracker.creatosaurus.in/v1/products/SKU001/history?from=2025-03-01&to=2025-03-17' \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+```
+
+### Example Response
+
+```json
+{
+  "status": "success",
+  "data": {
+    "sku": "SKU001",
+    "name": "Organic Banana",
+    "history": [
+      {
+        "date": "2025-03-17",
+        "time": "10:30:00Z",
+        "prices": {
+          "zepto": 120,
+          "blinkit": 115,
+          "jiomart": 110,
+          "dmart": 108,
+          "flipkart": 112,
+          "instamart": 118
+        },
+        "avgPrice": 116.60
+      },
+      {
+        "date": "2025-03-16",
+        "time": "10:30:00Z",
+        "prices": {
+          "zepto": 120,
+          "blinkit": 115,
+          "jiomart": 110,
+          "dmart": 108,
+          "flipkart": 112,
+          "instamart": 118
+        },
+        "avgPrice": 116.60
+      }
+    ],
+    "trends": {
+      "direction": "stable",
+      "changePercent": 0,
+      "dayChange": 0,
+      "weekChange": 2.5
+    }
+  }
+}
+```
+
+## Error Responses
+
+### Product Not Found
+
+```json
+{
+  "status": "error",
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Product SKU001 not found"
+  }
+}
+```
+
+### Invalid Parameter
+
+```json
+{
+  "status": "error",
+  "error": {
+    "code": "INVALID_PARAMETER",
+    "message": "Invalid category: xyz",
+    "details": {
+      "field": "category",
+      "validValues": ["fruits", "bakery", "dairy"]
+    }
+  }
+}
+```
+
+## Rate Limits
+
+- Free Plan: 60 requests/minute
+- Pro Plan: 600 requests/minute
+- Business Plan: Custom
+
+Check response headers for current limits:
+
+```http
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 59
+X-RateLimit-Reset: 1678977600
+```

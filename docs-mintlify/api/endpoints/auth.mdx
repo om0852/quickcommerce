@@ -1,0 +1,155 @@
+---
+title: Authentication Endpoints
+description: Login and logout endpoints
+---
+
+# Authentication Endpoints
+
+Login and logout endpoints for JWT token management.
+
+## Login
+
+Authenticate with credentials and receive JWT token.
+
+```
+POST /api/auth/login
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "password"
+  }'
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `username` | string | Yes | Admin or user username |
+| `password` | string | Yes | User password |
+
+### Response (200)
+
+```json
+{
+  "message": "Login successful",
+  "role": "admin",
+  "auth_session": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifQ.signature"
+}
+```
+
+**Response Fields:**
+- `message`: Confirmation message
+- `role`: User role (admin or user)
+- `auth_session`: JWT token (also set as httpOnly cookie)
+
+### Response (401)
+
+```json
+{
+  "error": "Invalid credentials"
+}
+```
+
+### JavaScript Example
+
+```javascript
+async function login(username, password) {
+  const response = await fetch('http://localhost:3000/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', // Include cookies
+    body: JSON.stringify({ username, password })
+  });
+  
+  if (!response.ok) {
+    throw new Error('Login failed');
+  }
+  
+  const data = await response.json();
+  localStorage.setItem('token', data.auth_session);
+  return data;
+}
+```
+
+### Python Example
+
+```python
+import requests
+
+def login(username, password):
+    response = requests.post(
+        'http://localhost:3000/api/auth/login',
+        json={'username': username, 'password': password}
+    )
+    
+    if response.status_code != 200:
+        raise Exception('Login failed')
+    
+    data = response.json()
+    token = data['auth_session']
+    return token
+```
+
+---
+
+## Logout
+
+End your session and invalidate token.
+
+```
+POST /api/auth/logout
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/auth/logout \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Response (200)
+
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+### JavaScript Example
+
+```javascript
+async function logout(token) {
+  const response = await fetch('http://localhost:3000/api/auth/logout', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  localStorage.removeItem('token');
+  return response.json();
+}
+```
+
+---
+
+## Common Issues
+
+**Invalid credentials:**
+- Check username and password
+- Verify environment variables are set
+- Ensure credentials match env vars
+
+**Token expired:**
+- Get new token by logging in again
+- Tokens expire after 7 days
+
+**Missing token:**
+- Provide Authorization header
+- Use format: `Authorization: Bearer YOUR_TOKEN`

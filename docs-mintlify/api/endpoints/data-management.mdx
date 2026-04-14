@@ -1,0 +1,183 @@
+---
+title: Data Management
+description: Import, export, and manage data
+---
+
+# Data Management
+
+Import, export, and manage product data.
+
+## Import Dataset
+
+Import products from external dataset.
+
+```
+POST /api/import-dataset
+```
+
+### Request Body
+
+```json
+{
+  "datasetUrl": "https://example.com/data.json",
+  "category": "fruits"
+}
+```
+
+### Response (200)
+
+```json
+{
+  "message": "Import successful",
+  "count": 150
+}
+```
+
+---
+
+## Export Category Data
+
+Export category data to Excel with pricing analysis.
+
+```
+GET /api/export-category-data
+```
+
+### Query Parameters
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `category` | string | Yes |
+| `pincode` | string | Yes |
+
+### Response
+
+Excel file download with formatted data.
+
+---
+
+## Get Failed Scrapes
+
+Get list of failed scraping attempts.
+
+```
+GET /api/failed-scrapes
+```
+
+### Query Parameters
+
+| Parameter | Type | Optional |
+|-----------|------|----------|
+| `status` | string | Optional |
+| `platform` | string | Optional |
+| `category` | string | Optional |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "count": 5,
+  "stats": {
+    "pending": 2,
+    "retrying": 1,
+    "failed": 2,
+    "resolved": 0
+  },
+  "failedScrapes": [
+    {
+      "_id": "fail_123",
+      "platform": "zepto",
+      "category": "fruits",
+      "status": "pending",
+      "error": "Network timeout"
+    }
+  ]
+}
+```
+
+---
+
+## Retry Failed Scrape
+
+Manually retry a failed scraping task.
+
+```
+POST /api/failed-scrapes
+```
+
+### Request Body
+
+```json
+{
+  "id": "fail_123"
+}
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "message": "Scrape retry queued"
+}
+```
+
+---
+
+## Key Health
+
+Get health stats for all API keys across platforms.
+
+```
+GET /api/key-health
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "summary": {
+    "total_keys": 6,
+    "healthy": 5,
+    "issues": 1
+  },
+  "health": [
+    {
+      "platform": "zepto",
+      "status": "healthy",
+      "calls": 1000,
+      "lastUsed": "2026-03-17T15:30:00Z"
+    }
+  ],
+  "timestamp": "2026-03-17T15:35:00Z"
+}
+```
+
+---
+
+## Get Overview Cache
+
+Get cached overview data for a pincode.
+
+```
+GET /api/overview
+```
+
+### Query Parameters
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `pincode` | string | Yes |
+| `timestamp` | string | No |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "data": [...],
+  "cachedAt": "2026-03-17T15:00:00Z"
+}
+```

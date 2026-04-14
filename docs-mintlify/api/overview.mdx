@@ -1,0 +1,169 @@
+---
+title: API Overview
+description: QuickCommerce Tracker API Documentation
+---
+
+# QuickCommerce Tracker API
+
+Real-time price tracking API for Indian quick-commerce platforms.
+
+## Quick Facts
+
+- **Base URL:** `http://localhost:3000` (development)
+- **Authentication:** JWT Bearer token (7-day expiration)
+- **Response Format:** JSON
+- **Rate Limiting:** No rate limiting (self-hosted)
+
+## Supported Platforms
+
+- Zepto
+- Blinkit
+- JioMart
+- DMart
+- Flipkart Minutes
+- Swiggy Instamart
+
+## Tracked Pincodes
+
+- 201303, 400706, 201014, 122008, 122010, 122016, 400070, 400703, 401101, 401202
+
+## Core Concepts
+
+### Products
+Individual items tracked across platforms with prices, rankings, and availability.
+
+### Product Groups
+Products with same name/details grouped together across pincodes for unified tracking.
+
+### Snapshots
+Time-stamped product data showing prices and stock status at specific moments.
+
+### Categories
+Product categories like fruits, bakery, dairy with aggregated data.
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - Authenticate and get JWT token
+- `POST /api/auth/logout` - End session
+
+### Products
+- `GET /api/category-data` - Get products by category/pincode
+- `GET /api/available-snapshots` - List snapshot timestamps 
+- `POST /api/product-history` - Get price history for products
+- `POST /api/product/update` - Batch update products
+- `POST /api/product/delete` - Batch delete products
+
+### Product Grouping
+- `POST /api/grouping/add` - Add product to group
+- `POST /api/grouping/update` - Update group metadata
+- `POST /api/grouping/remove` - Remove product from group
+- `POST /api/grouping/regroup` - Split group
+- `POST /api/grouping/delete-group` - Delete group
+- `GET /api/grouping/cross-pincode` - Cross-pincode analysis
+- `GET /api/grouping/problematic` - Get flagged groups
+
+### Search & Suggestions
+- `GET /api/search` - Hybrid product/group search
+- `GET /api/admin-search` - Admin product search
+- `GET /api/suggestions` - Get suggestions
+- `POST /api/suggestions` - Create suggestion
+- `PATCH /api/suggestions` - Update suggestion status
+- `DELETE /api/suggestions` - Delete suggestion
+
+### Analytics
+- `GET /api/analytics` - Get category analytics
+
+### Brands
+- `GET /api/brands` - List brands
+- `POST /api/brands` - Create brand
+- `PUT /api/brands/[id]` - Update brand
+
+### Data Management
+- `POST /api/import-dataset` - Import external data
+- `GET/POST /api/export-category-data` - Export to Excel
+- `GET /api/failed-scrapes` - Get failed scrapes
+- `POST /api/failed-scrapes` - Retry failed scrape
+- `GET /api/key-health` - Health stats
+- `GET /api/overview` - Get cached overview
+
+### Scraping
+- `POST /api/scrape-blinkit` - Trigger Blinkit scrape
+- `POST /api/scrape-categories` - Scrape categories
+
+### Data Integrity
+- `POST /api/sync-time-range` - Sync timestamps in range
+- `POST /api/update-timestamp` - Update product timestamps
+- `POST /api/populate-stock-status` - Generate random stock
+
+### Cron & Scheduling
+- `GET /api/cron` - Execute cron job
+- `GET /api/cron/generate-overview` - Generate overview cache
+- `GET /api/scheduler` - Check scheduler status
+- `POST /api/scheduler` - Start/stop scheduler
+
+### Utilities
+- `POST /api/feedback` - Submit feedback
+- `GET /api/feedback` - Get all feedback (admin)
+
+## Status Codes
+
+| Code | Meaning |
+|------|---------|
+| 200 | Success |
+| 201 | Created |
+| 400 | Bad request |
+| 401 | Unauthorized |
+| 404 | Not found |
+| 409 | Conflict (e.g., duplicate) |
+| 500 | Server error |
+
+## Response Format
+
+**Success:**
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+**Error:**
+```json
+{
+  "error": "Error message here",
+  "status": 400
+}
+```
+
+## Authentication
+
+All endpoints require a valid JWT token:
+
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:3000/api/category-data?category=fruits&pincode=400706
+```
+
+Get token by logging in:
+
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"password"}'
+```
+
+Response includes token and role.
+
+## Error Handling
+
+All errors follow this format:
+
+```json
+{
+  "error": "Description of what went wrong",
+  "status": 400  // HTTP status code
+}
+```
+
+See [Error Handling](./error-handling) for common errors and solutions.

@@ -1,0 +1,102 @@
+---
+title: Overview
+description: Understand QuickCommerce Tracker
+---
+
+# QuickCommerce Tracker Overview
+
+QuickCommerce Tracker is a **real-time price monitoring system** for Indian quick-commerce platforms. It continuously tracks product prices, availability, and rankings across multiple platforms and pincodes.
+
+## What We Track
+
+### Platforms (6 total)
+- **Zepto** - Ultra-fast delivery (10-15 min)
+- **Blinkit** - Same-day delivery  
+- **JioMart** - Reliance's quick-commerce
+- **DMart** - Retail chain (Daily Mart Express)
+- **Flipkart Minutes** - Flipkart's quick-commerce
+- **Swiggy Instamart** - Swiggy's quick-commerce
+
+### Pincodes (10 locations)
+201303, 400706, 201014, 122008, 122010, 122016, 400070, 400703, 401101, 401202
+
+### Categories
+- Fruits & Vegetables
+- Bakery & Breads
+- Dairy & Eggs
+
+## How It Works
+
+### 1. Data Collection
+Scrapers continuously gather product data from each platform for specified categories and pincodes.
+
+### 2. Data Storage
+Each product scan is stored as a **snapshot** with timestamp, price, rank, and stock status.
+
+### 3. Product Grouping
+Products with same/similar names across platforms are grouped for unified tracking.
+
+### 4. Analytics
+Aggregated data provides price distribution, stock analysis, rankings, and platform comparison.
+
+### 5. API Access
+REST API endpoints expose all data to applications and consumers.
+
+## Core Concepts
+
+### Snapshots
+A single data point of a product at a specific timestamp:
+- Product ID & platform
+- Name, price, rank
+- Stock status
+- Timestamp
+
+### Product Groups
+Unifies all variants of a product across platforms:
+- Single canonical name
+- Brand and metadata
+- Products across all platforms
+- Cross-pincode availability
+
+### Categories
+Products organized into logical groups (fruits, bakery, dairy) for easy filtering.
+
+## Key Features
+
+✅ **Real-time Monitoring** - Track prices as they change
+✅ **Historical Data** - Price trends and history retention
+✅ **Multi-platform** - Compare across 6 platforms simultaneously
+✅ **Analytics** - Price distribution, stock levels, rankings
+✅ **Product Grouping** - Unified tracking across variants
+✅ **Search** - Find products with hybrid and fuzzy search
+✅ **Suggestions** - User feedback system for data quality
+✅ **Export** - Download data in Excel format
+✅ **Admin Tools** - Manage products, groups, and data integrity
+
+## Architecture
+
+```
+Scrapers (6 platforms)
+        │
+        ▼
+Raw Snapshots (MongoDB)
+        │
+        ▼
+Product Groups (Unified)
+        │
+        ▼
+Analytics Cache
+        │
+        ▼
+REST API Endpoints
+        │
+        ▼
+Applications
+```
+
+## Next Steps
+
+- [Explore Platforms](/guides/platforms) - Learn about each platform
+- [Understand Categories](/guides/categories) - See product organization
+- [Get API Access](/api/authentication) - Start querying data
+- [Query Products](/api/endpoints/products) - Get product data

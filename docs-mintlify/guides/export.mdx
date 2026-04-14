@@ -1,0 +1,269 @@
+---
+title: Export & Data Download
+description: Export and download your pricing data
+---
+
+# Export & Data Download Guide
+
+## Export Formats
+
+### CSV Export
+
+Best for: Spreadsheet analysis in Excel/Google Sheets
+
+**Included columns:**
+- Date
+- SKU ID
+- Product Name
+- Platform
+- Price
+- Currency
+- Stock Status
+- URL
+- Last Updated
+
+**File size**: Depends on data volume
+
+### JSON Export
+
+Best for: API integration and programmatic use
+
+**Structure:**
+```json
+{
+  "export": {
+    "date": "2025-03-17",
+    "category": "Fruits & Vegetables",
+    "region": "Navi Mumbai — 400706",
+    "records": [...]
+  }
+}
+```
+
+### Excel Export
+
+Best for: Advanced analysis with formulas
+
+**Features:**
+- Multiple sheets (by platform)
+- Pre-formatted columns
+- Ready-to-use formulas
+- Charts included
+
+## How to Export
+
+### Basic Export
+
+<Steps>
+  <Step title="Apply Filters">
+    Set category, date, platforms, region
+  </Step>
+  <Step title="Select Data">
+    Choose products to export or "Select All"
+  </Step>
+  <Step title="Click Export">
+    Click blue **Export** button
+  </Step>
+  <Step title="Choose Format">
+    Pick CSV, JSON, or Excel
+  </Step>
+  <Step title="Download">
+    File downloads to your computer
+  </Step>
+</Steps>
+
+### Advanced Export Options
+
+Click **⚙️ Export Settings** for:
+
+1. **Custom Columns**: Choose which fields to include
+2. **Date Range**: Select specific period
+3. **Price Format**: Include/exclude currency
+4. **Filename**: Custom file naming
+5. **Schedule**: Set up recurring exports
+
+## Scheduled Exports
+
+Automatically export data on schedule:
+
+### Setup Recurring Export
+
+1. Go to **Settings** → **Exports**
+2. Click **Schedule New Export**
+3. Configure:
+   - Frequency (Daily, Weekly, Monthly)
+   - Time of day
+   - Format (CSV, JSON, Excel)
+   - Recipients (email)
+   - Filters (category, platforms, etc.)
+4. Save schedule
+
+### Email Delivery
+
+Files are emailed to configured recipients:
+- Automatically on schedule
+- Formatted for easy download
+- With summary stats
+
+## Data Download Limits
+
+| Plan | Monthly Limit | File Size |
+|------|---|---|
+| Free | 100,000 records | 50 MB |
+| Pro | 1,000,000 records | 500 MB |
+| Enterprise | Unlimited | Unlimited |
+
+## Using Exported Data
+
+### In Excel
+
+```
+1. Open CSV file in Excel
+2. Use pivot tables for analysis
+3. Create charts from data
+4. Add formulas for calculations
+5. Use conditional formatting for alerts
+```
+
+**Popular pivot table views:**
+- Average price by platform
+- Price trends over time
+- Category performance
+- Regional comparison
+
+### In Google Sheets
+
+```
+1. Upload CSV to Google Drive
+2. Open with Google Sheets
+3. Share with team members
+4. Create collaborative charts
+5. Setup automated reports
+```
+
+### In SQL Database
+
+```sql
+-- Example: Import CSV into database
+LOAD DATA INFILE 'export.csv'
+INTO TABLE products
+COLUMNS TERMINATED BY ','
+IGNORE 1 ROWS;
+```
+
+### In Python
+
+```python
+import pandas as pd
+
+# Read exported data
+df = pd.read_csv('export.csv')
+
+# Analyze
+avg_price = df['price'].mean()
+by_platform = df.groupby('platform')['price'].mean()
+```
+
+### In Power BI
+
+1. Import CSV file
+2. Model relationships
+3. Create dashboards
+4. Share reports
+5. Set up refresh schedules
+
+## Data Retention
+
+### How Long is Data Stored?
+
+| Data Type | Retention Period |
+|-----------|-----------------|
+| Current prices | Real-time + 90 days |
+| Historical prices | 1 year |
+| Alerts history | 6 months |
+| User activity | 2 years |
+
+### Download Historical Data
+
+Access data older than current period:
+
+1. **Settings** → **Data & Privacy**
+2. **Download Historical Data**
+3. Select date range
+4. Wait for processing
+5. Download when ready
+
+## Bulk Operations
+
+### Export Multiple Products
+
+1. Use **Select All** or checkbox
+2. Click **Bulk Actions**
+3. Choose **Export**
+4. Select format
+5. Download
+
+### Export by Filter
+
+Export all products matching criteria:
+
+1. Apply category filter
+2. Apply platform filter
+3. Apply price range filter
+4. Click **Export All Matching**
+
+### Batch Download
+
+Download multiple exports at once:
+
+1. Create and download export 1
+2. Create and download export 2
+3. Use **Download All** option
+4. Get ZIP file with all exports
+
+## Privacy & Security
+
+### Data Protection
+
+✓ All exports are encrypted in transit
+✓ Data can only be accessed by account owner
+✓ Exports are deleted after 30 days
+✓ No data is shared with third parties
+
+### GDPR Compliance
+
+Users can:
+- Download all personal data
+- Request data deletion
+- Control data usage
+- Export data in standard format
+
+## Troubleshooting
+
+### Export Taking Too Long
+
+**Solutions:**
+- Reduce date range
+- Reduce number of products
+- Export by platform separately
+- Try different format
+
+### File Format Issues
+
+**Excel import error?**
+- Use UTF-8 encoding
+- Check column combinations
+- Try CSV format first
+
+**JSON parsing error?**
+- Validate JSON format online
+- Check for special characters
+- Update parser settings
+
+### Missing Data in Export
+
+**Verify:**
+- All filters were applied
+- Date range is correct
+- Platforms are selected
+- Data actually exists for period

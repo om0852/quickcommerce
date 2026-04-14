@@ -1,0 +1,128 @@
+---
+title: Installation & Setup
+description: Set up QuickCommerce Tracker in your environment
+---
+
+# Installation & Setup
+
+## System Requirements
+
+- **Browser Support**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+- **Internet**: Stable connection recommended
+- **Screen Resolution**: 1024x768 minimum
+- **JavaScript**: Must be enabled
+
+## Accessing QuickCommerce Tracker
+
+### Web Access
+
+The easiest way to access QuickCommerce Tracker is through your web browser:
+
+```
+https://tracker.creatosaurus.in
+```
+
+No installation required!
+
+## For Developers
+
+### Self-Hosting Requirements
+
+If you want to host QuickCommerce Tracker locally:
+
+**Prerequisites:**
+- Node.js 18.x or higher
+- MongoDB 5.x or higher
+- Redis 6.x or higher
+
+### Installation Steps
+
+<Steps>
+  <Step title="Clone Repository">
+    ```bash
+    git clone <repository-url>
+    cd quickcommerce
+    ```
+  </Step>
+  <Step title="Install Dependencies">
+    ```bash
+    npm install
+    ```
+  </Step>
+  <Step title="Configure Environment">
+    ```bash
+    cp .env.example .env
+    # Edit .env with your database and API configurations
+    ```
+  </Step>
+  <Step title="Initialize Database">
+    ```bash
+    npm run db:init
+    npm run db:seed  # Optional: seed with sample data
+    ```
+  </Step>
+  <Step title="Start Development Server">
+    ```bash
+    npm run dev
+    ```
+    Access at: `http://localhost:3000`
+  </Step>
+</Steps>
+
+### Production Deployment
+
+For production deployment:
+
+```bash
+npm run build
+npm start
+```
+
+See our [API Integration Guide](/guides/api-integration) for production setup details.
+
+## API Integration
+
+To integrate QuickCommerce Tracker API in your application:
+
+```bash
+npm install @creatosaurus/quickcommerce-sdk
+```
+
+```javascript
+import { QuickCommerceTracker } from '@creatosaurus/quickcommerce-sdk';
+
+const tracker = new QuickCommerceTracker({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.tracker.creatosaurus.in'
+});
+```
+
+See [API Reference](/api-reference) for complete documentation.
+
+## Docker Deployment
+
+Alternatively, run QuickCommerce Tracker using Docker:
+
+```bash
+docker pull creatosaurus/quickcommerce-tracker
+docker run -p 3000:3000 creatosaurus/quickcommerce-tracker
+```
+
+## Troubleshooting
+
+**Port already in use?**
+```bash
+# Use a different port
+npm run dev -- --port 3001
+```
+
+**Database connection error?**
+- Check your MongoDB connection string in `.env`
+- Ensure MongoDB service is running
+- Verify credentials and network access
+
+**API Key issues?**
+- Generate a new API key from dashboard settings
+- Check API key expiration date
+
+Need more help? See our [Troubleshooting Guide](/guides/troubleshooting).

@@ -1,0 +1,143 @@
+---
+title: Brands
+description: Manage product brands
+---
+
+# Brands Endpoints
+
+Manage product brands in the system.
+
+## List Brands
+
+Get all brands.
+
+```
+GET /api/brands
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `all` | boolean | No | Include disabled? (default: enabled only) |
+
+### Request
+
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:3000/api/brands"
+```
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "brands": [
+    {
+      "_id": "brand_123",
+      "brandName": "Fresh Farms",
+      "enabled": true
+    },
+    {
+      "_id": "brand_124",
+      "brandName": "Organic Plus",
+      "enabled": true
+    }
+  ],
+  "fromCache": true
+}
+```
+
+---
+
+## Create Brand
+
+Create a new brand.
+
+```
+POST /api/brands
+```
+
+### Request Body
+
+```json
+{
+  "brandName": "Fresh Farms"
+}
+```
+
+### Response (201)
+
+```json
+{
+  "success": true,
+  "brand": {
+    "_id": "brand_123",
+    "brandName": "Fresh Farms"
+  }
+}
+```
+
+### Response (409) - Duplicate
+
+```json
+{
+  "error": "Brand with this name already exists",
+  "status": 409
+}
+```
+
+---
+
+## Update Brand
+
+Rename an existing brand.
+
+```
+PUT /api/brands/[id]
+```
+
+### Request
+
+```bash
+curl -X PUT http://localhost:3000/api/brands/brand_123 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "newBrandName": "Fresh Organic Farms"
+  }'
+```
+
+### Request Body
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `newBrandName` | string | Yes |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "brand": {
+    "_id": "brand_123",
+    "brandName": "Fresh Organic Farms"
+  }
+}
+```
+
+### Response (404)
+
+```json
+{
+  "error": "Brand not found",
+  "status": 404
+}
+```
+
+---
+
+## Caching
+
+Brand list is cached for 24 hours. Manual cache invalidation may be needed after bulk updates.

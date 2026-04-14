@@ -1,0 +1,156 @@
+---
+title: Platforms
+description: Quick-commerce platforms we track
+---
+
+# Supported Platforms
+
+QuickCommerce Tracker monitors **6 major quick-commerce platforms**. Each platform has unique inventory, pricing, and coverage.
+
+## Platform Overview
+
+| Platform | Founded | Delivery | Strength |
+|----------|---------|----------|----------|
+| **Zepto** | 2021 | 10-15 min | Fastest delivery |
+| **Blinkit** | 2021 | 15-20 min | Widest coverage |
+| **JioMart** | 2020 | 30-60 min | Large catalog |
+| **DMart** | 1997 | 60+ min | Retail chain |
+| **Flipkart Minutes** | 2022 | 20-30 min | Flipkart ecosystem |
+| **Instamart** | 2021 | 8-12 min | Swiggy integration |
+
+## Detailed Platform Info
+
+### 1. Zepto
+- **Parent:** Independent
+- **Delivery Speed:** 10-15 minutes (fastest)
+- **Strength:** Metro cities, fresh produce quality
+- **Product Range:** 4000+ SKUs
+- **Coverage:** Major metro areas
+
+### 2. Blinkit
+- **Parent:** Zomato
+- **Delivery Speed:** 15-20 minutes
+- **Strength:** Wide city coverage, 300+ cities
+- **Product Range:** 3500+ SKUs
+- **Coverage:** 300+ cities across India
+
+### 3. JioMart
+- **Parent:** Reliance Industries
+- **Delivery Speed:** 30-60 minutes
+- **Strength:** Large catalog, nationwide reach
+- **Product Range:** 5000+ SKUs
+- **Coverage:** 50+ cities
+
+### 4. DMart
+- **Parent:** Avenue Supermarts Ltd
+- **Delivery Speed:** 60+ minutes
+- **Strength:** Retail pricing, established brand
+- **Product Range:** 3000+ SKUs
+- **Coverage:** 20+ metro cities
+
+### 5. Flipkart Minutes
+- **Parent:** Flipkart/Walmart
+- **Delivery Speed:** 20-30 minutes
+- **Strength:** Flipkart ecosystem integration
+- **Product Range:** 2500+ SKUs
+- **Coverage:** 100+ cities
+
+### 6. Swiggy Instamart
+- **Parent:** Swiggy
+- **Delivery Speed:** 8-12 minutes
+- **Strength:** Swiggy logistics, fresh items
+- **Product Range:** 3000+ SKUs
+- **Coverage:** 100+ cities
+
+## Price Variations
+
+Prices vary across platforms for the same product:
+
+**Example - Organic Banana:**
+```
+Zepto:      ₹120
+Blinkit:    ₹115
+JioMart:    ₹110
+DMart:      ₹108
+Flipkart:   ₹112
+Instamart:  ₹118
+```
+
+Typical variance: ₹10-50 depending on product and category.
+
+## Data Tracking
+
+### Product IDs by Platform
+- Zepto: `zepto_SKU001`
+- Blinkit: `blinkit_BLN456`
+- JioMart: `jiomart_JIO789`
+- DMart: `dmart_DMT012`
+- Flipkart: `flipkart_FK345`
+- Instamart: `instamart_INS678`
+
+### Update Frequency
+- **Zepto & Blinkit:** 2-4 times daily
+- **JioMart:** 1-2 times daily
+- **DMart:** 1 time daily
+- **Flipkart:** 1-2 times daily
+- **Instamart:** 2-3 times daily
+
+### Coverage by Pincode
+
+All 6 platforms tracked in:
+- 400706 (Navi Mumbai)
+- 400101 (Mumbai)
+- 201303 (Noida)
+- And 7 other pincodes
+
+Coverage varies by category and platform availability.
+
+## Querying Platform Data
+
+### Get All Platforms
+
+```bash
+GET /api/category-data?category=fruits&pincode=400706
+```
+
+Returns products from all 6 platforms.
+
+### Platform Comparison
+
+```bash
+GET /api/analytics?category=fruits&pincode=400706
+```
+
+Returns stock availability per platform:
+```json
+{
+  "stockAvailability": [
+    { "platform": "zepto", "available": 98 },
+    { "platform": "blinkit", "available": 95 },
+    // ... others
+  ]
+}
+```
+
+### Individual Platform Query
+
+Filter products by specific platform while querying (check products endpoint for filtering).
+
+## Key Insights
+
+✓ **Zepto** - Best for fastest delivery, metro cities
+✓ **Blinkit** - Best for wide coverage, 300+ cities
+✓ **JioMart** - Best for catalog size, nationwide
+✓ **DMart** - Best for value pricing, retail chain
+✓ **Flipkart** - Best for ecosystem users, 100+ cities
+✓ **Instamart** - Best for speed, Swiggy integration
+
+## Real-Time Data
+
+Each platform updates inventory and pricing dynamically:
+- Stock levels change frequently
+- Prices adjust for demand
+- Availability varies by location
+- Check timestamps for data freshness
+
+Use API timestamps to understand when data was last updated.

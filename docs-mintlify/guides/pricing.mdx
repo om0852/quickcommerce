@@ -1,0 +1,148 @@
+---
+title: Pricing & Trends
+description: Understanding product pricing and trends
+---
+
+# Pricing & Trends
+
+## Price Data
+
+### How Prices Work
+
+Product prices on quick-commerce platforms are **dynamic**:
+- Change multiple times per day
+- Based on demand, inventory, and supply
+- Vary by location (pincode)
+- Different across platforms
+
+### Price Units
+
+All prices displayed in **Indian Rupees (₹)**:
+- Format: ₹ 99.99
+- Precision: Up to 2 decimal places
+- Accurate as of last update timestamp
+
+### Getting Current Prices
+
+Query current prices for a category:
+
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  "http://localhost:3000/api/category-data?category=fruits&pincode=400706"
+```
+
+Returns all products with current prices per platform.
+
+## Price Variations
+
+### Cross-Platform Variation
+
+Same product, different prices:
+
+**Example - Banana (1kg):**
+```
+Zepto:      ₹120  (Premium delivery)
+Blinkit:    ₹115  (Wide coverage)
+JioMart:    ₹110  (Value option)
+DMart:      ₹108  (Retail pricing)
+Flipkart:   ₹112  (With rewards)
+Instamart:  ₹118  (Fast delivery)
+
+Range: ₹108 - ₹120
+Variance: ₹12 (11% difference)
+```
+
+### Factors Affecting Prices
+
+- **Platform:** Each has different margins
+- **Demand:** High demand = higher prices
+- **Inventory:** Low stock = higher prices
+- **Location:** Pincode-specific pricing
+- **Time:** Prices change throughout the day
+- **Promotions:** Sales and discounts applied
+| **Std Dev** | Price variation | Market consistency |
+| **% Change** | Price change over time | Trend analysis |
+
+## Analysis Techniques
+
+### Identifying Trends
+
+Look for patterns:
+
+```
+Week 1: ₹100, ₹105, ₹102, ₹103, ₹104
+Week 2: ₹98, ₹95, ₹92, ₹90, ₹88  ← Downtrend
+
+Interpretation: Prices declining over the week
+Action: Good time to buy
+```
+
+### Comparing Platforms
+
+Use platform filters to compare specific vendors:
+
+1. Select 2-3 platforms
+2. View side-by-side prices
+3. Identify price leaders
+4. Note inconsistencies
+
+### Seasonal Analysis
+
+Track prices by season:
+
+```
+Summer (Apr-May):
+- Fresh produce: Lower prices
+- Demand: Higher
+
+Winter (Dec-Jan):
+- Seasonal items available
+- Premium pricing
+```
+
+## Exporting Price Data
+
+### CSV Export
+
+Export for Excel/spreadsheet analysis:
+
+```csv
+Date,SKU,Platform,Price,Stock,URL
+2025-03-17,SKU001,Zepto,₹120,In Stock,https://...
+2025-03-17,SKU001,Blinkit,₹115,In Stock,https://...
+```
+
+### JSON Export
+
+For programmatic analysis:
+
+```json
+{
+  "data": [
+    {
+      "date": "2025-03-17",
+      "sku": "SKU001",
+      "platform": "Zepto",
+      "price": 120,
+      "currency": "INR",
+      "stock": "In Stock"
+    }
+  ]
+}
+```
+
+## Best Practices
+
+✓ **Do:**
+- Monitor prices regularly for accuracy
+- Compare same dates across platforms
+- Account for delivery charges
+- Track seasonal variations
+- Set realistic alert thresholds
+
+✗ **Don't:**
+- Compare prices on different dates
+- Ignore stock availability
+- Forget to account for promotions
+- Set too many alerts (information overload)
+- Base decisions on single data points

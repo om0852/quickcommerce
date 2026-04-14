@@ -1,0 +1,235 @@
+---
+title: Product Endpoints
+description: Retrieve and manage product data
+---
+
+# Product Endpoints
+
+Retrieve product data, snapshots, and price history.
+
+## Get Category Data
+
+Get all products for a specific category and pincode.
+
+```
+GET /api/category-data
+```
+
+### Request
+
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:3000/api/category-data?category=fruits&pincode=400706"
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `category` | string | Yes | Product category (fruits, bakery, dairy, etc) |
+| `pincode` | string | Yes | Delivery pincode |
+| `timestamp` | string | No | ISO 8601 timestamp (defaults to latest) |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "category": "fruits",
+  "pincode": "400706",
+  "products": [
+    {
+      "productId": "blinkit_sku_001",
+      "platform": "blinkit",
+      "name": "Organic Banana",
+      "price": 120,
+      "rank": 1,
+      "stock": "in_stock"
+    }
+  ],
+  "platformCounts": {
+    "zepto": 45,
+    "blinkit": 48,
+    "jiomart": 42
+  },
+  "totalProducts": 135,
+  "fromCache": true
+}
+```
+
+### JavaScript Example
+
+```javascript
+async function getCategoryData(category, pincode, token) {
+  const response = await fetch(
+    `http://localhost:3000/api/category-data?category=${category}&pincode=${pincode}`,
+    { headers: { 'Authorization': `Bearer ${token}` } }
+  );
+  
+  return response.json();
+}
+
+// Usage
+const data = await getCategoryData('fruits', '400706', token);
+console.log(data.products);
+```
+
+---
+
+## Get Available Snapshots
+
+Get all available snapshot timestamps for a category/pincode combination.
+
+```
+GET /api/available-snapshots
+```
+
+### Request
+
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:3000/api/available-snapshots?category=fruits&pincode=400706"
+```
+
+### Query Parameters
+
+| Parameter | Type | Required |
+|-----------|------|----------|
+| `category` | string | Yes |
+| `pincode` | string | Yes |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "snapshots": [
+    "2026-03-17T15:30:00Z",
+    "2026-03-17T14:00:00Z",
+    "2026-03-17T12:30:00Z"
+  ]
+}
+```
+
+---
+
+## Get Product History
+
+Get historical price and ranking data for specific products.
+
+```
+POST /api/product-history
+```
+
+### Request
+
+```bash
+curl -X POST http://localhost:3000/api/product-history \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pincode": "400706",
+    "productNames": {
+      "zepto": ["Banana", "Apple"],
+      "blinkit": ["Organic Banana"]
+    },
+    "productIds": {
+      "zepto": ["SKU001", "SKU002"],
+      "blinkit": ["BLNKT_123"]
+    }
+  }'
+```
+
+### Request Body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `pincode` | string | Yes | Delivery pincode |
+| `productNames` | object | No | Map of `{platform: [names]}` |
+| `productIds` | object | No | Map of `{platform: [ids]}` |
+
+### Response (200)
+
+```json
+{
+  "success": true,
+  "history": [
+    {
+      "productId": "zepto_SKU001",
+      "platform": "zepto",
+      "name": "Banana",
+      "prices": [120, 125, 120],
+      "timestamps": [
+        "2026-03-17T15:30:00Z",
+        "2026-03-17T14:00:00Z",
+        "2026-03-17T12:30:00Z"
+      ],
+      "ranks": [1, 2, 1]
+    }
+  ],
+  "fromCache": true
+}
+```
+
+### Python Example
+
+```python
+def get_product_history(pincode, product_names, token):
+    response = requests.post(
+        'http://localhost:3000/api/product-history',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'pincode': pincode,
+            'productNames': product_names
+        }
+    )
+    return response.json()
+```
+
+---
+
+## Product Data Structure
+
+### Product Object
+
+```json
+{
+  "productId": "string",
+  "platform": "zepto|blinkit|jiomart|dmart|flipkart|instamart",
+  "name": "string",
+  "price": "number",
+  "rank": "number",
+  "stock": "in_stock|out_of_stock|limited",
+  "brand": "string",
+  "image": "string",
+  "category": "string"
+}
+```
+
+---
+
+## Caching
+
+Responses are cached in Redis for performance:
+- Category data: Gzipped and cached
+- Product history: Cached for 10 minutes
+- Available snapshots: Cached
+
+Set `?nocache=true` to bypass cache (if enabled).
+
+---
+
+## Common Issues
+
+**No products returned:**
+- Check category name spelling
+- Verify pincode is being tracked
+- Ensure data exists for timestamp
+
+**Product data seems old:**
+- Check timestamp parameter
+- Clear cache if available
+
+**Rate limited:**
+- All endpoints have reasonable response times
+- No artificial rate limiting
