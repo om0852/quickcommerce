@@ -221,6 +221,11 @@ function ProductDetailsDialog({
                                     >
                                         {copiedId === selectedProduct.groupingId ? <Check size={10} /> : <Copy size={10} />}
                                     </button>
+                                    {selectedProduct.eanCode && (
+                                        <span className="bg-neutral-100 text-neutral-600 text-[10px] font-mono px-1.5 py-0.5 rounded border border-neutral-200 ml-2">
+                                            EAN: {selectedProduct.eanCode}
+                                        </span>
+                                    )}
                                 </div>
                             )}
                             {isAdmin && selectedProduct.createdAt && (
@@ -417,6 +422,12 @@ function ProductDetailsDialog({
                                             <span className="text-neutral-400 font-medium min-w-[125px]">Combo:</span>
                                             <span className={`text-neutral-600 truncate ${!data.combo ? 'italic text-neutral-400' : ''}`} title={data.combo}>
                                                 {data.combo || 'No Combo'}
+                                            </span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <span className="text-neutral-400 font-medium min-w-[125px]">EAN Code:</span>
+                                            <span className={`text-neutral-700 truncate flex-1 block ${!data.eanCode ? 'italic text-neutral-300' : ''}`} title={data.eanCode}>
+                                                {data.eanCode || '--'}
                                             </span>
                                         </div>
 

@@ -213,6 +213,7 @@ export default function ProductEditDialog({
     const [brand, setBrand] = useState('');
     const [groupImage, setGroupImage] = useState('');
     const [label, setLabel] = useState('');
+    const [eanCode, setEanCode] = useState('');
 
     // Access available brands from API
     const [availableBrands, setAvailableBrands] = useState([]);
@@ -288,6 +289,7 @@ export default function ProductEditDialog({
             setBrand(product.brand || '');
             setGroupImage(product.groupImage || '');
             setLabel(product.label || '');
+            setEanCode(product.eanCode || '');
 
             // Platform Init
             const initialData = [];
@@ -296,6 +298,7 @@ export default function ProductEditDialog({
                     initialData.push({
                         platform: p,
                         snapshotId: product[p].snapshotId,
+                        productId: product[p].productId,
                         productName: product[p].productName || '',
                         currentPrice: product[p].currentPrice || '',
                         originalPrice: product[p].originalPrice || '',
@@ -304,6 +307,7 @@ export default function ProductEditDialog({
                         officialCategory: product[p].officialCategory || '',
                         officialSubCategory: product[p].officialSubCategory || '',
                         productUrl: product[p].productUrl || '', // Added
+                        eanCode: product[p].eanCode || '',
                         isOutOfStock: product[p].isOutOfStock || false,
                         isAd: product[p].isAd || false,
                         // Track modification
@@ -341,6 +345,7 @@ export default function ProductEditDialog({
             if (brand !== (product.brand || '')) groupUpdates.brand = brand;
             if (groupImage !== (product.groupImage || '')) groupUpdates.groupImage = groupImage;
             if (label !== (product.label || '')) groupUpdates.label = label;
+            if (eanCode !== (product.eanCode || '')) groupUpdates.eanCode = eanCode;
 
             let groupUpdatePromise = Promise.resolve();
             if (Object.keys(groupUpdates).length > 0) {
@@ -361,6 +366,7 @@ export default function ProductEditDialog({
             if (modifiedPlatforms.length > 0) {
                 const updates = modifiedPlatforms.map(p => ({
                     snapshotId: p.snapshotId,
+                    productId: p.productId,
                     productName: p.productName,
                     currentPrice: Number(p.currentPrice),
                     originalPrice: Number(p.originalPrice),
@@ -369,6 +375,7 @@ export default function ProductEditDialog({
                     officialCategory: p.officialCategory,
                     officialSubCategory: p.officialSubCategory,
                     productUrl: p.productUrl, // Added
+                    eanCode: p.eanCode,
                     isOutOfStock: p.isOutOfStock,
                     isAd: p.isAd
                 }));
@@ -472,6 +479,15 @@ export default function ProductEditDialog({
                                     availableBrands={availableBrands}
                                     onAddNewBrand={handleAddNewBrand}
                                     isLoading={brandsLoading}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-gray-500">EAN Code</label>
+                                <input
+                                    type="text"
+                                    value={eanCode}
+                                    onChange={(e) => setEanCode(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-colors"
                                 />
                             </div>
                             <div className="space-y-1">
@@ -626,6 +642,16 @@ export default function ProductEditDialog({
                                                     type="text"
                                                     value={data.productWeight}
                                                     onChange={(e) => handlePlatformChange(idx, 'productWeight', e.target.value)}
+                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 outline-none"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-semibold text-gray-500">EAN Code</label>
+                                                <input
+                                                    type="text"
+                                                    value={data.eanCode}
+                                                    onChange={(e) => handlePlatformChange(idx, 'eanCode', e.target.value)}
                                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 outline-none"
                                                 />
                                             </div>

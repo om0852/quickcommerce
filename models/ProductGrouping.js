@@ -48,6 +48,7 @@ const ProductGroupingSchema = new mongoose.Schema({
     primaryImage: String,
     groupImage: { type: String, default: null },
     primaryWeight: String,
+    eanCode: { type: String },
 
     // To track manual overrides
     isManuallyVerified: {

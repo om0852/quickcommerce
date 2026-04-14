@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductGrouping from '@/models/ProductGrouping';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import ProductEAN from '@/models/ProductEAN';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -35,6 +36,12 @@ export async function GET(request) {
         }
       ).sort({ scrapedAt: -1 }).lean();
 
+      const uniqueSnapshotProductIds = [...new Set(snapshots.map(s => s.productId))];
+      const eans = await ProductEAN.find({ productId: { $in: uniqueSnapshotProductIds } }).lean();
+      const eanMap = {};
+      eans.forEach(e => eanMap[e.productId] = e.eanCode);
+      snapshots.forEach(s => s.eanCode = eanMap[s.productId] || '');
+
       const byPincode = {};
       const seen = new Set();
 
@@ -49,6 +56,7 @@ export async function GET(request) {
           productWeight: snap.productWeight, currentPrice: snap.currentPrice,
           originalPrice: snap.originalPrice, discountPercentage: snap.discountPercentage,
           isOutOfStock: snap.isOutOfStock, ranking: snap.ranking, scrapedAt: snap.scrapedAt,
+          eanCode: snap.eanCode || '',
           productUrl: (snap.productUrl && snap.platform.toLowerCase() === 'flipkartminutes' && !snap.productUrl.includes('marketplace=HYPERLOCAL'))
             ? `${snap.productUrl}${snap.productUrl.includes('?') ? '&' : '?'}marketplace=HYPERLOCAL`
             : snap.productUrl,
@@ -61,6 +69,7 @@ export async function GET(request) {
           groupingId: group.groupingId, name: group.primaryName,
           weight: group.primaryWeight, brand: group.brand,
           totalProducts: group.totalProducts, category: group.category,
+          eanCode: group.eanCode || '',
         },
         results: byPincode,
         totalPincodes: Object.keys(byPincode).length,
@@ -84,6 +93,11 @@ export async function GET(request) {
     ).sort({ platform: 1, pincode: 1, scrapedAt: -1 }).lean();
 
     if (snapshots.length > 0) {
+      const eans = await ProductEAN.find({ productId: q }).lean();
+      const eanMap = {};
+      eans.forEach(e => eanMap[e.productId] = e.eanCode);
+      snapshots.forEach(s => s.eanCode = eanMap[s.productId] || '');
+
       const byPlatform = {};
       const seen2 = new Set();
 
@@ -97,6 +111,7 @@ export async function GET(request) {
           productWeight: snap.productWeight, currentPrice: snap.currentPrice,
           originalPrice: snap.originalPrice, isOutOfStock: snap.isOutOfStock,
           ranking: snap.ranking, category: snap.category, scrapedAt: snap.scrapedAt,
+          eanCode: snap.eanCode || '',
           productUrl: (snap.productUrl && snap.platform.toLowerCase() === 'flipkartminutes' && !snap.productUrl.includes('marketplace=HYPERLOCAL'))
             ? `${snap.productUrl}${snap.productUrl.includes('?') ? '&' : '?'}marketplace=HYPERLOCAL`
             : snap.productUrl,
@@ -118,7 +133,7 @@ export async function GET(request) {
       { primaryName: { $regex: q, $options: 'i' } },
       {
         groupingId: 1, primaryName: 1, primaryWeight: 1,
-        brand: 1, category: 1, totalProducts: 1, primaryImage: 1,
+        brand: 1, category: 1, totalProducts: 1, primaryImage: 1, eanCode: 1,
       }
     ).limit(30).lean();
 
@@ -135,6 +150,7 @@ export async function GET(request) {
           category: g.category,
           totalProducts: g.totalProducts,
           image: g.primaryImage,
+          eanCode: g.eanCode || '',
         })),
       });
     }

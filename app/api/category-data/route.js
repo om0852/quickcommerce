@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import zlib from 'zlib';
 import dbConnect from '@/lib/mongodb';
-import ProductSnapshot from '@/models/ProductSnapshot';
 import ProductGrouping from '@/models/ProductGrouping';
+import ProductSnapshot from '@/models/ProductSnapshot';
+import ProductEAN from '@/models/ProductEAN';
 import Brand from '@/models/Brand';
 import { getRedisForCategory } from '@/lib/redis-pool';
 
@@ -177,9 +178,18 @@ export async function GET(request) {
 
       console.log(`[category-data] Pincode ${currentPincode}: fetched ${snapshots.length} snapshots for ${allGroupProductIds.length} group product IDs`);
 
+      // Fetch EAN codes for these snapshots
+      const uniqueSnapshotProductIds = [...new Set(snapshots.map(s => s.productId))];
+      const eans = await ProductEAN.find({ productId: { $in: uniqueSnapshotProductIds } }).lean();
+      const eanMap = {};
+      eans.forEach(e => eanMap[e.productId] = e.eanCode);
+
       // Build snapshot lookup: platform:productId -> snapshot
       const snapshotMap = {};
       snapshots.forEach(snap => {
+        // Inject EAN code into snapshot from separate collection
+        snap.eanCode = eanMap[snap.productId] || '';
+        
         const key = `${snap.platform.toLowerCase()}:${snap.productId}`;
         // Keep best ranking if multiple exist
         if (!snapshotMap[key] || (snap.ranking && snap.ranking < (snapshotMap[key].ranking || Infinity))) {
@@ -287,6 +297,7 @@ export async function GET(request) {
                 brandId: group.brandId || '',
                 label: group.label || '',
                 weight: group.primaryWeight || '',
+                eanCode: group.eanCode || '',
                 zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
                 officialCategory: group.category,
                 officialSubCategory: null,
@@ -331,6 +342,7 @@ export async function GET(request) {
                     isAd: snap.isAd,
                     officialCategory: snap.officialCategory,
                     officialSubCategory: snap.officialSubCategory,
+                    eanCode: snap.eanCode || '',
                     subCategory: snap.subCategory,
                     combo: snap.combo,
                     new: snap.new,
@@ -381,6 +393,7 @@ export async function GET(request) {
                     brand: brandMap[group.brandId] || group.brand || '',
                     brandId: group.brandId || '',
                     label: group.label || '',
+                    eanCode: group.eanCode || '',
                     zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
                     officialCategory: group.category,
                     officialSubCategory: null,
@@ -421,6 +434,7 @@ export async function GET(request) {
                     isAd: snap.isAd,
                     officialCategory: snap.officialCategory,
                     officialSubCategory: snap.officialSubCategory,
+                    eanCode: snap.eanCode || '',
                     subCategory: snap.subCategory,
                     combo: snap.combo,
                     new: snap.new,
@@ -455,6 +469,7 @@ export async function GET(request) {
             brandId: group.brandId || '',
             label: group.label || '',
             weight: group.primaryWeight || '',
+            eanCode: group.eanCode || '',
             zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
             officialCategory: group.category,
             officialSubCategory: null,

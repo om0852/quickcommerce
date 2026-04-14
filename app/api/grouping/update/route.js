@@ -22,6 +22,7 @@ export async function POST(request) {
         if (typeof updates.weight !== 'undefined') allowedUpdates.primaryWeight = updates.weight;
         if (typeof updates.groupImage !== 'undefined') allowedUpdates.groupImage = updates.groupImage;
         if (typeof updates.label !== 'undefined') allowedUpdates.label = updates.label;
+        if (typeof updates.eanCode !== 'undefined') allowedUpdates.eanCode = updates.eanCode;
 
         if (typeof updates.brand !== 'undefined') {
             allowedUpdates.brand = updates.brand;

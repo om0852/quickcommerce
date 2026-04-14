@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import ProductSnapshot from '@/models/ProductSnapshot';
+import ProductEAN from '@/models/ProductEAN';
 import { invalidateCategoryCache } from '@/lib/redis-pool';
 
 export async function POST(request) {
@@ -44,6 +45,19 @@ export async function POST(request) {
                     safeUpdate[field] = fields[field];
                 }
             });
+
+            // Handle eanCode in the separate ProductEAN collection
+            if (fields.eanCode !== undefined && update.productId) {
+                try {
+                    await ProductEAN.findOneAndUpdate(
+                        { productId: update.productId },
+                        { $set: { eanCode: fields.eanCode } },
+                        { upsert: true, new: true }
+                    );
+                } catch (eanErr) {
+                    console.error("Error upserting EAN:", eanErr);
+                }
+            }
 
             if (Object.keys(safeUpdate).length === 0) {
                 continue; // Nothing to update
