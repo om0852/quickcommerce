@@ -565,7 +565,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
     const ITEMS_PER_PAGE = 50;
 
     const [apiBrands, setApiBrands] = useState([]);
-    const [isFetchingBrands, setIsFetchingBrands] = useState(false);
+    const [isFetchingBrands, setIsFetchingBrands] = useState(true);
 
     useEffect(() => {
         fetchBrands();
@@ -810,7 +810,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
                 totals={totals}
                 platforms={platforms}
                 platformLabels={platformLabels}
-                loading={loading}
+                loading={loading || isFetchingBrands}
                 handleSort={handleSort}
                 handleInteraction={handleInteraction}
                 products={products}
@@ -818,7 +818,7 @@ const BrandTab = ({ products, loading, platformFilter = 'all', pincode, snapshot
             />
 
             {/* Pagination Controls */}
-            {!loading && filteredBrands.length > 0 && (
+            {!(loading || isFetchingBrands) && filteredBrands.length > 0 && (
                 <div className="flex-none flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm mt-2">
                     <span className="text-sm text-gray-600 font-medium whitespace-nowrap mr-4">
                         Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filteredBrands.length)} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredBrands.length)} of {filteredBrands.length} brands
