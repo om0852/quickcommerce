@@ -48,7 +48,7 @@
             "group": "Advanced",
             "pages": [
               "guides/api-integration",
-              "guides/webhooks",
+
               "guides/data-sync"
             ]
           },
