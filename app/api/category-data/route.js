@@ -286,6 +286,7 @@ export async function GET(request) {
 
                 brandId: group.brandId || '',
                 label: group.label || '',
+                weight: group.primaryWeight || '',
                 zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
                 officialCategory: group.category,
                 officialSubCategory: null,
@@ -453,6 +454,7 @@ export async function GET(request) {
             brand: brandMap[group.brandId] || group.brand || '',
             brandId: group.brandId || '',
             label: group.label || '',
+            weight: group.primaryWeight || '',
             zepto: null, blinkit: null, jiomart: null, dmart: null, flipkartMinutes: null, instamart: null,
             officialCategory: group.category,
             officialSubCategory: null,
