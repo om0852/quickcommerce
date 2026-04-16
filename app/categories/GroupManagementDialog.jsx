@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Trash2, Loader2, Save, AlertTriangle, Unlink, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CustomDropdown from '@/components/CustomDropdown';
@@ -25,13 +25,28 @@ export default function GroupManagementDialog({
     });
     const [error, setError] = useState(null);
     const [productToDelete, setProductToDelete] = useState(''); // ID of product to delete in Danger Zone
+    const dialogRef = useRef(null);
 
     useEffect(() => {
+        if (!isOpen) return;
+
+        const preventScroll = (e) => {
+            if (dialogRef.current && dialogRef.current.contains(e.target)) return;
+            e.preventDefault();
+        };
+
+        document.addEventListener('wheel', preventScroll, { passive: false });
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+
         const handleEscape = (e) => {
             if (e.key === 'Escape' && isOpen) onClose();
         };
         window.addEventListener('keydown', handleEscape);
-        return () => window.removeEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('wheel', preventScroll);
+            document.removeEventListener('touchmove', preventScroll);
+            window.removeEventListener('keydown', handleEscape);
+        };
     }, [isOpen, onClose]);
 
     if (!isOpen) return null;
@@ -174,7 +189,7 @@ export default function GroupManagementDialog({
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             />
-            <div className="relative w-full h-full max-w-6xl max-h-[95vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div ref={dialogRef} className="relative w-full h-full max-w-6xl max-h-[95vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 sm:px-8 py-5 border-b border-neutral-200 bg-white">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Loader2, Database, MapPin, Package, ChevronDown, ChevronRight, AlertTriangle, List } from 'lucide-react';
+import { Search, Loader2, Database, MapPin, Package, ChevronDown, ChevronRight, AlertTriangle, List, ExternalLink } from 'lucide-react';
 import { useSidebar } from '@/components/SidebarContext';
 import { SidebarOpenIcon } from '@/components/SidebarIcons';
 
@@ -181,6 +181,7 @@ function GroupResult({ data }) {
                                       <th className="text-right px-3 py-2 font-semibold text-neutral-500">Rank</th>
                                       <th className="text-right px-3 py-2 font-semibold text-neutral-500">Stock</th>
                                       <th className="text-right px-3 py-2 font-semibold text-neutral-500">Scraped At</th>
+                                      <th className="text-center px-3 py-2 font-semibold text-neutral-500">Link</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-blue-50">
@@ -220,6 +221,22 @@ function GroupResult({ data }) {
                                             }
                                           </td>
                                           <td className="px-3 py-2 text-right text-neutral-400 whitespace-nowrap">{formatDate(snap.scrapedAt)}</td>
+                                          <td className="px-3 py-2 text-center">
+                                            {snap.productUrl ? (
+                                              <a
+                                                href={snap.productUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center justify-center p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-md transition-colors"
+                                                title="Open Product Page"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <ExternalLink size={14} />
+                                              </a>
+                                            ) : (
+                                              <span className="text-neutral-300">—</span>
+                                            )}
+                                          </td>
                                         </tr>
                                       ));
                                     })}
@@ -304,6 +321,7 @@ function ProductResult({ data }) {
                         <th className="text-right px-4 py-2 font-semibold text-neutral-500 text-xs">Price</th>
                         <th className="text-right px-4 py-2 font-semibold text-neutral-500 text-xs">Rank</th>
                         <th className="text-right px-4 py-2 font-semibold text-neutral-500 text-xs">Scraped At</th>
+                        <th className="text-center px-4 py-2 font-semibold text-neutral-500 text-xs">Link</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-50">
@@ -329,6 +347,22 @@ function ProductResult({ data }) {
                           </td>
                           <td className="px-4 py-2.5 text-right">
                             <span className="text-[11px] text-neutral-400 whitespace-nowrap">{formatDate(row.scrapedAt)}</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-center">
+                            {row.productUrl ? (
+                              <a
+                                href={row.productUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-md transition-colors"
+                                title="Open Product Page"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <ExternalLink size={14} />
+                              </a>
+                            ) : (
+                              <span className="text-neutral-300">—</span>
+                            )}
                           </td>
                         </tr>
                       ))}

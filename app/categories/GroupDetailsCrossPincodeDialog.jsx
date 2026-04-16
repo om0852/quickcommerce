@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Loader2, MapPin, Package, ExternalLink, Unlink, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/components/SidebarContext';
@@ -20,6 +20,7 @@ export default function GroupDetailsCrossPincodeDialog({
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
     const [summaryOpen, setSummaryOpen] = useState(true);
+    const dialogRef = useRef(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -79,11 +80,25 @@ export default function GroupDetailsCrossPincodeDialog({
     };
 
     useEffect(() => {
+        if (!isOpen) return;
+
+        const preventScroll = (e) => {
+            if (dialogRef.current && dialogRef.current.contains(e.target)) return;
+            e.preventDefault();
+        };
+
+        document.addEventListener('wheel', preventScroll, { passive: false });
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+
         const handleEscape = (e) => {
             if (e.key === 'Escape' && isOpen) onClose();
         };
         window.addEventListener('keydown', handleEscape);
-        return () => window.removeEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('wheel', preventScroll);
+            document.removeEventListener('touchmove', preventScroll);
+            window.removeEventListener('keydown', handleEscape);
+        };
     }, [isOpen, onClose]);
 
     if (!isOpen) return null;
@@ -99,7 +114,7 @@ export default function GroupDetailsCrossPincodeDialog({
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-4xl h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div ref={dialogRef} className="relative w-full max-w-4xl h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="px-4 sm:px-6 py-4 border-b border-neutral-200 bg-white flex items-center justify-between">
                     <div className="flex items-center gap-4">

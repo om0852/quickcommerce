@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import ProductTable from './ProductTable';
 
@@ -14,12 +14,28 @@ const BrandProductsDialog = ({
     snapshotDate,
     isAdmin = false
 }) => {
+    const dialogRef = useRef(null);
+
     useEffect(() => {
+        if (!isOpen) return;
+
+        const preventScroll = (e) => {
+            if (dialogRef.current && dialogRef.current.contains(e.target)) return;
+            e.preventDefault();
+        };
+
+        document.addEventListener('wheel', preventScroll, { passive: false });
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+
         const handleEscape = (e) => {
             if (e.key === 'Escape' && isOpen) onClose();
         };
         window.addEventListener('keydown', handleEscape);
-        return () => window.removeEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('wheel', preventScroll);
+            document.removeEventListener('touchmove', preventScroll);
+            window.removeEventListener('keydown', handleEscape);
+        };
     }, [isOpen, onClose]);
 
     if (!isOpen) return null;
@@ -77,7 +93,7 @@ const BrandProductsDialog = ({
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-6xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div ref={dialogRef} className="relative w-full max-w-6xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 bg-white">
                     <div>

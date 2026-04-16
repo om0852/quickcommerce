@@ -5,6 +5,15 @@ import ProductImage from './ProductImage';
 import { useSidebar } from '@/components/SidebarContext';
 import { cn } from '@/lib/utils';
 
+const PLATFORM_LABELS = {
+    zepto: 'Zepto',
+    blinkit: 'Blinkit',
+    jiomart: 'JioMart',
+    dmart: 'DMart',
+    flipkartMinutes: 'Flipkart',
+    instamart: 'Instamart',
+};
+
 const JIO_ARTICLE_CATEGORIES = [
   "APPLE FUJI", "APPLE RED DELICIOUS", "APPLE GRANNY SMITH", "APPLE GOLDEN IMPORTE", 
   "APPLE ROYAL GALA", "APPLE INORED EPLI", "APPLE QUEEN", "APPLE KINNAUR", "APPLE SHIMLA", 
@@ -140,14 +149,23 @@ function ProductDetailsDialog({
         return () => window.removeEventListener('keydown', handleEscape);
     }, [isOpen, onClose]);
 
+    const dialogRef = React.useRef(null);
+
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        if (!isOpen) return;
+
+        const preventScroll = (e) => {
+            // Allow scrolling inside the dialog content
+            if (dialogRef.current && dialogRef.current.contains(e.target)) return;
+            e.preventDefault();
+        };
+
+        document.addEventListener('wheel', preventScroll, { passive: false });
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+
         return () => {
-            document.body.style.overflow = '';
+            document.removeEventListener('wheel', preventScroll);
+            document.removeEventListener('touchmove', preventScroll);
         };
     }, [isOpen]);
 
@@ -178,7 +196,7 @@ function ProductDetailsDialog({
             />
 
             {/* Dialog Content */}
-            <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div ref={dialogRef} className="relative w-full max-w-5xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
                 <div className="flex items-start justify-between px-4 py-3 border-b border-neutral-200 bg-white">
@@ -279,13 +297,13 @@ function ProductDetailsDialog({
                                                     : data.productUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors bg-blue-50 px-2 py-1 rounded-full"
-                                                title="View on Platform"
+                                                className="inline-flex items-center justify-center p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-md transition-colors"
+                                                title={`View on ${PLATFORM_LABELS[platform] || platform}`}
                                             >
-                                                View <ExternalLink size={12} />
+                                                <ExternalLink size={16} />
                                             </a>
                                         ) : (
-                                            <span className="text-xs text-neutral-400 italic">No Link</span>
+                                            <span className="text-neutral-300">—</span>
                                         )}
                                     </div>
 

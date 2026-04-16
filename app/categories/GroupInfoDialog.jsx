@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
-import { X, Search, Loader2, Database, MapPin, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useCallback, Fragment, useRef } from 'react';
+import { X, Search, Loader2, Database, MapPin, AlertTriangle, ChevronDown, ChevronRight, ExternalLink, Unlink } from 'lucide-react';
 
 const PLATFORMS = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
 const PLATFORM_LABELS = {
@@ -45,7 +45,7 @@ function PriceTag({ price, originalPrice, isOutOfStock }) {
     );
 }
 
-function GroupResult({ data }) {
+function GroupResult({ data, onRefresh }) {
     const { group, results, totalPincodes, totalSnapshots } = data;
     const pincodes = Object.keys(results).sort();
     const [expandedPin, setExpandedPin] = useState(null);
@@ -55,6 +55,30 @@ function GroupResult({ data }) {
     );
 
     const togglePin = (pin) => setExpandedPin(prev => prev === pin ? null : pin);
+
+    const handleRemoveFromGroup = async (platform, productId) => {
+        if (!confirm(`Are you sure you want to remove this ${platform} product from the group and create a new group with its variants?`)) return;
+        
+        try {
+            const res = await fetch('/api/grouping/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupingId: group.groupingId,
+                    productId,
+                    platform
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to remove product');
+            
+            alert('Product separated into new group!');
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error('Error removing product:', error);
+            alert(error.message);
+        }
+    };
 
     return (
         <div className="space-y-3">
@@ -170,6 +194,7 @@ function GroupResult({ data }) {
                                                                             <th className="text-right px-3 py-2 font-semibold text-neutral-500">Rank</th>
                                                                             <th className="text-right px-3 py-2 font-semibold text-neutral-500">Stock</th>
                                                                             <th className="text-right px-3 py-2 font-semibold text-neutral-500">Scraped At</th>
+                                                                            <th className="text-center px-3 py-2 font-semibold text-neutral-500">Actions</th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody className="divide-y divide-blue-50">
@@ -205,6 +230,32 @@ function GroupResult({ data }) {
                                                                                         }
                                                                                     </td>
                                                                                     <td className="px-3 py-2 text-right text-neutral-400 whitespace-nowrap">{formatDate(snap.scrapedAt)}</td>
+                                                                                    <td className="px-3 py-2 text-center whitespace-nowrap">
+                                                                                        {snap.productUrl ? (
+                                                                                            <a
+                                                                                                href={snap.productUrl}
+                                                                                                target="_blank"
+                                                                                                rel="noopener noreferrer"
+                                                                                                className="inline-flex items-center justify-center p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded-md transition-colors"
+                                                                                                title="Open Product Page"
+                                                                                                onClick={(e) => e.stopPropagation()}
+                                                                                            >
+                                                                                                <ExternalLink size={14} />
+                                                                                            </a>
+                                                                                        ) : (
+                                                                                            <span className="text-neutral-300 inline-block px-2">—</span>
+                                                                                        )}
+                                                                                        <button
+                                                                                            onClick={(e) => {
+                                                                                                e.stopPropagation();
+                                                                                                handleRemoveFromGroup(plat, snap.productId);
+                                                                                            }}
+                                                                                            className="inline-flex items-center justify-center p-1.5 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-md transition-colors ml-1"
+                                                                                            title="Remove from group and create new group"
+                                                                                        >
+                                                                                            <Unlink size={14} />
+                                                                                        </button>
+                                                                                    </td>
                                                                                 </tr>
                                                                             ));
                                                                         })}
@@ -231,14 +282,14 @@ export default function GroupInfoDialog({ isOpen, onClose, product }) {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
+    const dialogRef = useRef(null);
 
-    useEffect(() => {
+    const loadData = useCallback(() => {
         if (!isOpen || !product) return;
         const groupId = product.parentGroupId || product.groupingId;
         if (!groupId) return;
 
         setLoading(true);
-        setResult(null);
         setError('');
 
         fetch(`/api/admin-search?q=${encodeURIComponent(groupId)}`)
@@ -252,9 +303,27 @@ export default function GroupInfoDialog({ isOpen, onClose, product }) {
     }, [isOpen, product]);
 
     useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const preventScroll = (e) => {
+            if (dialogRef.current && dialogRef.current.contains(e.target)) return;
+            e.preventDefault();
+        };
+
+        document.addEventListener('wheel', preventScroll, { passive: false });
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+
         const handleEscape = (e) => { if (e.key === 'Escape') onClose(); };
-        if (isOpen) window.addEventListener('keydown', handleEscape);
-        return () => window.removeEventListener('keydown', handleEscape);
+        window.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('wheel', preventScroll);
+            document.removeEventListener('touchmove', preventScroll);
+            window.removeEventListener('keydown', handleEscape);
+        };
     }, [isOpen, onClose]);
 
     if (!isOpen) return null;
@@ -266,7 +335,7 @@ export default function GroupInfoDialog({ isOpen, onClose, product }) {
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative w-full max-w-7xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div ref={dialogRef} className="relative w-full max-w-7xl max-h-[90vh] flex flex-col bg-white rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200 bg-white shrink-0">
                     <div className="flex items-center gap-2.5">
@@ -304,7 +373,7 @@ export default function GroupInfoDialog({ isOpen, onClose, product }) {
                         </div>
                     )}
 
-                    {result?.type === 'group' && <GroupResult data={result} />}
+                    {result?.type === 'group' && <GroupResult data={result} onRefresh={loadData} />}
 
                     {!loading && !error && !result && (
                         <div className="text-center py-20 text-neutral-400">

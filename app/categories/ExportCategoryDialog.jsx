@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Download, X, Mail, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -40,13 +40,28 @@ export default function ExportCategoryDialog({
     const [selectedPincodes, setSelectedPincodes] = useState(currentPincode ? [currentPincode] : (pincodeOptions[0]?.value ? [pincodeOptions[0].value] : []));
 
     const [exportType, setExportType] = useState('latest');
+    const dialogRef = useRef(null);
 
     useEffect(() => {
+        if (!isOpen) return;
+
+        const preventScroll = (e) => {
+            if (dialogRef.current && dialogRef.current.contains(e.target)) return;
+            e.preventDefault();
+        };
+
+        document.addEventListener('wheel', preventScroll, { passive: false });
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+
         const handleEscape = (e) => {
             if (e.key === 'Escape' && isOpen) onClose();
         };
         window.addEventListener('keydown', handleEscape);
-        return () => window.removeEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('wheel', preventScroll);
+            document.removeEventListener('touchmove', preventScroll);
+            window.removeEventListener('keydown', handleEscape);
+        };
     }, [isOpen, onClose]);
 
     // Sync state with current page selections when modal opens
@@ -205,7 +220,7 @@ export default function ExportCategoryDialog({
             "fixed inset-0 bg-black/40 flex items-center justify-center z-[200] backdrop-blur-[4px] transition-all duration-300",
             isSidebarOpen ? "xl:ml-64" : "xl:ml-0"
         )} onClick={onClose}>
-            <div className="bg-white rounded-xl overflow-hidden w-[90%] max-w-[600px] max-h-[90vh] flex flex-col shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div ref={dialogRef} className="bg-white rounded-xl overflow-hidden w-[90%] max-w-[600px] max-h-[90vh] flex flex-col shadow-2xl border border-neutral-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
 
                 {/* Header */}
                 <div className="flex-none p-5 bg-white border-b border-neutral-200 flex items-start justify-between">

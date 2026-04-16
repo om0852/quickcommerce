@@ -225,15 +225,30 @@ export default function ProductEditDialog({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [expandedPlatform, setExpandedPlatform] = useState(null); // Accordion state
+    const dialogRef = useRef(null);
 
     const platforms = ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'];
 
     useEffect(() => {
+        if (!isOpen) return;
+
+        const preventScroll = (e) => {
+            if (dialogRef.current && dialogRef.current.contains(e.target)) return;
+            e.preventDefault();
+        };
+
+        document.addEventListener('wheel', preventScroll, { passive: false });
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+
         const handleEscape = (e) => {
             if (e.key === 'Escape' && isOpen) onClose();
         };
         window.addEventListener('keydown', handleEscape);
-        return () => window.removeEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('wheel', preventScroll);
+            document.removeEventListener('touchmove', preventScroll);
+            window.removeEventListener('keydown', handleEscape);
+        };
     }, [isOpen, onClose]);
 
     if (!isOpen || !product) return null;
@@ -420,7 +435,7 @@ export default function ProductEditDialog({
                 onClick={onClose}
             />
 
-            <div 
+            <div ref={dialogRef}
                 className="relative w-full max-w-4xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' && !loading) {
