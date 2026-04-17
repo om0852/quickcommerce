@@ -22,6 +22,7 @@ import ProductEditDialog from './ProductEditDialog';
 import GroupDetailsCrossPincodeDialog from './GroupDetailsCrossPincodeDialog';
 import GroupInfoDialog from './GroupInfoDialog';
 import ProductImage from './ProductImage';
+import CustomDropdown from '@/components/CustomDropdown';
 
 const ProductTable = React.memo(function ProductTable({
     products,
@@ -46,7 +47,8 @@ const ProductTable = React.memo(function ProductTable({
     isBulkEditMode = false,
     selectedGroupIds = [],
     onSelectionChange,
-    bulkBrands = [],
+    availableBrands = [],
+    brandsLoading = false,
     isLiveMode = true, // NEW Prop
     scrapeIntervals,
     ngInterval,
@@ -291,7 +293,7 @@ const ProductTable = React.memo(function ProductTable({
             return;
         }
 
-        const brand = selectedBrand ? bulkBrands.find(b => b._id === selectedBrand) : null;
+        const brand = selectedBrand ? availableBrands.find(b => b._id === selectedBrand) : null;
 
         setBulkUpdating(true);
 
@@ -301,7 +303,7 @@ const ProductTable = React.memo(function ProductTable({
             if (bulkWeight.trim()) updates.weight = bulkWeight.trim();
             if (brand) {
                 updates.brand = brand.brandName;
-                updates.brandId = brand._id;
+                updates.brandId = brand.brandId;
             }
 
             const { successCount, total } = await onBulkUpdate(selectedGroupIds, updates);
@@ -402,17 +404,30 @@ const ProductTable = React.memo(function ProductTable({
                                 className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:border-blue-400 w-32"
                                 disabled={bulkUpdating}
                             />
-                            <select
-                                value={selectedBrand}
-                                onChange={(e) => setSelectedBrand(e.target.value)}
-                                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:border-blue-400"
-                                disabled={bulkUpdating}
-                            >
-                                <option value="">Select Brand...</option>
-                                {(Array.isArray(bulkBrands) ? bulkBrands : []).map(b => (
-                                    <option key={b._id} value={b._id}>{b.brandName}</option>
-                                ))}
-                            </select>
+                            {brandsLoading ? (
+                                <div className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 border border-gray-200 rounded-lg bg-gray-50 h-[34px] w-48">
+                                    <Loader2 size={14} className="animate-spin" />
+                                    <span>Loading brands...</span>
+                                </div>
+                            ) : (
+                                <div className="w-48 relative z-[60]">
+                                    <CustomDropdown
+                                        value={selectedBrand}
+                                        onChange={(val) => setSelectedBrand(val)}
+                                        options={[
+                                            { value: '', label: 'Select Brand...' },
+                                            ...(Array.isArray(availableBrands) ? availableBrands : []).map(b => ({
+                                                value: b._id,
+                                                label: b.brandName
+                                            }))
+                                        ]}
+                                        searchable={true}
+                                        placeholder="Select Brand..."
+                                        disabled={bulkUpdating}
+                                        className="h-[34px]"
+                                    />
+                                </div>
+                            )}
                             <button
                                 onClick={handleBulkUpdate}
                                 disabled={bulkUpdating || (!selectedBrand && !bulkName.trim() && !bulkWeight.trim())}
@@ -456,9 +471,9 @@ const ProductTable = React.memo(function ProductTable({
                                         <input
                                             type="checkbox"
                                             className="w-4 h-4 cursor-pointer"
-                                            checked={products.filter(p => !p.isHeader).length > 0 && products.filter(p => !p.isHeader).every(p => selectedGroupIds.includes(p.groupingId))}
+                                            checked={allFilteredProducts.filter(p => !p.isHeader).length > 0 && allFilteredProducts.filter(p => !p.isHeader).every(p => selectedGroupIds.includes(p.groupingId))}
                                             onChange={(e) => {
-                                                const ids = products.filter(p => !p.isHeader).map(p => p.groupingId);
+                                                const ids = allFilteredProducts.filter(p => !p.isHeader).map(p => p.groupingId);
                                                 if (onSelectionChange) onSelectionChange(e.target.checked ? ids : []);
                                             }}
                                         />
