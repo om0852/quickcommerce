@@ -272,6 +272,16 @@ export const createSortFunction = (
       return (a.name || '').localeCompare(b.name || '');
     }
 
+    if (sortConfig.key === 'subcategory') {
+      const subA = (resolveSubCategory(a) || '').trim().toLowerCase();
+      const subB = (resolveSubCategory(b) || '').trim().toLowerCase();
+      if (!subA && !subB) return (a.name || '').localeCompare(b.name || '');
+      if (!subA) return 1;
+      if (!subB) return -1;
+      if (subA !== subB) return sortConfig.direction === 'asc' ? subA.localeCompare(subB) : subB.localeCompare(subA);
+      return (a.name || '').localeCompare(b.name || '');
+    }
+
     if (sortConfig.key === 'name') {
       const nameA = a.name || '';
       const nameB = b.name || '';
@@ -296,6 +306,32 @@ export const createSortFunction = (
         const priceA = getPrice(itemA);
         const priceB = getPrice(itemB);
         if (priceA !== priceB) return sortConfig.direction === 'price_asc' ? priceA - priceB : priceB - priceA;
+        return 0;
+      }
+
+      if (sortConfig.direction === 'combo_asc' || sortConfig.direction === 'combo_desc') {
+        const getComboCount = (item: any): number => {
+          if (item.combo === undefined || item.combo === null || item.combo === 'N/A' || item.combo === '') return 1;
+          const match = String(item.combo).match(/\d+/);
+          if (match) return parseInt(match[0], 10);
+          return 1;
+        };
+        const comboA = getComboCount(itemA);
+        const comboB = getComboCount(itemB);
+        if (comboA !== comboB) return sortConfig.direction === 'combo_asc' ? comboA - comboB : comboB - comboA;
+        return 0;
+      }
+
+      if (sortConfig.direction === 'subCategory_asc' || sortConfig.direction === 'subCategory_desc') {
+        const getSub = (item: any): string => {
+          return (item.officialSubCategory || '').trim().toLowerCase();
+        };
+        const subA = getSub(itemA);
+        const subB = getSub(itemB);
+        if (!subA && !subB) return 0;
+        if (!subA) return 1;
+        if (!subB) return -1;
+        if (subA !== subB) return sortConfig.direction === 'subCategory_asc' ? subA.localeCompare(subB) : subB.localeCompare(subA);
         return 0;
       }
 

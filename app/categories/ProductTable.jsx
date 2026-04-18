@@ -106,6 +106,8 @@ const ProductTable = React.memo(function ProductTable({
         setSortMenuAnchor(null);
         setSortSubMenuAnchor(null);
         setRankSubMenuAnchor(null);
+        setComboSubMenuAnchor(null);
+        setSubCatSubMenuAnchor(null);
     };
 
     const handleNameSort = (direction) => {
@@ -117,6 +119,27 @@ const ProductTable = React.memo(function ProductTable({
     const handleBrandSort = (direction) => {
         clearFilters();
         onSort('brand', direction);
+        handleSortMenuClose();
+    };
+
+    // Subcategory Submenu State
+    const [subCatSubMenuAnchor, setSubCatSubMenuAnchor] = useState(null);
+    const [subCatSortDirection, setSubCatSortDirection] = useState('subCategory_asc');
+    const isSubCatSubMenuOpen = Boolean(subCatSubMenuAnchor);
+
+    const handleSubCatSubMenuOpen = (event, direction) => {
+        setSubCatSubMenuAnchor(event.currentTarget);
+        setSubCatSortDirection(direction);
+    };
+
+    const handleSubCatSubMenuClose = () => {
+        setSubCatSubMenuAnchor(null);
+    };
+
+    const handlePlatformSubCatSort = (platform) => {
+        clearFilters();
+        onSort(platform, subCatSortDirection);
+        handleSubCatSubMenuClose();
         handleSortMenuClose();
     };
 
@@ -138,6 +161,27 @@ const ProductTable = React.memo(function ProductTable({
         clearFilters();
         onSort(platform, rankSortDirection);
         handleRankSubMenuClose();
+        handleSortMenuClose();
+    };
+
+    // Combo Submenu State
+    const [comboSubMenuAnchor, setComboSubMenuAnchor] = useState(null);
+    const [comboSortDirection, setComboSortDirection] = useState('combo_asc');
+    const isComboSubMenuOpen = Boolean(comboSubMenuAnchor);
+
+    const handleComboSubMenuOpen = (event, direction) => {
+        setComboSubMenuAnchor(event.currentTarget);
+        setComboSortDirection(direction);
+    };
+
+    const handleComboSubMenuClose = () => {
+        setComboSubMenuAnchor(null);
+    };
+
+    const handlePlatformComboSort = (platform) => {
+        clearFilters();
+        onSort(platform, comboSortDirection);
+        handleComboSubMenuClose();
         handleSortMenuClose();
     };
 
@@ -640,6 +684,54 @@ const ProductTable = React.memo(function ProductTable({
                                             <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
                                             <MenuItem
+                                                onClick={(e) => handleSubCatSubMenuOpen(e, 'subCategory_asc')}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.direction === 'subCategory_asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.direction === 'subCategory_asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
+                                                    color: sortConfig.direction === 'subCategory_asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <TrendingUp size={14} className="text-emerald-600" />
+                                                    <span>Official Subcategory (A to Z)</span>
+                                                </div>
+                                                <ChevronRight size={14} className="text-gray-400" />
+                                            </MenuItem>
+
+                                            <MenuItem
+                                                onClick={(e) => handleSubCatSubMenuOpen(e, 'subCategory_desc')}
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 1,
+                                                    fontSize: '0.75rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: sortConfig.direction === 'subCategory_desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
+                                                    fontWeight: sortConfig.direction === 'subCategory_desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
+                                                    color: sortConfig.direction === 'subCategory_desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                    '&:hover': { backgroundColor: '#f9fafb' },
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <TrendingDown size={14} className="text-rose-600" />
+                                                    <span>Official Subcategory (Z to A)</span>
+                                                </div>
+                                                <ChevronRight size={14} className="text-gray-400" />
+                                            </MenuItem>
+
+                                            <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                            <MenuItem
                                                 onClick={handleSortSubSubMenuOpen}
                                                 sx={{
                                                     px: 1.5,
@@ -754,6 +846,42 @@ const ProductTable = React.memo(function ProductTable({
                                                 <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
 
                                                 <MenuItem
+                                                    onClick={(e) => handleComboSubMenuOpen(e, 'combo_asc')}
+                                                    sx={{
+                                                        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.direction === 'combo_asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.direction === 'combo_asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
+                                                        color: sortConfig.direction === 'combo_asc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <TrendingUp size={14} className="text-emerald-600" />
+                                                        <span>Combo: Low to High</span>
+                                                    </div>
+                                                    <ChevronRight size={14} className="text-gray-400" />
+                                                </MenuItem>
+
+                                                <MenuItem
+                                                    onClick={(e) => handleComboSubMenuOpen(e, 'combo_desc')}
+                                                    sx={{
+                                                        px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        backgroundColor: sortConfig.direction === 'combo_desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#f9fafb' : 'transparent',
+                                                        fontWeight: sortConfig.direction === 'combo_desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? 700 : 500,
+                                                        color: sortConfig.direction === 'combo_desc' && ['zepto', 'blinkit', 'jiomart', 'dmart', 'flipkartMinutes', 'instamart'].includes(sortConfig.key) ? '#171717' : '#4b5563',
+                                                        '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <TrendingDown size={14} className="text-rose-600" />
+                                                        <span>Combo: High to Low</span>
+                                                    </div>
+                                                    <ChevronRight size={14} className="text-gray-400" />
+                                                </MenuItem>
+
+                                                <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+
+                                                <MenuItem
                                                     onClick={handleDangerFirstToggle}
                                                     sx={{
                                                         px: 1.5, py: 1, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -834,6 +962,40 @@ const ProductTable = React.memo(function ProductTable({
                                                 </MenuItem>
                                             </Menu>
 
+                                            {/* Combo Selection Platforms Submenu */}
+                                            <Menu
+                                                anchorEl={comboSubMenuAnchor}
+                                                open={isComboSubMenuOpen}
+                                                onClose={handleComboSubMenuClose}
+                                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                                                PaperProps={{
+                                                    sx: { ml: 0.5, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', border: '1px solid #e5e7eb', minWidth: '140px', borderRadius: '0.375rem' }
+                                                }}
+                                            >
+                                                {['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'].map((plat) => (
+                                                    <MenuItem
+                                                        key={plat}
+                                                        onClick={() => {
+                                                            handlePlatformComboSort(plat);
+                                                            handleComboSubMenuClose();
+                                                            handleSortSubSubMenuClose();
+                                                            handleSortMenuClose();
+                                                        }}
+                                                        sx={{
+                                                            px: 1.5, py: 0.75, fontSize: '0.725rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                            backgroundColor: sortConfig.key === plat && sortConfig.direction === comboSortDirection ? '#f9fafb' : 'transparent',
+                                                            fontWeight: sortConfig.key === plat && sortConfig.direction === comboSortDirection ? 700 : 500,
+                                                            color: sortConfig.key === plat && sortConfig.direction === comboSortDirection ? '#171717' : '#4b5563',
+                                                            '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        <span>{platformLabels[plat] || plat}</span>
+                                                        {sortConfig.key === plat && sortConfig.direction === comboSortDirection && <Check size={14} className="text-neutral-900" />}
+                                                    </MenuItem>
+                                                ))}
+                                            </Menu>
+
                                             {/* Rank Selection Platforms Submenu */}
                                             <Menu
                                                 anchorEl={rankSubMenuAnchor}
@@ -864,6 +1026,40 @@ const ProductTable = React.memo(function ProductTable({
                                                     >
                                                         <span className="capitalize">{plat === 'flipkartMinutes' ? 'Flipkart' : plat}</span>
                                                         {sortConfig.key === plat && sortConfig.direction === rankSortDirection && <Check size={14} className="text-neutral-900" />}
+                                                    </MenuItem>
+                                                ))}
+                                            </Menu>
+
+                                            {/* Subcategory Selection Platforms Submenu */}
+                                            <Menu
+                                                anchorEl={subCatSubMenuAnchor}
+                                                open={isSubCatSubMenuOpen}
+                                                onClose={handleSubCatSubMenuClose}
+                                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                                                PaperProps={{
+                                                    sx: { ml: 0.5, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', border: '1px solid #e5e7eb', minWidth: '140px', borderRadius: '0.375rem' }
+                                                }}
+                                            >
+                                                {['jiomart', 'zepto', 'blinkit', 'dmart', 'flipkartMinutes', 'instamart'].map((plat) => (
+                                                    <MenuItem
+                                                        key={plat}
+                                                        onClick={() => {
+                                                            handlePlatformSubCatSort(plat);
+                                                            handleSubCatSubMenuClose();
+                                                            handleSortSubSubMenuClose();
+                                                            handleSortMenuClose();
+                                                        }}
+                                                        sx={{
+                                                            px: 1.5, py: 0.75, fontSize: '0.725rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                            backgroundColor: sortConfig.key === plat && sortConfig.direction === subCatSortDirection ? '#f9fafb' : 'transparent',
+                                                            fontWeight: sortConfig.key === plat && sortConfig.direction === subCatSortDirection ? 700 : 500,
+                                                            color: sortConfig.key === plat && sortConfig.direction === subCatSortDirection ? '#171717' : '#4b5563',
+                                                            '&:hover': { backgroundColor: '#f9fafb' }, cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        <span className="capitalize">{plat === 'flipkartMinutes' ? 'Flipkart' : plat}</span>
+                                                        {sortConfig.key === plat && sortConfig.direction === subCatSortDirection && <Check size={14} className="text-neutral-900" />}
                                                     </MenuItem>
                                                 ))}
                                             </Menu>
